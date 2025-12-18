@@ -3,357 +3,465 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Haslun.ai – Legal Infrastructure Experiments</title>
-    <meta name="description" content="AI-assisted tools for legal practice. Not to tell us what the law is, but to help us practice it better.">
+    <title>Haslun.ai — Legal Infrastructure Experiments</title>
+    <meta name="description" content="AI-assisted tools for legal practice. Built by a lawyer on the Upper West Side.">
+    <meta name="author" content="Will Haslun">
     
+    <!-- Open Graph -->
+    <meta property="og:title" content="Haslun.ai">
+    <meta property="og:description" content="AI-assisted tools for legal practice. Built by a lawyer on the Upper West Side.">
+    <meta property="og:type" content="website">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23B8860B' width='100' height='100' rx='8'/%3E%3Ctext x='50' y='68' text-anchor='middle' fill='%23fff' font-family='Georgia' font-size='52' font-weight='600'%3EH%3C/text%3E%3C/svg%3E">
+    
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
     
     <style>
+        /* ========================================
+           CSS VARIABLES - Unified Design System
+           ======================================== */
         :root {
-            --bg: #faf9f7;
-            --bg-alt: #f3f1ed;
-            --text: #2c2c2c;
-            --text-muted: #6b6b6b;
-            --text-faint: #9a9a9a;
-            --accent: #1a1a1a;
-            --accent-hover: #3d3d3d;
-            --border: #e5e3df;
-            --border-light: #eceae6;
+            /* Core palette - matching haslan.xyz */
+            --gold: #B8860B;
+            --gold-light: #D4A84B;
+            --gold-muted: rgba(184, 134, 11, 0.12);
+            --gold-glow: rgba(184, 134, 11, 0.25);
             
-            --font-display: 'EB Garamond', Georgia, serif;
-            --font-body: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            /* Light mode */
+            --bg-primary: #FAFAF8;
+            --bg-secondary: #F2F2EF;
+            --bg-card: #FFFFFF;
+            --text-primary: #1A1A18;
+            --text-secondary: #4A4A45;
+            --text-tertiary: #7A7A72;
+            --border-color: #E0E0D8;
+            --border-hover: #C8C8C0;
             
-            --transition: 0.3s ease;
+            /* Typography */
+            --font-display: 'EB Garamond', Georgia, 'Times New Roman', serif;
+            --font-body: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            
+            /* Effects */
+            --shadow-sm: 0 1px 3px rgba(26, 26, 24, 0.06);
+            --shadow-md: 0 4px 12px rgba(26, 26, 24, 0.08);
+            --shadow-lg: 0 12px 32px rgba(26, 26, 24, 0.12);
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-base: 280ms cubic-bezier(0.4, 0, 0.2, 1);
         }
         
         [data-theme="dark"] {
-            --bg: #151515;
-            --bg-alt: #1c1c1c;
-            --text: #e8e8e8;
-            --text-muted: #a0a0a0;
-            --text-faint: #666;
-            --accent: #f0f0f0;
-            --accent-hover: #c0c0c0;
-            --border: #2a2a2a;
-            --border-light: #222;
+            --bg-primary: #151515;
+            --bg-secondary: #1C1C1A;
+            --bg-card: #1E1E1C;
+            --text-primary: #E8E8E4;
+            --text-secondary: #B8B8B2;
+            --text-tertiary: #8A8A82;
+            --border-color: #3A3A35;
+            --border-hover: #4A4A45;
+            --gold: #D4A84B;
+            --gold-light: #E8C87B;
+            --gold-muted: rgba(212, 168, 75, 0.15);
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
+            --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.4);
         }
         
-        * {
+        /* ========================================
+           RESET & BASE
+           ======================================== */
+        *, *::before, *::after {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
         
         html {
-            font-size: 18px;
+            font-size: 17px;
             scroll-behavior: smooth;
         }
         
         body {
             font-family: var(--font-body);
-            font-weight: 400;
-            line-height: 1.7;
-            color: var(--text);
-            background: var(--bg);
+            color: var(--text-primary);
+            background: var(--bg-primary);
+            line-height: 1.6;
             min-height: 100vh;
-            transition: background var(--transition), color var(--transition);
+            -webkit-font-smoothing: antialiased;
+            transition: background-color var(--transition-base), color var(--transition-base);
         }
         
-        ::selection {
-            background: var(--accent);
-            color: var(--bg);
+        /* Subtle paper texture */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+            opacity: 0.018;
+            pointer-events: none;
+            z-index: 0;
         }
         
-        a {
-            color: inherit;
-            text-decoration: none;
+        [data-theme="dark"] body::before {
+            opacity: 0.012;
         }
         
-        /* Layout */
+        /* ========================================
+           LAYOUT
+           ======================================== */
         .container {
-            max-width: 680px;
-            margin: 0 auto;
-            padding: 0 2rem;
-        }
-        
-        /* Header */
-        header {
-            padding: 3rem 0 1rem;
             position: relative;
+            z-index: 1;
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
         }
         
-        .header-inner {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .logo {
-            font-family: var(--font-display);
-            font-size: 1.5rem;
-            font-weight: 500;
-            letter-spacing: -0.02em;
-        }
-        
-        .logo span {
-            opacity: 0.4;
-        }
-        
-        .theme-toggle {
-            background: none;
-            border: 1px solid var(--border);
-            color: var(--text-muted);
-            cursor: pointer;
-            padding: 0.4rem 0.8rem;
-            font-size: 0.75rem;
-            font-family: var(--font-body);
-            letter-spacing: 0.05em;
-            text-transform: uppercase;
-            transition: all var(--transition);
-            border-radius: 2px;
-        }
-        
-        .theme-toggle:hover {
-            border-color: var(--text-muted);
-            color: var(--text);
-        }
-        
-        /* Hero */
-        .hero {
+        /* ========================================
+           HEADER
+           ======================================== */
+        header {
             padding: 4rem 0 3rem;
-            border-bottom: 1px solid var(--border-light);
+            border-bottom: 1px solid var(--border-color);
         }
         
-        .hero h1 {
-            font-family: var(--font-display);
-            font-size: 2.8rem;
-            font-weight: 400;
-            line-height: 1.2;
-            letter-spacing: -0.02em;
+        .brand {
             margin-bottom: 1.5rem;
         }
         
-        .hero h1 em {
-            font-style: italic;
+        .brand h1 {
+            font-family: var(--font-display);
+            font-size: 2.4rem;
+            font-weight: 500;
+            letter-spacing: -0.01em;
+            margin-bottom: 0.25rem;
         }
         
-        .hero-text {
-            font-size: 1.05rem;
-            color: var(--text-muted);
-            max-width: 540px;
-            line-height: 1.8;
+        .brand h1 span {
+            color: var(--gold);
         }
         
-        /* Section */
+        .brand-sub {
+            font-size: 0.9rem;
+            color: var(--text-tertiary);
+            letter-spacing: 0.02em;
+        }
+        
+        .intro {
+            font-family: var(--font-display);
+            font-size: 1.35rem;
+            line-height: 1.55;
+            color: var(--text-secondary);
+            max-width: 580px;
+        }
+        
+        .intro strong {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+        
+        /* ========================================
+           THEME TOGGLE
+           ======================================== */
+        .theme-toggle {
+            position: fixed;
+            top: 1.5rem;
+            right: 1.5rem;
+            z-index: 100;
+        }
+        
+        .theme-toggle button {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-fast);
+        }
+        
+        .theme-toggle button:hover {
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+        
+        [data-theme="dark"] .sun { display: inline; }
+        [data-theme="dark"] .moon { display: none; }
+        [data-theme="light"] .sun,
+        :root:not([data-theme]) .sun { display: none; }
+        [data-theme="light"] .moon,
+        :root:not([data-theme]) .moon { display: inline; }
+        
+        /* ========================================
+           SECTIONS
+           ======================================== */
         section {
             padding: 3rem 0;
         }
         
-        .section-label {
-            font-size: 0.7rem;
-            letter-spacing: 0.15em;
-            text-transform: uppercase;
-            color: var(--text-faint);
-            margin-bottom: 2rem;
+        section + section {
+            border-top: 1px solid var(--border-color);
         }
         
-        /* Approach */
-        .approach p {
+        h2 {
             font-family: var(--font-display);
-            font-size: 1.35rem;
-            line-height: 1.7;
-            color: var(--text);
-            margin-bottom: 1rem;
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: var(--gold);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 1.5rem;
         }
         
-        .approach p:last-child {
+        p {
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+        }
+        
+        p:last-child {
             margin-bottom: 0;
         }
         
-        .approach em {
-            font-style: italic;
-        }
-        
-        /* Projects */
-        .projects {
-            border-top: 1px solid var(--border-light);
-        }
-        
+        /* ========================================
+           PROJECT LIST - Editorial style
+           ======================================== */
         .project-list {
+            list-style: none;
+        }
+        
+        .project-item {
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .project-item:last-child {
+            border-bottom: none;
+        }
+        
+        .project-link {
             display: flex;
-            flex-direction: column;
-            gap: 0;
-        }
-        
-        .project {
-            display: block;
-            padding: 2rem 0;
-            border-bottom: 1px solid var(--border-light);
-            transition: all var(--transition);
-        }
-        
-        .project:hover {
-            padding-left: 1rem;
-        }
-        
-        .project-header {
-            display: flex;
-            align-items: baseline;
+            align-items: center;
             justify-content: space-between;
             gap: 1rem;
-            margin-bottom: 0.5rem;
+            padding: 1.25rem 0;
+            text-decoration: none;
+            color: inherit;
+            transition: all var(--transition-fast);
         }
         
-        .project-title {
-            font-family: var(--font-display);
-            font-size: 1.4rem;
-            font-weight: 500;
+        .project-link:hover {
+            padding-left: 0.75rem;
         }
         
-        .project-status {
-            font-size: 0.7rem;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-            white-space: nowrap;
+        .project-link:hover .project-title {
+            color: var(--gold);
         }
         
-        .project-status.live {
-            color: #2d7a4d;
-        }
-        
-        [data-theme="dark"] .project-status.live {
-            color: #5cb97a;
-        }
-        
-        .project-status.soon {
-            color: var(--text-faint);
-        }
-        
-        .project-description {
-            font-size: 0.95rem;
-            color: var(--text-muted);
-            line-height: 1.7;
-        }
-        
-        .project.inactive {
-            opacity: 0.5;
-            pointer-events: none;
-        }
-        
-        .project.inactive:hover {
-            padding-left: 0;
-        }
-        
-        /* Arrow */
-        .arrow {
-            display: inline-block;
-            margin-left: 0.5rem;
-            opacity: 0;
-            transform: translateX(-4px);
-            transition: all var(--transition);
-        }
-        
-        .project:hover .arrow {
+        .project-link:hover .project-arrow {
             opacity: 1;
             transform: translateX(0);
         }
         
-        /* Footer */
+        .project-content {
+            flex: 1;
+        }
+        
+        .project-title {
+            font-family: var(--font-display);
+            font-size: 1.25rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+            transition: color var(--transition-fast);
+        }
+        
+        .project-desc {
+            font-size: 0.9rem;
+            color: var(--text-tertiary);
+            line-height: 1.5;
+        }
+        
+        .project-meta {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.3rem 0.7rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+        
+        .status-live {
+            background: rgba(22, 163, 74, 0.12);
+            color: #16a34a;
+        }
+        
+        [data-theme="dark"] .status-live {
+            background: rgba(34, 197, 94, 0.15);
+            color: #4ade80;
+        }
+        
+        .status-coming {
+            background: var(--bg-secondary);
+            color: var(--text-tertiary);
+        }
+        
+        .project-arrow {
+            font-size: 1.25rem;
+            color: var(--gold);
+            opacity: 0;
+            transform: translateX(-8px);
+            transition: all var(--transition-fast);
+        }
+        
+        /* Disabled state for coming soon */
+        .project-item.coming-soon {
+            opacity: 0.55;
+        }
+        
+        .project-item.coming-soon .project-link {
+            cursor: default;
+            pointer-events: none;
+        }
+        
+        /* ========================================
+           APPROACH SECTION
+           ======================================== */
+        .approach {
+            background: var(--bg-secondary);
+            margin: 0 -1.5rem;
+            padding: 2.5rem 1.5rem;
+            border-radius: var(--radius-md);
+        }
+        
+        .approach p {
+            font-size: 0.95rem;
+            line-height: 1.7;
+        }
+        
+        .approach em {
+            color: var(--gold);
+            font-style: normal;
+            font-weight: 500;
+        }
+        
+        /* ========================================
+           FOOTER
+           ======================================== */
         footer {
-            padding: 3rem 0 4rem;
-            border-top: 1px solid var(--border-light);
-            margin-top: 1rem;
+            padding: 3rem 0;
+            border-top: 1px solid var(--border-color);
         }
         
         .footer-content {
             display: flex;
-            flex-direction: column;
-            gap: 2rem;
-        }
-        
-        .footer-text {
-            font-size: 0.9rem;
-            color: var(--text-muted);
-            line-height: 1.8;
-        }
-        
-        .footer-text a {
-            border-bottom: 1px solid var(--border);
-            transition: border-color var(--transition);
-        }
-        
-        .footer-text a:hover {
-            border-color: var(--text);
-        }
-        
-        .footer-links {
-            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
             gap: 2rem;
             flex-wrap: wrap;
         }
         
+        .footer-main p {
+            font-size: 0.9rem;
+            color: var(--text-tertiary);
+            margin-bottom: 0.5rem;
+        }
+        
+        .footer-main a {
+            color: var(--gold);
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+            transition: border-color var(--transition-fast);
+        }
+        
+        .footer-main a:hover {
+            border-bottom-color: var(--gold);
+        }
+        
+        .footer-links {
+            display: flex;
+            gap: 1.5rem;
+        }
+        
         .footer-links a {
             font-size: 0.85rem;
-            color: var(--text-muted);
-            transition: color var(--transition);
+            color: var(--text-tertiary);
+            text-decoration: none;
+            transition: color var(--transition-fast);
         }
         
         .footer-links a:hover {
-            color: var(--text);
+            color: var(--gold);
         }
         
         .colophon {
-            font-size: 0.75rem;
-            color: var(--text-faint);
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-color);
+            font-size: 0.8rem;
+            color: var(--text-tertiary);
             font-style: italic;
-            margin-top: 1rem;
         }
         
-        /* Responsive */
-        @media (max-width: 600px) {
+        /* ========================================
+           RESPONSIVE
+           ======================================== */
+        @media (max-width: 640px) {
             html {
                 font-size: 16px;
             }
             
-            .container {
-                padding: 0 1.5rem;
-            }
-            
-            .hero {
+            header {
                 padding: 3rem 0 2rem;
             }
             
-            .hero h1 {
-                font-size: 2.2rem;
+            .brand h1 {
+                font-size: 2rem;
             }
             
-            .approach p {
+            .intro {
                 font-size: 1.2rem;
             }
             
-            .project-header {
+            .footer-content {
                 flex-direction: column;
-                align-items: flex-start;
-                gap: 0.25rem;
-            }
-            
-            .project:hover {
-                padding-left: 0.5rem;
             }
             
             .footer-links {
-                flex-direction: column;
-                gap: 0.75rem;
+                flex-wrap: wrap;
+                gap: 1rem;
+            }
+            
+            .theme-toggle {
+                top: 1rem;
+                right: 1rem;
             }
         }
         
-        /* Subtle entrance animation */
+        /* ========================================
+           ANIMATIONS
+           ======================================== */
         @keyframes fadeUp {
             from {
                 opacity: 0;
-                transform: translateY(10px);
+                transform: translateY(12px);
             }
             to {
                 opacity: 1;
@@ -361,145 +469,145 @@
             }
         }
         
-        .hero, section, footer {
-            animation: fadeUp 0.6s ease forwards;
+        header, section, footer {
+            animation: fadeUp 0.5s ease-out both;
         }
         
-        section {
-            animation-delay: 0.1s;
-        }
+        section:nth-child(2) { animation-delay: 0.1s; }
+        section:nth-child(3) { animation-delay: 0.2s; }
+        footer { animation-delay: 0.3s; }
         
-        .projects {
-            animation-delay: 0.2s;
-        }
-        
-        footer {
-            animation-delay: 0.3s;
+        @media (prefers-reduced-motion: reduce) {
+            header, section, footer {
+                animation: none;
+            }
         }
     </style>
 </head>
 <body>
+    <!-- Theme Toggle -->
+    <div class="theme-toggle">
+        <button id="theme-toggle-btn" aria-label="Toggle dark mode">
+            <span class="sun">☀</span>
+            <span class="moon">☾</span>
+        </button>
+    </div>
+
     <div class="container">
         <header>
-            <div class="header-inner">
-                <div class="logo">Haslun<span>.ai</span></div>
-                <button class="theme-toggle" onclick="toggleTheme()">Dark</button>
+            <div class="brand">
+                <h1>Haslun<span>.ai</span></h1>
+                <p class="brand-sub">Legal Infrastructure Experiments</p>
             </div>
+            <p class="intro">
+                AI-assisted tools for legal practice—<strong>not to interpret law</strong>, 
+                but to build better technical infrastructure for the work itself.
+            </p>
         </header>
         
-        <div class="hero">
-            <h1>Tools for <em>practicing</em> law,<br>not interpreting it.</h1>
-            <p class="hero-text">
-                Experiments in using AI to build better infrastructure for legal work—document tracking, 
-                defined terms, closing checklists—the plumbing that makes transactions run.
-            </p>
-        </div>
-        
-        <section class="approach">
-            <div class="section-label">The idea</div>
-            <p>
-                Legal practice generates enormous structured information—checklists, conditions, 
-                cross-references, deadlines. We manage most of it in Word documents and email chains.
-            </p>
-            <p>
-                These projects treat legal workflows as <em>structured data</em>, 
-                surfacing insights and reducing the cognitive load of complex transactions.
-            </p>
+        <section>
+            <h2>Projects</h2>
+            <ul class="project-list">
+                <li class="project-item">
+                    <a href="https://demo.haslun.ai" class="project-link">
+                        <div class="project-content">
+                            <h3 class="project-title">Credit Agreement Closing Engine</h3>
+                            <p class="project-desc">Treating credit facility closings as structured data. Tracks documents, conditions precedent, defined terms, and generates closing checklists with cryptographic audit trails.</p>
+                        </div>
+                        <div class="project-meta">
+                            <span class="status-badge status-live">● Live</span>
+                            <span class="project-arrow">→</span>
+                        </div>
+                    </a>
+                </li>
+                <li class="project-item coming-soon">
+                    <a href="#" class="project-link">
+                        <div class="project-content">
+                            <h3 class="project-title">Semantic Document Comparison</h3>
+                            <p class="project-desc">Beyond redlines—understanding substantive vs. non-substantive changes, tracking defined term modifications across document sets.</p>
+                        </div>
+                        <div class="project-meta">
+                            <span class="status-badge status-coming">Coming</span>
+                        </div>
+                    </a>
+                </li>
+                <li class="project-item coming-soon">
+                    <a href="#" class="project-link">
+                        <div class="project-content">
+                            <h3 class="project-title">Covenant Compliance Dashboard</h3>
+                            <p class="project-desc">Automated tracking of financial covenants across a loan portfolio—parsing quarterly financials, calculating ratios, flagging potential breaches.</p>
+                        </div>
+                        <div class="project-meta">
+                            <span class="status-badge status-coming">Coming</span>
+                        </div>
+                    </a>
+                </li>
+            </ul>
         </section>
         
-        <section class="projects">
-            <div class="section-label">Experiments</div>
-            <div class="project-list">
-                <a href="https://demo.haslun.ai/demo/credit-agreement/login" class="project">
-                    <div class="project-header">
-                        <span class="project-title">Credit Agreement Closing Engine<span class="arrow">→</span></span>
-                        <span class="project-status live">Live</span>
-                    </div>
-                    <p class="project-description">
-                        Manage credit facility closings. Track documents, conditions precedent, 
-                        defined terms. Generate checklists. Treat the transaction as queryable data.
-                    </p>
-                </a>
-                
-                <div class="project inactive">
-                    <div class="project-header">
-                        <span class="project-title">Document Comparison</span>
-                        <span class="project-status soon">Coming</span>
-                    </div>
-                    <p class="project-description">
-                        Semantic redlines that understand substantive vs. non-substantive changes. 
-                        Track defined term modifications across drafts.
-                    </p>
-                </div>
-                
-                <div class="project inactive">
-                    <div class="project-header">
-                        <span class="project-title">Covenant Dashboard</span>
-                        <span class="project-status soon">Coming</span>
-                    </div>
-                    <p class="project-description">
-                        Parse quarterly financials, calculate ratios, flag breaches. 
-                        Maintain compliance history across a loan portfolio.
-                    </p>
-                </div>
-                
-                <div class="project inactive">
-                    <div class="project-header">
-                        <span class="project-title">Deal Timeline Generator</span>
-                        <span class="project-status soon">Coming</span>
-                    </div>
-                    <p class="project-description">
-                        Extract timelines from transaction documents. Parse relative date 
-                        references. Generate visual Gantt views.
-                    </p>
-                </div>
+        <section>
+            <h2>The Approach</h2>
+            <div class="approach">
+                <p>
+                    Legal practice generates enormous structured information—checklists, conditions, 
+                    defined terms, cross-references, deadlines. Yet we manage this complexity with 
+                    Word documents and email chains.
+                </p>
+                <p>
+                    These projects treat legal workflows as <em>structured data</em>: version-controlled, 
+                    queryable, with clear audit trails. The goal isn't to replace legal judgment—it's to 
+                    reduce the cognitive load of complex transactions so lawyers can focus on what matters.
+                </p>
             </div>
         </section>
         
         <footer>
             <div class="footer-content">
-                <p class="footer-text">
-                    Built by a lawyer on the Upper West Side experimenting with what AI tools can do 
-                    for legal practice.<br>
-                    Questions or ideas? <a href="mailto:hello@haslun.ai">Get in touch</a>.
-                </p>
-                <div class="footer-links">
-                    <a href="https://haslun.me">About</a>
-                    <a href="https://haslun.studio">Watercolors</a>
-                    <a href="https://haslan.xyz">Writing</a>
+                <div class="footer-main">
+                    <p>Built by a lawyer on the Upper West Side.</p>
+                    <p>Questions or ideas? <a href="mailto:will@haslun.ai">will@haslun.ai</a></p>
                 </div>
-                <p class="colophon">
-                    Built by hand—no templates, no trackers. NYC, 2025.
-                </p>
+                <div class="footer-links">
+                    <a href="https://haslun.me">haslun.me</a>
+                    <a href="https://haslun.studio">haslun.studio</a>
+                    <a href="https://haslan.xyz">haslan.xyz</a>
+                </div>
             </div>
+            <p class="colophon">Built by hand—no templates, no trackers. NYC, 2025.</p>
         </footer>
     </div>
     
     <script>
-        function toggleTheme() {
-            const body = document.body;
-            const btn = document.querySelector('.theme-toggle');
-            
-            if (body.getAttribute('data-theme') === 'dark') {
-                body.removeAttribute('data-theme');
-                btn.textContent = 'Dark';
-                localStorage.setItem('theme', 'light');
-            } else {
-                body.setAttribute('data-theme', 'dark');
-                btn.textContent = 'Light';
-                localStorage.setItem('theme', 'dark');
-            }
-        }
-        
-        // Check saved preference
+        // Theme toggle with localStorage persistence
         (function() {
-            const saved = localStorage.getItem('theme');
-            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const html = document.documentElement;
+            const toggle = document.getElementById('theme-toggle-btn');
             
-            if (saved === 'dark' || (!saved && prefersDark)) {
-                document.body.setAttribute('data-theme', 'dark');
-                document.querySelector('.theme-toggle').textContent = 'Light';
+            // Check saved preference or system preference
+            const saved = localStorage.getItem('haslun-theme');
+            const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            
+            if (saved) {
+                html.setAttribute('data-theme', saved);
+            } else if (systemDark) {
+                html.setAttribute('data-theme', 'dark');
+            } else {
+                html.setAttribute('data-theme', 'light');
             }
+            
+            toggle.addEventListener('click', function() {
+                const current = html.getAttribute('data-theme');
+                const next = current === 'dark' ? 'light' : 'dark';
+                html.setAttribute('data-theme', next);
+                localStorage.setItem('haslun-theme', next);
+            });
+            
+            // Listen for system preference changes
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
+                if (!localStorage.getItem('haslun-theme')) {
+                    html.setAttribute('data-theme', e.matches ? 'dark' : 'light');
+                }
+            });
         })();
     </script>
 </body>
