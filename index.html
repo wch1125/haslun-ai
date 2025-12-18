@@ -3,337 +3,504 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Haslun.ai | AI-Powered Legal Infrastructure</title>
-    <meta name="description" content="Exploring how AI can help lawyers build better technical infrastructure—not to tell us what the law is, but to help us practice it more effectively.">
+    <title>Haslun.ai – Legal Infrastructure Experiments</title>
+    <meta name="description" content="AI-assisted tools for legal practice. Not to tell us what the law is, but to help us practice it better.">
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
     
     <style>
         :root {
-            --navy: #1a2744;
-            --navy-light: #2d3f5f;
-            --gold: #c9a962;
-            --gold-light: #e5d4a1;
-            --cream: #faf8f5;
-            --white: #ffffff;
-            --gray-100: #f7f7f7;
-            --gray-200: #e5e5e5;
-            --gray-400: #a3a3a3;
-            --gray-500: #737373;
-            --gray-600: #525252;
-            --gray-700: #404040;
-            --font-display: 'Cormorant Garamond', Georgia, serif;
-            --font-body: 'Source Sans 3', -apple-system, BlinkMacSystemFont, sans-serif;
-            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
-            --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+            --bg: #faf9f7;
+            --bg-alt: #f3f1ed;
+            --text: #2c2c2c;
+            --text-muted: #6b6b6b;
+            --text-faint: #9a9a9a;
+            --accent: #1a1a1a;
+            --accent-hover: #3d3d3d;
+            --border: #e5e3df;
+            --border-light: #eceae6;
+            
+            --font-display: 'EB Garamond', Georgia, serif;
+            --font-body: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            
+            --transition: 0.3s ease;
         }
         
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        [data-theme="dark"] {
+            --bg: #151515;
+            --bg-alt: #1c1c1c;
+            --text: #e8e8e8;
+            --text-muted: #a0a0a0;
+            --text-faint: #666;
+            --accent: #f0f0f0;
+            --accent-hover: #c0c0c0;
+            --border: #2a2a2a;
+            --border-light: #222;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html {
+            font-size: 18px;
+            scroll-behavior: smooth;
+        }
         
         body {
             font-family: var(--font-body);
-            font-size: 16px;
-            line-height: 1.6;
-            color: var(--gray-700);
-            background: var(--cream);
+            font-weight: 400;
+            line-height: 1.7;
+            color: var(--text);
+            background: var(--bg);
             min-height: 100vh;
+            transition: background var(--transition), color var(--transition);
         }
         
-        .hero {
-            background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%);
-            color: var(--white);
-            padding: 4rem 2rem;
-            text-align: center;
+        ::selection {
+            background: var(--accent);
+            color: var(--bg);
         }
         
-        .hero-content { max-width: 800px; margin: 0 auto; }
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+        
+        /* Layout */
+        .container {
+            max-width: 680px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+        
+        /* Header */
+        header {
+            padding: 3rem 0 1rem;
+            position: relative;
+        }
+        
+        .header-inner {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
         
         .logo {
             font-family: var(--font-display);
-            font-size: 3rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            letter-spacing: 0.02em;
-        }
-        
-        .logo span { color: var(--gold); }
-        
-        .hero-tagline {
             font-size: 1.5rem;
-            font-weight: 300;
-            color: var(--gray-200);
-            margin-bottom: 2rem;
-            line-height: 1.4;
+            font-weight: 500;
+            letter-spacing: -0.02em;
         }
         
-        .hero-description {
-            font-size: 1.1rem;
-            color: var(--gray-400);
-            max-width: 600px;
-            margin: 0 auto;
-            line-height: 1.7;
+        .logo span {
+            opacity: 0.4;
         }
         
-        .philosophy {
-            background: var(--white);
-            padding: 4rem 2rem;
-            border-bottom: 1px solid var(--gray-200);
+        .theme-toggle {
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 0.4rem 0.8rem;
+            font-size: 0.75rem;
+            font-family: var(--font-body);
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            transition: all var(--transition);
+            border-radius: 2px;
         }
         
-        .philosophy-content { max-width: 700px; margin: 0 auto; text-align: center; }
+        .theme-toggle:hover {
+            border-color: var(--text-muted);
+            color: var(--text);
+        }
         
-        .philosophy h2 {
+        /* Hero */
+        .hero {
+            padding: 4rem 0 3rem;
+            border-bottom: 1px solid var(--border-light);
+        }
+        
+        .hero h1 {
             font-family: var(--font-display);
-            font-size: 2rem;
-            color: var(--navy);
+            font-size: 2.8rem;
+            font-weight: 400;
+            line-height: 1.2;
+            letter-spacing: -0.02em;
             margin-bottom: 1.5rem;
         }
         
-        .philosophy p {
-            color: var(--gray-600);
-            font-size: 1.1rem;
+        .hero h1 em {
+            font-style: italic;
+        }
+        
+        .hero-text {
+            font-size: 1.05rem;
+            color: var(--text-muted);
+            max-width: 540px;
             line-height: 1.8;
+        }
+        
+        /* Section */
+        section {
+            padding: 3rem 0;
+        }
+        
+        .section-label {
+            font-size: 0.7rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--text-faint);
+            margin-bottom: 2rem;
+        }
+        
+        /* Approach */
+        .approach p {
+            font-family: var(--font-display);
+            font-size: 1.35rem;
+            line-height: 1.7;
+            color: var(--text);
             margin-bottom: 1rem;
         }
         
-        .philosophy em {
-            color: var(--gold);
-            font-style: normal;
-            font-weight: 500;
+        .approach p:last-child {
+            margin-bottom: 0;
         }
         
-        .projects { padding: 4rem 2rem; }
+        .approach em {
+            font-style: italic;
+        }
         
-        .projects-header { text-align: center; margin-bottom: 3rem; }
+        /* Projects */
+        .projects {
+            border-top: 1px solid var(--border-light);
+        }
         
-        .projects-header h2 {
-            font-family: var(--font-display);
-            font-size: 2rem;
-            color: var(--navy);
+        .project-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+        
+        .project {
+            display: block;
+            padding: 2rem 0;
+            border-bottom: 1px solid var(--border-light);
+            transition: all var(--transition);
+        }
+        
+        .project:hover {
+            padding-left: 1rem;
+        }
+        
+        .project-header {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 1rem;
             margin-bottom: 0.5rem;
-        }
-        
-        .projects-header p { color: var(--gray-500); font-size: 1.1rem; }
-        
-        .projects-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 2rem;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        
-        .project-card {
-            background: var(--white);
-            border-radius: 12px;
-            box-shadow: var(--shadow-md);
-            overflow: hidden;
-            transition: transform 0.2s, box-shadow 0.2s;
-            text-decoration: none;
-            color: inherit;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .project-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-xl); }
-        .project-card.coming-soon { opacity: 0.7; cursor: default; }
-        .project-card.coming-soon:hover { transform: none; box-shadow: var(--shadow-md); }
-        
-        .project-icon {
-            background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%);
-            padding: 2rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 3rem;
-        }
-        
-        .project-body {
-            padding: 1.5rem;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
         }
         
         .project-title {
             font-family: var(--font-display);
             font-size: 1.4rem;
-            font-weight: 600;
-            color: var(--navy);
-            margin-bottom: 0.5rem;
-        }
-        
-        .project-description {
-            color: var(--gray-600);
-            font-size: 0.95rem;
-            line-height: 1.6;
-            flex: 1;
-        }
-        
-        .project-status {
-            margin-top: 1rem;
-            padding-top: 1rem;
-            border-top: 1px solid var(--gray-200);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        
-        .status-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.25rem 0.75rem;
-            border-radius: 9999px;
-            font-size: 0.8rem;
             font-weight: 500;
         }
         
-        .status-live { background: #dcfce7; color: #15803d; }
-        .status-coming { background: var(--gray-100); color: var(--gray-500); }
-        
-        .project-link { color: var(--gold); font-weight: 500; font-size: 0.9rem; }
-        
-        .footer {
-            background: var(--navy);
-            color: var(--gray-400);
-            padding: 2rem;
-            text-align: center;
+        .project-status {
+            font-size: 0.7rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            white-space: nowrap;
         }
         
-        .footer a { color: var(--gold); text-decoration: none; }
-        .footer a:hover { text-decoration: underline; }
+        .project-status.live {
+            color: #2d7a4d;
+        }
+        
+        [data-theme="dark"] .project-status.live {
+            color: #5cb97a;
+        }
+        
+        .project-status.soon {
+            color: var(--text-faint);
+        }
+        
+        .project-description {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            line-height: 1.7;
+        }
+        
+        .project.inactive {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        
+        .project.inactive:hover {
+            padding-left: 0;
+        }
+        
+        /* Arrow */
+        .arrow {
+            display: inline-block;
+            margin-left: 0.5rem;
+            opacity: 0;
+            transform: translateX(-4px);
+            transition: all var(--transition);
+        }
+        
+        .project:hover .arrow {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        
+        /* Footer */
+        footer {
+            padding: 3rem 0 4rem;
+            border-top: 1px solid var(--border-light);
+            margin-top: 1rem;
+        }
+        
+        .footer-content {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+        
+        .footer-text {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            line-height: 1.8;
+        }
+        
+        .footer-text a {
+            border-bottom: 1px solid var(--border);
+            transition: border-color var(--transition);
+        }
+        
+        .footer-text a:hover {
+            border-color: var(--text);
+        }
         
         .footer-links {
-            margin-top: 1rem;
-            padding-top: 1rem;
-            border-top: 1px solid var(--navy-light);
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
         }
         
         .footer-links a {
-            margin: 0 1rem;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            transition: color var(--transition);
         }
         
-        @media (max-width: 640px) {
-            .hero { padding: 3rem 1.5rem; }
-            .logo { font-size: 2.5rem; }
-            .hero-tagline { font-size: 1.25rem; }
-            .projects-grid { grid-template-columns: 1fr; }
+        .footer-links a:hover {
+            color: var(--text);
+        }
+        
+        .colophon {
+            font-size: 0.75rem;
+            color: var(--text-faint);
+            font-style: italic;
+            margin-top: 1rem;
+        }
+        
+        /* Responsive */
+        @media (max-width: 600px) {
+            html {
+                font-size: 16px;
+            }
+            
+            .container {
+                padding: 0 1.5rem;
+            }
+            
+            .hero {
+                padding: 3rem 0 2rem;
+            }
+            
+            .hero h1 {
+                font-size: 2.2rem;
+            }
+            
+            .approach p {
+                font-size: 1.2rem;
+            }
+            
+            .project-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.25rem;
+            }
+            
+            .project:hover {
+                padding-left: 0.5rem;
+            }
+            
+            .footer-links {
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+        }
+        
+        /* Subtle entrance animation */
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .hero, section, footer {
+            animation: fadeUp 0.6s ease forwards;
+        }
+        
+        section {
+            animation-delay: 0.1s;
+        }
+        
+        .projects {
+            animation-delay: 0.2s;
+        }
+        
+        footer {
+            animation-delay: 0.3s;
         }
     </style>
 </head>
 <body>
-    <section class="hero">
-        <div class="hero-content">
-            <h1 class="logo">Haslun<span>.ai</span></h1>
-            <p class="hero-tagline">AI-Powered Legal Infrastructure</p>
-            <p class="hero-description">
-                Exploring how AI can help lawyers build better technical infrastructure—not to tell us what the law is, 
-                but to help us practice it more effectively.
+    <div class="container">
+        <header>
+            <div class="header-inner">
+                <div class="logo">Haslun<span>.ai</span></div>
+                <button class="theme-toggle" onclick="toggleTheme()">Dark</button>
+            </div>
+        </header>
+        
+        <div class="hero">
+            <h1>Tools for <em>practicing</em> law,<br>not interpreting it.</h1>
+            <p class="hero-text">
+                Experiments in using AI to build better infrastructure for legal work—document tracking, 
+                defined terms, closing checklists—the plumbing that makes transactions run.
             </p>
-        </div>
-    </section>
-    
-    <section class="philosophy">
-        <div class="philosophy-content">
-            <h2>The Approach</h2>
-            <p>
-                Legal practice generates enormous amounts of structured information—checklists, conditions, 
-                defined terms, cross-references, deadlines. Yet we often manage this complexity with 
-                Word documents and email chains.
-            </p>
-            <p>
-                These projects explore a different approach: treating legal workflows as <em>structured data</em>, 
-                using AI to help build infrastructure that surfaces insights, tracks status, and reduces 
-                the cognitive load of complex transactions.
-            </p>
-        </div>
-    </section>
-    
-    <section class="projects">
-        <div class="projects-header">
-            <h2>Experiments & Demos</h2>
-            <p>Click on a project to explore the live demo</p>
         </div>
         
-        <div class="projects-grid">
-            <!-- LIVE DEMO - Update this URL to your VM subdomain -->
-            <a href="https://demo.haslun.ai/demo/credit-agreement/login" class="project-card">
-                <div class="project-icon">📋</div>
-                <div class="project-body">
-                    <h3 class="project-title">Credit Agreement Closing Engine</h3>
-                    <p class="project-description">
-                        A system for managing credit facility closings. Tracks documents, 
-                        conditions precedent, defined terms, and generates closing checklists—treating 
-                        the entire transaction as queryable, version-controlled data.
-                    </p>
-                    <div class="project-status">
-                        <span class="status-badge status-live">● Live Demo</span>
-                        <span class="project-link">Explore →</span>
+        <section class="approach">
+            <div class="section-label">The idea</div>
+            <p>
+                Legal practice generates enormous structured information—checklists, conditions, 
+                cross-references, deadlines. We manage most of it in Word documents and email chains.
+            </p>
+            <p>
+                These projects treat legal workflows as <em>structured data</em>, 
+                surfacing insights and reducing the cognitive load of complex transactions.
+            </p>
+        </section>
+        
+        <section class="projects">
+            <div class="section-label">Experiments</div>
+            <div class="project-list">
+                <a href="https://demo.haslun.ai/demo/credit-agreement/login" class="project">
+                    <div class="project-header">
+                        <span class="project-title">Credit Agreement Closing Engine<span class="arrow">→</span></span>
+                        <span class="project-status live">Live</span>
                     </div>
+                    <p class="project-description">
+                        Manage credit facility closings. Track documents, conditions precedent, 
+                        defined terms. Generate checklists. Treat the transaction as queryable data.
+                    </p>
+                </a>
+                
+                <div class="project inactive">
+                    <div class="project-header">
+                        <span class="project-title">Document Comparison</span>
+                        <span class="project-status soon">Coming</span>
+                    </div>
+                    <p class="project-description">
+                        Semantic redlines that understand substantive vs. non-substantive changes. 
+                        Track defined term modifications across drafts.
+                    </p>
                 </div>
-            </a>
-            
-            <div class="project-card coming-soon">
-                <div class="project-icon">📄</div>
-                <div class="project-body">
-                    <h3 class="project-title">Intelligent Document Comparison</h3>
-                    <p class="project-description">
-                        Beyond redlines: semantic comparison of legal documents that understands 
-                        substantive vs. non-substantive changes, tracks defined term modifications, 
-                        and highlights changes that actually matter.
-                    </p>
-                    <div class="project-status">
-                        <span class="status-badge status-coming">○ Coming Soon</span>
+                
+                <div class="project inactive">
+                    <div class="project-header">
+                        <span class="project-title">Covenant Dashboard</span>
+                        <span class="project-status soon">Coming</span>
                     </div>
+                    <p class="project-description">
+                        Parse quarterly financials, calculate ratios, flag breaches. 
+                        Maintain compliance history across a loan portfolio.
+                    </p>
                 </div>
-            </div>
-            
-            <div class="project-card coming-soon">
-                <div class="project-icon">📊</div>
-                <div class="project-body">
-                    <h3 class="project-title">Covenant Compliance Dashboard</h3>
-                    <p class="project-description">
-                        Automated tracking of financial covenants across a loan portfolio. 
-                        Parses quarterly financials, calculates ratios, flags potential breaches, 
-                        and maintains compliance history over time.
-                    </p>
-                    <div class="project-status">
-                        <span class="status-badge status-coming">○ Coming Soon</span>
+                
+                <div class="project inactive">
+                    <div class="project-header">
+                        <span class="project-title">Deal Timeline Generator</span>
+                        <span class="project-status soon">Coming</span>
                     </div>
-                </div>
-            </div>
-            
-            <div class="project-card coming-soon">
-                <div class="project-icon">📅</div>
-                <div class="project-body">
-                    <h3 class="project-title">Deal Timeline Generator</h3>
                     <p class="project-description">
-                        Automatically extract and visualize deal timelines from transaction documents. 
-                        Understands "T+5 Business Days" and other relative date references, 
-                        generating clear Gantt-style views.
+                        Extract timelines from transaction documents. Parse relative date 
+                        references. Generate visual Gantt views.
                     </p>
-                    <div class="project-status">
-                        <span class="status-badge status-coming">○ Coming Soon</span>
-                    </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
+        
+        <footer>
+            <div class="footer-content">
+                <p class="footer-text">
+                    Built by a lawyer on the Upper West Side experimenting with what AI tools can do 
+                    for legal practice.<br>
+                    Questions or ideas? <a href="mailto:hello@haslun.ai">Get in touch</a>.
+                </p>
+                <div class="footer-links">
+                    <a href="https://haslun.me">About</a>
+                    <a href="https://haslun.studio">Watercolors</a>
+                    <a href="https://haslan.xyz">Writing</a>
+                </div>
+                <p class="colophon">
+                    Built by hand—no templates, no trackers. NYC, 2025.
+                </p>
+            </div>
+        </footer>
+    </div>
     
-    <footer class="footer">
-        <p>
-            Built by a lawyer experimenting with AI tools for legal practice.<br>
-            Questions or ideas? <a href="mailto:hello@haslun.ai">Get in touch</a>
-        </p>
-        <div class="footer-links">
-            <a href="https://haslun.me">About</a>
-            <a href="https://haslun.studio">Art</a>
-            <a href="https://haslan.xyz">Writing</a>
-        </div>
-    </footer>
+    <script>
+        function toggleTheme() {
+            const body = document.body;
+            const btn = document.querySelector('.theme-toggle');
+            
+            if (body.getAttribute('data-theme') === 'dark') {
+                body.removeAttribute('data-theme');
+                btn.textContent = 'Dark';
+                localStorage.setItem('theme', 'light');
+            } else {
+                body.setAttribute('data-theme', 'dark');
+                btn.textContent = 'Light';
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+        
+        // Check saved preference
+        (function() {
+            const saved = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            
+            if (saved === 'dark' || (!saved && prefersDark)) {
+                document.body.setAttribute('data-theme', 'dark');
+                document.querySelector('.theme-toggle').textContent = 'Light';
+            }
+        })();
+    </script>
 </body>
 </html>
