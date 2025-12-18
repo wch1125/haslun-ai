@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Haslun.ai | AI-Powered Legal Infrastructure</title>
+    <meta name="description" content="Exploring how AI can help lawyers build better technical infrastructure—not to tell us what the law is, but to help us practice it more effectively.">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --navy: #1a2744;
+            --navy-light: #2d3f5f;
+            --gold: #c9a962;
+            --gold-light: #e5d4a1;
+            --cream: #faf8f5;
+            --white: #ffffff;
+            --gray-100: #f7f7f7;
+            --gray-200: #e5e5e5;
+            --gray-400: #a3a3a3;
+            --gray-500: #737373;
+            --gray-600: #525252;
+            --gray-700: #404040;
+            --font-display: 'Cormorant Garamond', Georgia, serif;
+            --font-body: 'Source Sans 3', -apple-system, BlinkMacSystemFont, sans-serif;
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+            --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: var(--font-body);
+            font-size: 16px;
+            line-height: 1.6;
+            color: var(--gray-700);
+            background: var(--cream);
+            min-height: 100vh;
+        }
+        
+        .hero {
+            background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%);
+            color: var(--white);
+            padding: 4rem 2rem;
+            text-align: center;
+        }
+        
+        .hero-content { max-width: 800px; margin: 0 auto; }
+        
+        .logo {
+            font-family: var(--font-display);
+            font-size: 3rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            letter-spacing: 0.02em;
+        }
+        
+        .logo span { color: var(--gold); }
+        
+        .hero-tagline {
+            font-size: 1.5rem;
+            font-weight: 300;
+            color: var(--gray-200);
+            margin-bottom: 2rem;
+            line-height: 1.4;
+        }
+        
+        .hero-description {
+            font-size: 1.1rem;
+            color: var(--gray-400);
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.7;
+        }
+        
+        .philosophy {
+            background: var(--white);
+            padding: 4rem 2rem;
+            border-bottom: 1px solid var(--gray-200);
+        }
+        
+        .philosophy-content { max-width: 700px; margin: 0 auto; text-align: center; }
+        
+        .philosophy h2 {
+            font-family: var(--font-display);
+            font-size: 2rem;
+            color: var(--navy);
+            margin-bottom: 1.5rem;
+        }
+        
+        .philosophy p {
+            color: var(--gray-600);
+            font-size: 1.1rem;
+            line-height: 1.8;
+            margin-bottom: 1rem;
+        }
+        
+        .philosophy em {
+            color: var(--gold);
+            font-style: normal;
+            font-weight: 500;
+        }
+        
+        .projects { padding: 4rem 2rem; }
+        
+        .projects-header { text-align: center; margin-bottom: 3rem; }
+        
+        .projects-header h2 {
+            font-family: var(--font-display);
+            font-size: 2rem;
+            color: var(--navy);
+            margin-bottom: 0.5rem;
+        }
+        
+        .projects-header p { color: var(--gray-500); font-size: 1.1rem; }
+        
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .project-card {
+            background: var(--white);
+            border-radius: 12px;
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .project-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-xl); }
+        .project-card.coming-soon { opacity: 0.7; cursor: default; }
+        .project-card.coming-soon:hover { transform: none; box-shadow: var(--shadow-md); }
+        
+        .project-icon {
+            background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%);
+            padding: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+        }
+        
+        .project-body {
+            padding: 1.5rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .project-title {
+            font-family: var(--font-display);
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: var(--navy);
+            margin-bottom: 0.5rem;
+        }
+        
+        .project-description {
+            color: var(--gray-600);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            flex: 1;
+        }
+        
+        .project-status {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--gray-200);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        
+        .status-live { background: #dcfce7; color: #15803d; }
+        .status-coming { background: var(--gray-100); color: var(--gray-500); }
+        
+        .project-link { color: var(--gold); font-weight: 500; font-size: 0.9rem; }
+        
+        .footer {
+            background: var(--navy);
+            color: var(--gray-400);
+            padding: 2rem;
+            text-align: center;
+        }
+        
+        .footer a { color: var(--gold); text-decoration: none; }
+        .footer a:hover { text-decoration: underline; }
+        
+        .footer-links {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--navy-light);
+        }
+        
+        .footer-links a {
+            margin: 0 1rem;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 640px) {
+            .hero { padding: 3rem 1.5rem; }
+            .logo { font-size: 2.5rem; }
+            .hero-tagline { font-size: 1.25rem; }
+            .projects-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <section class="hero">
+        <div class="hero-content">
+            <h1 class="logo">Haslun<span>.ai</span></h1>
+            <p class="hero-tagline">AI-Powered Legal Infrastructure</p>
+            <p class="hero-description">
+                Exploring how AI can help lawyers build better technical infrastructure—not to tell us what the law is, 
+                but to help us practice it more effectively.
+            </p>
+        </div>
+    </section>
+    
+    <section class="philosophy">
+        <div class="philosophy-content">
+            <h2>The Approach</h2>
+            <p>
+                Legal practice generates enormous amounts of structured information—checklists, conditions, 
+                defined terms, cross-references, deadlines. Yet we often manage this complexity with 
+                Word documents and email chains.
+            </p>
+            <p>
+                These projects explore a different approach: treating legal workflows as <em>structured data</em>, 
+                using AI to help build infrastructure that surfaces insights, tracks status, and reduces 
+                the cognitive load of complex transactions.
+            </p>
+        </div>
+    </section>
+    
+    <section class="projects">
+        <div class="projects-header">
+            <h2>Experiments & Demos</h2>
+            <p>Click on a project to explore the live demo</p>
+        </div>
+        
+        <div class="projects-grid">
+            <!-- LIVE DEMO - Update this URL to your VM subdomain -->
+            <a href="https://demo.haslun.ai/demo/credit-agreement/login" class="project-card">
+                <div class="project-icon">📋</div>
+                <div class="project-body">
+                    <h3 class="project-title">Credit Agreement Closing Engine</h3>
+                    <p class="project-description">
+                        A system for managing credit facility closings. Tracks documents, 
+                        conditions precedent, defined terms, and generates closing checklists—treating 
+                        the entire transaction as queryable, version-controlled data.
+                    </p>
+                    <div class="project-status">
+                        <span class="status-badge status-live">● Live Demo</span>
+                        <span class="project-link">Explore →</span>
+                    </div>
+                </div>
+            </a>
+            
+            <div class="project-card coming-soon">
+                <div class="project-icon">📄</div>
+                <div class="project-body">
+                    <h3 class="project-title">Intelligent Document Comparison</h3>
+                    <p class="project-description">
+                        Beyond redlines: semantic comparison of legal documents that understands 
+                        substantive vs. non-substantive changes, tracks defined term modifications, 
+                        and highlights changes that actually matter.
+                    </p>
+                    <div class="project-status">
+                        <span class="status-badge status-coming">○ Coming Soon</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="project-card coming-soon">
+                <div class="project-icon">📊</div>
+                <div class="project-body">
+                    <h3 class="project-title">Covenant Compliance Dashboard</h3>
+                    <p class="project-description">
+                        Automated tracking of financial covenants across a loan portfolio. 
+                        Parses quarterly financials, calculates ratios, flags potential breaches, 
+                        and maintains compliance history over time.
+                    </p>
+                    <div class="project-status">
+                        <span class="status-badge status-coming">○ Coming Soon</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="project-card coming-soon">
+                <div class="project-icon">📅</div>
+                <div class="project-body">
+                    <h3 class="project-title">Deal Timeline Generator</h3>
+                    <p class="project-description">
+                        Automatically extract and visualize deal timelines from transaction documents. 
+                        Understands "T+5 Business Days" and other relative date references, 
+                        generating clear Gantt-style views.
+                    </p>
+                    <div class="project-status">
+                        <span class="status-badge status-coming">○ Coming Soon</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <footer class="footer">
+        <p>
+            Built by a lawyer experimenting with AI tools for legal practice.<br>
+            Questions or ideas? <a href="mailto:hello@haslun.ai">Get in touch</a>
+        </p>
+        <div class="footer-links">
+            <a href="https://haslun.me">About</a>
+            <a href="https://haslun.studio">Art</a>
+            <a href="https://haslan.xyz">Writing</a>
+        </div>
+    </footer>
+</body>
+</html>
