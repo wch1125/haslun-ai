@@ -203,383 +203,156 @@
     }
     
     /* =========================================================================
-       CINEMATIC UFO DESIGN — Close Encounters meets Arrival
+       8-BIT PIXEL INVADER — Retro Arcade Aesthetic
        ========================================================================= */
     
-    @keyframes ufo-hover { 
-      0%, 100% { transform: translate3d(0, 0, 0) rotate(-0.5deg); } 
-      25% { transform: translate3d(1px, -6px, 0) rotate(0.3deg); }
-      50% { transform: translate3d(-1px, -10px, 0) rotate(0.8deg); } 
-      75% { transform: translate3d(2px, -4px, 0) rotate(-0.3deg); }
+    /* Step-based arcade animations */
+    @keyframes invader-bob { 
+      0%, 100% { transform: translateY(0); } 
+      50% { transform: translateY(-8px); } 
     }
     
-    @keyframes ufo-tilt {
-      0%, 100% { transform: rotate(0deg); }
-      50% { transform: rotate(-1deg); }
+    @keyframes invader-march {
+      0%, 100% { transform: translateX(0); }
+      50% { transform: translateX(12px); }
     }
     
-    @keyframes dome-inner-glow { 
-      0%, 100% { opacity: 0.4; } 
-      50% { opacity: 0.8; } 
+    @keyframes crt-pixel-flicker { 
+      0%, 90%, 100% { opacity: 1; } 
+      92% { opacity: 0.85; } 
+      94% { opacity: 1; }
+      96% { opacity: 0.9; }
     }
     
-    @keyframes light-sequence { 
-      0%, 100% { opacity: 0.4; box-shadow: 0 0 4px var(--amber); }
-      15% { opacity: 1; box-shadow: 0 0 12px var(--amber), 0 0 24px var(--amber-glow); }
-      30% { opacity: 0.4; box-shadow: 0 0 4px var(--amber); }
+    @keyframes invader-glow {
+      0%, 100% { 
+        filter: drop-shadow(0 0 8px var(--phosphor)) drop-shadow(0 0 20px rgba(51, 255, 153, 0.4)); 
+      }
+      50% { 
+        filter: drop-shadow(0 0 12px var(--phosphor)) drop-shadow(0 0 30px rgba(51, 255, 153, 0.6)); 
+      }
     }
     
-    @keyframes hull-shimmer {
-      0%, 100% { opacity: 0.3; }
-      50% { opacity: 0.6; }
+    @keyframes march-row {
+      0% { transform: translateX(0); }
+      50% { transform: translateX(20px); }
+      100% { transform: translateX(0); }
     }
     
-    @keyframes beam-scan {
-      0% { opacity: 0.6; transform: translateX(-50%) scaleX(0.95); }
-      50% { opacity: 1; transform: translateX(-50%) scaleX(1.05); }
-      100% { opacity: 0.6; transform: translateX(-50%) scaleX(0.95); }
+    @keyframes pixel-beam-pulse {
+      0%, 100% { opacity: 0.3; height: 80px; }
+      50% { opacity: 0.6; height: 100px; }
     }
     
-    @keyframes beam-particles {
-      0% { background-position: 0 0; }
-      100% { background-position: 0 30px; }
+    /* Main invader container */
+    .pixel-invader-scene {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 40px;
     }
     
-    @keyframes halo-pulse {
-      0%, 100% { opacity: 0.5; transform: translateX(-50%) scale(1); }
-      50% { opacity: 0.8; transform: translateX(-50%) scale(1.02); }
+    /* Background marching invaders row */
+    .invader-fleet {
+      position: absolute;
+      top: -60px;
+      display: flex;
+      gap: 40px;
+      opacity: 0.15;
+      animation: march-row 2s steps(2) infinite;
     }
     
-    @keyframes beacon-blink {
-      0%, 45% { opacity: 1; }
-      50%, 100% { opacity: 0.2; }
+    .fleet-invader {
+      width: 24px;
+      height: 18px;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
     }
     
+    /* Main pixel invader */
+    .pixel-invader {
+      width: 96px;
+      height: 72px;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      animation: 
+        invader-bob 1.2s steps(2) infinite,
+        crt-pixel-flicker 4s linear infinite,
+        invader-glow 2s ease-in-out infinite;
+      position: relative;
+      z-index: 2;
+    }
+    
+    /* Pixel beam beneath invader */
+    .pixel-beam {
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 8px;
+      height: 80px;
+      background: linear-gradient(180deg, 
+        var(--phosphor) 0%, 
+        rgba(51, 255, 153, 0.6) 30%,
+        rgba(51, 255, 153, 0.2) 70%,
+        transparent 100%
+      );
+      opacity: 0;
+      transition: opacity 0.5s ease;
+      animation: pixel-beam-pulse 1.5s steps(3) infinite;
+    }
+    
+    .pixel-beam.active {
+      opacity: 1;
+    }
+    
+    /* Pixel scan line effect */
+    .pixel-beam::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: repeating-linear-gradient(180deg,
+        transparent 0px,
+        transparent 4px,
+        rgba(0, 0, 0, 0.3) 4px,
+        rgba(0, 0, 0, 0.3) 8px
+      );
+    }
+    
+    /* Ground reflection */
+    .pixel-ground {
+      width: 120px;
+      height: 4px;
+      margin-top: 100px;
+      background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(51, 255, 153, 0.3) 30%,
+        var(--phosphor-dim) 50%,
+        rgba(51, 255, 153, 0.3) 70%,
+        transparent 100%
+      );
+      opacity: 0;
+      transition: opacity 0.5s ease;
+      filter: blur(2px);
+    }
+    
+    .pixel-ground.active {
+      opacity: 1;
+    }
+    
+    /* Legacy support - hidden but keeps JS from breaking */
     .mothership {
+      display: none;
       position: relative;
       width: 320px;
       height: 160px;
       margin-bottom: 40px;
       animation: ufo-hover 5s ease-in-out infinite;
       filter: drop-shadow(0 40px 60px rgba(0,0,0,0.9));
-    }
-    
-    /* Atmospheric halo beneath ship */
-    .ufo-halo {
-      position: absolute;
-      bottom: -30px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 400px;
-      height: 120px;
-      background: radial-gradient(ellipse at 50% 20%, rgba(51, 255, 153, 0.15) 0%, transparent 70%);
-      filter: blur(20px);
-      animation: halo-pulse 4s ease-in-out infinite;
-      pointer-events: none;
-    }
-    
-    /* Main saucer hull - layered metallic effect */
-    .mothership-body {
-      position: absolute;
-      bottom: 30px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 280px;
-      height: 55px;
-      background: 
-        linear-gradient(180deg, 
-          rgba(90, 100, 115, 1) 0%, 
-          rgba(55, 62, 75, 1) 20%,
-          rgba(35, 40, 52, 1) 50%,
-          rgba(20, 24, 32, 1) 80%,
-          rgba(10, 12, 18, 1) 100%
-        );
-      border-radius: 50%;
-      box-shadow:
-        0 -1px 0 rgba(255,255,255,0.2),
-        0 1px 0 rgba(0,0,0,0.8),
-        inset 0 -20px 40px rgba(0,0,0,0.5),
-        inset 0 8px 16px rgba(255,255,255,0.05),
-        0 0 60px rgba(51, 255, 153, 0.2);
-    }
-    
-    /* Hull highlight band */
-    .mothership-body::before {
-      content: '';
-      position: absolute;
-      top: 8px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 240px;
-      height: 1px;
-      background: linear-gradient(90deg, 
-        transparent 0%, 
-        rgba(255,255,255,0.4) 30%,
-        rgba(255,255,255,0.5) 50%,
-        rgba(255,255,255,0.4) 70%,
-        transparent 100%
-      );
-    }
-    
-    /* Hull panel seam */
-    .mothership-body::after {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 220px;
-      height: 35px;
-      border: 1px solid rgba(255,255,255,0.06);
-      border-radius: 50%;
-      animation: hull-shimmer 6s ease-in-out infinite;
-    }
-    
-    /* Glass dome - volumetric lighting */
-    .mothership-dome {
-      position: absolute;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 120px;
-      height: 65px;
-      border-radius: 50% 50% 48% 48%;
-      background: 
-        radial-gradient(ellipse at 25% 25%, rgba(255,255,255,0.6) 0%, transparent 40%),
-        radial-gradient(ellipse at 50% 90%, rgba(51, 255, 153, 0.25) 0%, transparent 50%),
-        linear-gradient(180deg, 
-          rgba(140, 160, 180, 0.95) 0%,
-          rgba(80, 95, 115, 0.9) 30%,
-          rgba(40, 50, 65, 0.95) 70%,
-          rgba(20, 28, 40, 0.98) 100%
-        );
-      box-shadow: 
-        0 -2px 0 rgba(255,255,255,0.5),
-        inset 0 -25px 50px rgba(51, 255, 153, 0.12),
-        inset 0 15px 30px rgba(255,255,255,0.08),
-        0 0 40px rgba(51, 255, 153, 0.25),
-        0 0 80px rgba(51, 255, 153, 0.1);
-    }
-    
-    /* Dome specular highlight */
-    .mothership-dome::before {
-      content: '';
-      position: absolute;
-      top: 10px;
-      left: 18px;
-      width: 40px;
-      height: 25px;
-      background: linear-gradient(145deg, rgba(255,255,255,0.7) 0%, transparent 100%);
-      border-radius: 50%;
-      filter: blur(1px);
-    }
-    
-    /* Inner cockpit glow */
-    .mothership-dome::after {
-      content: '';
-      position: absolute;
-      bottom: 8px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 50px;
-      height: 20px;
-      background: radial-gradient(ellipse, rgba(51, 255, 153, 0.5) 0%, transparent 70%);
-      filter: blur(4px);
-      animation: dome-inner-glow 3s ease-in-out infinite;
-    }
-    
-    /* Running lights ring */
-    .mothership-lights {
-      position: absolute;
-      bottom: 42px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 240px;
-      height: 20px;
-      display: flex;
-      justify-content: space-around;
-      align-items: center;
-    }
-    
-    .ship-light {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: radial-gradient(circle at 30% 30%, #ffd080 0%, var(--amber) 50%, #cc8020 100%);
-      box-shadow: 
-        0 0 8px var(--amber), 
-        0 0 16px var(--amber),
-        0 0 32px rgba(255, 179, 71, 0.4);
-      animation: light-sequence 2.5s ease-in-out infinite;
-    }
-    
-    .ship-light:nth-child(1) { animation-delay: 0s; }
-    .ship-light:nth-child(2) { animation-delay: 0.2s; }
-    .ship-light:nth-child(3) { animation-delay: 0.4s; }
-    .ship-light:nth-child(4) { animation-delay: 0.6s; }
-    .ship-light:nth-child(5) { animation-delay: 0.8s; }
-    .ship-light:nth-child(6) { animation-delay: 1.0s; }
-    .ship-light:nth-child(7) { animation-delay: 1.2s; }
-    .ship-light:nth-child(8) { animation-delay: 1.4s; }
-    .ship-light:nth-child(9) { animation-delay: 1.6s; }
-    
-    /* Engine nacelles */
-    .engine-pod {
-      position: absolute;
-      bottom: 38px;
-      width: 40px;
-      height: 20px;
-      background: linear-gradient(180deg, 
-        rgba(70, 80, 95, 1) 0%, 
-        rgba(40, 48, 60, 1) 50%, 
-        rgba(20, 25, 35, 1) 100%
-      );
-      border-radius: 10px;
-      box-shadow: 
-        0 2px 8px rgba(0,0,0,0.6),
-        inset 0 1px 2px rgba(255,255,255,0.1);
-    }
-    
-    .engine-pod.left { left: 12px; }
-    .engine-pod.right { right: 12px; }
-    
-    /* Engine glow */
-    .engine-pod::before {
-      content: '';
-      position: absolute;
-      bottom: -6px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 24px;
-      height: 12px;
-      background: radial-gradient(ellipse at 50% 0%, 
-        rgba(51, 255, 153, 0.9) 0%, 
-        rgba(51, 255, 153, 0.4) 40%, 
-        transparent 70%
-      );
-      filter: blur(3px);
-      animation: dome-inner-glow 2s ease-in-out infinite;
-    }
-    
-    /* Engine detail line */
-    .engine-pod::after {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 28px;
-      height: 1px;
-      background: rgba(255,255,255,0.15);
-    }
-    
-    /* Top sensor/beacon */
-    .sensor-array {
-      position: absolute;
-      top: 8px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 6px;
-      height: 18px;
-      background: linear-gradient(180deg, 
-        rgba(100, 110, 120, 1) 0%,
-        rgba(60, 68, 80, 1) 100%
-      );
-      border-radius: 3px 3px 2px 2px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.4);
-    }
-    
-    /* Beacon light */
-    .sensor-array::before {
-      content: '';
-      position: absolute;
-      top: -4px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 8px;
-      height: 8px;
-      background: radial-gradient(circle, #ff4466 0%, #cc2244 100%);
-      border-radius: 50%;
-      box-shadow: 
-        0 0 8px #ff4466, 
-        0 0 16px rgba(255, 68, 102, 0.6),
-        0 0 32px rgba(255, 68, 102, 0.3);
-      animation: beacon-blink 1.2s ease-in-out infinite;
-    }
-    
-    /* Scanner/tractor beam - volumetric cone */
-    .tractor-beam {
-      position: absolute;
-      top: 82px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 200px;
-      height: 260px;
-      pointer-events: none;
-      opacity: 0;
-      transition: opacity 0.8s ease;
-    }
-    
-    /* Beam outer glow */
-    .tractor-beam::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 100%;
-      height: 100%;
-      background: 
-        linear-gradient(180deg,
-          rgba(51, 255, 153, 0.7) 0%,
-          rgba(51, 255, 153, 0.35) 15%,
-          rgba(255, 179, 71, 0.2) 40%,
-          rgba(255, 179, 71, 0.08) 70%,
-          transparent 100%
-        );
-      clip-path: polygon(35% 0%, 65% 0%, 100% 100%, 0% 100%);
-      filter: blur(2px);
-      animation: beam-scan 3s ease-in-out infinite;
-    }
-    
-    /* Beam scan lines */
-    .tractor-beam::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 100%;
-      height: 100%;
-      background: 
-        repeating-linear-gradient(180deg,
-          transparent 0px,
-          transparent 4px,
-          rgba(255,255,255,0.04) 4px,
-          rgba(255,255,255,0.04) 6px
-        );
-      clip-path: polygon(35% 0%, 65% 0%, 100% 100%, 0% 100%);
-      animation: beam-particles 2s linear infinite;
-    }
-    
-    /* Inner beam core */
-    .beam-core {
-      position: absolute;
-      top: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 60%;
-      height: 100%;
-      background: radial-gradient(ellipse at 50% 0%, 
-        rgba(255, 255, 255, 0.3) 0%, 
-        rgba(51, 255, 153, 0.15) 30%,
-        transparent 70%
-      );
-      clip-path: polygon(40% 0%, 60% 0%, 85% 100%, 15% 100%);
-    }
-    
-    .tractor-beam.active {
-      opacity: 1;
     }
     
     .loading-content {
@@ -1003,11 +776,16 @@
     .activity-icon { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 1px solid var(--border); }
     .activity-icon.trade { border-color: var(--phosphor-dim); color: var(--phosphor); }
     .activity-icon.alert { border-color: var(--amber-dim); color: var(--amber); }
+    .activity-icon.invader { border-color: #ff6b6b; color: #ff6b6b; }
+    .activity-icon.scenario { border-color: #47d4ff; color: #47d4ff; }
+    .activity-icon.bonus { border-color: var(--phosphor); color: var(--phosphor); animation: icon-pulse 1s ease-out; }
     .activity-icon svg { width: 14px; height: 14px; }
     .activity-content { flex: 1; min-width: 0; }
     .activity-title { font-size: 0.75rem; font-weight: 500; color: var(--text); }
+    .activity-title.arcade { font-family: var(--font-display); letter-spacing: 0.1em; text-transform: uppercase; }
     .activity-subtitle { font-size: 0.65rem; color: var(--text-muted); margin-top: 0.15rem; }
     .activity-time { font-size: 0.55rem; color: var(--text-dim); letter-spacing: 0.05em; }
+    @keyframes icon-pulse { 0% { transform: scale(1.3); opacity: 1; } 100% { transform: scale(1); opacity: 0.9; } }
     
     .watermark { position: fixed; bottom: 2.5rem; left: 1.25rem; display: flex; align-items: center; gap: 0.85rem; padding: 0.6rem 1rem; background: var(--bg-panel); border: 1px solid var(--border); font-size: 0.7rem; color: var(--text-muted); z-index: 50; }
     .watermark a { color: var(--amber); text-decoration: none; letter-spacing: 0.05em; }
@@ -1521,34 +1299,104 @@
     <div class="stars"></div>
     <div class="horizon"></div>
     <div class="launch-scene">
-      <div class="ufo-halo"></div>
-      <div class="mothership">
-        <div class="sensor-array"></div>
-        <div class="mothership-dome"></div>
-        <div class="mothership-body"></div>
-        <div class="engine-pod left"></div>
-        <div class="engine-pod right"></div>
-        <div class="mothership-lights">
-          <div class="ship-light"></div>
-          <div class="ship-light"></div>
-          <div class="ship-light"></div>
-          <div class="ship-light"></div>
-          <div class="ship-light"></div>
-          <div class="ship-light"></div>
-          <div class="ship-light"></div>
-          <div class="ship-light"></div>
-          <div class="ship-light"></div>
+      <!-- Pixel Invader Scene -->
+      <div class="pixel-invader-scene">
+        <!-- Background fleet -->
+        <div class="invader-fleet">
+          <svg class="fleet-invader" viewBox="0 0 11 8" fill="var(--phosphor)">
+            <rect x="2" y="0" width="1" height="1"/><rect x="8" y="0" width="1" height="1"/>
+            <rect x="3" y="1" width="1" height="1"/><rect x="7" y="1" width="1" height="1"/>
+            <rect x="2" y="2" width="7" height="1"/>
+            <rect x="1" y="3" width="2" height="1"/><rect x="4" y="3" width="3" height="1"/><rect x="8" y="3" width="2" height="1"/>
+            <rect x="0" y="4" width="11" height="1"/>
+            <rect x="0" y="5" width="1" height="1"/><rect x="2" y="5" width="7" height="1"/><rect x="10" y="5" width="1" height="1"/>
+            <rect x="0" y="6" width="1" height="1"/><rect x="2" y="6" width="1" height="1"/><rect x="8" y="6" width="1" height="1"/><rect x="10" y="6" width="1" height="1"/>
+            <rect x="3" y="7" width="2" height="1"/><rect x="6" y="7" width="2" height="1"/>
+          </svg>
+          <svg class="fleet-invader" viewBox="0 0 11 8" fill="var(--phosphor)">
+            <rect x="2" y="0" width="1" height="1"/><rect x="8" y="0" width="1" height="1"/>
+            <rect x="3" y="1" width="1" height="1"/><rect x="7" y="1" width="1" height="1"/>
+            <rect x="2" y="2" width="7" height="1"/>
+            <rect x="1" y="3" width="2" height="1"/><rect x="4" y="3" width="3" height="1"/><rect x="8" y="3" width="2" height="1"/>
+            <rect x="0" y="4" width="11" height="1"/>
+            <rect x="0" y="5" width="1" height="1"/><rect x="2" y="5" width="7" height="1"/><rect x="10" y="5" width="1" height="1"/>
+            <rect x="0" y="6" width="1" height="1"/><rect x="2" y="6" width="1" height="1"/><rect x="8" y="6" width="1" height="1"/><rect x="10" y="6" width="1" height="1"/>
+            <rect x="3" y="7" width="2" height="1"/><rect x="6" y="7" width="2" height="1"/>
+          </svg>
+          <svg class="fleet-invader" viewBox="0 0 11 8" fill="var(--phosphor)">
+            <rect x="2" y="0" width="1" height="1"/><rect x="8" y="0" width="1" height="1"/>
+            <rect x="3" y="1" width="1" height="1"/><rect x="7" y="1" width="1" height="1"/>
+            <rect x="2" y="2" width="7" height="1"/>
+            <rect x="1" y="3" width="2" height="1"/><rect x="4" y="3" width="3" height="1"/><rect x="8" y="3" width="2" height="1"/>
+            <rect x="0" y="4" width="11" height="1"/>
+            <rect x="0" y="5" width="1" height="1"/><rect x="2" y="5" width="7" height="1"/><rect x="10" y="5" width="1" height="1"/>
+            <rect x="0" y="6" width="1" height="1"/><rect x="2" y="6" width="1" height="1"/><rect x="8" y="6" width="1" height="1"/><rect x="10" y="6" width="1" height="1"/>
+            <rect x="3" y="7" width="2" height="1"/><rect x="6" y="7" width="2" height="1"/>
+          </svg>
+          <svg class="fleet-invader" viewBox="0 0 11 8" fill="var(--phosphor)">
+            <rect x="2" y="0" width="1" height="1"/><rect x="8" y="0" width="1" height="1"/>
+            <rect x="3" y="1" width="1" height="1"/><rect x="7" y="1" width="1" height="1"/>
+            <rect x="2" y="2" width="7" height="1"/>
+            <rect x="1" y="3" width="2" height="1"/><rect x="4" y="3" width="3" height="1"/><rect x="8" y="3" width="2" height="1"/>
+            <rect x="0" y="4" width="11" height="1"/>
+            <rect x="0" y="5" width="1" height="1"/><rect x="2" y="5" width="7" height="1"/><rect x="10" y="5" width="1" height="1"/>
+            <rect x="0" y="6" width="1" height="1"/><rect x="2" y="6" width="1" height="1"/><rect x="8" y="6" width="1" height="1"/><rect x="10" y="6" width="1" height="1"/>
+            <rect x="3" y="7" width="2" height="1"/><rect x="6" y="7" width="2" height="1"/>
+          </svg>
+          <svg class="fleet-invader" viewBox="0 0 11 8" fill="var(--phosphor)">
+            <rect x="2" y="0" width="1" height="1"/><rect x="8" y="0" width="1" height="1"/>
+            <rect x="3" y="1" width="1" height="1"/><rect x="7" y="1" width="1" height="1"/>
+            <rect x="2" y="2" width="7" height="1"/>
+            <rect x="1" y="3" width="2" height="1"/><rect x="4" y="3" width="3" height="1"/><rect x="8" y="3" width="2" height="1"/>
+            <rect x="0" y="4" width="11" height="1"/>
+            <rect x="0" y="5" width="1" height="1"/><rect x="2" y="5" width="7" height="1"/><rect x="10" y="5" width="1" height="1"/>
+            <rect x="0" y="6" width="1" height="1"/><rect x="2" y="6" width="1" height="1"/><rect x="8" y="6" width="1" height="1"/><rect x="10" y="6" width="1" height="1"/>
+            <rect x="3" y="7" width="2" height="1"/><rect x="6" y="7" width="2" height="1"/>
+          </svg>
         </div>
-        <div class="tractor-beam" id="tractor-beam">
-          <div class="beam-core"></div>
-        </div>
+        
+        <!-- Main invader sprite (classic Space Invaders crab) -->
+        <svg class="pixel-invader" viewBox="0 0 11 8" fill="var(--phosphor)">
+          <!-- Row 0 - antennae -->
+          <rect x="2" y="0" width="1" height="1"/>
+          <rect x="8" y="0" width="1" height="1"/>
+          <!-- Row 1 -->
+          <rect x="3" y="1" width="1" height="1"/>
+          <rect x="7" y="1" width="1" height="1"/>
+          <!-- Row 2 - top of head -->
+          <rect x="2" y="2" width="7" height="1"/>
+          <!-- Row 3 - eyes row -->
+          <rect x="1" y="3" width="2" height="1"/>
+          <rect x="4" y="3" width="3" height="1"/>
+          <rect x="8" y="3" width="2" height="1"/>
+          <!-- Row 4 - full body -->
+          <rect x="0" y="4" width="11" height="1"/>
+          <!-- Row 5 - body with gaps -->
+          <rect x="0" y="5" width="1" height="1"/>
+          <rect x="2" y="5" width="7" height="1"/>
+          <rect x="10" y="5" width="1" height="1"/>
+          <!-- Row 6 - legs upper -->
+          <rect x="0" y="6" width="1" height="1"/>
+          <rect x="2" y="6" width="1" height="1"/>
+          <rect x="8" y="6" width="1" height="1"/>
+          <rect x="10" y="6" width="1" height="1"/>
+          <!-- Row 7 - feet -->
+          <rect x="3" y="7" width="2" height="1"/>
+          <rect x="6" y="7" width="2" height="1"/>
+        </svg>
+        
+        <!-- Pixel beam -->
+        <div class="pixel-beam" id="pixel-beam"></div>
+        
+        <!-- Ground reflection -->
+        <div class="pixel-ground" id="pixel-ground"></div>
       </div>
     </div>
     <div class="loading-content">
       <div class="loading-brand">HASLUN</div>
       <div class="loading-sub">Mission Control</div>
       <div class="countdown" id="countdown">3</div>
-      <div class="loading-status" id="loading-status">Awaiting transmission...</div>
+      <div class="loading-status" id="loading-status">ESTABLISHING UPLINK...</div>
     </div>
   </div>
   
@@ -1909,22 +1757,30 @@
     function runCountdown() {
       const countdown = document.getElementById('countdown');
       const status = document.getElementById('loading-status');
-      const beam = document.getElementById('tractor-beam');
+      const beam = document.getElementById('pixel-beam');
+      const ground = document.getElementById('pixel-ground');
       const loadingScreen = document.getElementById('loading-screen');
       const app = document.getElementById('app');
       
       let count = 3;
       
+      const arcadeMessages = [
+        'ESTABLISHING UPLINK...',
+        'DEFENSIVE GRID ONLINE...',
+        'SIGNAL LOCK ACQUIRED...'
+      ];
+      
       const interval = setInterval(() => {
         count--;
         if (count > 0) {
           countdown.textContent = count;
-          status.textContent = count === 2 ? 'Establishing contact...' : 'Aligning signal...';
+          status.textContent = arcadeMessages[3 - count - 1] || 'INITIALIZING...';
         } else if (count === 0) {
           countdown.textContent = 'GO';
           countdown.classList.add('go');
-          beam.classList.add('active');
-          status.textContent = 'Contact established — loading dashboard...';
+          if (beam) beam.classList.add('active');
+          if (ground) ground.classList.add('active');
+          status.textContent = 'READY — PRESS ANY KEY';
         } else {
           clearInterval(interval);
           loadingScreen.classList.add('hidden');
@@ -2005,6 +1861,35 @@
       { type: 'alert', title: 'MACD Crossover', subtitle: 'ASTS bullish signal', time: 'JAN02' }
     ];
     
+    // Arcade-style SVG icons
+    const invaderSvg = '<svg viewBox="0 0 11 8" fill="currentColor"><rect x="2" y="0" width="1" height="1"/><rect x="8" y="0" width="1" height="1"/><rect x="3" y="1" width="1" height="1"/><rect x="7" y="1" width="1" height="1"/><rect x="2" y="2" width="7" height="1"/><rect x="1" y="3" width="2" height="1"/><rect x="4" y="3" width="3" height="1"/><rect x="8" y="3" width="2" height="1"/><rect x="0" y="4" width="11" height="1"/><rect x="0" y="5" width="1" height="1"/><rect x="2" y="5" width="7" height="1"/><rect x="10" y="5" width="1" height="1"/></svg>';
+    const scenarioSvg = '<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="5"/><path d="M7 4v3l2 2"/></svg>';
+    const bonusSvg = '<svg viewBox="0 0 14 14" fill="currentColor"><path d="M7 1l1.5 4.5H13l-3.5 3 1.5 4.5L7 10l-4 3 1.5-4.5L1 5.5h4.5z"/></svg>';
+    
+    // Mission log helper for scenario engine
+    function pushMissionLog(entry) {
+      const feed = document.getElementById('activity-feed');
+      if (!feed) return;
+      
+      const icons = { trade: tradeSvg, alert: alertSvg, invader: invaderSvg, scenario: scenarioSvg, bonus: bonusSvg };
+      const time = entry.time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      
+      const item = document.createElement('div');
+      item.className = 'activity-item';
+      item.innerHTML = 
+        '<div class="activity-icon ' + (entry.type || 'alert') + '">' + (icons[entry.type] || alertSvg) + '</div>' +
+        '<div class="activity-content"><div class="activity-title' + (entry.arcade ? ' arcade' : '') + '">' + entry.title + '</div>' +
+        '<div class="activity-subtitle">' + entry.subtitle + '</div></div>' +
+        '<div class="activity-time">' + time + '</div>';
+      
+      feed.insertBefore(item, feed.firstChild);
+      
+      // Keep max 25 entries
+      while (feed.children.length > 25) {
+        feed.removeChild(feed.lastChild);
+      }
+    }
+    
     async function init() {
       updateTime();
       setInterval(updateTime, 1000);
@@ -2022,6 +1907,16 @@
       renderCatalysts();
       renderActivity();
       renderPositionCharts();
+      
+      // Mission log startup message
+      setTimeout(() => {
+        pushMissionLog({ 
+          type: 'scenario', 
+          title: 'UPLINK ESTABLISHED', 
+          subtitle: 'Mission Control systems online · defensive grid active',
+          arcade: true
+        });
+      }, 500);
     }
     
     function updateTime() {
