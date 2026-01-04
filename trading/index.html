@@ -7,8 +7,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Trading Dashboard – Haslun</title>
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📈</text></svg>">
-  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%231A1918' width='100' height='100'/><text y='.9em' x='50' text-anchor='middle' font-size='70'>📈</text></svg>">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%231A1918' width='100' height='100' rx='12'/%3E%3Cpath d='M20 70 L35 50 L50 60 L65 30 L80 40' stroke='%23C4846C' stroke-width='6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%231A1918' width='100' height='100' rx='12'/%3E%3Cpath d='M20 70 L35 50 L50 60 L65 30 L80 40' stroke='%23C4846C' stroke-width='6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -99,10 +99,14 @@
     }
     
     .rocket {
-      font-size: 3.5rem;
+      color: var(--terracotta);
       filter: drop-shadow(0 0 10px rgba(196, 132, 108, 0.5));
       animation: hover 1s ease-in-out infinite;
       transition: transform 1s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .rocket svg {
+      display: block;
     }
     
     .rocket.launching {
@@ -964,18 +968,15 @@
     }
     
     .activity-icon {
-      width: 32px;
-      height: 32px;
+      width: 10px;
+      height: 10px;
       border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.875rem;
+      flex-shrink: 0;
     }
     
-    .activity-icon.alert { background: rgba(184, 152, 107, 0.2); }
-    .activity-icon.trade { background: rgba(92, 154, 107, 0.2); }
-    .activity-icon.system { background: rgba(107, 123, 138, 0.2); }
+    .activity-icon.alert { background: var(--gold); }
+    .activity-icon.trade { background: var(--green); }
+    .activity-icon.system { background: var(--slate); }
     
     .activity-content { flex: 1; }
     
@@ -1026,6 +1027,121 @@
     .rule-text strong {
       color: var(--ink);
     }
+    
+    /* =========================================================================
+       PERFORMANCE CHART
+       ========================================================================= */
+    .perf-chart-container {
+      position: relative;
+      height: 280px;
+      margin-top: 0.5rem;
+    }
+    
+    .perf-chart {
+      position: relative;
+      height: 220px;
+      border-left: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      margin-left: 45px;
+      margin-right: 10px;
+    }
+    
+    .perf-chart-grid {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    
+    .perf-chart-grid-line {
+      border-top: 1px dashed var(--line);
+      position: relative;
+    }
+    
+    .perf-chart-grid-line::before {
+      content: attr(data-value);
+      position: absolute;
+      left: -45px;
+      top: -8px;
+      font-size: 0.625rem;
+      color: var(--muted);
+      font-family: var(--font-mono);
+      width: 40px;
+      text-align: right;
+    }
+    
+    .perf-chart-lines {
+      position: absolute;
+      inset: 0;
+    }
+    
+    .perf-chart-lines svg {
+      width: 100%;
+      height: 100%;
+    }
+    
+    .perf-line {
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    
+    .perf-line.portfolio { stroke: var(--terracotta); stroke-width: 2.5; }
+    .perf-line.xar { stroke: var(--gold); }
+    .perf-line.spy { stroke: var(--slate); }
+    
+    .perf-chart-x-axis {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.5rem 0 0;
+      margin-left: 45px;
+      margin-right: 10px;
+    }
+    
+    .perf-chart-x-label {
+      font-size: 0.6rem;
+      color: var(--muted);
+      font-family: var(--font-mono);
+    }
+    
+    .perf-legend {
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      margin-top: 1rem;
+      flex-wrap: wrap;
+    }
+    
+    .perf-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.75rem;
+    }
+    
+    .perf-legend-line {
+      width: 20px;
+      height: 3px;
+      border-radius: 2px;
+    }
+    
+    .perf-legend-line.portfolio { background: var(--terracotta); }
+    .perf-legend-line.xar { background: var(--gold); }
+    .perf-legend-line.spy { background: var(--slate); }
+    
+    .perf-legend-label {
+      color: var(--ink-light);
+    }
+    
+    .perf-legend-value {
+      font-family: var(--font-mono);
+      font-weight: 600;
+    }
+    
+    .perf-legend-value.positive { color: var(--green); }
+    .perf-legend-value.negative { color: var(--red); }
     
     /* =========================================================================
        MOBILE RESPONSIVE STYLES
@@ -1182,6 +1298,47 @@
       
       .card-title {
         font-size: 1rem;
+      }
+      
+      /* Performance chart mobile */
+      .perf-chart-container {
+        height: auto;
+      }
+      
+      .perf-chart {
+        height: 180px;
+        margin-left: 35px;
+        margin-right: 5px;
+      }
+      
+      .perf-chart-grid-line::before {
+        left: -35px;
+        font-size: 0.55rem;
+        width: 32px;
+      }
+      
+      .perf-chart-x-axis {
+        margin-left: 35px;
+        margin-right: 5px;
+      }
+      
+      .perf-chart-x-label {
+        font-size: 0.5rem;
+      }
+      
+      .perf-legend {
+        gap: 0.75rem;
+        margin-top: 0.75rem;
+      }
+      
+      .perf-legend-item {
+        font-size: 0.65rem;
+        gap: 0.375rem;
+      }
+      
+      .perf-legend-line {
+        width: 14px;
+        height: 2px;
       }
       
       /* Chart tabs - Scrollable */
@@ -1681,12 +1838,19 @@
   </style>
 </head>
 <body>
-  <!-- Loading Screen - Rocket Launch -->
+  <!-- Loading Screen -->
   <div class="loading-screen" id="loading-screen">
     <div class="stars"></div>
     <div class="launch-scene">
       <div class="rocket-container">
-        <div class="rocket" id="rocket">🚀</div>
+        <div class="rocket" id="rocket">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/>
+            <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/>
+            <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/>
+            <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/>
+          </svg>
+        </div>
         <div class="exhaust">
           <div class="flame"></div>
           <div class="flame"></div>
@@ -1698,9 +1862,9 @@
       <div class="countdown" id="countdown">3</div>
       <div class="loading-brand">
         <div class="loading-brand-name">Haslun Trading</div>
-        <div class="loading-brand-sub">Mission Control</div>
+        <div class="loading-brand-sub">Dashboard</div>
       </div>
-      <div class="loading-status" id="loading-status">Initializing systems...</div>
+      <div class="loading-status" id="loading-status">Initializing...</div>
     </div>
   </div>
   
@@ -1733,9 +1897,9 @@
     
     <!-- Tabs -->
     <div class="tabs">
-      <div class="tab active" data-tab="trading" onclick="switchTab('trading')">📊 Stock Trading</div>
-      <div class="tab" data-tab="options" onclick="switchTab('options')">📈 Options Portfolio</div>
-      <div class="tab" data-tab="catalysts" onclick="switchTab('catalysts')">📅 Catalysts</div>
+      <div class="tab active" data-tab="trading" onclick="switchTab('trading')">Stock Trading</div>
+      <div class="tab" data-tab="options" onclick="switchTab('options')">Options Portfolio</div>
+      <div class="tab" data-tab="catalysts" onclick="switchTab('catalysts')">Catalysts</div>
     </div>
     
     <main class="main">
@@ -1774,7 +1938,7 @@
               <div class="strategy-overview">
                 <div class="strategy-section">
                   <div class="strategy-section-title">
-                    <span class="icon">📡</span> Signal Components
+                    Signal Components
                   </div>
                   <div class="macd-visual">
                     <div class="macd-line">
@@ -1799,7 +1963,7 @@
                 </div>
                 <div class="strategy-section">
                   <div class="strategy-section-title">
-                    <span class="icon">🎯</span> Watchlist
+                    Watchlist
                   </div>
                   <div class="watchlist" id="macd-watchlist">
                     <div class="watchlist-item">
@@ -1827,7 +1991,7 @@
               </div>
               <div class="rules-grid">
                 <div class="rule-item">
-                  <span class="rule-icon">📈</span>
+                  
                   <div class="rule-text"><strong>Entry:</strong> MACD crosses above signal line</div>
                 </div>
                 <div class="rule-item">
@@ -1835,13 +1999,28 @@
                   <div class="rule-text"><strong>Exit:</strong> MACD crosses below signal line</div>
                 </div>
                 <div class="rule-item">
-                  <span class="rule-icon">💰</span>
+                  
                   <div class="rule-text"><strong>Size:</strong> $2,000 per position</div>
                 </div>
                 <div class="rule-item">
-                  <span class="rule-icon">🛡️</span>
+                  
                   <div class="rule-text"><strong>Limit:</strong> 5 trades per day, -$200 max loss</div>
                 </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Performance vs Benchmarks Chart -->
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-label">Since March 2024</div>
+                <h2 class="card-title">Performance vs Benchmarks</h2>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="perf-chart-container" id="perf-chart-container">
+                <!-- Rendered by JavaScript -->
               </div>
             </div>
           </div>
@@ -1854,28 +2033,7 @@
               </div>
             </div>
             <div class="card-body" id="stock-positions">
-              <div class="empty-state-enhanced">
-                <div class="empty-state-icon">📊</div>
-                <div class="empty-state-title">No Active Positions</div>
-                <div class="empty-state-text">
-                  The MACD strategy is monitoring your watchlist for entry signals. 
-                  When a crossover occurs, positions will appear here.
-                </div>
-                <div class="empty-state-steps">
-                  <div class="empty-state-step">
-                    <div class="step-number">1</div>
-                    <div class="step-text">TradingView Alert</div>
-                  </div>
-                  <div class="empty-state-step">
-                    <div class="step-number">2</div>
-                    <div class="step-text">Webhook Received</div>
-                  </div>
-                  <div class="empty-state-step">
-                    <div class="step-number">3</div>
-                    <div class="step-text">Order Executed</div>
-                  </div>
-                </div>
-              </div>
+              <!-- Will be populated by renderStockPositions() -->
             </div>
           </div>
           
@@ -1887,24 +2045,7 @@
               </div>
             </div>
             <div class="card-body" id="trades-log">
-              <div class="activity-feed">
-                <div class="activity-item">
-                  <div class="activity-icon system">🚀</div>
-                  <div class="activity-content">
-                    <div class="activity-title">Dashboard Started</div>
-                    <div class="activity-subtitle">MACD strategy monitoring active</div>
-                  </div>
-                  <div class="activity-time" id="start-time">--:--</div>
-                </div>
-                <div class="activity-item">
-                  <div class="activity-icon alert">📡</div>
-                  <div class="activity-content">
-                    <div class="activity-title">Webhook Endpoint Ready</div>
-                    <div class="activity-subtitle">Listening for TradingView alerts</div>
-                  </div>
-                  <div class="activity-time">Ready</div>
-                </div>
-              </div>
+              <!-- Will be populated by renderActivity() -->
             </div>
           </div>
         </div>
@@ -1940,10 +2081,10 @@
             </div>
             <div class="card-body">
               <div class="chart-tabs">
-                <div class="chart-tab active" data-chart="sizes" onclick="switchChartTab('sizes')">📊 Position Sizes</div>
-                <div class="chart-tab" data-chart="pnl" onclick="switchChartTab('pnl')">📈 P&L</div>
-                <div class="chart-tab" data-chart="risk" onclick="switchChartTab('risk')">🛡️ Risk</div>
-                <div class="chart-tab" data-chart="themes" onclick="switchChartTab('themes')">🎯 Themes</div>
+                <div class="chart-tab active" data-chart="sizes" onclick="switchChartTab('sizes')">Position Sizes</div>
+                <div class="chart-tab" data-chart="pnl" onclick="switchChartTab('pnl')">P&L</div>
+                <div class="chart-tab" data-chart="risk" onclick="switchChartTab('risk')">Risk</div>
+                <div class="chart-tab" data-chart="themes" onclick="switchChartTab('themes')">Themes</div>
               </div>
               
               <!-- Position Sizes Chart -->
@@ -2148,6 +2289,111 @@
       { date: '2026-Q2', ticker: 'RKLB', event: 'Neutron First Flight', impact: 'HIGH' }
     ];
     
+    // Demo STOCK positions (MACD-triggered swing trades)
+    const DEMO_STOCK_POSITIONS = [
+      { ticker: 'RKLB', shares: 75, entry_price: 68.45, current_price: 72.80, entry_time: '2026-01-02 10:32 AM' },
+      { ticker: 'ASTS', shares: 50, entry_price: 78.20, current_price: 83.47, entry_time: '2026-01-02 11:15 AM' },
+      { ticker: 'LUNR', shares: 100, entry_price: 15.20, current_price: 17.88, entry_time: '2026-01-03 09:45 AM' }
+    ];
+    
+    // Demo recent activity/alerts
+    const DEMO_ACTIVITY = [
+      { type: 'trade', title: 'BUY LUNR', subtitle: '100 shares @ $15.20', time: '09:45 AM' },
+      { type: 'alert', title: 'MACD Crossover', subtitle: 'LUNR bullish signal', time: '09:44 AM' },
+      { type: 'trade', title: 'BUY ASTS', subtitle: '50 shares @ $78.20', time: 'Yesterday' },
+      { type: 'alert', title: 'MACD Crossover', subtitle: 'ASTS bullish signal', time: 'Yesterday' },
+      { type: 'system', title: 'Dashboard Started', subtitle: 'All systems nominal', time: 'Yesterday' }
+    ];
+    
+    // Monthly performance data (cumulative % returns since March 2024)
+    // Portfolio: Started with $5,550 in options, now worth ~$38,400
+    // SPY: ~$510 in Mar 2024 → ~$683 now
+    // XAR: ~$165 in Mar 2024 → ~$250 now
+    const PERFORMANCE_DATA = {
+      labels: ['Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan'],
+      portfolio: [0, -15, 12, 45, 78, 125, 180, 285, 390, 520, 592],  // Your LEAPs portfolio
+      xar: [0, 2, 8, 12, 18, 22, 28, 35, 42, 48, 52],                  // XAR Aerospace & Defense
+      spy: [0, 1, 5, 9, 14, 12, 16, 20, 26, 32, 34]                    // S&P 500
+    };
+    
+    // Render performance chart
+    function renderPerformanceChart() {
+      const container = document.getElementById('perf-chart-container');
+      if (!container) return;
+      
+      const data = PERFORMANCE_DATA;
+      const maxVal = Math.max(...data.portfolio, ...data.xar, ...data.spy);
+      const minVal = Math.min(...data.portfolio, ...data.xar, ...data.spy);
+      const range = maxVal - minVal;
+      const chartHeight = 220;
+      const chartPadding = 10;
+      
+      // Calculate Y-axis scale
+      const yMax = Math.ceil(maxVal / 100) * 100 + 50;
+      const yMin = Math.min(0, Math.floor(minVal / 50) * 50);
+      const yRange = yMax - yMin;
+      
+      // Generate grid lines
+      const gridLines = [];
+      for (let v = yMax; v >= yMin; v -= 100) {
+        gridLines.push(v);
+      }
+      
+      // Convert data points to SVG coordinates
+      function toCoords(values) {
+        const points = values.map((val, i) => {
+          const x = (i / (values.length - 1)) * 100;
+          const y = ((yMax - val) / yRange) * 100;
+          return `${x},${y}`;
+        });
+        return points.join(' ');
+      }
+      
+      const portfolioPath = toCoords(data.portfolio);
+      const xarPath = toCoords(data.xar);
+      const spyPath = toCoords(data.spy);
+      
+      // Get final values for legend
+      const portfolioFinal = data.portfolio[data.portfolio.length - 1];
+      const xarFinal = data.xar[data.xar.length - 1];
+      const spyFinal = data.spy[data.spy.length - 1];
+      
+      container.innerHTML = `
+        <div class="perf-chart">
+          <div class="perf-chart-grid">
+            ${gridLines.map(v => `<div class="perf-chart-grid-line" data-value="${v > 0 ? '+' : ''}${v}%"></div>`).join('')}
+          </div>
+          <div class="perf-chart-lines">
+            <svg viewBox="0 0 100 100" preserveAspectRatio="none">
+              <polyline class="perf-line spy" points="${spyPath}" vector-effect="non-scaling-stroke"/>
+              <polyline class="perf-line xar" points="${xarPath}" vector-effect="non-scaling-stroke"/>
+              <polyline class="perf-line portfolio" points="${portfolioPath}" vector-effect="non-scaling-stroke"/>
+            </svg>
+          </div>
+        </div>
+        <div class="perf-chart-x-axis">
+          ${data.labels.map(l => `<span class="perf-chart-x-label">${l}</span>`).join('')}
+        </div>
+        <div class="perf-legend">
+          <div class="perf-legend-item">
+            <div class="perf-legend-line portfolio"></div>
+            <span class="perf-legend-label">Portfolio</span>
+            <span class="perf-legend-value positive">+${portfolioFinal}%</span>
+          </div>
+          <div class="perf-legend-item">
+            <div class="perf-legend-line xar"></div>
+            <span class="perf-legend-label">XAR</span>
+            <span class="perf-legend-value positive">+${xarFinal}%</span>
+          </div>
+          <div class="perf-legend-item">
+            <div class="perf-legend-line spy"></div>
+            <span class="perf-legend-label">SPY</span>
+            <span class="perf-legend-value positive">+${spyFinal}%</span>
+          </div>
+        </div>
+      `;
+    }
+    
     function getStaticOptionsData() {
       let totalValue = 0, totalCost = 0, totalDelta = 0;
       DEMO_POSITIONS.forEach(p => {
@@ -2214,16 +2460,16 @@
     
     // Theme/sector definitions
     const tickerThemes = {
-      'RKLB': { theme: 'Space', icon: '🚀' },
-      'LUNR': { theme: 'Space', icon: '🚀' },
-      'ASTS': { theme: 'Space', icon: '🚀' },
-      'BKSY': { theme: 'Space', icon: '🚀' },
-      'RDW': { theme: 'Space', icon: '🚀' },
-      'PL': { theme: 'Space', icon: '🚀' },
-      'ACHR': { theme: 'eVTOL', icon: '🛩️' },
-      'JOBY': { theme: 'eVTOL', icon: '🛩️' },
-      'EVEX': { theme: 'eVTOL', icon: '🛩️' },
-      'GME': { theme: 'Meme', icon: '🎮' }
+      'RKLB': { theme: 'Space' },
+      'LUNR': { theme: 'Space' },
+      'ASTS': { theme: 'Space' },
+      'BKSY': { theme: 'Space' },
+      'RDW': { theme: 'Space' },
+      'PL': { theme: 'Space' },
+      'ACHR': { theme: 'eVTOL' },
+      'JOBY': { theme: 'eVTOL' },
+      'EVEX': { theme: 'eVTOL' },
+      'GME': { theme: 'Meme' }
     };
     
     // 1. Position Sizes - Horizontal Bar Chart
@@ -2356,7 +2602,7 @@
       container.innerHTML = `
         <div class="risk-section">
           <div class="risk-header">
-            <div class="risk-label"><span class="risk-icon">🎯</span> Structure Allocation</div>
+            <div class="risk-label">Structure Allocation</div>
             <div class="risk-stats">$${totalValue.toLocaleString()} total</div>
           </div>
           <div class="risk-bar">
@@ -2391,13 +2637,13 @@
             `).join('')}
           </div>
           <div style="font-size: 0.75rem; color: var(--muted); margin-top: 0.5rem;">
-            ⚠️ Naked LEAPs: Unlimited upside potential, full premium at risk
+            Naked LEAPs: Unlimited upside potential, full premium at risk
           </div>
         </div>
         
         <div class="risk-section">
           <div class="risk-header">
-            <div class="risk-label"><span class="risk-icon">🛡️</span> Defined Risk</div>
+            <div class="risk-label">Defined Risk</div>
           </div>
           <div class="risk-bar">
             ${spreads.map(p => `
@@ -2421,9 +2667,9 @@
       // Group by theme
       const themes = {};
       positions.forEach(p => {
-        const info = tickerThemes[p.ticker] || { theme: 'Other', icon: '📊' };
+        const info = tickerThemes[p.ticker] || { theme: 'Other' };
         if (!themes[info.theme]) {
-          themes[info.theme] = { icon: info.icon, positions: [], total: 0 };
+          themes[info.theme] = { positions: [], total: 0 };
         }
         const cost = p.entry_cost * p.contracts * 100;
         const value = p.current_price * p.contracts * 100;
@@ -2436,7 +2682,7 @@
       container.innerHTML = Object.entries(themes).map(([name, data]) => `
         <div class="theme-group">
           <div class="theme-header">
-            <div class="theme-name"><span class="theme-icon">${data.icon}</span> ${name}</div>
+            <div class="theme-name">${name}</div>
             <div class="theme-total">$${data.total.toLocaleString()}</div>
           </div>
           <div class="theme-grid">
@@ -2608,6 +2854,87 @@
       return prefix + Math.abs(amount).toFixed(2);
     }
     
+    // Render stock positions table
+    function renderStockPositions() {
+      const container = document.getElementById('stock-positions');
+      if (!container) return;
+      
+      if (DEMO_STOCK_POSITIONS.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state-enhanced">
+            
+            <div class="empty-state-title">No Active Positions</div>
+            <div class="empty-state-text">
+              The MACD strategy is monitoring your watchlist for entry signals.
+            </div>
+          </div>
+        `;
+        return;
+      }
+      
+      let totalPnl = 0;
+      const rows = DEMO_STOCK_POSITIONS.map(pos => {
+        const pnl = (pos.current_price - pos.entry_price) * pos.shares;
+        const pnlPct = ((pos.current_price - pos.entry_price) / pos.entry_price * 100);
+        totalPnl += pnl;
+        const color = tickerColors[pos.ticker] || '#8A857D';
+        
+        return `
+          <tr>
+            <td><span class="ticker-badge" style="background: ${color}">${pos.ticker}</span></td>
+            <td style="font-family: var(--font-mono)">${pos.shares}</td>
+            <td style="font-family: var(--font-mono)">$${pos.entry_price.toFixed(2)}</td>
+            <td style="font-family: var(--font-mono)">$${pos.current_price.toFixed(2)}</td>
+            <td class="${pnl >= 0 ? 'pnl-positive' : 'pnl-negative'}">
+              ${pnl >= 0 ? '+' : ''}$${pnl.toFixed(2)} (${pnlPct >= 0 ? '+' : ''}${pnlPct.toFixed(1)}%)
+            </td>
+          </tr>
+        `;
+      }).join('');
+      
+      container.innerHTML = `
+        <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+          <table class="options-table" style="min-width: 450px;">
+            <thead>
+              <tr>
+                <th>Ticker</th>
+                <th>Shares</th>
+                <th>Entry</th>
+                <th>Current</th>
+                <th>P&L</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+        <div style="display: flex; justify-content: space-between; padding: 0.75rem 0 0; margin-top: 0.75rem; border-top: 1px solid var(--line);">
+          <span style="font-size: 0.75rem; color: var(--muted);">Total Unrealized P&L</span>
+          <span class="${totalPnl >= 0 ? 'pnl-positive' : 'pnl-negative'}" style="font-family: var(--font-mono); font-weight: 600;">
+            ${totalPnl >= 0 ? '+' : ''}$${totalPnl.toFixed(2)}
+          </span>
+        </div>
+      `;
+    }
+    
+    // Render activity feed
+    function renderActivity() {
+      const container = document.getElementById('trades-log');
+      if (!container) return;
+      
+      const items = DEMO_ACTIVITY.map(act => `
+        <div class="activity-item">
+          <div class="activity-icon ${act.type}"></div>
+          <div class="activity-content">
+            <div class="activity-title">${act.title}</div>
+            <div class="activity-subtitle">${act.subtitle}</div>
+          </div>
+          <div class="activity-time">${act.time}</div>
+        </div>
+      `).join('');
+      
+      container.innerHTML = `<div class="activity-feed">${items}</div>`;
+    }
+    
     async function updateStatus() {
       const data = await fetchStatus();
       if (data) updateStatusUI(data);
@@ -2621,11 +2948,19 @@
     // Initial load with countdown - DEMO MODE
     Promise.all([updateStatus(), updateOptions()]).then(() => {
       runCountdown();
-      // Set start time
-      const startTimeEl = document.getElementById('start-time');
-      if (startTimeEl) {
-        startTimeEl.textContent = new Date().toLocaleTimeString();
-      }
+      
+      // Render stock positions and activity
+      renderStockPositions();
+      renderActivity();
+      renderPerformanceChart();
+      
+      // Update trading tab stats
+      document.getElementById('daily-pnl').textContent = '+$857.75';
+      document.getElementById('daily-pnl').classList.add('positive');
+      document.getElementById('trades-today').textContent = '3';
+      document.getElementById('alerts-count').textContent = '5';
+      document.getElementById('positions-count').textContent = DEMO_STOCK_POSITIONS.length.toString();
+      
       // Force demo badge visible
       const demoBadge = document.getElementById('demo-badge');
       if (demoBadge) demoBadge.style.display = 'inline-flex';
@@ -2636,7 +2971,7 @@
   
   <!-- Demo Watermark -->
   <div class="demo-watermark" style="position: fixed; bottom: 1rem; left: 1rem; display: flex; align-items: center; gap: 0.75rem; padding: 0.625rem 1rem; background: var(--paper); border: 1px solid var(--line); border-radius: 8px; font-size: 0.8125rem; color: var(--ink-light); z-index: 100;">
-    <span>📊 Demo</span>
+    <span>Demo Mode</span>
     <a href="https://haslun.ai" style="color: var(--terracotta); text-decoration: none;">← haslun.ai</a>
   </div>
 </body>
