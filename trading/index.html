@@ -420,6 +420,50 @@
     .macd-value.positive { color: var(--signal-up); }
     .macd-value.negative { color: var(--signal-down); }
     
+    /* Trend Status Styles */
+    .trend-display { display: flex; flex-direction: column; gap: 0.75rem; }
+    .trend-status-badge { display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem 0.8rem; background: var(--bg-card); border: 1px solid var(--border); transition: all 0.3s; }
+    .trend-status-badge.trend-bull { border-color: rgba(51, 255, 153, 0.5); background: rgba(51, 255, 153, 0.08); }
+    .trend-status-badge.trend-bear { border-color: rgba(255, 107, 107, 0.5); background: rgba(255, 107, 107, 0.08); }
+    .trend-status-badge.trend-neutral { border-color: rgba(255, 179, 71, 0.5); background: rgba(255, 179, 71, 0.08); }
+    .trend-icon { font-size: 1rem; transition: color 0.3s; }
+    .trend-status-badge.trend-bull .trend-icon { color: var(--signal-up); text-shadow: 0 0 10px var(--signal-up); }
+    .trend-status-badge.trend-bear .trend-icon { color: var(--signal-down); text-shadow: 0 0 10px var(--signal-down); }
+    .trend-status-badge.trend-neutral .trend-icon { color: var(--amber); text-shadow: 0 0 10px var(--amber); }
+    .trend-label { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.1em; color: var(--text-bright); }
+    .trend-detail { font-size: 0.65rem; color: var(--text-muted); line-height: 1.4; padding: 0 0.2rem; }
+    .trend-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; margin-top: 0.25rem; }
+    .trend-metric { display: flex; flex-direction: column; align-items: center; padding: 0.4rem; background: var(--bg-card); border: 1px solid var(--border); }
+    .trend-metric-label { font-size: 0.5rem; letter-spacing: 0.08em; color: var(--text-dim); text-transform: uppercase; }
+    .trend-metric-value { font-size: 0.7rem; font-weight: 600; color: var(--text); margin-top: 0.15rem; }
+    
+    /* Volume Badge Styles */
+    .volume-badge { padding: 0.2rem 0.5rem; border-radius: 2px; font-size: 0.6rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; border: 1px solid var(--border); color: var(--text-muted); background: var(--bg-card); transition: all 0.3s; margin-left: 0.75rem; }
+    .volume-badge.vol-high { border-color: rgba(255, 107, 107, 0.7); color: var(--signal-down); background: rgba(255, 107, 107, 0.12); animation: pulse 2s infinite; }
+    .volume-badge.vol-elevated { border-color: rgba(255, 179, 71, 0.7); color: var(--amber); background: rgba(255, 179, 71, 0.1); }
+    .volume-badge.vol-normal { border-color: rgba(51, 255, 153, 0.4); color: var(--phosphor-dim); }
+    .volume-badge.vol-quiet { border-color: var(--border); color: var(--text-dim); opacity: 0.7; }
+    
+    /* P&L Simulation Styles */
+    .simulation-section { background: linear-gradient(135deg, rgba(255, 179, 71, 0.03) 0%, transparent 50%); }
+    .sim-form { display: flex; flex-direction: column; gap: 0.75rem; }
+    .sim-field { display: flex; flex-direction: column; gap: 0.25rem; }
+    .sim-label { font-size: 0.55rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); }
+    .sim-input { width: 100%; padding: 0.5rem 0.6rem; background: var(--bg-input); border: 1px solid var(--border); color: var(--text); font-family: var(--font-body); font-size: 0.75rem; transition: all 0.15s; }
+    .sim-input:focus { outline: none; border-color: var(--amber-dim); box-shadow: 0 0 10px rgba(255, 179, 71, 0.15); }
+    .sim-btn { width: 100%; padding: 0.6rem; margin-top: 0.25rem; background: var(--bg-card); border: 1px solid var(--amber-dim); color: var(--amber); font-family: var(--font-body); font-size: 0.65rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 0.5rem; }
+    .sim-btn:hover { background: rgba(255, 179, 71, 0.1); border-color: var(--amber); box-shadow: 0 0 15px rgba(255, 179, 71, 0.2); }
+    .sim-btn-icon { font-size: 0.5rem; }
+    .sim-result { padding: 0.75rem; background: var(--bg-card); border: 1px solid var(--border); text-align: center; transition: all 0.3s; }
+    .sim-result.positive { border-color: rgba(51, 255, 153, 0.5); background: rgba(51, 255, 153, 0.08); }
+    .sim-result.negative { border-color: rgba(255, 107, 107, 0.5); background: rgba(255, 107, 107, 0.08); }
+    .sim-result-label { font-size: 0.55rem; letter-spacing: 0.08em; color: var(--text-dim); text-transform: uppercase; }
+    .sim-result-value { font-family: var(--font-display); font-size: 1.1rem; font-weight: 600; margin-top: 0.25rem; letter-spacing: 0.05em; }
+    .sim-result-value.positive { color: var(--signal-up); text-shadow: 0 0 15px var(--phosphor-glow); }
+    .sim-result-value.negative { color: var(--signal-down); }
+    .sim-result-pct { font-size: 0.7rem; color: var(--text-muted); margin-top: 0.15rem; }
+    .sim-result-meta { font-size: 0.55rem; color: var(--text-dim); margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid var(--border); }
+    
     .watchlist { flex: 1; overflow-y: auto; }
     .watchlist::-webkit-scrollbar { width: 4px; }
     .watchlist::-webkit-scrollbar-track { background: var(--bg-deep); }
@@ -728,6 +772,21 @@
             <div class="macd-row"><span class="macd-label">Histogram</span><span class="macd-value positive" id="hist-val">0.1073</span></div>
           </div>
         </div>
+        <div class="sidebar-section" id="trend-card">
+          <div class="sidebar-title">Trend Status</div>
+          <div class="trend-display">
+            <div class="trend-status-badge" id="trend-status-badge">
+              <span class="trend-icon" id="trend-icon">◈</span>
+              <span class="trend-label" id="trend-status-label">ANALYZING...</span>
+            </div>
+            <div class="trend-detail" id="trend-status-detail">Awaiting data...</div>
+            <div class="trend-metrics">
+              <div class="trend-metric"><span class="trend-metric-label">MA-100</span><span class="trend-metric-value" id="ma100-val">--</span></div>
+              <div class="trend-metric"><span class="trend-metric-label">MA-150</span><span class="trend-metric-value" id="ma150-val">--</span></div>
+              <div class="trend-metric"><span class="trend-metric-label">MA-200</span><span class="trend-metric-value" id="ma200-val">--</span></div>
+            </div>
+          </div>
+        </div>
         <div class="sidebar-section" style="padding-bottom: 0.5rem;"><div class="sidebar-title">Tracking</div></div>
         <div class="watchlist" id="watchlist"></div>
       </aside>
@@ -740,6 +799,7 @@
                 <span class="ticker-symbol" id="chart-ticker">RKLB</span>
                 <span class="ticker-price" id="chart-price">$72.43</span>
                 <span class="ticker-change positive" id="chart-change">+2.16%</span>
+                <span class="volume-badge" id="volume-status">LOADING</span>
               </div>
               <div class="control-group">
                 <button class="ctrl-btn active" data-tf="1D" onclick="setTimeframe('1D')">1D</button>
@@ -828,6 +888,25 @@
             <div class="safety-item"><span class="safety-label">Daily Loss Limit</span><span class="safety-value ok">$200 remaining</span></div>
             <div class="safety-item"><span class="safety-label">Trades Remaining</span><span class="safety-value">2 of 5</span></div>
             <div class="safety-item"><span class="safety-label">Market Status</span><span class="safety-value warning">CLOSED</span></div>
+          </div>
+        </div>
+        <div class="sidebar-section simulation-section">
+          <div class="sidebar-title">P&L Simulator</div>
+          <div class="sim-form">
+            <div class="sim-field">
+              <label class="sim-label">Entry Date</label>
+              <input type="date" id="sim-entry-date" class="sim-input">
+            </div>
+            <div class="sim-field">
+              <label class="sim-label">Capital ($)</label>
+              <input type="number" id="sim-capital" class="sim-input" value="10000" min="100" step="100">
+            </div>
+            <button class="sim-btn" onclick="runPnLSimulation()">
+              <span class="sim-btn-icon">▶</span> RUN SIMULATION
+            </button>
+            <div class="sim-result" id="sim-result">
+              <div class="sim-result-label">Select parameters above</div>
+            </div>
           </div>
         </div>
         <div class="sidebar-section" style="padding-bottom: 0.5rem;"><div class="sidebar-title">Activity Log</div></div>
@@ -1010,6 +1089,15 @@
       updateTickerDisplay();
       updateCharts();
       updateMACDDisplay();
+      
+      // Call new status functions
+      const data = tickerData[ticker];
+      if (data) {
+        updateTrendStatus(data);
+        updateVolumeStatus(data);
+        resetSimulation();
+      }
+      
       document.querySelectorAll('.watchlist-item').forEach(el => {
         const tickerEl = el.querySelector('.watchlist-ticker');
         el.classList.toggle('active', tickerEl && tickerEl.textContent === ticker);
@@ -1017,6 +1105,85 @@
     }
     
     function selectTicker(ticker) { loadTicker(ticker); }
+    
+    // P&L Simulation
+    function resetSimulation() {
+      const resultEl = document.getElementById('sim-result');
+      resultEl.className = 'sim-result';
+      resultEl.innerHTML = '<div class="sim-result-label">Select parameters above</div>';
+    }
+    
+    function runPnLSimulation() {
+      const data = tickerData[currentTicker];
+      if (!data || !data.daily || !data.daily.length) {
+        showSimError('No historical data available');
+        return;
+      }
+      
+      const dateInput = document.getElementById('sim-entry-date').value;
+      const capital = parseFloat(document.getElementById('sim-capital').value) || 0;
+      
+      if (!dateInput) {
+        showSimError('Please select an entry date');
+        return;
+      }
+      
+      if (capital < 100) {
+        showSimError('Minimum capital: $100');
+        return;
+      }
+      
+      const daily = data.daily;
+      const entryTs = new Date(dateInput).getTime();
+      const dataStartTs = daily[0].t;
+      const dataEndTs = daily[daily.length - 1].t;
+      
+      if (entryTs < dataStartTs) {
+        showSimError('Date before available data range');
+        return;
+      }
+      
+      // Find entry candle (first candle on or after entry date)
+      const entryCandle = daily.find(p => p.t >= entryTs);
+      if (!entryCandle) {
+        showSimError('No data for selected date');
+        return;
+      }
+      
+      const lastCandle = daily[daily.length - 1];
+      const entryPrice = entryCandle.c;
+      const lastPrice = lastCandle.c;
+      
+      const shares = Math.floor(capital / entryPrice);
+      const actualInvested = shares * entryPrice;
+      const currentValue = shares * lastPrice;
+      const pnl = currentValue - actualInvested;
+      const returnPct = ((lastPrice - entryPrice) / entryPrice) * 100;
+      
+      const entryDate = new Date(entryCandle.t).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      const holdDays = Math.floor((lastCandle.t - entryCandle.t) / 86400000);
+      
+      const resultEl = document.getElementById('sim-result');
+      const isPositive = pnl >= 0;
+      
+      resultEl.className = 'sim-result ' + (isPositive ? 'positive' : 'negative');
+      resultEl.innerHTML = 
+        '<div class="sim-result-label">Simulated P&L</div>' +
+        '<div class="sim-result-value ' + (isPositive ? 'positive' : 'negative') + '">' +
+          (isPositive ? '+' : '−') + '$' + Math.abs(pnl).toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0}) +
+        '</div>' +
+        '<div class="sim-result-pct">' + (isPositive ? '+' : '') + returnPct.toFixed(1) + '% return</div>' +
+        '<div class="sim-result-meta">' +
+          shares + ' shares @ $' + entryPrice.toFixed(2) + ' → $' + lastPrice.toFixed(2) + '<br>' +
+          'Entry: ' + entryDate + ' • ' + holdDays + ' days held' +
+        '</div>';
+    }
+    
+    function showSimError(msg) {
+      const resultEl = document.getElementById('sim-result');
+      resultEl.className = 'sim-result';
+      resultEl.innerHTML = '<div class="sim-result-label" style="color: var(--signal-down);">' + msg + '</div>';
+    }
     
     function updateTickerDisplay() {
       const stats = statsData[currentTicker] || {};
@@ -1051,11 +1218,129 @@
       }
     }
     
+    function updateTrendStatus(data) {
+      const source = currentTimeframe === '1D' ? data.daily : data.intraday;
+      if (!source || !source.length) return;
+      
+      // Find the last candle with MA data
+      let last = null;
+      for (let i = source.length - 1; i >= 0; i--) {
+        if (source[i].g100 !== undefined || source[i].g200 !== undefined) {
+          last = source[i];
+          break;
+        }
+      }
+      
+      if (!last) {
+        document.getElementById('trend-status-label').textContent = 'NO MA DATA';
+        document.getElementById('trend-status-detail').textContent = 'Moving average data unavailable for this range.';
+        document.getElementById('trend-status-badge').className = 'trend-status-badge';
+        return;
+      }
+      
+      const price = last.c;
+      const g100 = last.g100;
+      const g150 = last.g150;
+      const g200 = last.g200;
+      
+      const badgeEl = document.getElementById('trend-status-badge');
+      const labelEl = document.getElementById('trend-status-label');
+      const detailEl = document.getElementById('trend-status-detail');
+      const iconEl = document.getElementById('trend-icon');
+      
+      // Update MA metric values
+      document.getElementById('ma100-val').textContent = g100 ? '$' + g100.toFixed(2) : '--';
+      document.getElementById('ma150-val').textContent = g150 ? '$' + g150.toFixed(2) : '--';
+      document.getElementById('ma200-val').textContent = g200 ? '$' + g200.toFixed(2) : '--';
+      
+      let label, detail, mode, icon;
+      
+      // Determine trend status
+      const aboveG200 = g200 && price > g200;
+      const aboveG150 = g150 && price > g150;
+      const aboveG100 = g100 && price > g100;
+      
+      if (aboveG200 && aboveG150 && aboveG100) {
+        label = 'FULL THRUST';
+        mode = 'bull';
+        icon = '▲';
+        detail = `All systems green. Price $${price.toFixed(2)} above all MAs. Strong uptrend confirmed.`;
+      } else if (aboveG200) {
+        label = 'LONG-TERM UPTREND';
+        mode = 'bull';
+        icon = '◈';
+        detail = `Price $${price.toFixed(2)} holding above 200-MA ($${g200.toFixed(2)}). Primary trend bullish.`;
+      } else if (aboveG100) {
+        label = 'REVERSAL ATTEMPT';
+        mode = 'neutral';
+        icon = '◆';
+        detail = `Price $${price.toFixed(2)} above 100-MA but below 200-MA. Trend uncertain—monitor closely.`;
+      } else {
+        label = 'DESCENT MODE';
+        mode = 'bear';
+        icon = '▼';
+        detail = `Price $${price.toFixed(2)} below key averages. Downtrend pressure active.`;
+      }
+      
+      labelEl.textContent = label;
+      detailEl.textContent = detail;
+      iconEl.textContent = icon;
+      badgeEl.className = 'trend-status-badge trend-' + mode;
+    }
+    
+    function updateVolumeStatus(data) {
+      const source = currentTimeframe === '1D' ? data.daily : data.intraday;
+      if (!source || source.length < 10) {
+        document.getElementById('volume-status').textContent = '--';
+        document.getElementById('volume-status').className = 'volume-badge';
+        return;
+      }
+      
+      // Get last 50 candles for average calculation
+      const recent = source.slice(-50);
+      const vols = recent.map(p => p.v).filter(v => v && v > 0);
+      
+      if (vols.length < 5) {
+        document.getElementById('volume-status').textContent = 'N/A';
+        return;
+      }
+      
+      const avg = vols.reduce((a, b) => a + b, 0) / vols.length;
+      const current = vols[vols.length - 1];
+      const ratio = current / avg;
+      
+      const el = document.getElementById('volume-status');
+      let label, cls;
+      
+      if (ratio >= 2) {
+        label = 'VOL: HIGH (' + ratio.toFixed(1) + '×)';
+        cls = 'vol-high';
+      } else if (ratio >= 1.25) {
+        label = 'VOL: ELEVATED';
+        cls = 'vol-elevated';
+      } else if (ratio <= 0.5) {
+        label = 'VOL: QUIET';
+        cls = 'vol-quiet';
+      } else {
+        label = 'VOL: NORMAL';
+        cls = 'vol-normal';
+      }
+      
+      el.textContent = label;
+      el.className = 'volume-badge ' + cls;
+    }
+    
     function setTimeframe(tf) {
       currentTimeframe = tf;
       document.querySelectorAll('.ctrl-btn[data-tf]').forEach(btn => btn.classList.toggle('active', btn.dataset.tf === tf));
       updateCharts();
       updateMACDDisplay();
+      // Also update trend and volume for new timeframe
+      const data = tickerData[currentTicker];
+      if (data) {
+        updateTrendStatus(data);
+        updateVolumeStatus(data);
+      }
     }
     
     function setRange(range) {
