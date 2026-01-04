@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chart Analysis – Haslun Trading</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-financial"></script>
+  <style>
+    :root {
+      --bg: #131722;
+      --bg-panel: #1E222D;
+      --bg-input: #2A2E39;
+      --border: #363A45;
+      --text: #D1D4DC;
+      --text-muted: #787B86;
+      --green: #26A69A;
+      --red: #EF5350;
+      --blue: #2962FF;
+      --orange: #FF9800;
+      --purple: #9C27B0;
+    }
+    
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      font-family: 'DM Sans', -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    
+    /* Header */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.5rem 1rem;
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+    }
+    
+    .logo {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+    
+    .ticker-selector {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .ticker-btn {
+      padding: 0.4rem 0.75rem;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    
+    .ticker-btn:hover {
+      border-color: var(--text-muted);
+    }
+    
+    .ticker-btn.active {
+      background: var(--blue);
+      border-color: var(--blue);
+    }
+    
+    .ticker-dropdown {
+      position: relative;
+    }
+    
+    .ticker-dropdown-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 0.75rem;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    
+    .ticker-dropdown-btn::after {
+      content: '▼';
+      font-size: 0.6rem;
+      color: var(--text-muted);
+    }
+    
+    .ticker-dropdown-menu {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      margin-top: 4px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      min-width: 120px;
+      max-height: 300px;
+      overflow-y: auto;
+      z-index: 100;
+      display: none;
+    }
+    
+    .ticker-dropdown-menu.open {
+      display: block;
+    }
+    
+    .ticker-dropdown-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem 0.75rem;
+      cursor: pointer;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+    }
+    
+    .ticker-dropdown-item:hover {
+      background: var(--bg-input);
+    }
+    
+    .ticker-dropdown-item.active {
+      background: var(--blue);
+    }
+    
+    .ticker-change {
+      font-size: 0.7rem;
+    }
+    
+    .ticker-change.positive { color: var(--green); }
+    .ticker-change.negative { color: var(--red); }
+    
+    /* Timeframe selector */
+    .timeframe-selector {
+      display: flex;
+      gap: 0.25rem;
+    }
+    
+    .tf-btn {
+      padding: 0.35rem 0.6rem;
+      background: transparent;
+      border: none;
+      border-radius: 4px;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    
+    .tf-btn:hover {
+      color: var(--text);
+      background: var(--bg-input);
+    }
+    
+    .tf-btn.active {
+      color: var(--text);
+      background: var(--bg-input);
+    }
+    
+    /* Price display */
+    .price-display {
+      display: flex;
+      align-items: baseline;
+      gap: 0.75rem;
+    }
+    
+    .current-price {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+    
+    .price-change {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+    }
+    
+    .price-change.positive { color: var(--green); }
+    .price-change.negative { color: var(--red); }
+    
+    /* Main layout */
+    .main {
+      display: flex;
+      height: calc(100vh - 52px);
+    }
+    
+    /* Sidebar */
+    .sidebar {
+      width: 260px;
+      background: var(--bg-panel);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .sidebar-section {
+      padding: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .sidebar-title {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 0.75rem;
+    }
+    
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+    }
+    
+    .stat-item {
+      padding: 0.5rem;
+      background: var(--bg-input);
+      border-radius: 4px;
+    }
+    
+    .stat-label {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      margin-bottom: 0.25rem;
+    }
+    
+    .stat-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+    
+    .stat-value.positive { color: var(--green); }
+    .stat-value.negative { color: var(--red); }
+    
+    /* MACD stats */
+    .macd-indicator {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    
+    .macd-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .macd-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+    
+    .macd-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+    }
+    
+    .macd-value.positive { color: var(--green); }
+    .macd-value.negative { color: var(--red); }
+    
+    /* Watchlist */
+    .watchlist {
+      flex: 1;
+      overflow-y: auto;
+    }
+    
+    .watchlist-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.6rem 1rem;
+      cursor: pointer;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+    }
+    
+    .watchlist-item:hover {
+      background: var(--bg-input);
+    }
+    
+    .watchlist-item.active {
+      background: var(--bg-input);
+      border-left: 2px solid var(--blue);
+    }
+    
+    .watchlist-ticker {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+    
+    .watchlist-price {
+      text-align: right;
+    }
+    
+    .watchlist-current {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+    }
+    
+    .watchlist-change {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+    }
+    
+    .watchlist-change.positive { color: var(--green); }
+    .watchlist-change.negative { color: var(--red); }
+    
+    /* Chart area */
+    .chart-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+    
+    .chart-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem 1rem;
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .chart-tools {
+      display: flex;
+      gap: 0.5rem;
+    }
+    
+    .tool-btn {
+      padding: 0.35rem 0.6rem;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    
+    .tool-btn:hover {
+      color: var(--text);
+      background: var(--bg-input);
+    }
+    
+    .tool-btn.active {
+      color: var(--text);
+      background: var(--bg-input);
+      border-color: var(--border);
+    }
+    
+    .range-selector {
+      display: flex;
+      gap: 0.25rem;
+    }
+    
+    .range-btn {
+      padding: 0.3rem 0.5rem;
+      background: transparent;
+      border: none;
+      border-radius: 4px;
+      color: var(--text-muted);
+      font-size: 0.7rem;
+      cursor: pointer;
+    }
+    
+    .range-btn:hover {
+      color: var(--text);
+    }
+    
+    .range-btn.active {
+      color: var(--text);
+      background: var(--bg-input);
+    }
+    
+    /* Chart container */
+    .chart-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 0.5rem;
+    }
+    
+    .price-chart-wrapper {
+      flex: 3;
+      position: relative;
+      min-height: 0;
+    }
+    
+    .macd-chart-wrapper {
+      flex: 1;
+      position: relative;
+      min-height: 120px;
+      border-top: 1px solid var(--border);
+      margin-top: 0.5rem;
+      padding-top: 0.5rem;
+    }
+    
+    .chart-wrapper canvas {
+      width: 100% !important;
+      height: 100% !important;
+    }
+    
+    /* Loading state */
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: var(--text-muted);
+    }
+    
+    .loading-spinner {
+      width: 24px;
+      height: 24px;
+      border: 2px solid var(--border);
+      border-top-color: var(--blue);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-right: 0.75rem;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+      .sidebar {
+        display: none;
+      }
+      
+      .header-left {
+        gap: 0.75rem;
+      }
+      
+      .price-display {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="header-left">
+      <div class="logo">Haslun</div>
+      
+      <div class="ticker-dropdown" id="ticker-dropdown">
+        <button class="ticker-dropdown-btn" onclick="toggleTickerDropdown()">
+          <span id="selected-ticker">RKLB</span>
+        </button>
+        <div class="ticker-dropdown-menu" id="ticker-menu"></div>
+      </div>
+      
+      <div class="timeframe-selector">
+        <button class="tf-btn active" data-tf="1D" onclick="setTimeframe('1D')">1D</button>
+        <button class="tf-btn" data-tf="45" onclick="setTimeframe('45')">45m</button>
+      </div>
+      
+      <div class="price-display" id="price-display">
+        <span class="current-price" id="current-price">--</span>
+        <span class="price-change" id="price-change">--</span>
+      </div>
+    </div>
+    
+    <div class="range-selector">
+      <button class="range-btn" data-range="1W" onclick="setRange('1W')">1W</button>
+      <button class="range-btn" data-range="1M" onclick="setRange('1M')">1M</button>
+      <button class="range-btn active" data-range="3M" onclick="setRange('3M')">3M</button>
+      <button class="range-btn" data-range="6M" onclick="setRange('6M')">6M</button>
+      <button class="range-btn" data-range="1Y" onclick="setRange('1Y')">1Y</button>
+      <button class="range-btn" data-range="ALL" onclick="setRange('ALL')">All</button>
+    </div>
+  </header>
+  
+  <main class="main">
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-title">Performance</div>
+        <div class="stats-grid" id="stats-grid">
+          <div class="stat-item">
+            <div class="stat-label">1 Day</div>
+            <div class="stat-value" id="stat-1d">--</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">1 Week</div>
+            <div class="stat-value" id="stat-1w">--</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">1 Month</div>
+            <div class="stat-value" id="stat-1m">--</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">3 Months</div>
+            <div class="stat-value" id="stat-3m">--</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">6 Months</div>
+            <div class="stat-value" id="stat-6m">--</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">1 Year</div>
+            <div class="stat-value" id="stat-1y">--</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="sidebar-section">
+        <div class="sidebar-title">MACD Indicator</div>
+        <div class="macd-indicator" id="macd-indicator">
+          <div class="macd-row">
+            <span class="macd-label">MACD</span>
+            <span class="macd-value" id="macd-value">--</span>
+          </div>
+          <div class="macd-row">
+            <span class="macd-label">Signal</span>
+            <span class="macd-value" id="signal-value">--</span>
+          </div>
+          <div class="macd-row">
+            <span class="macd-label">Histogram</span>
+            <span class="macd-value" id="hist-value">--</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="sidebar-section">
+        <div class="sidebar-title">52 Week Range</div>
+        <div class="stats-grid">
+          <div class="stat-item">
+            <div class="stat-label">High</div>
+            <div class="stat-value" id="stat-high">--</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Low</div>
+            <div class="stat-value" id="stat-low">--</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="watchlist" id="watchlist"></div>
+    </aside>
+    
+    <div class="chart-area">
+      <div class="chart-toolbar">
+        <div class="chart-tools">
+          <button class="tool-btn active" data-chart="line" onclick="setChartType('line')">Line</button>
+          <button class="tool-btn" data-chart="candlestick" onclick="setChartType('candlestick')">Candle</button>
+          <span style="color: var(--border); margin: 0 0.25rem;">|</span>
+          <button class="tool-btn" id="ma-toggle" onclick="toggleMA()">MA</button>
+        </div>
+      </div>
+      
+      <div class="chart-container">
+        <div class="price-chart-wrapper">
+          <canvas id="price-chart"></canvas>
+        </div>
+        <div class="macd-chart-wrapper">
+          <canvas id="macd-chart"></canvas>
+        </div>
+      </div>
+    </div>
+  </main>
+  
+  <script>
+    // State
+    let currentTicker = 'RKLB';
+    let currentTimeframe = '1D';
+    let currentRange = '3M';
+    let chartType = 'line';
+    let showMA = false;
+    let priceChart = null;
+    let macdChart = null;
+    let tickerData = {};
+    let statsData = {};
+    
+    // Range to days mapping
+    const rangeDays = {
+      '1W': 7,
+      '1M': 30,
+      '3M': 90,
+      '6M': 180,
+      '1Y': 365,
+      'ALL': 9999
+    };
+    
+    // Initialize
+    async function init() {
+      // Load stats first
+      try {
+        const res = await fetch('data/stats.json');
+        const data = await res.json();
+        statsData = data.stats;
+        buildWatchlist(data.tickers);
+      } catch (e) {
+        console.error('Failed to load stats:', e);
+      }
+      
+      // Load initial ticker
+      await loadTicker(currentTicker);
+    }
+    
+    function buildWatchlist(tickers) {
+      const container = document.getElementById('watchlist');
+      const menu = document.getElementById('ticker-menu');
+      
+      container.innerHTML = tickers.map(t => {
+        const stats = statsData[t] || {};
+        const change = stats.return_1d || 0;
+        const isPositive = change >= 0;
+        return `
+          <div class="watchlist-item ${t === currentTicker ? 'active' : ''}" onclick="selectTicker('${t}')">
+            <span class="watchlist-ticker">${t}</span>
+            <div class="watchlist-price">
+              <div class="watchlist-current">$${(stats.current || 0).toFixed(2)}</div>
+              <div class="watchlist-change ${isPositive ? 'positive' : 'negative'}">${isPositive ? '+' : ''}${change.toFixed(2)}%</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+      
+      menu.innerHTML = tickers.map(t => {
+        const stats = statsData[t] || {};
+        const change = stats.return_1d || 0;
+        const isPositive = change >= 0;
+        return `
+          <div class="ticker-dropdown-item ${t === currentTicker ? 'active' : ''}" onclick="selectTicker('${t}')">
+            <span>${t}</span>
+            <span class="ticker-change ${isPositive ? 'positive' : 'negative'}">${isPositive ? '+' : ''}${change.toFixed(1)}%</span>
+          </div>
+        `;
+      }).join('');
+    }
+    
+    function toggleTickerDropdown() {
+      document.getElementById('ticker-menu').classList.toggle('open');
+    }
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.ticker-dropdown')) {
+        document.getElementById('ticker-menu').classList.remove('open');
+      }
+    });
+    
+    async function loadTicker(ticker) {
+      // Check cache
+      if (!tickerData[ticker]) {
+        try {
+          const res = await fetch(`data/${ticker.toLowerCase()}.json`);
+          tickerData[ticker] = await res.json();
+        } catch (e) {
+          console.error(`Failed to load ${ticker}:`, e);
+          return;
+        }
+      }
+      
+      currentTicker = ticker;
+      document.getElementById('selected-ticker').textContent = ticker;
+      
+      // Update UI
+      updateStats();
+      updateCharts();
+      
+      // Update watchlist active state
+      document.querySelectorAll('.watchlist-item').forEach(el => {
+        el.classList.toggle('active', el.querySelector('.watchlist-ticker').textContent === ticker);
+      });
+      document.querySelectorAll('.ticker-dropdown-item').forEach(el => {
+        el.classList.toggle('active', el.querySelector('span').textContent === ticker);
+      });
+      document.getElementById('ticker-menu').classList.remove('open');
+    }
+    
+    function selectTicker(ticker) {
+      loadTicker(ticker);
+    }
+    
+    function setTimeframe(tf) {
+      currentTimeframe = tf;
+      document.querySelectorAll('.tf-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tf === tf);
+      });
+      updateCharts();
+    }
+    
+    function setRange(range) {
+      currentRange = range;
+      document.querySelectorAll('.range-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.range === range);
+      });
+      updateCharts();
+    }
+    
+    function setChartType(type) {
+      chartType = type;
+      document.querySelectorAll('.tool-btn[data-chart]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.chart === type);
+      });
+      updateCharts();
+    }
+    
+    function toggleMA() {
+      showMA = !showMA;
+      document.getElementById('ma-toggle').classList.toggle('active', showMA);
+      updateCharts();
+    }
+    
+    function updateStats() {
+      const stats = statsData[currentTicker] || {};
+      
+      // Price display
+      document.getElementById('current-price').textContent = `$${(stats.current || 0).toFixed(2)}`;
+      const change = stats.return_1d || 0;
+      const changeEl = document.getElementById('price-change');
+      changeEl.textContent = `${change >= 0 ? '+' : ''}${change.toFixed(2)}%`;
+      changeEl.className = `price-change ${change >= 0 ? 'positive' : 'negative'}`;
+      
+      // Stats grid
+      const periods = ['1d', '1w', '1m', '3m', '6m', '1y'];
+      periods.forEach(p => {
+        const el = document.getElementById(`stat-${p}`);
+        const val = stats[`return_${p}`];
+        if (val !== undefined) {
+          el.textContent = `${val >= 0 ? '+' : ''}${val.toFixed(1)}%`;
+          el.className = `stat-value ${val >= 0 ? 'positive' : 'negative'}`;
+        }
+      });
+      
+      // 52 week range
+      document.getElementById('stat-high').textContent = `$${(stats.high_52w || 0).toFixed(2)}`;
+      document.getElementById('stat-low').textContent = `$${(stats.low_52w || 0).toFixed(2)}`;
+      
+      // MACD (from latest data point)
+      const data = tickerData[currentTicker];
+      if (data) {
+        const source = currentTimeframe === '1D' ? data.daily : data.intraday;
+        if (source && source.length > 0) {
+          const latest = source[source.length - 1];
+          
+          const macdEl = document.getElementById('macd-value');
+          if (latest.macd !== undefined) {
+            macdEl.textContent = latest.macd.toFixed(4);
+            macdEl.className = `macd-value ${latest.macd >= 0 ? 'positive' : 'negative'}`;
+          }
+          
+          const signalEl = document.getElementById('signal-value');
+          if (latest.signal !== undefined) {
+            signalEl.textContent = latest.signal.toFixed(4);
+          }
+          
+          const histEl = document.getElementById('hist-value');
+          if (latest.hist !== undefined) {
+            histEl.textContent = latest.hist.toFixed(4);
+            histEl.className = `macd-value ${latest.hist >= 0 ? 'positive' : 'negative'}`;
+          }
+        }
+      }
+    }
+    
+    function updateCharts() {
+      const data = tickerData[currentTicker];
+      if (!data) return;
+      
+      // Get data based on timeframe
+      let source = currentTimeframe === '1D' ? data.daily : data.intraday;
+      if (!source || source.length === 0) return;
+      
+      // Filter by range
+      const days = rangeDays[currentRange];
+      const msPerDay = 24 * 60 * 60 * 1000;
+      const cutoff = Date.now() - (days * msPerDay);
+      source = source.filter(d => d.t > cutoff);
+      
+      // Prepare chart data
+      const labels = source.map(d => new Date(d.t));
+      const closes = source.map(d => d.c);
+      const macdData = source.map(d => d.macd).filter(v => v !== undefined);
+      const signalData = source.map(d => d.signal).filter(v => v !== undefined);
+      const histData = source.map(d => d.hist).filter(v => v !== undefined);
+      
+      // Price chart
+      if (priceChart) priceChart.destroy();
+      
+      const priceCtx = document.getElementById('price-chart');
+      const datasets = [{
+        label: currentTicker,
+        data: closes,
+        borderColor: '#2962FF',
+        backgroundColor: 'rgba(41, 98, 255, 0.1)',
+        borderWidth: 2,
+        fill: true,
+        tension: 0.1,
+        pointRadius: 0,
+        pointHoverRadius: 4
+      }];
+      
+      // Add MAs if enabled
+      if (showMA) {
+        const ma100 = source.map(d => d.g100).filter(v => v !== undefined);
+        const ma150 = source.map(d => d.g150).filter(v => v !== undefined);
+        const ma200 = source.map(d => d.g200).filter(v => v !== undefined);
+        
+        if (ma100.length > 0) {
+          datasets.push({
+            label: 'MA 100',
+            data: ma100,
+            borderColor: '#FF9800',
+            borderWidth: 1,
+            fill: false,
+            tension: 0.1,
+            pointRadius: 0
+          });
+        }
+        if (ma150.length > 0) {
+          datasets.push({
+            label: 'MA 150',
+            data: ma150,
+            borderColor: '#9C27B0',
+            borderWidth: 1,
+            fill: false,
+            tension: 0.1,
+            pointRadius: 0
+          });
+        }
+        if (ma200.length > 0) {
+          datasets.push({
+            label: 'MA 200',
+            data: ma200,
+            borderColor: '#26A69A',
+            borderWidth: 1,
+            fill: false,
+            tension: 0.1,
+            pointRadius: 0
+          });
+        }
+      }
+      
+      priceChart = new Chart(priceCtx, {
+        type: 'line',
+        data: { labels, datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: {
+            mode: 'index',
+            intersect: false
+          },
+          plugins: {
+            legend: { display: showMA },
+            tooltip: {
+              backgroundColor: 'rgba(30, 34, 45, 0.95)',
+              titleColor: '#D1D4DC',
+              bodyColor: '#D1D4DC',
+              borderColor: '#363A45',
+              borderWidth: 1,
+              padding: 12,
+              callbacks: {
+                title: (items) => {
+                  const date = new Date(items[0].parsed.x);
+                  return date.toLocaleDateString('en-US', { 
+                    month: 'short', day: 'numeric', year: 'numeric',
+                    hour: currentTimeframe === '45' ? '2-digit' : undefined,
+                    minute: currentTimeframe === '45' ? '2-digit' : undefined
+                  });
+                },
+                label: (item) => {
+                  return `${item.dataset.label}: $${item.parsed.y.toFixed(2)}`;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              type: 'time',
+              time: {
+                unit: currentRange === '1W' ? 'day' : currentRange === '1M' ? 'week' : 'month'
+              },
+              grid: { color: '#1E222D' },
+              ticks: { color: '#787B86', maxTicksLimit: 8 }
+            },
+            y: {
+              position: 'right',
+              grid: { color: '#1E222D' },
+              ticks: {
+                color: '#787B86',
+                callback: (v) => '$' + v.toFixed(2)
+              }
+            }
+          }
+        }
+      });
+      
+      // MACD chart
+      if (macdChart) macdChart.destroy();
+      
+      const macdCtx = document.getElementById('macd-chart');
+      const macdLabels = labels.slice(-macdData.length);
+      
+      macdChart = new Chart(macdCtx, {
+        type: 'bar',
+        data: {
+          labels: macdLabels,
+          datasets: [
+            {
+              label: 'Histogram',
+              data: histData,
+              backgroundColor: histData.map(v => v >= 0 ? 'rgba(38, 166, 154, 0.5)' : 'rgba(239, 83, 80, 0.5)'),
+              borderColor: histData.map(v => v >= 0 ? '#26A69A' : '#EF5350'),
+              borderWidth: 1,
+              type: 'bar',
+              order: 2
+            },
+            {
+              label: 'MACD',
+              data: macdData,
+              borderColor: '#2962FF',
+              borderWidth: 1.5,
+              fill: false,
+              tension: 0.1,
+              pointRadius: 0,
+              type: 'line',
+              order: 1
+            },
+            {
+              label: 'Signal',
+              data: signalData,
+              borderColor: '#FF9800',
+              borderWidth: 1.5,
+              fill: false,
+              tension: 0.1,
+              pointRadius: 0,
+              type: 'line',
+              order: 0
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: {
+            mode: 'index',
+            intersect: false
+          },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: 'rgba(30, 34, 45, 0.95)',
+              titleColor: '#D1D4DC',
+              bodyColor: '#D1D4DC',
+              borderColor: '#363A45',
+              borderWidth: 1
+            }
+          },
+          scales: {
+            x: {
+              type: 'time',
+              display: false
+            },
+            y: {
+              position: 'right',
+              grid: { color: '#1E222D' },
+              ticks: { color: '#787B86' }
+            }
+          }
+        }
+      });
+    }
+    
+    // Start
+    init();
+  </script>
+</body>
+</html>

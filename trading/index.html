@@ -2476,19 +2476,14 @@
     
     function initPerfChart() {
       const ctx = document.getElementById('perf-canvas');
-      if (!ctx) {
-        console.error('Canvas not found');
-        return;
-      }
+      if (!ctx) return;
       
       // Build initial datasets
       const initialDatasets = chartState.activeSeries.map(key => {
         const cfg = seriesConfig[key];
-        const data = PERFORMANCE_DATA[key];
-        console.log('Building dataset for', key, ':', data);
         return {
           label: cfg.label,
-          data: data,
+          data: PERFORMANCE_DATA[key],
           borderColor: cfg.color,
           backgroundColor: 'transparent',
           borderWidth: cfg.borderWidth,
@@ -2498,9 +2493,6 @@
           pointBorderColor: cfg.color
         };
       });
-      
-      console.log('Initial datasets:', initialDatasets);
-      console.log('Labels:', PERFORMANCE_DATA.labels);
       
       perfChart = new Chart(ctx, {
         type: 'line',
@@ -2580,24 +2572,6 @@
       // Update legend and summary
       rebuildLegend();
       updatePerfSummary();
-    }
-    
-    function updateLegendValues(dataIndex) {
-      const legend = document.getElementById('perf-legend');
-      if (!legend) return;
-      
-      chartState.activeSeries.forEach(key => {
-        const row = legend.querySelector(`[data-series="${key}"]`);
-        if (!row) return;
-        
-        const valueEl = row.querySelector('.perf-legend-value');
-        const idx = dataIndex >= 0 ? dataIndex : PERFORMANCE_DATA[key].length - 1;
-        const val = PERFORMANCE_DATA[key][idx];
-        const isPositive = val >= 0;
-        
-        valueEl.textContent = (isPositive ? '+' : '') + val + '%';
-        valueEl.className = 'perf-legend-value ' + (isPositive ? 'positive' : 'negative');
-      });
     }
     
     function rebuildLegend() {
