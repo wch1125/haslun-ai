@@ -2222,6 +2222,323 @@
       100% { top: 100%; }
     }
 
+    /* =========================================================================
+       CLOSE ENCOUNTERS SIGNAL BOARD
+       ========================================================================= */
+    #encounters-console {
+      margin-top: 1rem;
+      padding: 14px;
+      border-radius: 14px;
+      border: 1px solid hsla(var(--accent-hue), 100%, 60%, 0.15);
+      background: radial-gradient(circle at center, hsla(var(--accent-hue), 100%, 60%, 0.05), transparent 70%);
+    }
+
+    .console-title {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.25em;
+      color: var(--phosphor);
+      text-align: center;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+    }
+
+    .encounters-board {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .board-row {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .enc-light {
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+      background: hsla(var(--accent-hue), 100%, 60%, 0.12);
+      box-shadow: 0 0 4px hsla(var(--accent-hue), 100%, 60%, 0.4);
+      transition: background 0.12s, transform 0.12s, box-shadow 0.12s;
+    }
+
+    .enc-light.active {
+      background: var(--phosphor);
+      transform: scale(1.5);
+      box-shadow:
+        0 0 8px var(--phosphor),
+        0 0 16px var(--accent-glow),
+        inset 0 0 4px hsla(var(--accent-hue), 80%, 85%, 0.8);
+    }
+
+    .signal-status {
+      margin-top: 12px;
+      text-align: center;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      letter-spacing: 0.25em;
+      color: var(--phosphor);
+      text-transform: uppercase;
+    }
+
+    .signal-status.noise {
+      color: #ff6b6b;
+    }
+
+    .signal-status.locked {
+      color: var(--phosphor);
+      text-shadow: 0 0 10px var(--accent-glow);
+      animation: status-pulse 0.8s ease-in-out infinite;
+    }
+
+    @keyframes status-pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    /* =========================================================================
+       CARGO BAY MANIFEST
+       ========================================================================= */
+    .cargo-bay {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 10px;
+      padding: 12px;
+      margin-bottom: 1rem;
+      background: radial-gradient(ellipse at 50% 0%, hsla(var(--accent-hue), 100%, 60%, 0.05), transparent 60%);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+
+    .cargo-item {
+      text-align: center;
+      border-radius: 8px;
+      padding: 10px 8px;
+      background: linear-gradient(180deg, #0a0f14, #050810);
+      border: 1px solid hsla(var(--accent-hue), 100%, 60%, 0.15);
+      transition: all 0.2s;
+    }
+
+    .cargo-item:hover {
+      border-color: var(--phosphor-dim);
+      transform: translateY(-2px);
+    }
+
+    .cargo-icon {
+      width: 36px;
+      height: 28px;
+      margin: 0 auto 6px;
+      border: 1px solid var(--phosphor-dim);
+      border-radius: 4px;
+      background: linear-gradient(180deg, hsla(var(--accent-hue), 100%, 60%, 0.1), transparent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .cargo-icon svg {
+      width: 20px;
+      height: 16px;
+      fill: var(--phosphor);
+      opacity: 0.8;
+    }
+
+    .cargo-name {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .cargo-ticker {
+      font-family: var(--font-display);
+      font-size: 0.7rem;
+      color: var(--phosphor);
+      margin-bottom: 4px;
+    }
+
+    .cargo-health {
+      font-family: var(--font-mono);
+      font-size: 0.55rem;
+      letter-spacing: 0.12em;
+      padding: 2px 6px;
+      border-radius: 3px;
+      background: hsla(var(--accent-hue), 100%, 60%, 0.1);
+      color: var(--phosphor);
+      display: inline-block;
+    }
+
+    .cargo-item.damaged {
+      border-color: rgba(255, 107, 107, 0.4);
+    }
+
+    .cargo-item.damaged .cargo-icon {
+      border-color: rgba(255, 107, 107, 0.5);
+    }
+
+    .cargo-item.damaged .cargo-icon svg {
+      fill: #ff6b6b;
+    }
+
+    .cargo-item.damaged .cargo-health {
+      background: rgba(255, 107, 107, 0.15);
+      color: #ff6b6b;
+    }
+
+    .cargo-item.optimal {
+      border-color: hsla(var(--accent-hue), 100%, 60%, 0.4);
+      box-shadow: 0 0 15px hsla(var(--accent-hue), 100%, 60%, 0.1);
+    }
+
+    .cargo-item.optimal .cargo-health {
+      background: hsla(var(--accent-hue), 100%, 60%, 0.2);
+    }
+
+    /* =========================================================================
+       TRAJECTORY NAVIGATOR (Derivatives)
+       ========================================================================= */
+    .trajectory-section {
+      margin-bottom: 1rem;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: radial-gradient(ellipse at 50% 100%, hsla(var(--accent-hue), 100%, 60%, 0.05), transparent 50%);
+    }
+
+    .trajectory-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .trajectory-title {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.15em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .trajectory-legend {
+      display: flex;
+      gap: 12px;
+      font-size: 0.6rem;
+      color: var(--text-dim);
+    }
+
+    .trajectory-legend span {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .trajectory-legend .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+
+    .trajectory-legend .dot.bullish { background: var(--phosphor); }
+    .trajectory-legend .dot.neutral { background: var(--amber); }
+    .trajectory-legend .dot.bearish { background: #ff6b6b; }
+
+    #trajectory-canvas {
+      width: 100%;
+      height: 140px;
+      background: radial-gradient(ellipse at 50% 50%, #020509, #000);
+      border-radius: 8px;
+      border: 1px solid hsla(var(--accent-hue), 100%, 60%, 0.2);
+    }
+
+    .trajectory-readout {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+    }
+
+    .trajectory-stat {
+      text-align: center;
+    }
+
+    .trajectory-stat-value {
+      font-family: var(--font-display);
+      font-size: 0.85rem;
+      color: var(--phosphor);
+    }
+
+    .trajectory-stat-label {
+      font-size: 0.55rem;
+      letter-spacing: 0.1em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    /* =========================================================================
+       AMBIENT PANEL FLICKER
+       ========================================================================= */
+    @keyframes panel-flicker {
+      0%, 100% { opacity: 1; }
+      92% { opacity: 1; }
+      93% { opacity: 0.8; }
+      94% { opacity: 1; }
+      96% { opacity: 0.9; }
+      97% { opacity: 1; }
+    }
+
+    .card-header,
+    .panel-header {
+      animation: panel-flicker 8s linear infinite;
+    }
+
+    /* =========================================================================
+       AMBIENT PARTICLES (subtle background life)
+       ========================================================================= */
+    .ambient-particles {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      pointer-events: none;
+      z-index: -1;
+      overflow: hidden;
+    }
+
+    .particle {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      background: var(--phosphor);
+      border-radius: 50%;
+      opacity: 0.3;
+      animation: float-up 15s linear infinite;
+    }
+
+    @keyframes float-up {
+      0% {
+        transform: translateY(100vh) translateX(0);
+        opacity: 0;
+      }
+      10% {
+        opacity: 0.3;
+      }
+      90% {
+        opacity: 0.3;
+      }
+      100% {
+        transform: translateY(-10vh) translateX(20px);
+        opacity: 0;
+      }
+    }
+
     /* COLOR PROFILE CONTROL */
     .color-profile-control {
       margin-top: 0.4rem;
@@ -2331,6 +2648,7 @@
 <body>
   <div class="scan-line"></div>
   <div class="grid-bg"></div>
+  <div class="ambient-particles" id="ambient-particles"></div>
   
   <!-- LOADING SCREEN -->
   <div class="loading-screen" id="loading-screen">
@@ -2722,6 +3040,23 @@
                 </div>
               </div>
             </div>
+            
+            <!-- CLOSE ENCOUNTERS SIGNAL BOARD -->
+            <div id="encounters-console">
+              <div class="console-title">👽 ENCOUNTERS SIGNAL ARRAY</div>
+              <div class="encounters-board">
+                <div class="board-row">
+                  <div class="enc-light"></div><div class="enc-light"></div><div class="enc-light"></div><div class="enc-light"></div><div class="enc-light"></div>
+                </div>
+                <div class="board-row">
+                  <div class="enc-light"></div><div class="enc-light"></div><div class="enc-light"></div><div class="enc-light"></div><div class="enc-light"></div>
+                </div>
+                <div class="board-row">
+                  <div class="enc-light"></div><div class="enc-light"></div><div class="enc-light"></div><div class="enc-light"></div><div class="enc-light"></div>
+                </div>
+              </div>
+              <div class="signal-status" id="signal-status">LISTENING…</div>
+            </div>
           </div>
         </div>
         
@@ -2735,7 +3070,60 @@
             </div>
             <div class="card">
               <div class="card-header"><div><div class="card-label">// Active</div><div class="card-title">Stock Positions</div></div></div>
-              <div class="card-body" style="padding: 0;"><table class="data-table"><thead><tr><th>Ticker</th><th>Sector</th><th>Shares</th><th>Entry</th><th>Current</th><th>Value</th><th>P&L</th></tr></thead><tbody id="stock-tbody"></tbody></table></div>
+              <div class="card-body">
+                <!-- CARGO BAY MANIFEST -->
+                <div class="cargo-bay" id="cargo-bay">
+                  <div class="cargo-item" data-ticker="RKLB">
+                    <div class="cargo-icon">
+                      <svg viewBox="0 0 20 16"><path d="M10 0L18 6V14L10 16L2 14V6L10 0Z M10 4L14 6.5V11L10 12.5L6 11V6.5L10 4Z"/></svg>
+                    </div>
+                    <div class="cargo-ticker">RKLB</div>
+                    <div class="cargo-name">NAV THRUSTERS</div>
+                    <div class="cargo-health">OPTIMAL</div>
+                  </div>
+                  <div class="cargo-item" data-ticker="LUNR">
+                    <div class="cargo-icon">
+                      <svg viewBox="0 0 20 16"><rect x="2" y="6" width="16" height="4" rx="1"/><rect x="0" y="4" width="4" height="8" rx="1"/><rect x="16" y="4" width="4" height="8" rx="1"/></svg>
+                    </div>
+                    <div class="cargo-ticker">LUNR</div>
+                    <div class="cargo-name">SOLAR ARRAY</div>
+                    <div class="cargo-health">OPTIMAL</div>
+                  </div>
+                  <div class="cargo-item" data-ticker="JOBY">
+                    <div class="cargo-icon">
+                      <svg viewBox="0 0 20 16"><ellipse cx="10" cy="8" rx="8" ry="4"/><circle cx="4" cy="4" r="2"/><circle cx="16" cy="4" r="2"/></svg>
+                    </div>
+                    <div class="cargo-ticker">JOBY</div>
+                    <div class="cargo-name">EVTOL DECK</div>
+                    <div class="cargo-health">OPTIMAL</div>
+                  </div>
+                  <div class="cargo-item" data-ticker="ASTS">
+                    <div class="cargo-icon">
+                      <svg viewBox="0 0 20 16"><rect x="6" y="4" width="8" height="8" rx="1"/><line x1="2" y1="8" x2="6" y2="8" stroke="currentColor" stroke-width="1.5"/><line x1="14" y1="8" x2="18" y2="8" stroke="currentColor" stroke-width="1.5"/></svg>
+                    </div>
+                    <div class="cargo-ticker">ASTS</div>
+                    <div class="cargo-name">COMMS RELAY</div>
+                    <div class="cargo-health">OPTIMAL</div>
+                  </div>
+                  <div class="cargo-item" data-ticker="ACHR">
+                    <div class="cargo-icon">
+                      <svg viewBox="0 0 20 16"><polygon points="10,2 16,8 10,14 4,8"/><circle cx="10" cy="8" r="2"/></svg>
+                    </div>
+                    <div class="cargo-ticker">ACHR</div>
+                    <div class="cargo-name">LIFT JETS</div>
+                    <div class="cargo-health">OPTIMAL</div>
+                  </div>
+                  <div class="cargo-item" data-ticker="EVEX">
+                    <div class="cargo-icon">
+                      <svg viewBox="0 0 20 16"><rect x="4" y="2" width="12" height="12" rx="2"/><circle cx="10" cy="8" r="3"/></svg>
+                    </div>
+                    <div class="cargo-ticker">EVEX</div>
+                    <div class="cargo-name">SUPPORT DRONE</div>
+                    <div class="cargo-health">FAULT</div>
+                  </div>
+                </div>
+                <table class="data-table"><thead><tr><th>Ticker</th><th>Sector</th><th>Shares</th><th>Entry</th><th>Current</th><th>Value</th><th>P&L</th></tr></thead><tbody id="stock-tbody"></tbody></table>
+              </div>
             </div>
           </div>
         </div>
@@ -2761,7 +3149,39 @@
             </div>
             <div class="card">
               <div class="card-header"><div><div class="card-label">// LEAPs & Spreads</div><div class="card-title">Options Positions</div></div></div>
-              <div class="card-body" style="padding: 0;"><table class="data-table"><thead><tr><th>Ticker</th><th>Structure</th><th>Strikes</th><th>Entry</th><th>Current</th><th>P&L</th><th>Delta</th></tr></thead><tbody id="options-tbody"></tbody></table></div>
+              <div class="card-body">
+                <!-- TRAJECTORY NAVIGATOR -->
+                <div class="trajectory-section">
+                  <div class="trajectory-header">
+                    <div class="trajectory-title">🛰 NAVIGATION PATH SIMULATOR</div>
+                    <div class="trajectory-legend">
+                      <span><div class="dot bullish"></div> Bullish</span>
+                      <span><div class="dot neutral"></div> Neutral</span>
+                      <span><div class="dot bearish"></div> Risk</span>
+                    </div>
+                  </div>
+                  <canvas id="trajectory-canvas"></canvas>
+                  <div class="trajectory-readout">
+                    <div class="trajectory-stat">
+                      <div class="trajectory-stat-value" id="traj-delta">23.55</div>
+                      <div class="trajectory-stat-label">Net Delta</div>
+                    </div>
+                    <div class="trajectory-stat">
+                      <div class="trajectory-stat-value" id="traj-theta">-12.40</div>
+                      <div class="trajectory-stat-label">Daily Theta</div>
+                    </div>
+                    <div class="trajectory-stat">
+                      <div class="trajectory-stat-value" id="traj-risk">MODERATE</div>
+                      <div class="trajectory-stat-label">Risk Level</div>
+                    </div>
+                    <div class="trajectory-stat">
+                      <div class="trajectory-stat-value" id="traj-horizon">45D</div>
+                      <div class="trajectory-stat-label">Horizon</div>
+                    </div>
+                  </div>
+                </div>
+                <table class="data-table"><thead><tr><th>Ticker</th><th>Structure</th><th>Strikes</th><th>Entry</th><th>Current</th><th>P&L</th><th>Delta</th></tr></thead><tbody id="options-tbody"></tbody></table>
+              </div>
             </div>
           </div>
         </div>
@@ -5606,16 +6026,311 @@
         }
       }
 
+      // =========================================================================
+      // CLOSE ENCOUNTERS SIGNAL BOARD
+      // =========================================================================
+      function initEncountersBoard() {
+        const lights = [...document.querySelectorAll('.encounters-board .enc-light')];
+        const status = document.getElementById('signal-status');
+        if (!lights.length || !status) return;
+
+        let userInteracting = false;
+        let interactionTimeout;
+
+        function setStatus(text, mode) {
+          status.textContent = text;
+          status.className = 'signal-status ' + mode;
+        }
+
+        function updateSignalLevel(value) {
+          value = Number(value);
+          const activeCount = Math.round((value / 100) * lights.length);
+
+          lights.forEach((l, i) => l.classList.toggle('active', i < activeCount));
+
+          if (value < 20) {
+            setStatus("STATIC / NOISE", "noise");
+          } else if (value < 80) {
+            setStatus("LISTENING…", "");
+          } else {
+            setStatus("⚡ COMMS LOCKED ⚡", "locked");
+            if (typeof beep === 'function') beep(660, 0.08);
+          }
+        }
+
+        // Hook into sliders, knobs, etc.
+        document.querySelectorAll('input[type="range"]').forEach(slider => {
+          slider.addEventListener('input', () => {
+            userInteracting = true;
+            clearTimeout(interactionTimeout);
+            updateSignalLevel(slider.value);
+            interactionTimeout = setTimeout(() => { userInteracting = false; }, 3000);
+          });
+        });
+
+        // Knob clicks also affect signal
+        document.querySelectorAll('.knob').forEach(knob => {
+          knob.addEventListener('click', () => {
+            userInteracting = true;
+            clearTimeout(interactionTimeout);
+            const val = parseInt(knob.dataset.value) || 50;
+            updateSignalLevel(val);
+            interactionTimeout = setTimeout(() => { userInteracting = false; }, 3000);
+          });
+        });
+
+        // Atmospheric idle animation - alien pulse when not interacting
+        setInterval(() => {
+          if (userInteracting) return;
+          const random = Math.floor(Math.random() * 100);
+          updateSignalLevel(random);
+        }, 1200);
+
+        logTerminal('encounters signal array online');
+      }
+
+      // =========================================================================
+      // CARGO BAY HEALTH SYSTEM
+      // =========================================================================
+      const CARGO_SYSTEMS = {
+        'RKLB': { name: 'NAV THRUSTERS', critical: true },
+        'LUNR': { name: 'SOLAR ARRAY', critical: true },
+        'JOBY': { name: 'EVTOL DECK', critical: false },
+        'ASTS': { name: 'COMMS RELAY', critical: true },
+        'ACHR': { name: 'LIFT JETS', critical: false },
+        'EVEX': { name: 'SUPPORT DRONE', critical: false },
+        'BKSY': { name: 'OPTICS BAY', critical: false },
+        'GME': { name: 'POWER CORE', critical: true }
+      };
+
+      function updateCargoHealth(ticker, pnl) {
+        const item = document.querySelector(`.cargo-item[data-ticker="${ticker}"]`);
+        if (!item) return;
+
+        const health = item.querySelector('.cargo-health');
+        item.classList.remove('damaged', 'optimal');
+
+        if (pnl < -5) {
+          item.classList.add('damaged');
+          health.textContent = "CRITICAL";
+        } else if (pnl < 0) {
+          item.classList.add('damaged');
+          health.textContent = "FAULT";
+        } else if (pnl > 10) {
+          item.classList.add('optimal');
+          health.textContent = "OPTIMAL+";
+        } else if (pnl > 0) {
+          item.classList.add('optimal');
+          health.textContent = "OPTIMAL";
+        } else {
+          health.textContent = "NOMINAL";
+        }
+      }
+
+      function initCargoBay() {
+        // Update cargo bay based on demo positions
+        if (typeof DEMO_STOCK_POSITIONS !== 'undefined') {
+          DEMO_STOCK_POSITIONS.forEach(pos => {
+            const pnlPct = ((pos.current_price - pos.entry_price) / pos.entry_price) * 100;
+            updateCargoHealth(pos.ticker, pnlPct);
+          });
+        }
+        logTerminal('cargo bay manifest synchronized');
+      }
+
+      // =========================================================================
+      // TRAJECTORY NAVIGATOR (Derivatives Path Simulator)
+      // =========================================================================
+      function initTrajectoryCanvas() {
+        const canvas = document.getElementById('trajectory-canvas');
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        
+        // Set actual canvas size
+        function resizeCanvas() {
+          const rect = canvas.getBoundingClientRect();
+          canvas.width = rect.width * window.devicePixelRatio;
+          canvas.height = rect.height * window.devicePixelRatio;
+          ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+        }
+        
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // Star field
+        const stars = [];
+        for (let i = 0; i < 50; i++) {
+          stars.push({
+            x: Math.random() * 100,
+            y: Math.random() * 100,
+            size: Math.random() * 1.5 + 0.5,
+            alpha: Math.random() * 0.5 + 0.2
+          });
+        }
+
+        let volatility = 2;
+        let horizon = 45;
+        let phase = 0;
+
+        function drawTrajectory() {
+          const w = canvas.getBoundingClientRect().width;
+          const h = canvas.getBoundingClientRect().height;
+          
+          ctx.clearRect(0, 0, w, h);
+          
+          // Draw stars
+          stars.forEach(star => {
+            ctx.beginPath();
+            ctx.arc(star.x / 100 * w, star.y / 100 * h, star.size, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(255, 255, 255, ${star.alpha})`;
+            ctx.fill();
+          });
+
+          // Draw trajectory path
+          ctx.beginPath();
+          ctx.moveTo(0, h * 0.7);
+
+          let y = h * 0.7;
+          const hue = getComputedStyle(document.documentElement).getPropertyValue('--accent-hue') || 150;
+
+          for (let x = 0; x < w; x += 4) {
+            const noise = Math.sin((x + phase) / 25) * volatility;
+            const trend = -0.15 * (horizon / 100);
+            y += noise + trend;
+            y = Math.max(10, Math.min(h - 10, y));
+            ctx.lineTo(x, y);
+          }
+
+          ctx.strokeStyle = `hsla(${hue}, 100%, 60%, 0.9)`;
+          ctx.lineWidth = 2;
+          ctx.shadowColor = `hsla(${hue}, 100%, 60%, 0.8)`;
+          ctx.shadowBlur = 8;
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+
+          // Draw current position dot
+          ctx.beginPath();
+          ctx.arc(w * 0.1, h * 0.65, 4, 0, Math.PI * 2);
+          ctx.fillStyle = `hsl(${hue}, 100%, 60%)`;
+          ctx.fill();
+
+          // Draw target zone
+          ctx.beginPath();
+          ctx.arc(w * 0.85, y, 6, 0, Math.PI * 2);
+          ctx.strokeStyle = `hsla(${hue}, 100%, 60%, 0.6)`;
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+
+          phase += 0.5;
+        }
+
+        // Animate
+        function animate() {
+          drawTrajectory();
+          requestAnimationFrame(animate);
+        }
+        animate();
+
+        // Hook into controls
+        document.querySelectorAll('input[type="range"]').forEach(slider => {
+          slider.addEventListener('input', () => {
+            volatility = 1 + (slider.value / 50);
+          });
+        });
+
+        document.querySelectorAll('.knob').forEach(knob => {
+          knob.addEventListener('click', () => {
+            horizon = parseInt(knob.dataset.value) || 45;
+          });
+        });
+
+        logTerminal('trajectory navigator online');
+      }
+
+      // =========================================================================
+      // LORE ENGINE - Random In-World Events
+      // =========================================================================
+      const LORE_EVENTS = [
+        "Unknown beacon pinged portside array.",
+        "Telemetry drift corrected automatically.",
+        "Cargo handlers report minor anomalies.",
+        "Charts updated to reflect stellar winds.",
+        "Crew reports strange vibrations in deck 3.",
+        "AI suggests caution in derivatives bay.",
+        "Solar flare activity detected — shields nominal.",
+        "Quantum entanglement stable at 99.7%.",
+        "Navigation computer recalibrating...",
+        "Distant signal classified as potential artificial.",
+        "Life support cycling — all systems green.",
+        "Hull integrity scan complete. No breaches.",
+        "Spectral analysis of nearby object complete.",
+        "FTL drive cooling cycle initiated.",
+        "Crew morale index: NOMINAL.",
+        "Market anomaly detected in sector 7-G.",
+        "Thermal signature identified — classifying...",
+        "Backup power reserves at 94%.",
+        "Long-range sensors detect movement.",
+        "Docking bay pressure equalized.",
+        "Encrypted transmission received. Decoding...",
+        "Asteroid field mapped. Course adjusted.",
+        "Bio-scanner reports all crew accounted for.",
+        "Reactor output stable at 87%.",
+        "External cameras detect debris field ahead."
+      ];
+
+      function initLoreEngine() {
+        setInterval(() => {
+          const event = LORE_EVENTS[Math.floor(Math.random() * LORE_EVENTS.length)];
+          if (typeof logTerminal === 'function') {
+            logTerminal(event);
+          }
+        }, 18000); // Every 18 seconds
+
+        // Initial lore message
+        setTimeout(() => {
+          logTerminal('Lore engine initialized. Monitoring all frequencies.');
+        }, 2000);
+      }
+
+      // =========================================================================
+      // AMBIENT PARTICLES
+      // =========================================================================
+      function initAmbientParticles() {
+        const container = document.getElementById('ambient-particles');
+        if (!container) return;
+
+        const particleCount = 15;
+        
+        for (let i = 0; i < particleCount; i++) {
+          const particle = document.createElement('div');
+          particle.className = 'particle';
+          particle.style.left = Math.random() * 100 + '%';
+          particle.style.animationDelay = Math.random() * 15 + 's';
+          particle.style.animationDuration = (12 + Math.random() * 8) + 's';
+          container.appendChild(particle);
+        }
+      }
+
       // Run initializations immediately
       initInvaderArmy();
       initColorProfileControl();
+      initAmbientParticles();
       
       if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initArcade);
         document.addEventListener('DOMContentLoaded', initTubeOverload);
+        document.addEventListener('DOMContentLoaded', initEncountersBoard);
+        document.addEventListener('DOMContentLoaded', initCargoBay);
+        document.addEventListener('DOMContentLoaded', initTrajectoryCanvas);
+        document.addEventListener('DOMContentLoaded', initLoreEngine);
       } else {
         initArcade();
         initTubeOverload();
+        initEncountersBoard();
+        initCargoBay();
+        initTrajectoryCanvas();
+        initLoreEngine();
       }
     })();
   </script>
