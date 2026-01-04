@@ -1031,28 +1031,25 @@
     }
     
     /* =========================================================================
-       PERFORMANCE CHART - TRADINGVIEW INSPIRED
+       PERFORMANCE CHART - REFINED DESIGN
        ========================================================================= */
     .perf-chart-container {
       position: relative;
-      background: #131722;
-      border-radius: var(--radius-sm);
-      padding: 1rem;
-      margin: 0 -0.5rem;
     }
     
     .perf-header {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      margin-bottom: 0.75rem;
+      margin-bottom: 1rem;
+      gap: 1rem;
     }
     
     .perf-legend {
       display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
-      min-width: 200px;
+      flex-wrap: wrap;
+      gap: 0.25rem 1rem;
+      min-width: 180px;
     }
     
     .perf-legend-row {
@@ -1065,53 +1062,55 @@
     
     .perf-legend-color {
       width: 3px;
-      height: 14px;
+      height: 12px;
       border-radius: 1px;
+      flex-shrink: 0;
     }
     
     .perf-legend-name {
-      color: #787B86;
-      min-width: 70px;
+      color: var(--muted);
+      min-width: 55px;
     }
     
     .perf-legend-value {
       font-weight: 500;
     }
     
-    .perf-legend-value.positive { color: #26A69A; }
-    .perf-legend-value.negative { color: #EF5350; }
+    .perf-legend-value.positive { color: var(--green); }
+    .perf-legend-value.negative { color: var(--red); }
     
     .perf-controls {
       display: flex;
       flex-wrap: wrap;
-      gap: 0.375rem;
+      gap: 0.3rem;
+      justify-content: flex-end;
     }
     
     .perf-toggle {
       display: flex;
       align-items: center;
-      gap: 0.35rem;
-      padding: 0.3rem 0.5rem;
+      gap: 0.3rem;
+      padding: 0.25rem 0.5rem;
       background: transparent;
-      border: 1px solid #2A2E39;
+      border: 1px solid var(--line);
       border-radius: 4px;
       font-size: 0.65rem;
       font-family: var(--font-body);
-      color: #787B86;
+      color: var(--muted);
       cursor: pointer;
       transition: all 0.15s ease;
       user-select: none;
     }
     
     .perf-toggle:hover {
-      border-color: #434651;
-      color: #D1D4DC;
+      border-color: var(--line-strong);
+      color: var(--ink-light);
     }
     
     .perf-toggle.active {
-      background: #2A2E39;
-      border-color: #2A2E39;
-      color: #D1D4DC;
+      background: var(--bg);
+      border-color: var(--line-strong);
+      color: var(--ink);
     }
     
     .perf-toggle-dot {
@@ -1121,23 +1120,23 @@
     }
     
     .perf-toggle:not(.active) .perf-toggle-dot {
-      opacity: 0.4;
+      opacity: 0.35;
     }
     
     .perf-toggle-value {
       font-family: var(--font-mono);
-      font-size: 0.6rem;
+      font-size: 0.55rem;
       font-weight: 500;
     }
     
-    .perf-toggle-value.positive { color: #26A69A; }
-    .perf-toggle-value.negative { color: #EF5350; }
+    .perf-toggle-value.positive { color: var(--green); }
+    .perf-toggle-value.negative { color: var(--red); }
     .perf-toggle:not(.active) .perf-toggle-value { opacity: 0.5; }
     
     .perf-chart-wrapper {
       position: relative;
-      height: 350px;
-      margin: 0;
+      height: 320px;
+      margin: 0 -0.5rem;
     }
     
     .perf-chart-wrapper canvas {
@@ -1145,39 +1144,13 @@
       height: 100% !important;
     }
     
-    /* Crosshair styling via Chart.js plugin */
-    .perf-crosshair-label {
-      position: absolute;
-      right: 0;
-      background: #2A2E39;
-      color: #D1D4DC;
-      font-size: 0.65rem;
-      font-family: var(--font-mono);
-      padding: 0.2rem 0.4rem;
-      border-radius: 2px;
-      pointer-events: none;
-      transform: translateY(-50%);
-    }
-    
-    .perf-time-label {
-      position: absolute;
-      bottom: 0;
-      background: #2A2E39;
-      color: #D1D4DC;
-      font-size: 0.65rem;
-      font-family: var(--font-mono);
-      padding: 0.2rem 0.4rem;
-      border-radius: 2px;
-      pointer-events: none;
-      transform: translateX(-50%);
-    }
-    
     .perf-summary {
       display: flex;
+      flex-wrap: wrap;
       gap: 1.5rem;
       margin-top: 1rem;
       padding-top: 0.75rem;
-      border-top: 1px solid #2A2E39;
+      border-top: 1px solid var(--line);
     }
     
     .perf-summary-item {
@@ -1190,7 +1163,7 @@
       font-size: 0.6rem;
       text-transform: uppercase;
       letter-spacing: 0.05em;
-      color: #787B86;
+      color: var(--muted);
     }
     
     .perf-summary-value {
@@ -1199,8 +1172,8 @@
       font-weight: 600;
     }
     
-    .perf-summary-value.positive { color: #26A69A; }
-    .perf-summary-value.negative { color: #EF5350; }
+    .perf-summary-value.positive { color: var(--green); }
+    .perf-summary-value.negative { color: var(--red); }
     
     /* =========================================================================
        MOBILE RESPONSIVE STYLES
@@ -1359,12 +1332,7 @@
         font-size: 1rem;
       }
       
-      /* Performance chart mobile - TradingView style */
-      .perf-chart-container {
-        padding: 0.75rem;
-        margin: 0 -0.5rem;
-      }
-      
+      /* Performance chart mobile */
       .perf-header {
         flex-direction: column;
         gap: 0.75rem;
@@ -1372,9 +1340,6 @@
       
       .perf-legend {
         min-width: auto;
-        flex-direction: row;
-        flex-wrap: wrap;
-        gap: 0.5rem 1rem;
       }
       
       .perf-legend-row {
@@ -1382,6 +1347,7 @@
       }
       
       .perf-controls {
+        justify-content: flex-start;
         gap: 0.25rem;
       }
       
@@ -1401,10 +1367,10 @@
       
       .perf-chart-wrapper {
         height: 260px;
+        margin: 0;
       }
       
       .perf-summary {
-        flex-wrap: wrap;
         gap: 1rem;
       }
       
@@ -2559,38 +2525,37 @@
             tooltip: {
               enabled: false,
               external: function(context) {
-                // Update the floating legend with current values
                 const tooltipModel = context.tooltip;
                 if (tooltipModel.opacity === 0) {
-                  // Reset to final values when not hovering
                   updateLegendValues(-1);
                   return;
                 }
-                
-                const dataIndex = tooltipModel.dataPoints[0].dataIndex;
-                updateLegendValues(dataIndex);
+                if (tooltipModel.dataPoints && tooltipModel.dataPoints.length > 0) {
+                  const dataIndex = tooltipModel.dataPoints[0].dataIndex;
+                  updateLegendValues(dataIndex);
+                }
               }
             }
           },
           scales: {
             x: {
               grid: {
-                color: '#1E222D',
+                color: 'rgba(61, 58, 54, 0.5)',
                 drawBorder: false
               },
               ticks: {
-                color: '#787B86',
+                color: '#8A857D',
                 font: { size: 11, family: "'JetBrains Mono', monospace" }
               }
             },
             y: {
               position: 'right',
               grid: {
-                color: '#1E222D',
+                color: 'rgba(61, 58, 54, 0.5)',
                 drawBorder: false
               },
               ticks: {
-                color: '#787B86',
+                color: '#8A857D',
                 font: { size: 11, family: "'JetBrains Mono', monospace" },
                 callback: function(value) {
                   return (value >= 0 ? '+' : '') + value + '%';
@@ -2603,20 +2568,21 @@
               radius: 0,
               hoverRadius: 4,
               hoverBorderWidth: 2,
-              hoverBackgroundColor: '#131722',
-              hoverBorderColor: function(context) {
-                return context.dataset.borderColor;
-              }
+              hoverBackgroundColor: '#2C2A26'
             },
             line: {
-              tension: 0.1,
+              tension: 0.2,
               borderCapStyle: 'round',
               borderJoinStyle: 'round'
             }
+          },
+          animation: {
+            duration: 300
           }
         }
       });
       
+      // Initial data load
       updatePerfChart();
     }
     
@@ -2683,16 +2649,17 @@
           label: cfg.label,
           data: PERFORMANCE_DATA[key],
           borderColor: cfg.color,
-          backgroundColor: cfg.color + '20',
+          backgroundColor: 'transparent',
           borderWidth: cfg.borderWidth,
           borderDash: cfg.borderDash || [],
           fill: false,
-          pointBackgroundColor: cfg.color
+          pointBackgroundColor: cfg.color,
+          pointBorderColor: cfg.color
         };
       });
       
       perfChart.data.datasets = datasets;
-      perfChart.update('none');
+      perfChart.update();
       
       // Rebuild the legend with active series
       rebuildLegend();
