@@ -2474,42 +2474,39 @@
       initPerfChart();
     }
     
-    // Crosshair plugin for TradingView-style interaction
-    const crosshairPlugin = {
-      id: 'crosshair',
-      afterDraw: (chart) => {
-        if (chart.tooltip._active && chart.tooltip._active.length) {
-          const ctx = chart.ctx;
-          const activePoint = chart.tooltip._active[0];
-          const x = activePoint.element.x;
-          const topY = chart.scales.y.top;
-          const bottomY = chart.scales.y.bottom;
-          
-          // Draw vertical crosshair line
-          ctx.save();
-          ctx.beginPath();
-          ctx.moveTo(x, topY);
-          ctx.lineTo(x, bottomY);
-          ctx.lineWidth = 1;
-          ctx.strokeStyle = '#363A45';
-          ctx.setLineDash([3, 3]);
-          ctx.stroke();
-          ctx.restore();
-        }
-      }
-    };
-    
     function initPerfChart() {
-      const ctx = document.getElementById('perf-canvas').getContext('2d');
+      const ctx = document.getElementById('perf-canvas');
+      if (!ctx) {
+        console.error('Canvas not found');
+        return;
+      }
       
-      // Register crosshair plugin
-      Chart.register(crosshairPlugin);
+      // Build initial datasets
+      const initialDatasets = chartState.activeSeries.map(key => {
+        const cfg = seriesConfig[key];
+        const data = PERFORMANCE_DATA[key];
+        console.log('Building dataset for', key, ':', data);
+        return {
+          label: cfg.label,
+          data: data,
+          borderColor: cfg.color,
+          backgroundColor: 'transparent',
+          borderWidth: cfg.borderWidth,
+          borderDash: cfg.borderDash || [],
+          fill: false,
+          pointBackgroundColor: cfg.color,
+          pointBorderColor: cfg.color
+        };
+      });
+      
+      console.log('Initial datasets:', initialDatasets);
+      console.log('Labels:', PERFORMANCE_DATA.labels);
       
       perfChart = new Chart(ctx, {
         type: 'line',
         data: {
           labels: PERFORMANCE_DATA.labels,
-          datasets: []
+          datasets: initialDatasets
         },
         options: {
           responsive: true,
@@ -2523,16 +2520,19 @@
               display: false
             },
             tooltip: {
-              enabled: false,
-              external: function(context) {
-                const tooltipModel = context.tooltip;
-                if (tooltipModel.opacity === 0) {
-                  updateLegendValues(-1);
-                  return;
-                }
-                if (tooltipModel.dataPoints && tooltipModel.dataPoints.length > 0) {
-                  const dataIndex = tooltipModel.dataPoints[0].dataIndex;
-                  updateLegendValues(dataIndex);
+              backgroundColor: 'rgba(44, 42, 38, 0.95)',
+              titleColor: '#F5F2ED',
+              bodyColor: '#C4C0B8',
+              borderColor: '#3D3A36',
+              borderWidth: 1,
+              padding: 12,
+              cornerRadius: 6,
+              titleFont: { weight: '600', size: 12 },
+              bodyFont: { size: 11, family: "'JetBrains Mono', monospace" },
+              callbacks: {
+                label: function(context) {
+                  const val = context.parsed.y;
+                  return ` ${context.dataset.label}: ${val >= 0 ? '+' : ''}${val}%`;
                 }
               }
             }
@@ -2566,24 +2566,20 @@
           elements: {
             point: {
               radius: 0,
-              hoverRadius: 4,
+              hoverRadius: 5,
               hoverBorderWidth: 2,
               hoverBackgroundColor: '#2C2A26'
             },
             line: {
-              tension: 0.2,
-              borderCapStyle: 'round',
-              borderJoinStyle: 'round'
+              tension: 0.25
             }
-          },
-          animation: {
-            duration: 300
           }
         }
       });
       
-      // Initial data load
-      updatePerfChart();
+      // Update legend and summary
+      rebuildLegend();
+      updatePerfSummary();
     }
     
     function updateLegendValues(dataIndex) {
