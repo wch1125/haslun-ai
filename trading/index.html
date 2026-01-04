@@ -16,7 +16,226 @@
       --blue: #2962FF; --orange: #FF9800; --purple: #9C27B0; --terracotta: #C4846C;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow: hidden; }
+    body.loaded { overflow: auto; }
+    
+    /* UFO Loading Screen */
+    .loading-screen {
+      position: fixed; inset: 0; z-index: 9999;
+      background: linear-gradient(180deg, #05050a 0%, #0a0e17 30%, #131722 60%, #1a1a2e 100%);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      transition: opacity 0.6s, visibility 0.6s;
+    }
+    .loading-screen.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+    
+    .stars { position: absolute; inset: 0; overflow: hidden; }
+    .star {
+      position: absolute; background: #fff; border-radius: 50%;
+      animation: twinkle 3s infinite;
+    }
+    .star.large { width: 3px; height: 3px; box-shadow: 0 0 6px 1px rgba(255,255,255,0.5); }
+    @keyframes twinkle { 0%, 100% { opacity: 0.2; } 50% { opacity: 1; } }
+    
+    /* Shooting star */
+    .shooting-star {
+      position: absolute; width: 100px; height: 2px;
+      background: linear-gradient(90deg, rgba(255,255,255,0.8), transparent);
+      animation: shoot 4s linear infinite;
+      opacity: 0;
+    }
+    @keyframes shoot {
+      0% { transform: translateX(0) translateY(0); opacity: 0; }
+      5% { opacity: 1; }
+      20% { transform: translateX(300px) translateY(150px); opacity: 0; }
+      100% { opacity: 0; }
+    }
+    
+    .ufo-scene { position: relative; width: 320px; height: 300px; }
+    
+    .ufo {
+      position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+      animation: ufoHover 3s ease-in-out infinite;
+      filter: drop-shadow(0 20px 40px rgba(72,187,120,0.3));
+    }
+    @keyframes ufoHover { 
+      0%, 100% { transform: translateX(-50%) translateY(0) rotate(-1deg); } 
+      50% { transform: translateX(-50%) translateY(-12px) rotate(1deg); } 
+    }
+    
+    /* UFO Top Dome - Glass cockpit */
+    .ufo-dome {
+      position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+      width: 60px; height: 35px;
+      background: linear-gradient(180deg, 
+        rgba(120,200,255,0.9) 0%, 
+        rgba(80,160,220,0.7) 40%,
+        rgba(60,140,200,0.5) 100%);
+      border-radius: 50% 50% 45% 45%;
+      border: 2px solid rgba(150,220,255,0.8);
+      box-shadow: 
+        inset 0 -10px 20px rgba(0,50,100,0.3),
+        inset 0 5px 15px rgba(255,255,255,0.4),
+        0 0 20px rgba(100,180,255,0.5);
+    }
+    .ufo-dome::before {
+      content: ''; position: absolute; top: 8px; left: 12px;
+      width: 15px; height: 8px; background: rgba(255,255,255,0.5);
+      border-radius: 50%; transform: rotate(-20deg);
+    }
+    /* Alien silhouette */
+    .ufo-alien {
+      position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+      width: 20px; height: 16px;
+      background: rgba(0,40,60,0.6);
+      border-radius: 50% 50% 40% 40%;
+    }
+    .ufo-alien::before, .ufo-alien::after {
+      content: ''; position: absolute; top: 5px;
+      width: 5px; height: 3px; background: rgba(100,255,150,0.8);
+      border-radius: 50%; box-shadow: 0 0 5px rgba(100,255,150,0.8);
+    }
+    .ufo-alien::before { left: 3px; }
+    .ufo-alien::after { right: 3px; }
+    
+    /* UFO Main Body - Saucer */
+    .ufo-body {
+      position: relative; top: 30px;
+      width: 160px; height: 45px;
+      background: linear-gradient(180deg, 
+        #7a8599 0%, #5a6577 20%, #4a5568 50%, #3d4556 80%, #2d3545 100%);
+      border-radius: 50%;
+      box-shadow: 
+        inset 0 -8px 15px rgba(0,0,0,0.4),
+        inset 0 8px 15px rgba(255,255,255,0.1),
+        0 8px 30px rgba(0,0,0,0.5);
+    }
+    /* Metallic ring detail */
+    .ufo-ring {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      width: 140px; height: 35px; border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.15);
+      box-shadow: inset 0 0 10px rgba(255,255,255,0.1);
+    }
+    
+    /* UFO Bottom section */
+    .ufo-bottom {
+      position: absolute; top: 35px; left: 50%; transform: translateX(-50%);
+      width: 80px; height: 25px;
+      background: linear-gradient(180deg, #3d4556 0%, #2a303d 100%);
+      border-radius: 0 0 50% 50% / 0 0 100% 100%;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+    }
+    
+    /* Rotating lights ring */
+    .ufo-lights-ring {
+      position: absolute; top: 18px; left: 50%; transform: translateX(-50%);
+      width: 130px; height: 130px;
+      animation: rotateLights 4s linear infinite;
+    }
+    @keyframes rotateLights { from { transform: translateX(-50%) rotate(0deg); } to { transform: translateX(-50%) rotate(360deg); } }
+    
+    .ufo-light {
+      position: absolute; width: 10px; height: 10px; border-radius: 50%;
+      box-shadow: 0 0 10px currentColor, 0 0 20px currentColor;
+      animation: lightPulse 0.8s ease-in-out infinite;
+    }
+    .ufo-light:nth-child(1) { top: 0; left: 50%; transform: translateX(-50%); background: #ff6b6b; color: #ff6b6b; }
+    .ufo-light:nth-child(2) { top: 15%; right: 10%; background: #ffd93d; color: #ffd93d; animation-delay: 0.1s; }
+    .ufo-light:nth-child(3) { top: 50%; right: 0; transform: translateY(-50%); background: #6bcb77; color: #6bcb77; animation-delay: 0.2s; }
+    .ufo-light:nth-child(4) { bottom: 15%; right: 10%; background: #4d96ff; color: #4d96ff; animation-delay: 0.3s; }
+    .ufo-light:nth-child(5) { bottom: 0; left: 50%; transform: translateX(-50%); background: #9b59b6; color: #9b59b6; animation-delay: 0.4s; }
+    .ufo-light:nth-child(6) { bottom: 15%; left: 10%; background: #ff6b6b; color: #ff6b6b; animation-delay: 0.5s; }
+    .ufo-light:nth-child(7) { top: 50%; left: 0; transform: translateY(-50%); background: #ffd93d; color: #ffd93d; animation-delay: 0.6s; }
+    .ufo-light:nth-child(8) { top: 15%; left: 10%; background: #6bcb77; color: #6bcb77; animation-delay: 0.7s; }
+    @keyframes lightPulse { 0%, 100% { opacity: 0.5; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.1); } }
+    
+    /* Center beam emitter */
+    .beam-emitter {
+      position: absolute; top: 55px; left: 50%; transform: translateX(-50%);
+      width: 30px; height: 12px;
+      background: linear-gradient(180deg, #2a303d 0%, #1a1f2a 100%);
+      border-radius: 0 0 50% 50%;
+      box-shadow: 0 0 20px rgba(72,187,120,0.8), inset 0 -3px 8px rgba(72,187,120,0.5);
+    }
+    .beam-emitter::after {
+      content: ''; position: absolute; top: 4px; left: 50%; transform: translateX(-50%);
+      width: 14px; height: 6px; background: rgba(72,187,120,0.9);
+      border-radius: 50%; box-shadow: 0 0 15px rgba(72,187,120,1);
+      animation: emitterGlow 1s ease-in-out infinite;
+    }
+    @keyframes emitterGlow { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
+    
+    /* Tractor Beam */
+    .beam {
+      position: absolute; top: 65px; left: 50%; transform: translateX(-50%);
+      width: 30px; height: 200px;
+      background: linear-gradient(180deg, 
+        rgba(72,187,120,0.8) 0%, 
+        rgba(72,187,120,0.4) 30%,
+        rgba(72,187,120,0.2) 60%,
+        rgba(72,187,120,0.05) 100%);
+      clip-path: polygon(10% 0%, 90% 0%, 100% 100%, 0% 100%);
+      animation: beamPulse 2s ease-in-out infinite;
+    }
+    .beam::before {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(180deg, 
+        rgba(150,255,180,0.3) 0%, 
+        transparent 50%);
+      clip-path: polygon(10% 0%, 90% 0%, 100% 100%, 0% 100%);
+    }
+    @keyframes beamPulse { 0%, 100% { opacity: 0.8; } 50% { opacity: 1; } }
+    
+    .beam-particles {
+      position: absolute; inset: 0;
+      background: repeating-linear-gradient(0deg, 
+        transparent 0px, transparent 8px, 
+        rgba(255,255,255,0.15) 8px, rgba(255,255,255,0.15) 10px);
+      animation: particlesUp 0.8s linear infinite;
+      clip-path: polygon(10% 0%, 90% 0%, 100% 100%, 0% 100%);
+    }
+    @keyframes particlesUp { from { transform: translateY(0); } to { transform: translateY(-18px); } }
+    
+    /* Ground glow */
+    .ground-glow {
+      position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
+      width: 120px; height: 40px;
+      background: radial-gradient(ellipse, rgba(72,187,120,0.4) 0%, transparent 70%);
+      animation: groundPulse 2s ease-in-out infinite;
+    }
+    @keyframes groundPulse { 0%, 100% { opacity: 0.5; transform: translateX(-50%) scale(1); } 50% { opacity: 0.8; transform: translateX(-50%) scale(1.1); } }
+    
+    .abductee {
+      position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%);
+      font-size: 2.8rem; 
+      animation: float 2.5s ease-in-out infinite;
+      filter: drop-shadow(0 0 10px rgba(72,187,120,0.5));
+    }
+    @keyframes float { 
+      0%, 100% { transform: translateX(-50%) translateY(0) rotate(-5deg); } 
+      50% { transform: translateX(-50%) translateY(-25px) rotate(5deg); } 
+    }
+    .abductee.abducting { animation: abduct 1.8s ease-in forwards; }
+    @keyframes abduct { 
+      0% { transform: translateX(-50%) translateY(0) scale(1) rotate(0deg); opacity: 1; filter: drop-shadow(0 0 10px rgba(72,187,120,0.5)); }
+      50% { transform: translateX(-50%) translateY(-100px) scale(0.7) rotate(180deg); opacity: 0.8; filter: drop-shadow(0 0 20px rgba(72,187,120,0.8)); }
+      100% { transform: translateX(-50%) translateY(-190px) scale(0.2) rotate(360deg); opacity: 0; filter: drop-shadow(0 0 30px rgba(72,187,120,1)); }
+    }
+    
+    .loading-text {
+      margin-top: 2rem; text-align: center;
+    }
+    .loading-brand { font-size: 1.5rem; font-weight: 600; color: var(--text); margin-bottom: 0.5rem; }
+    .loading-status { font-size: 0.9rem; color: var(--text-muted); }
+    .loading-status span { color: var(--green); font-family: 'JetBrains Mono', monospace; }
+    
+    .countdown-display {
+      font-family: 'JetBrains Mono', monospace; font-size: 3rem; font-weight: 600;
+      color: var(--green); margin-top: 1rem;
+      text-shadow: 0 0 20px rgba(38,166,154,0.5);
+    }
+    .countdown-display.go { color: var(--orange); animation: pulse 0.3s; }
+    @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
     .header { display: flex; align-items: center; justify-content: space-between; padding: 0 1rem; height: 48px; background: var(--bg-panel); border-bottom: 1px solid var(--border); }
     .header-left { display: flex; align-items: center; gap: 1.5rem; }
     .logo { font-size: 1.1rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; }
@@ -180,6 +399,49 @@
   </style>
 </head>
 <body>
+  <!-- UFO Abduction Loading Screen -->
+  <div class="loading-screen" id="loading-screen">
+    <div class="stars" id="stars"></div>
+    <div class="shooting-star" style="top: 10%; left: 20%;"></div>
+    <div class="shooting-star" style="top: 30%; left: 60%; animation-delay: 2s;"></div>
+    <div class="ufo-scene">
+      <div class="ufo">
+        <!-- Glass Dome with Alien -->
+        <div class="ufo-dome">
+          <div class="ufo-alien"></div>
+        </div>
+        <!-- Main Saucer Body -->
+        <div class="ufo-body">
+          <div class="ufo-ring"></div>
+        </div>
+        <!-- Bottom Section -->
+        <div class="ufo-bottom"></div>
+        <!-- Rotating Lights Ring -->
+        <div class="ufo-lights-ring">
+          <div class="ufo-light"></div>
+          <div class="ufo-light"></div>
+          <div class="ufo-light"></div>
+          <div class="ufo-light"></div>
+          <div class="ufo-light"></div>
+          <div class="ufo-light"></div>
+          <div class="ufo-light"></div>
+          <div class="ufo-light"></div>
+        </div>
+        <!-- Beam Emitter -->
+        <div class="beam-emitter"></div>
+      </div>
+      <div class="beam">
+        <div class="beam-particles"></div>
+      </div>
+      <div class="ground-glow"></div>
+      <div class="abductee" id="abductee">🐄</div>
+    </div>
+    <div class="loading-text">
+      <div class="loading-brand">Haslun Trading</div>
+      <div class="loading-status" id="loading-status">Initiating tractor beam...</div>
+    </div>
+    <div class="countdown-display" id="countdown">3</div>
+  </div>
   <header class="header">
     <div class="header-left">
       <div class="logo"><div class="logo-icon">📈</div>Haslun Trading</div>
@@ -471,17 +733,75 @@
     
     const rangeDays = { '1W': 7, '1M': 30, '3M': 90, '6M': 180, '1Y': 365, 'ALL': 500 };
     
+    // ===== LOADING SCREEN =====
+    function createStars() {
+      const container = document.getElementById('stars');
+      // Regular stars
+      for (let i = 0; i < 80; i++) {
+        const star = document.createElement('div');
+        const isLarge = Math.random() > 0.85;
+        star.className = 'star' + (isLarge ? ' large' : '');
+        star.style.left = Math.random() * 100 + '%';
+        star.style.top = Math.random() * 100 + '%';
+        star.style.animationDelay = Math.random() * 3 + 's';
+        star.style.animationDuration = (2 + Math.random() * 2) + 's';
+        if (!isLarge) {
+          const size = Math.random() * 2 + 1;
+          star.style.width = star.style.height = size + 'px';
+        }
+        container.appendChild(star);
+      }
+    }
+    
+    function runLoadingSequence() {
+      createStars();
+      const countdown = document.getElementById('countdown');
+      const status = document.getElementById('loading-status');
+      const abductee = document.getElementById('abductee');
+      const messages = [
+        'Initiating tractor beam...',
+        'Scanning for data...',
+        'Acquiring target...',
+        'LOCK ON!'
+      ];
+      
+      let count = 3;
+      countdown.textContent = count;
+      
+      const interval = setInterval(() => {
+        count--;
+        if (count > 0) {
+          countdown.textContent = count;
+          status.innerHTML = messages[3 - count];
+        } else if (count === 0) {
+          countdown.textContent = '🛸';
+          countdown.classList.add('go');
+          status.innerHTML = '<span>ABDUCTING...</span>';
+          abductee.classList.add('abducting');
+        } else {
+          clearInterval(interval);
+          setTimeout(() => {
+            document.getElementById('loading-screen').classList.add('hidden');
+            document.body.classList.add('loaded');
+          }, 800);
+        }
+      }, 700);
+    }
+    
     // ===== INIT =====
     function init() {
-      updateTime(); setInterval(updateTime, 1000);
-      buildWatchlist();
-      loadTicker('RKLB');
-      renderStockPositions();
-      renderOptionsPositions();
-      renderCatalysts();
-      renderActivity();
-      renderPositionCharts();
-      updateScenario();
+      runLoadingSequence();
+      setTimeout(() => {
+        updateTime(); setInterval(updateTime, 1000);
+        buildWatchlist();
+        loadTicker('RKLB');
+        renderStockPositions();
+        renderOptionsPositions();
+        renderCatalysts();
+        renderActivity();
+        renderPositionCharts();
+        updateScenario();
+      }, 100);
     }
     
     function updateTime() { 
@@ -779,6 +1099,205 @@
       const btn = document.querySelector('.kill-switch-btn');
       if (btn.classList.contains('resume')) { btn.classList.remove('resume'); btn.textContent = 'Stop All Trading'; }
       else { btn.classList.add('resume'); btn.textContent = 'Resume Trading'; }
+    }
+    
+    init();
+  </script>
+</body>
+</html>
+ 0, projDelta = 0;
+      
+      OPTIONS_POSITIONS.forEach(pos => {
+        const basePos = pos.current * pos.contracts * 100;
+        baseValue += basePos;
+        baseDelta += pos.delta * pos.contracts;
+        
+        const priceMult = 1 + priceChange / 100;
+        const timeDecay = Math.max(0, 1 - (daysForward / 12) * 0.3);
+        const ivMult = 1 + ivChange / 200;
+        const deltaImpact = pos.delta * priceChange / 100 * pos.current * 1.5;
+        let newPrice = (pos.current + deltaImpact) * timeDecay * ivMult;
+        newPrice = Math.max(0.01, newPrice);
+        projValue += newPrice * pos.contracts * 100;
+        
+        let newDelta = pos.delta;
+        if (priceChange > 0) newDelta = Math.min(1, pos.delta + priceChange / 200);
+        else newDelta = Math.max(0, pos.delta + priceChange / 150);
+        projDelta += newDelta * pos.contracts;
+      });
+      
+      const scenarioPnl = projValue - baseValue;
+      const scenarioReturn = (scenarioPnl / baseValue) * 100;
+      
+      document.getElementById('proj-value').textContent = `$${projValue.toLocaleString(undefined, {maximumFractionDigits: 0})}`;
+      document.getElementById('proj-value').className = `summary-value ${projValue >= baseValue ? 'positive' : 'negative'}`;
+      document.getElementById('proj-pnl').textContent = `${scenarioPnl >= 0 ? '+' : ''}$${scenarioPnl.toLocaleString(undefined, {maximumFractionDigits: 0})}`;
+      document.getElementById('proj-pnl').className = `summary-value ${scenarioPnl >= 0 ? 'positive' : 'negative'}`;
+      document.getElementById('proj-delta').textContent = projDelta.toFixed(2);
+      document.getElementById('proj-return').textContent = `${scenarioReturn >= 0 ? '+' : ''}${scenarioReturn.toFixed(1)}%`;
+      document.getElementById('proj-return').className = `summary-value ${scenarioReturn >= 0 ? 'positive' : 'negative'}`;
+      
+      updateProjectionChart(priceChange);
+    }
+    
+    function updateProjectionChart(centerChange) {
+      if (projectionChart) projectionChart.destroy();
+      
+      const priceChanges = [], portfolioValues = [];
+      for (let pc = -50; pc <= 100; pc += 5) {
+        priceChanges.push(pc);
+        let pv = 0;
+        OPTIONS_POSITIONS.forEach(pos => {
+          const deltaImpact = pos.delta * pc / 100 * pos.current * 1.5;
+          let newPrice = Math.max(0.01, pos.current + deltaImpact);
+          pv += newPrice * pos.contracts * 100;
+        });
+        portfolioValues.push(pv);
+      }
+      
+      const baseValue = portfolioValues[10];
+      const pnlValues = portfolioValues.map(v => v - baseValue);
+      
+      projectionChart = new Chart(document.getElementById('projection-chart'), {
+        type: 'line',
+        data: {
+          labels: priceChanges.map(p => `${p >= 0 ? '+' : ''}${p}%`),
+          datasets: [{
+            label: 'P&L',
+            data: pnlValues,
+            borderColor: '#00d4ff',
+            backgroundColor: ctx => {
+              const gradient = ctx.chart.ctx.createLinearGradient(0, 0, 0, ctx.chart.height);
+              gradient.addColorStop(0, 'rgba(57,255,20,0.3)');
+              gradient.addColorStop(0.5, 'rgba(0,212,255,0.1)');
+              gradient.addColorStop(1, 'rgba(255,49,49,0.3)');
+              return gradient;
+            },
+            fill: true,
+            tension: 0.3,
+            pointRadius: priceChanges.map(p => p === centerChange ? 8 : 0),
+            pointBackgroundColor: '#ffb347',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { color: '#1a2028' }, ticks: { color: '#5a6370', maxTicksLimit: 7, font: { family: 'JetBrains Mono' } } },
+            y: { grid: { color: '#1a2028' }, ticks: { color: '#5a6370', callback: v => `${v >= 0 ? '+' : ''}$${(v/1000).toFixed(0)}k`, font: { family: 'JetBrains Mono' } } }
+          }
+        }
+      });
+    }
+    
+    // ===== TAB & CHART SWITCHING =====
+    function switchTab(tabName) {
+      document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tabName));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === `${tabName}-panel`));
+    }
+    
+    function switchChartTab(chartName) {
+      document.querySelectorAll('.chart-tab').forEach(t => t.classList.toggle('active', t.dataset.chart === chartName));
+      document.querySelectorAll('.chart-panel').forEach(p => p.classList.toggle('active', p.id === `chart-${chartName}`));
+    }
+    
+    // ===== RENDER FUNCTIONS =====
+    function renderStockPositions() {
+      document.getElementById('stock-tbody').innerHTML = STOCK_POSITIONS.map(pos => {
+        const current = TICKERS[pos.ticker]?.price || pos.entry;
+        const value = pos.shares * current;
+        const pnl = (current - pos.entry) * pos.shares;
+        const pnlPct = ((current - pos.entry) / pos.entry * 100);
+        const color = TICKERS[pos.ticker]?.color || '#6B7B8A';
+        return `<tr>
+          <td><span class="ticker-badge" style="background:${color}">${pos.ticker}</span></td>
+          <td style="color:var(--text-muted);font-size:0.75rem">${TICKERS[pos.ticker]?.theme || ''}</td>
+          <td class="mono">${pos.shares}</td>
+          <td class="mono">$${pos.entry.toFixed(2)}</td>
+          <td class="mono">$${current.toFixed(2)}</td>
+          <td class="mono">$${value.toLocaleString()}</td>
+          <td class="${pnl >= 0 ? 'pnl-positive' : 'pnl-negative'}">${pnl >= 0 ? '+' : ''}$${pnl.toFixed(0)} (${pnlPct >= 0 ? '+' : ''}${pnlPct.toFixed(1)}%)</td>
+        </tr>`;
+      }).join('');
+    }
+    
+    function renderOptionsPositions() {
+      document.getElementById('options-tbody').innerHTML = OPTIONS_POSITIONS.map(pos => {
+        const pnl = (pos.current - pos.entry) * pos.contracts * 100;
+        const pnlPct = ((pos.current - pos.entry) / pos.entry * 100);
+        const color = TICKERS[pos.ticker]?.color || '#6B7B8A';
+        return `<tr>
+          <td><span class="ticker-badge" style="background:${color}">${pos.ticker}</span></td>
+          <td><span class="structure-badge">${pos.structure}</span></td>
+          <td class="mono">${pos.strikes}</td>
+          <td class="mono">$${pos.entry.toFixed(2)}</td>
+          <td class="mono">$${pos.current.toFixed(2)}</td>
+          <td class="${pnl >= 0 ? 'pnl-positive' : 'pnl-negative'}">${pnl >= 0 ? '+' : ''}$${pnl.toFixed(0)} (${pnlPct >= 0 ? '+' : ''}${pnlPct.toFixed(0)}%)</td>
+          <td class="mono">${pos.delta.toFixed(2)}</td>
+        </tr>`;
+      }).join('');
+    }
+    
+    function renderPositionCharts() {
+      // Position Sizes
+      const positions = OPTIONS_POSITIONS.map(pos => ({ ticker: pos.ticker, value: pos.current * pos.contracts * 100, color: TICKERS[pos.ticker]?.color })).sort((a, b) => b.value - a.value);
+      const maxVal = Math.max(...positions.map(p => p.value)), totalVal = positions.reduce((s, p) => s + p.value, 0);
+      document.getElementById('chart-sizes').innerHTML = positions.map(p => 
+        `<div class="bar-row"><span class="bar-ticker">${p.ticker}</span><div class="bar-container"><div class="bar-fill" style="width:${p.value/maxVal*100}%;background:${p.color}">${Math.round(p.value/totalVal*100)}%</div></div><span class="bar-value">$${p.value.toLocaleString()}</span></div>`
+      ).join('');
+      
+      // P&L
+      const pnlData = OPTIONS_POSITIONS.map(pos => ({ ticker: pos.ticker, pnl: (pos.current - pos.entry) * pos.contracts * 100, pct: ((pos.current - pos.entry) / pos.entry * 100) })).sort((a, b) => b.pnl - a.pnl);
+      const maxPnl = Math.max(...pnlData.map(p => Math.abs(p.pnl)));
+      let winners = 0, losers = 0, totalPnl = 0;
+      pnlData.forEach(p => { if (p.pnl >= 0) winners++; else losers++; totalPnl += p.pnl; });
+      document.getElementById('chart-pnl').innerHTML = pnlData.map(p => 
+        `<div class="bar-row"><span class="bar-ticker">${p.ticker}</span><div class="bar-container"><div class="bar-fill" style="width:${Math.abs(p.pnl)/maxPnl*100}%;background:${p.pnl >= 0 ? 'var(--green)' : 'var(--red)'}">${p.pnl >= 0 ? '+' : ''}${p.pct.toFixed(0)}%</div></div><span class="bar-value ${p.pnl >= 0 ? 'pnl-positive' : 'pnl-negative'}">${p.pnl >= 0 ? '+' : ''}$${Math.abs(p.pnl).toLocaleString()}</span></div>`
+      ).join('') + `<div class="summary-row"><div class="summary-item"><div class="summary-value positive">${winners}</div><div class="summary-label">Winners</div></div><div class="summary-item"><div class="summary-value positive">+$${totalPnl.toLocaleString()}</div><div class="summary-label">Total</div></div><div class="summary-item"><div class="summary-value negative">${losers}</div><div class="summary-label">Losers</div></div></div>`;
+      
+      // Greeks
+      const greeksData = OPTIONS_POSITIONS.map(pos => ({ ticker: pos.ticker, delta: pos.delta * pos.contracts, color: TICKERS[pos.ticker]?.color })).sort((a, b) => b.delta - a.delta);
+      const maxDelta = Math.max(...greeksData.map(g => g.delta));
+      document.getElementById('chart-greeks').innerHTML = `<div style="margin-bottom:0.75rem;font-size:0.75rem;color:var(--text-muted)">Delta Exposure by Position</div>` + greeksData.map(g => 
+        `<div class="bar-row"><span class="bar-ticker">${g.ticker}</span><div class="bar-container"><div class="bar-fill" style="width:${g.delta/maxDelta*100}%;background:${g.color}">${g.delta.toFixed(1)}Δ</div></div><span class="bar-value">${(g.delta * 100).toFixed(0)} shares</span></div>`
+      ).join('');
+    }
+    
+    function renderCatalysts() {
+      document.getElementById('catalyst-list').innerHTML = CATALYSTS.map(cat => 
+        `<div class="catalyst-item">
+          <span class="catalyst-date">${cat.date}</span>
+          <span class="catalyst-ticker" style="color:${TICKERS[cat.ticker]?.color || 'var(--amber)'}">${cat.ticker}</span>
+          <span class="catalyst-event">${cat.event}</span>
+          <span class="catalyst-impact ${cat.impact}">${cat.impact}</span>
+        </div>`
+      ).join('');
+    }
+    
+    function renderActivity() {
+      document.getElementById('activity-feed').innerHTML = ACTIVITY.map(a => 
+        `<div class="activity-item">
+          <div class="activity-icon ${a.type}">${a.type === 'trade' ? '💰' : '⚡'}</div>
+          <div class="activity-content">
+            <div class="activity-title">${a.title}</div>
+            <div class="activity-subtitle">${a.subtitle}</div>
+          </div>
+          <div class="activity-time">${a.time}</div>
+        </div>`
+      ).join('');
+    }
+    
+    function toggleKillSwitch() {
+      const btn = document.querySelector('.kill-switch-btn');
+      if (btn.classList.contains('resume')) {
+        btn.classList.remove('resume');
+        btn.innerHTML = '⚡ Stop All Trading';
+      } else {
+        btn.classList.add('resume');
+        btn.innerHTML = '▶ Resume Trading';
+      }
     }
     
     init();
