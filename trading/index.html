@@ -380,6 +380,7 @@
     .catalyst-impact { font-size: 0.6875rem; padding: 0.125rem 0.375rem; border-radius: var(--radius-sm); font-weight: 600; }
     .catalyst-impact.high { background: var(--red); color: white; }
     .catalyst-impact.medium { background: var(--gold); color: var(--bg); }
+    .catalyst-impact.low { background: var(--slate); color: white; }
     
     /* Input Fields */
     .input-field {
@@ -2281,28 +2282,49 @@
     ];
     
     const DEMO_CATALYSTS = [
-      { date: '2026-01-16', ticker: 'ALL', event: 'Options Expiration', impact: 'HIGH' },
-      { date: '2026-02-15', ticker: 'LUNR', event: 'IM-2 Lunar Mission', impact: 'HIGH' },
-      { date: '2026-Q1', ticker: 'ACHR', event: 'FAA Certification', impact: 'HIGH' },
-      { date: '2026-Q1', ticker: 'JOBY', event: 'FAA Certification', impact: 'HIGH' },
-      { date: '2026-Q2', ticker: 'ASTS', event: 'Commercial Launch', impact: 'HIGH' },
-      { date: '2026-Q2', ticker: 'RKLB', event: 'Neutron First Flight', impact: 'HIGH' }
+      { date: '2026-01-16', ticker: 'ALL', event: 'January Options Expiration', impact: 'HIGH' },
+      { date: '2026-01-21', ticker: 'RKLB', event: 'Q4 Earnings Report', impact: 'HIGH' },
+      { date: '2026-01-28', ticker: 'ASTS', event: 'Q4 Earnings Report', impact: 'HIGH' },
+      { date: '2026-02-10', ticker: 'LUNR', event: 'Q4 Earnings Report', impact: 'MEDIUM' },
+      { date: '2026-02-15', ticker: 'LUNR', event: 'IM-2 Lunar Landing Mission', impact: 'HIGH' },
+      { date: '2026-Q1', ticker: 'ACHR', event: 'FAA Type Certification Expected', impact: 'HIGH' },
+      { date: '2026-Q1', ticker: 'JOBY', event: 'FAA Type Certification Expected', impact: 'HIGH' },
+      { date: '2026-Q1', ticker: 'BKSY', event: 'Government Contract Announcement', impact: 'MEDIUM' },
+      { date: '2026-Q2', ticker: 'ASTS', event: 'BlueBird Commercial Service Launch', impact: 'HIGH' },
+      { date: '2026-Q2', ticker: 'RKLB', event: 'Neutron Rocket First Flight', impact: 'HIGH' },
+      { date: '2026-Q2', ticker: 'RDW', event: 'Phantom Space Partnership Update', impact: 'MEDIUM' },
+      { date: '2026-Q3', ticker: 'PL', event: 'Pelican Constellation Expansion', impact: 'MEDIUM' },
+      { date: '2026-Q4', ticker: 'GME', event: 'Holiday Sales Report', impact: 'LOW' }
     ];
     
-    // Demo STOCK positions (MACD-triggered swing trades)
+    // Demo STOCK positions (MACD-triggered swing trades) - All 10 watchlist stocks
     const DEMO_STOCK_POSITIONS = [
+      // Space sector - Strong performers
       { ticker: 'RKLB', shares: 75, entry_price: 68.45, current_price: 72.80, entry_time: '2026-01-02 10:32 AM' },
       { ticker: 'ASTS', shares: 50, entry_price: 78.20, current_price: 83.47, entry_time: '2026-01-02 11:15 AM' },
-      { ticker: 'LUNR', shares: 100, entry_price: 15.20, current_price: 17.88, entry_time: '2026-01-03 09:45 AM' }
+      { ticker: 'LUNR', shares: 100, entry_price: 15.20, current_price: 17.88, entry_time: '2026-01-03 09:45 AM' },
+      { ticker: 'BKSY', shares: 200, entry_price: 3.85, current_price: 4.20, entry_time: '2025-12-30 02:18 PM' },
+      { ticker: 'RDW', shares: 80, entry_price: 13.60, current_price: 15.00, entry_time: '2025-12-27 10:05 AM' },
+      { ticker: 'PL', shares: 150, entry_price: 3.72, current_price: 4.00, entry_time: '2025-12-23 11:30 AM' },
+      // eVTOL sector - Mixed
+      { ticker: 'ACHR', shares: 100, entry_price: 7.85, current_price: 8.13, entry_time: '2025-12-28 09:52 AM' },
+      { ticker: 'JOBY', shares: 60, entry_price: 13.20, current_price: 14.36, entry_time: '2025-12-19 03:15 PM' },
+      { ticker: 'EVEX', shares: 250, entry_price: 3.10, current_price: 2.80, entry_time: '2025-12-18 10:45 AM' },
+      // Meme
+      { ticker: 'GME', shares: 40, entry_price: 25.80, current_price: 27.50, entry_time: '2025-12-20 01:22 PM' }
     ];
     
-    // Demo recent activity/alerts
+    // Demo recent activity/alerts - More comprehensive
     const DEMO_ACTIVITY = [
       { type: 'trade', title: 'BUY LUNR', subtitle: '100 shares @ $15.20', time: '09:45 AM' },
-      { type: 'alert', title: 'MACD Crossover', subtitle: 'LUNR bullish signal', time: '09:44 AM' },
+      { type: 'alert', title: 'MACD Crossover', subtitle: 'LUNR bullish signal detected', time: '09:44 AM' },
       { type: 'trade', title: 'BUY ASTS', subtitle: '50 shares @ $78.20', time: 'Yesterday' },
-      { type: 'alert', title: 'MACD Crossover', subtitle: 'ASTS bullish signal', time: 'Yesterday' },
-      { type: 'system', title: 'Dashboard Started', subtitle: 'All systems nominal', time: 'Yesterday' }
+      { type: 'trade', title: 'BUY RKLB', subtitle: '75 shares @ $68.45', time: 'Yesterday' },
+      { type: 'alert', title: 'MACD Crossover', subtitle: 'ASTS bullish signal detected', time: 'Jan 2' },
+      { type: 'trade', title: 'BUY BKSY', subtitle: '200 shares @ $3.85', time: 'Dec 30' },
+      { type: 'trade', title: 'BUY ACHR', subtitle: '100 shares @ $7.85', time: 'Dec 28' },
+      { type: 'alert', title: 'MACD Crossover', subtitle: 'RDW bullish signal detected', time: 'Dec 27' },
+      { type: 'system', title: 'System Online', subtitle: 'Dashboard initialized', time: 'Dec 15' }
     ];
     
     // Monthly performance data (cumulative % returns since March 2024)
@@ -2873,45 +2895,69 @@
       }
       
       let totalPnl = 0;
+      let totalCost = 0;
+      let totalValue = 0;
+      
       const rows = DEMO_STOCK_POSITIONS.map(pos => {
-        const pnl = (pos.current_price - pos.entry_price) * pos.shares;
+        const cost = pos.entry_price * pos.shares;
+        const value = pos.current_price * pos.shares;
+        const pnl = value - cost;
         const pnlPct = ((pos.current_price - pos.entry_price) / pos.entry_price * 100);
         totalPnl += pnl;
+        totalCost += cost;
+        totalValue += value;
         const color = tickerColors[pos.ticker] || '#8A857D';
+        const theme = tickerThemes[pos.ticker]?.theme || 'Other';
         
         return `
           <tr>
             <td><span class="ticker-badge" style="background: ${color}">${pos.ticker}</span></td>
+            <td style="font-size: 0.7rem; color: var(--muted);">${theme}</td>
             <td style="font-family: var(--font-mono)">${pos.shares}</td>
             <td style="font-family: var(--font-mono)">$${pos.entry_price.toFixed(2)}</td>
             <td style="font-family: var(--font-mono)">$${pos.current_price.toFixed(2)}</td>
+            <td style="font-family: var(--font-mono)">$${value.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0})}</td>
             <td class="${pnl >= 0 ? 'pnl-positive' : 'pnl-negative'}">
-              ${pnl >= 0 ? '+' : ''}$${pnl.toFixed(2)} (${pnlPct >= 0 ? '+' : ''}${pnlPct.toFixed(1)}%)
+              ${pnl >= 0 ? '+' : ''}$${pnl.toFixed(0)} <span style="opacity: 0.7">(${pnlPct >= 0 ? '+' : ''}${pnlPct.toFixed(1)}%)</span>
             </td>
           </tr>
         `;
       }).join('');
       
+      const totalPnlPct = totalCost > 0 ? ((totalValue - totalCost) / totalCost * 100) : 0;
+      
       container.innerHTML = `
         <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
-          <table class="options-table" style="min-width: 450px;">
+          <table class="options-table" style="min-width: 580px;">
             <thead>
               <tr>
                 <th>Ticker</th>
+                <th>Sector</th>
                 <th>Shares</th>
                 <th>Entry</th>
                 <th>Current</th>
+                <th>Value</th>
                 <th>P&L</th>
               </tr>
             </thead>
             <tbody>${rows}</tbody>
           </table>
         </div>
-        <div style="display: flex; justify-content: space-between; padding: 0.75rem 0 0; margin-top: 0.75rem; border-top: 1px solid var(--line);">
-          <span style="font-size: 0.75rem; color: var(--muted);">Total Unrealized P&L</span>
-          <span class="${totalPnl >= 0 ? 'pnl-positive' : 'pnl-negative'}" style="font-family: var(--font-mono); font-weight: 600;">
-            ${totalPnl >= 0 ? '+' : ''}$${totalPnl.toFixed(2)}
-          </span>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; padding: 1rem 0 0; margin-top: 0.75rem; border-top: 1px solid var(--line);">
+          <div style="text-align: center;">
+            <div style="font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em;">Cost Basis</div>
+            <div style="font-family: var(--font-mono); font-size: 1rem; font-weight: 600; color: var(--ink);">$${totalCost.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0})}</div>
+          </div>
+          <div style="text-align: center;">
+            <div style="font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em;">Market Value</div>
+            <div style="font-family: var(--font-mono); font-size: 1rem; font-weight: 600; color: var(--ink);">$${totalValue.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0})}</div>
+          </div>
+          <div style="text-align: center;">
+            <div style="font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em;">Unrealized P&L</div>
+            <div class="${totalPnl >= 0 ? 'pnl-positive' : 'pnl-negative'}" style="font-family: var(--font-mono); font-size: 1rem; font-weight: 600;">
+              ${totalPnl >= 0 ? '+' : ''}$${totalPnl.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0})} <span style="opacity: 0.7; font-size: 0.8rem;">(${totalPnlPct >= 0 ? '+' : ''}${totalPnlPct.toFixed(1)}%)</span>
+            </div>
+          </div>
         </div>
       `;
     }
@@ -2954,12 +3000,25 @@
       renderActivity();
       renderPerformanceChart();
       
-      // Update trading tab stats
-      document.getElementById('daily-pnl').textContent = '+$857.75';
-      document.getElementById('daily-pnl').classList.add('positive');
+      // Calculate and update trading tab stats from stock positions
+      let totalStockPnl = 0;
+      DEMO_STOCK_POSITIONS.forEach(pos => {
+        totalStockPnl += (pos.current_price - pos.entry_price) * pos.shares;
+      });
+      
+      document.getElementById('daily-pnl').textContent = (totalStockPnl >= 0 ? '+' : '') + '$' + totalStockPnl.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+      document.getElementById('daily-pnl').classList.add(totalStockPnl >= 0 ? 'positive' : 'negative');
       document.getElementById('trades-today').textContent = '3';
-      document.getElementById('alerts-count').textContent = '5';
+      document.getElementById('alerts-count').textContent = DEMO_ACTIVITY.filter(a => a.type === 'alert').length.toString();
       document.getElementById('positions-count').textContent = DEMO_STOCK_POSITIONS.length.toString();
+      
+      // Update sidebar safety status with realistic data
+      document.getElementById('loss-remaining').textContent = '$200 remaining';
+      document.getElementById('loss-remaining').classList.add('ok');
+      document.getElementById('trades-remaining').textContent = '2 of 5';
+      document.getElementById('trades-progress').style.width = '60%';
+      document.getElementById('market-hours').textContent = 'Closed';
+      document.getElementById('market-hours').classList.add('warning');
       
       // Force demo badge visible
       const demoBadge = document.getElementById('demo-badge');
