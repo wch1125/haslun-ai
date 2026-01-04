@@ -1285,9 +1285,172 @@
     .log-entry .level.warn { color: var(--amber); }
     .log-entry .level.error { color: var(--signal-down); }
     
+    /* =====================================================================
+       ARCADE EXTRAS – HUD, toggles, terminal, toasts, themes
+       ===================================================================== */
+    
+    /* Mini toggle in status bar */
+    .toggle-mini {
+      display: inline-flex;
+      align-items: center;
+      cursor: pointer;
+      margin-left: 0.35rem;
+    }
+    .toggle-mini input { display: none; }
+    .toggle-mini-track {
+      width: 32px;
+      height: 14px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: #11161b;
+      padding: 1px;
+      box-shadow: inset 0 0 4px rgba(0,0,0,0.7);
+      display: inline-flex;
+      align-items: center;
+    }
+    .toggle-mini-knob {
+      width: 12px;
+      height: 12px;
+      border-radius: 999px;
+      background: var(--text-dim);
+      transition: transform 0.18s ease, background 0.18s ease;
+    }
+    .toggle-mini input:checked + .toggle-mini-track .toggle-mini-knob {
+      transform: translateX(16px);
+      background: var(--phosphor);
+    }
+    
+    /* Theme select in status bar */
+    .theme-select {
+      background: #0b1016;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-family: var(--font-body);
+      font-size: 0.65rem;
+      padding: 0.1rem 0.35rem;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .theme-select:hover { border-color: var(--phosphor-dim); }
+    
+    /* Arcade HUD */
+    .arcade-hud {
+      position: fixed;
+      top: 80px;
+      right: 18px;
+      width: 220px;
+      background: rgba(7, 11, 17, 0.95);
+      border-radius: 10px;
+      border: 1px solid #1e2832;
+      box-shadow: 0 0 20px rgba(51,255,153,0.15);
+      padding: 0.65rem 0.75rem;
+      font-family: var(--font-body);
+      font-size: 0.7rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      z-index: 15000;
+      backdrop-filter: blur(8px);
+    }
+    .arcade-hud.hidden { display: none; }
+    .arcade-hud .hud-title {
+      color: var(--phosphor);
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+    }
+    .arcade-hud ul { list-style: none; margin: 0; padding: 0; }
+    .arcade-mission {
+      padding: 0.2rem 0;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .arcade-mission::before {
+      content: '○';
+      color: var(--text-dim);
+      font-size: 0.5rem;
+    }
+    .arcade-mission.completed {
+      text-decoration: line-through;
+      opacity: 0.55;
+    }
+    .arcade-mission.completed::before {
+      content: '●';
+      color: var(--phosphor);
+    }
+    
+    /* Terminal-style uplink log */
+    .terminal-log {
+      position: fixed;
+      left: 18px;
+      bottom: 54px;
+      width: 280px;
+      height: 130px;
+      background: rgba(5, 8, 12, 0.92);
+      border-radius: 8px;
+      border: 1px solid #182228;
+      padding: 0.4rem 0.55rem;
+      font-family: var(--font-body);
+      font-size: 0.6rem;
+      line-height: 1.4;
+      color: #76a58e;
+      overflow-y: auto;
+      z-index: 14000;
+      backdrop-filter: blur(6px);
+    }
+    .terminal-log-line {
+      white-space: nowrap;
+      padding: 0.1rem 0;
+    }
+    .terminal-log-line span.time {
+      color: #4e6b5f;
+      margin-right: 0.35rem;
+    }
+    
+    /* Toast popups */
+    .toast-container {
+      position: fixed;
+      right: 20px;
+      bottom: 70px;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      z-index: 16000;
+    }
+    .toast {
+      background: rgba(12, 16, 21, 0.95);
+      border-radius: 8px;
+      border: 1px solid rgba(51,255,153,0.4);
+      padding: 0.5rem 0.75rem;
+      font-family: var(--font-body);
+      font-size: 0.7rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--phosphor);
+      box-shadow: 0 0 20px rgba(51,255,153,0.25);
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      backdrop-filter: blur(8px);
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .toast.warn {
+      border-color: var(--amber);
+      color: var(--amber);
+      box-shadow: 0 0 20px rgba(255,179,71,0.2);
+    }
+    .toast.alert {
+      border-color: #ff6666;
+      color: #ff8080;
+      box-shadow: 0 0 20px rgba(255,102,102,0.2);
+    }
+    
     @media (max-width: 1200px) { .right-sidebar { display: none; } }
-    @media (max-width: 900px) { .sidebar { width: 240px; } .positions-grid { grid-template-columns: repeat(2, 1fr); } }
-    @media (max-width: 768px) { .sidebar { display: none; } .positions-grid { grid-template-columns: 1fr 1fr; } .nav-tab { padding: 0.4rem 0.6rem; font-size: 0.6rem; } }
+    @media (max-width: 900px) { .sidebar { width: 240px; } .positions-grid { grid-template-columns: repeat(2, 1fr); } .arcade-hud { display: none; } }
+    @media (max-width: 768px) { .sidebar { display: none; } .positions-grid { grid-template-columns: 1fr 1fr; } .nav-tab { padding: 0.4rem 0.6rem; font-size: 0.6rem; } .terminal-log { display: none; } }
   </style>
 </head>
 <body>
@@ -1733,6 +1896,24 @@
       <div class="status-item"><span class="dot green"></span><span class="value">UPLINK ACTIVE</span></div>
       <div class="status-item"><span class="dot amber"></span><span class="value">MKT CLOSED</span></div>
       <div class="status-item"><span class="value" id="uptime">UPTIME: 00:00:00</span></div>
+      
+      <!-- SFX toggle -->
+      <div class="status-item">
+        <span class="value">SFX</span>
+        <label class="toggle-mini">
+          <input id="sfx-toggle" type="checkbox" checked />
+          <span class="toggle-mini-track"><span class="toggle-mini-knob"></span></span>
+        </label>
+      </div>
+      
+      <!-- Theme selector -->
+      <div class="status-item">
+        <select id="theme-select" class="theme-select">
+          <option value="Terminal">Terminal</option>
+          <option value="Arcade">Arcade</option>
+          <option value="NeonNoir">Neon Noir</option>
+        </select>
+      </div>
     </div>
     
     <div class="dev-console" id="dev-console">
@@ -1750,6 +1931,18 @@
         <div class="log-entry"><span class="timestamp">T-00:00:00</span><span class="level info">[INFO]</span> Mission Control systems initialized</div>
       </div>
     </div>
+    
+    <!-- ARCADE HUD – mini mission list -->
+    <div id="arcade-hud" class="arcade-hud hidden">
+      <div class="hud-title">👾 ARCADE MODE</div>
+      <ul id="mission-list"></ul>
+    </div>
+    
+    <!-- Tiny uplink terminal -->
+    <div id="terminal-log" class="terminal-log"></div>
+    
+    <!-- Toast container for pop-up notifications -->
+    <div id="toast-container" class="toast-container"></div>
   </div>
 
   <script>
@@ -2601,6 +2794,235 @@
       if (el) el.textContent = 'UPTIME: ' + h + ':' + m + ':' + s;
     }
     setInterval(updateUptime, 1000);
+    
+    // =========================================================================
+    // ARCADE EXTRAS MODULE – HUD, SFX, themes, terminal, toasts, Konami code
+    // =========================================================================
+    (function() {
+      // Config
+      const ARCADE_MISSIONS = [
+        { id:'tabs',      text:'Explore 3 panels', done:false },
+        { id:'analysis',  text:'Run analysis once', done:false },
+        { id:'simulation', text:'Run P&L simulation', done:false },
+        { id:'secret',    text:'Find the hidden invader', done:false }
+      ];
+      
+      const THEMES = {
+        Terminal: { '--phosphor': '#33ff99', '--amber': '#ffb347' },
+        Arcade:   { '--phosphor': '#7cff00', '--amber': '#ffd93d' },
+        NeonNoir: { '--phosphor': '#7afcff', '--amber': '#ff6fd8' }
+      };
+      
+      // State
+      let sfxEnabled = true;
+      let tabsVisited = new Set();
+      const root = document.documentElement;
+      
+      // Audio context (lazy init)
+      let audioCtx = null;
+      function getAudioContext() {
+        if (!audioCtx) {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          audioCtx = AudioCtx ? new AudioCtx() : null;
+        }
+        return audioCtx;
+      }
+      
+      // Tiny beep sound
+      window.beep = function(freq = 520, duration = 0.08) {
+        if (!sfxEnabled) return;
+        const ctx = getAudioContext();
+        if (!ctx) return;
+        if (ctx.state === 'suspended') ctx.resume();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.frequency.value = freq;
+        osc.type = 'square';
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        gain.gain.setValueAtTime(0.12, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+        osc.start();
+        osc.stop(ctx.currentTime + duration);
+      };
+      
+      // Toast notifications
+      window.showToast = function(message, level = 'info') {
+        const container = document.getElementById('toast-container');
+        if (!container) return;
+        const div = document.createElement('div');
+        div.className = 'toast' + (level !== 'info' ? ' ' + level : '');
+        div.textContent = message;
+        container.appendChild(div);
+        requestAnimationFrame(() => div.classList.add('show'));
+        setTimeout(() => {
+          div.classList.remove('show');
+          setTimeout(() => div.remove(), 300);
+        }, 2300);
+      };
+      
+      // Terminal log
+      window.logTerminal = function(msg) {
+        const el = document.getElementById('terminal-log');
+        if (!el) return;
+        const line = document.createElement('div');
+        line.className = 'terminal-log-line';
+        const now = new Date();
+        const hh = String(now.getHours()).padStart(2,'0');
+        const mm = String(now.getMinutes()).padStart(2,'0');
+        const ss = String(now.getSeconds()).padStart(2,'0');
+        line.innerHTML = '<span class="time">['+hh+':'+mm+':'+ss+']</span> ' + msg;
+        el.appendChild(line);
+        el.scrollTop = el.scrollHeight;
+        // Keep max 50 lines
+        while (el.children.length > 50) el.removeChild(el.firstChild);
+      };
+      
+      // Periodic uplink messages
+      const uplinkMessages = [
+        'uplink stable · packet OK',
+        'telemetry sync · nominal',
+        'signal lock · holding',
+        'data stream · active',
+        'quantum link · stable'
+      ];
+      setInterval(() => {
+        const msg = uplinkMessages[Math.floor(Math.random() * uplinkMessages.length)];
+        logTerminal(msg);
+      }, 7000);
+      
+      // Missions HUD
+      function renderMissions() {
+        const hud = document.getElementById('arcade-hud');
+        const list = document.getElementById('mission-list');
+        if (!hud || !list) return;
+        hud.classList.remove('hidden');
+        list.innerHTML = ARCADE_MISSIONS.map(m =>
+          '<li class="arcade-mission'+(m.done?' completed':'')+'">'+m.text+'</li>'
+        ).join('');
+      }
+      
+      window.completeMission = function(id) {
+        const mission = ARCADE_MISSIONS.find(m => m.id === id);
+        if (!mission || mission.done) return;
+        mission.done = true;
+        renderMissions();
+        showToast('Mission complete: ' + mission.text);
+        logTerminal('mission complete · ' + mission.id);
+        beep(800, 0.12);
+        
+        // Check if all missions complete
+        if (ARCADE_MISSIONS.every(m => m.done)) {
+          setTimeout(() => {
+            showToast('🏆 ALL MISSIONS COMPLETE!', 'alert');
+            beep(1000, 0.15);
+          }, 500);
+        }
+      };
+      
+      // Theme switching
+      function initThemeSelect() {
+        const select = document.getElementById('theme-select');
+        if (!select) return;
+        select.addEventListener('change', () => {
+          const theme = THEMES[select.value];
+          if (!theme) return;
+          Object.entries(theme).forEach(([k,v]) => root.style.setProperty(k, v));
+          logTerminal('theme applied · ' + select.value);
+          beep(600, 0.07);
+        });
+      }
+      
+      // SFX toggle
+      function initSfxToggle() {
+        const toggle = document.getElementById('sfx-toggle');
+        if (!toggle) return;
+        sfxEnabled = toggle.checked;
+        toggle.addEventListener('change', () => {
+          sfxEnabled = toggle.checked;
+          logTerminal('sfx ' + (sfxEnabled ? 'enabled' : 'muted'));
+          if (sfxEnabled) beep(700, 0.06);
+        });
+      }
+      
+      // Tab visit tracking
+      function initTabTracking() {
+        const tabs = document.querySelectorAll('.nav-tab');
+        tabs.forEach(btn => {
+          btn.addEventListener('click', () => {
+            const id = btn.getAttribute('data-tab') || btn.textContent.trim();
+            tabsVisited.add(id);
+            if (tabsVisited.size >= 3) completeMission('tabs');
+            beep(500, 0.05);
+          });
+        });
+      }
+      
+      // Wrap runPnLSimulation for mission tracking
+      const originalSimulation = window.runPnLSimulation;
+      if (typeof originalSimulation === 'function') {
+        window.runPnLSimulation = function() {
+          completeMission('simulation');
+          logTerminal('P&L simulation executed');
+          beep(520, 0.08);
+          return originalSimulation.apply(this, arguments);
+        };
+      }
+      
+      // Wrap runAnalysis if it exists
+      const originalRunAnalysis = window.runAnalysis;
+      if (typeof originalRunAnalysis === 'function') {
+        window.runAnalysis = function() {
+          completeMission('analysis');
+          logTerminal('scenario analysis · control panel executed');
+          showToast('Analysis fired');
+          beep(520, 0.08);
+          return originalRunAnalysis.apply(this, arguments);
+        };
+      }
+      
+      // Konami code -> activate pixel beam easter egg
+      const KONAMI = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
+      let konamiIndex = 0;
+      
+      window.addEventListener('keydown', (e) => {
+        const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+        const target = KONAMI[konamiIndex].toLowerCase();
+        if (key === target) {
+          konamiIndex++;
+          if (konamiIndex === KONAMI.length) {
+            konamiIndex = 0;
+            // Activate the pixel beam
+            const beam = document.getElementById('pixel-beam');
+            const ground = document.getElementById('pixel-ground');
+            if (beam) beam.classList.add('active');
+            if (ground) ground.classList.add('active');
+            completeMission('secret');
+            showToast('👾 INVADER DEFENSE GRID UNLOCKED', 'alert');
+            logTerminal('konami code accepted · easter egg revealed');
+            beep(900, 0.15);
+          }
+        } else {
+          konamiIndex = 0;
+        }
+      });
+      
+      // Initialize on DOM ready
+      function initArcade() {
+        initThemeSelect();
+        initSfxToggle();
+        initTabTracking();
+        renderMissions();
+        logTerminal('arcade module initialized');
+        logTerminal('system ready · awaiting input');
+      }
+      
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initArcade);
+      } else {
+        initArcade();
+      }
+    })();
   </script>
 </body>
 </html>
