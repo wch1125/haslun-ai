@@ -2,17 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#1A1918">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Trading Dashboard – Haslun</title>
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%231A1918' width='100' height='100' rx='12'/%3E%3Cpath d='M20 70 L35 50 L50 60 L65 30 L80 40' stroke='%23C4846C' stroke-width='6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
-  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%231A1918' width='100' height='100' rx='12'/%3E%3Cpath d='M20 70 L35 50 L50 60 L65 30 L80 40' stroke='%23C4846C' stroke-width='6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📈</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root {
       --bg: #1A1918; --bg-subtle: #242220; --paper: #2C2A26;
@@ -100,14 +95,10 @@
     }
     
     .rocket {
-      color: var(--terracotta);
+      font-size: 3.5rem;
       filter: drop-shadow(0 0 10px rgba(196, 132, 108, 0.5));
       animation: hover 1s ease-in-out infinite;
       transition: transform 1s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    
-    .rocket svg {
-      display: block;
     }
     
     .rocket.launching {
@@ -256,25 +247,9 @@
     .tab:hover { color: var(--ink-light); }
     .tab.active { color: var(--terracotta); border-bottom-color: var(--terracotta); }
     
-    .main { 
-      flex: 1; 
-      display: flex;
-      min-height: 0;
-    }
-    .content { 
-      flex: 1;
-      padding: 1.5rem; 
-      overflow-y: auto;
-      min-width: 0;
-    }
-    .sidebar { 
-      width: 320px;
-      flex-shrink: 0;
-      background: var(--bg-subtle); 
-      border-left: 1px solid var(--line); 
-      padding: 1.5rem; 
-      overflow-y: auto; 
-    }
+    .main { flex: 1; display: grid; grid-template-columns: 1fr 320px; }
+    .content { padding: 1.5rem; overflow-y: auto; }
+    .sidebar { background: var(--bg-subtle); border-left: 1px solid var(--line); padding: 1.5rem; overflow-y: auto; }
     
     .tab-content { display: none; }
     .tab-content.active { display: block; }
@@ -381,7 +356,6 @@
     .catalyst-impact { font-size: 0.6875rem; padding: 0.125rem 0.375rem; border-radius: var(--radius-sm); font-weight: 600; }
     .catalyst-impact.high { background: var(--red); color: white; }
     .catalyst-impact.medium { background: var(--gold); color: var(--bg); }
-    .catalyst-impact.low { background: var(--slate); color: white; }
     
     /* Input Fields */
     .input-field {
@@ -970,15 +944,18 @@
     }
     
     .activity-icon {
-      width: 10px;
-      height: 10px;
+      width: 32px;
+      height: 32px;
       border-radius: 50%;
-      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.875rem;
     }
     
-    .activity-icon.alert { background: var(--gold); }
-    .activity-icon.trade { background: var(--green); }
-    .activity-icon.system { background: var(--slate); }
+    .activity-icon.alert { background: rgba(184, 152, 107, 0.2); }
+    .activity-icon.trade { background: rgba(92, 154, 107, 0.2); }
+    .activity-icon.system { background: rgba(107, 123, 138, 0.2); }
     
     .activity-content { flex: 1; }
     
@@ -1029,873 +1006,15 @@
     .rule-text strong {
       color: var(--ink);
     }
-    
-    /* =========================================================================
-       PERFORMANCE CHART - REFINED DESIGN
-       ========================================================================= */
-    .perf-chart-container {
-      position: relative;
-    }
-    
-    .perf-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 1rem;
-      gap: 1rem;
-    }
-    
-    .perf-legend {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.25rem 1rem;
-      min-width: 180px;
-    }
-    
-    .perf-legend-row {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-size: 0.75rem;
-      font-family: var(--font-mono);
-    }
-    
-    .perf-legend-color {
-      width: 3px;
-      height: 12px;
-      border-radius: 1px;
-      flex-shrink: 0;
-    }
-    
-    .perf-legend-name {
-      color: var(--muted);
-      min-width: 55px;
-    }
-    
-    .perf-legend-value {
-      font-weight: 500;
-    }
-    
-    .perf-legend-value.positive { color: var(--green); }
-    .perf-legend-value.negative { color: var(--red); }
-    
-    .perf-controls {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.3rem;
-      justify-content: flex-end;
-    }
-    
-    .perf-toggle {
-      display: flex;
-      align-items: center;
-      gap: 0.3rem;
-      padding: 0.25rem 0.5rem;
-      background: transparent;
-      border: 1px solid var(--line);
-      border-radius: 4px;
-      font-size: 0.65rem;
-      font-family: var(--font-body);
-      color: var(--muted);
-      cursor: pointer;
-      transition: all 0.15s ease;
-      user-select: none;
-    }
-    
-    .perf-toggle:hover {
-      border-color: var(--line-strong);
-      color: var(--ink-light);
-    }
-    
-    .perf-toggle.active {
-      background: var(--bg);
-      border-color: var(--line-strong);
-      color: var(--ink);
-    }
-    
-    .perf-toggle-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-    }
-    
-    .perf-toggle:not(.active) .perf-toggle-dot {
-      opacity: 0.35;
-    }
-    
-    .perf-toggle-value {
-      font-family: var(--font-mono);
-      font-size: 0.55rem;
-      font-weight: 500;
-    }
-    
-    .perf-toggle-value.positive { color: var(--green); }
-    .perf-toggle-value.negative { color: var(--red); }
-    .perf-toggle:not(.active) .perf-toggle-value { opacity: 0.5; }
-    
-    .perf-chart-wrapper {
-      position: relative;
-      height: 320px;
-      margin: 0 -0.5rem;
-    }
-    
-    .perf-chart-wrapper canvas {
-      width: 100% !important;
-      height: 100% !important;
-    }
-    
-    .perf-summary {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1.5rem;
-      margin-top: 1rem;
-      padding-top: 0.75rem;
-      border-top: 1px solid var(--line);
-    }
-    
-    .perf-summary-item {
-      display: flex;
-      flex-direction: column;
-      gap: 0.125rem;
-    }
-    
-    .perf-summary-label {
-      font-size: 0.6rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--muted);
-    }
-    
-    .perf-summary-value {
-      font-family: var(--font-mono);
-      font-size: 0.9rem;
-      font-weight: 600;
-    }
-    
-    .perf-summary-value.positive { color: var(--green); }
-    .perf-summary-value.negative { color: var(--red); }
-    
-    /* =========================================================================
-       MOBILE RESPONSIVE STYLES
-       ========================================================================= */
-    
-    /* Tablet breakpoint */
-    @media (max-width: 1024px) {
-      .main {
-        flex-direction: column;
-      }
-      
-      .sidebar {
-        width: 100%;
-        border-left: none;
-        border-top: 1px solid var(--line);
-      }
-      
-      .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-      
-      .strategy-overview {
-        grid-template-columns: 1fr;
-      }
-    }
-    
-    /* Mobile breakpoint */
-    @media (max-width: 640px) {
-      /* Header - Stack vertically */
-      .header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.75rem;
-        padding: 1rem;
-      }
-      
-      .header-brand {
-        width: 100%;
-      }
-      
-      .header-title {
-        font-size: 1.25rem;
-      }
-      
-      .header-subtitle {
-        font-size: 0.7rem;
-      }
-      
-      .header-status {
-        width: 100%;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-      }
-      
-      .status-item {
-        font-size: 0.7rem;
-      }
-      
-      .demo-badge {
-        font-size: 0.65rem;
-        padding: 0.25rem 0.5rem;
-      }
-      
-      /* Tabs - Scrollable */
-      .tabs {
-        padding: 0 1rem;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
-      }
-      
-      .tabs::-webkit-scrollbar {
-        display: none;
-      }
-      
-      .tab {
-        padding: 0.75rem 1rem;
-        font-size: 0.8rem;
-        white-space: nowrap;
-        flex-shrink: 0;
-      }
-      
-      /* Main layout - CRITICAL: Stack vertically */
-      .main {
-        flex-direction: column;
-        padding: 0;
-      }
-      
-      .content {
-        padding: 1rem;
-        width: 100%;
-        overflow-y: visible;
-      }
-      
-      .sidebar {
-        width: 100%;
-        border-left: none;
-        border-top: 1px solid var(--line);
-        padding: 1rem;
-        overflow-y: visible;
-      }
-      
-      /* Stats grid - 2x2 on mobile */
-      .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 0.75rem;
-        margin-bottom: 1rem;
-      }
-      
-      .stat-card {
-        padding: 0.875rem 0.75rem;
-      }
-      
-      .stat-value {
-        font-size: 1.25rem;
-      }
-      
-      .stat-label {
-        font-size: 0.6rem;
-      }
-      
-      .stat-sub {
-        font-size: 0.65rem;
-      }
-      
-      /* Cards */
-      .card {
-        margin-bottom: 1rem;
-      }
-      
-      .card-header {
-        padding: 0.875rem 1rem;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.5rem;
-      }
-      
-      .card-actions {
-        width: 100%;
-        display: flex;
-        gap: 0.5rem;
-      }
-      
-      .card-actions .btn {
-        flex: 1;
-        justify-content: center;
-        font-size: 0.75rem;
-        padding: 0.5rem;
-      }
-      
-      .card-body {
-        padding: 1rem;
-      }
-      
-      .card-title {
-        font-size: 1rem;
-      }
-      
-      /* Performance chart mobile */
-      .perf-header {
-        flex-direction: column;
-        gap: 0.75rem;
-      }
-      
-      .perf-legend {
-        min-width: auto;
-      }
-      
-      .perf-legend-row {
-        font-size: 0.65rem;
-      }
-      
-      .perf-controls {
-        justify-content: flex-start;
-        gap: 0.25rem;
-      }
-      
-      .perf-toggle {
-        padding: 0.2rem 0.375rem;
-        font-size: 0.55rem;
-      }
-      
-      .perf-toggle-dot {
-        width: 5px;
-        height: 5px;
-      }
-      
-      .perf-toggle-value {
-        font-size: 0.5rem;
-      }
-      
-      .perf-chart-wrapper {
-        height: 260px;
-        margin: 0;
-      }
-      
-      .perf-summary {
-        gap: 1rem;
-      }
-      
-      .perf-summary-item {
-        padding: 0.375rem;
-      }
-      
-      .perf-summary-label {
-        font-size: 0.5rem;
-      }
-      
-      .perf-summary-value {
-        font-size: 0.8rem;
-      }
-      
-      /* Chart tabs - Scrollable */
-      .chart-tabs {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
-        margin: 0 -1rem 1rem -1rem;
-        padding: 0 1rem;
-      }
-      
-      .chart-tabs::-webkit-scrollbar {
-        display: none;
-      }
-      
-      .chart-tab {
-        padding: 0.5rem 0.75rem;
-        font-size: 0.7rem;
-        white-space: nowrap;
-        flex-shrink: 0;
-      }
-      
-      /* Bar charts */
-      .bar-chart {
-        gap: 0.5rem;
-      }
-      
-      .bar-row {
-        grid-template-columns: 50px 1fr 50px;
-        gap: 0.5rem;
-      }
-      
-      .bar-ticker {
-        font-size: 0.7rem;
-      }
-      
-      .bar-ticker-dot {
-        width: 6px;
-        height: 6px;
-      }
-      
-      .bar-track {
-        height: 18px;
-      }
-      
-      .bar-fill-label {
-        font-size: 0.55rem;
-      }
-      
-      .bar-value {
-        font-size: 0.65rem;
-      }
-      
-      /* P&L chart */
-      .pnl-chart {
-        gap: 0.5rem;
-      }
-      
-      .pnl-row {
-        grid-template-columns: 45px 1fr 50px;
-        gap: 0.5rem;
-        padding: 0.375rem 0;
-      }
-      
-      .pnl-ticker {
-        font-size: 0.7rem;
-      }
-      
-      .pnl-ticker-dot {
-        width: 6px;
-        height: 6px;
-      }
-      
-      .pnl-bar-container {
-        height: 22px;
-      }
-      
-      .pnl-bar-label {
-        font-size: 0.5rem;
-      }
-      
-      .pnl-value {
-        font-size: 0.65rem;
-      }
-      
-      .pnl-summary {
-        padding: 0.5rem;
-      }
-      
-      .pnl-summary-value {
-        font-size: 0.875rem;
-      }
-      
-      .pnl-summary-label {
-        font-size: 0.5rem;
-      }
-      
-      /* Risk chart */
-      .risk-chart {
-        gap: 1rem;
-      }
-      
-      .risk-bar {
-        height: 26px;
-      }
-      
-      .risk-segment {
-        font-size: 0.55rem;
-        min-width: 28px;
-      }
-      
-      .risk-legend {
-        flex-direction: column;
-        gap: 0.375rem;
-      }
-      
-      .risk-legend-item {
-        font-size: 0.65rem;
-      }
-      
-      .risk-legend-dot {
-        width: 8px;
-        height: 8px;
-      }
-      
-      .risk-note {
-        font-size: 0.6rem;
-      }
-      
-      /* Theme chart */
-      .theme-chart {
-        gap: 0.75rem;
-      }
-      
-      .theme-grid {
-        gap: 4px;
-      }
-      
-      .theme-cell {
-        padding: 0.375rem 0.5rem;
-        min-width: 50px;
-      }
-      
-      .theme-cell-ticker {
-        font-size: 0.6rem;
-      }
-      
-      .theme-cell-value {
-        font-size: 0.5rem;
-      }
-      
-      .theme-cell-pnl {
-        font-size: 0.45rem;
-        padding: 0.1rem 0.2rem;
-      }
-      
-      /* Tables - Horizontal scroll wrapper */
-      .table-scroll-wrapper {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        margin: 0 -1rem;
-        padding: 0 1rem;
-      }
-      
-      .options-table,
-      .positions-table {
-        min-width: 550px;
-        font-size: 0.7rem;
-      }
-      
-      .options-table th,
-      .options-table td {
-        padding: 0.5rem 0.4rem;
-      }
-      
-      .ticker-badge {
-        font-size: 0.6rem;
-        padding: 0.15rem 0.35rem;
-      }
-      
-      .structure-badge {
-        font-size: 0.55rem;
-        padding: 0.15rem 0.3rem;
-      }
-      
-      .action-badge {
-        font-size: 0.55rem;
-        padding: 0.15rem 0.3rem;
-      }
-      
-      /* Strategy overview */
-      .strategy-overview {
-        grid-template-columns: 1fr;
-        gap: 0.75rem;
-      }
-      
-      .strategy-section {
-        padding: 0.75rem;
-      }
-      
-      .strategy-section-title {
-        font-size: 0.6rem;
-        margin-bottom: 0.5rem;
-      }
-      
-      .rules-grid {
-        grid-template-columns: 1fr 1fr;
-        gap: 0.5rem;
-      }
-      
-      .rule-item {
-        padding: 0.4rem;
-      }
-      
-      .rule-icon {
-        font-size: 0.875rem;
-      }
-      
-      .rule-text {
-        font-size: 0.65rem;
-      }
-      
-      .watchlist {
-        gap: 0.375rem;
-      }
-      
-      .watchlist-item {
-        padding: 0.25rem 0.4rem;
-        font-size: 0.65rem;
-      }
-      
-      /* MACD visual */
-      .macd-line {
-        gap: 0.5rem;
-      }
-      
-      .macd-line-label {
-        font-size: 0.65rem;
-        width: 50px;
-      }
-      
-      .macd-line-bar {
-        height: 5px;
-      }
-      
-      /* Empty state */
-      .empty-state-enhanced {
-        padding: 1.25rem 1rem;
-      }
-      
-      .empty-state-icon {
-        font-size: 2rem;
-      }
-      
-      .empty-state-title {
-        font-size: 1rem;
-      }
-      
-      .empty-state-text {
-        font-size: 0.75rem;
-        margin-bottom: 1rem;
-      }
-      
-      .empty-state-steps {
-        gap: 0.75rem;
-      }
-      
-      .step-number {
-        width: 22px;
-        height: 22px;
-        font-size: 0.65rem;
-      }
-      
-      .step-text {
-        font-size: 0.65rem;
-      }
-      
-      /* Activity feed */
-      .activity-feed {
-        gap: 0.375rem;
-      }
-      
-      .activity-item {
-        padding: 0.5rem;
-        gap: 0.5rem;
-      }
-      
-      .activity-icon {
-        width: 26px;
-        height: 26px;
-        font-size: 0.7rem;
-      }
-      
-      .activity-title {
-        font-size: 0.7rem;
-      }
-      
-      .activity-subtitle {
-        font-size: 0.65rem;
-      }
-      
-      .activity-time {
-        font-size: 0.55rem;
-      }
-      
-      /* Sidebar cards */
-      .kill-switch-card {
-        padding: 1rem;
-        margin-bottom: 1rem;
-      }
-      
-      .kill-switch-label {
-        font-size: 0.6rem;
-      }
-      
-      .kill-switch-btn {
-        padding: 0.75rem;
-        font-size: 0.8rem;
-      }
-      
-      .kill-switch-status {
-        font-size: 0.7rem;
-      }
-      
-      .safety-item {
-        padding: 0.375rem 0;
-        margin-bottom: 0.25rem;
-      }
-      
-      .safety-label,
-      .safety-value {
-        font-size: 0.75rem;
-      }
-      
-      /* Catalysts */
-      .catalyst-item {
-        padding: 0.5rem 0;
-        gap: 0.5rem;
-      }
-      
-      .catalyst-date {
-        font-size: 0.6rem;
-        min-width: 55px;
-      }
-      
-      .catalyst-ticker {
-        font-size: 0.7rem;
-      }
-      
-      .catalyst-event {
-        font-size: 0.65rem;
-      }
-      
-      .catalyst-impact {
-        font-size: 0.5rem;
-        padding: 0.125rem 0.3rem;
-      }
-      
-      /* Alerts */
-      .alert-item {
-        font-size: 0.7rem;
-        padding: 0.5rem;
-      }
-      
-      .empty-state {
-        font-size: 0.75rem;
-        padding: 1rem;
-      }
-      
-      /* Demo watermark */
-      .demo-watermark {
-        bottom: 0.5rem !important;
-        left: 0.5rem !important;
-        padding: 0.4rem 0.6rem !important;
-        font-size: 0.65rem !important;
-        gap: 0.4rem !important;
-      }
-      
-      /* Loading screen */
-      .rocket {
-        font-size: 2.5rem;
-      }
-      
-      .rocket-container {
-        height: 80px;
-        margin-bottom: 1rem;
-      }
-      
-      .countdown {
-        font-size: 2rem;
-      }
-      
-      .loading-brand-name {
-        font-size: 1.1rem;
-      }
-      
-      .loading-brand-sub {
-        font-size: 0.6rem;
-      }
-      
-      .loading-status {
-        font-size: 0.75rem;
-      }
-      
-      .flame {
-        width: 4px;
-      }
-      
-      .flame:nth-child(1) { height: 14px; }
-      .flame:nth-child(2) { height: 20px; }
-      .flame:nth-child(3) { height: 18px; }
-      .flame:nth-child(4) { height: 20px; }
-      .flame:nth-child(5) { height: 14px; }
-    }
-    
-    /* Extra small mobile */
-    @media (max-width: 380px) {
-      .header-title {
-        font-size: 1.1rem;
-      }
-      
-      .stats-grid {
-        gap: 0.5rem;
-      }
-      
-      .stat-value {
-        font-size: 1.1rem;
-      }
-      
-      .stat-label {
-        font-size: 0.55rem;
-      }
-      
-      .bar-row {
-        grid-template-columns: 40px 1fr 40px;
-      }
-      
-      .bar-ticker {
-        font-size: 0.6rem;
-      }
-      
-      .pnl-row {
-        grid-template-columns: 40px 1fr 40px;
-      }
-      
-      .pnl-ticker {
-        font-size: 0.6rem;
-      }
-      
-      .rules-grid {
-        grid-template-columns: 1fr;
-      }
-      
-      .theme-cell {
-        min-width: 45px;
-        padding: 0.3rem 0.4rem;
-      }
-    }
-    
-    /* Touch-friendly interactions */
-    @media (hover: none) and (pointer: coarse) {
-      .tab:active,
-      .chart-tab:active {
-        background: var(--line);
-      }
-      
-      .btn:active {
-        transform: scale(0.98);
-      }
-      
-      .theme-cell:active {
-        transform: scale(0.98);
-      }
-      
-      /* Remove hover effects on touch */
-      .theme-cell:hover {
-        transform: none;
-        box-shadow: none;
-      }
-      
-      /* Larger touch targets */
-      .tab,
-      .chart-tab {
-        min-height: 44px;
-        display: flex;
-        align-items: center;
-      }
-      
-      .btn {
-        min-height: 44px;
-      }
-      
-      .kill-switch-btn {
-        min-height: 48px;
-      }
-    }
   </style>
 </head>
 <body>
-  <!-- Loading Screen -->
+  <!-- Loading Screen - Rocket Launch -->
   <div class="loading-screen" id="loading-screen">
     <div class="stars"></div>
     <div class="launch-scene">
       <div class="rocket-container">
-        <div class="rocket" id="rocket">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/>
-            <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/>
-            <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/>
-            <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/>
-          </svg>
-        </div>
+        <div class="rocket" id="rocket">🚀</div>
         <div class="exhaust">
           <div class="flame"></div>
           <div class="flame"></div>
@@ -1907,9 +1026,9 @@
       <div class="countdown" id="countdown">3</div>
       <div class="loading-brand">
         <div class="loading-brand-name">Haslun Trading</div>
-        <div class="loading-brand-sub">Dashboard</div>
+        <div class="loading-brand-sub">Mission Control</div>
       </div>
-      <div class="loading-status" id="loading-status">Initializing...</div>
+      <div class="loading-status" id="loading-status">Initializing systems...</div>
     </div>
   </div>
   
@@ -1942,9 +1061,9 @@
     
     <!-- Tabs -->
     <div class="tabs">
-      <div class="tab active" data-tab="trading" onclick="switchTab('trading')">Stock Trading</div>
-      <div class="tab" data-tab="options" onclick="switchTab('options')">Options Portfolio</div>
-      <div class="tab" data-tab="catalysts" onclick="switchTab('catalysts')">Catalysts</div>
+      <div class="tab active" data-tab="trading" onclick="switchTab('trading')">📊 Stock Trading</div>
+      <div class="tab" data-tab="options" onclick="switchTab('options')">📈 Options Portfolio</div>
+      <div class="tab" data-tab="catalysts" onclick="switchTab('catalysts')">📅 Catalysts</div>
     </div>
     
     <main class="main">
@@ -1983,7 +1102,7 @@
               <div class="strategy-overview">
                 <div class="strategy-section">
                   <div class="strategy-section-title">
-                    Signal Components
+                    <span class="icon">📡</span> Signal Components
                   </div>
                   <div class="macd-visual">
                     <div class="macd-line">
@@ -2008,7 +1127,7 @@
                 </div>
                 <div class="strategy-section">
                   <div class="strategy-section-title">
-                    Watchlist
+                    <span class="icon">🎯</span> Watchlist
                   </div>
                   <div class="watchlist" id="macd-watchlist">
                     <div class="watchlist-item">
@@ -2036,7 +1155,7 @@
               </div>
               <div class="rules-grid">
                 <div class="rule-item">
-                  
+                  <span class="rule-icon">📈</span>
                   <div class="rule-text"><strong>Entry:</strong> MACD crosses above signal line</div>
                 </div>
                 <div class="rule-item">
@@ -2044,28 +1163,13 @@
                   <div class="rule-text"><strong>Exit:</strong> MACD crosses below signal line</div>
                 </div>
                 <div class="rule-item">
-                  
+                  <span class="rule-icon">💰</span>
                   <div class="rule-text"><strong>Size:</strong> $2,000 per position</div>
                 </div>
                 <div class="rule-item">
-                  
+                  <span class="rule-icon">🛡️</span>
                   <div class="rule-text"><strong>Limit:</strong> 5 trades per day, -$200 max loss</div>
                 </div>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Performance vs Benchmarks Chart -->
-          <div class="card">
-            <div class="card-header">
-              <div>
-                <div class="card-label">Since March 2024</div>
-                <h2 class="card-title">Performance vs Benchmarks</h2>
-              </div>
-            </div>
-            <div class="card-body">
-              <div class="perf-chart-container" id="perf-chart-container">
-                <!-- Rendered by JavaScript -->
               </div>
             </div>
           </div>
@@ -2078,7 +1182,28 @@
               </div>
             </div>
             <div class="card-body" id="stock-positions">
-              <!-- Will be populated by renderStockPositions() -->
+              <div class="empty-state-enhanced">
+                <div class="empty-state-icon">📊</div>
+                <div class="empty-state-title">No Active Positions</div>
+                <div class="empty-state-text">
+                  The MACD strategy is monitoring your watchlist for entry signals. 
+                  When a crossover occurs, positions will appear here.
+                </div>
+                <div class="empty-state-steps">
+                  <div class="empty-state-step">
+                    <div class="step-number">1</div>
+                    <div class="step-text">TradingView Alert</div>
+                  </div>
+                  <div class="empty-state-step">
+                    <div class="step-number">2</div>
+                    <div class="step-text">Webhook Received</div>
+                  </div>
+                  <div class="empty-state-step">
+                    <div class="step-number">3</div>
+                    <div class="step-text">Order Executed</div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
           
@@ -2090,7 +1215,24 @@
               </div>
             </div>
             <div class="card-body" id="trades-log">
-              <!-- Will be populated by renderActivity() -->
+              <div class="activity-feed">
+                <div class="activity-item">
+                  <div class="activity-icon system">🚀</div>
+                  <div class="activity-content">
+                    <div class="activity-title">Dashboard Started</div>
+                    <div class="activity-subtitle">MACD strategy monitoring active</div>
+                  </div>
+                  <div class="activity-time" id="start-time">--:--</div>
+                </div>
+                <div class="activity-item">
+                  <div class="activity-icon alert">📡</div>
+                  <div class="activity-content">
+                    <div class="activity-title">Webhook Endpoint Ready</div>
+                    <div class="activity-subtitle">Listening for TradingView alerts</div>
+                  </div>
+                  <div class="activity-time">Ready</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -2126,10 +1268,10 @@
             </div>
             <div class="card-body">
               <div class="chart-tabs">
-                <div class="chart-tab active" data-chart="sizes" onclick="switchChartTab('sizes')">Position Sizes</div>
-                <div class="chart-tab" data-chart="pnl" onclick="switchChartTab('pnl')">P&L</div>
-                <div class="chart-tab" data-chart="risk" onclick="switchChartTab('risk')">Risk</div>
-                <div class="chart-tab" data-chart="themes" onclick="switchChartTab('themes')">Themes</div>
+                <div class="chart-tab active" data-chart="sizes" onclick="switchChartTab('sizes')">📊 Position Sizes</div>
+                <div class="chart-tab" data-chart="pnl" onclick="switchChartTab('pnl')">📈 P&L</div>
+                <div class="chart-tab" data-chart="risk" onclick="switchChartTab('risk')">🛡️ Risk</div>
+                <div class="chart-tab" data-chart="themes" onclick="switchChartTab('themes')">🎯 Themes</div>
               </div>
               
               <!-- Position Sizes Chart -->
@@ -2326,373 +1468,13 @@
     ];
     
     const DEMO_CATALYSTS = [
-      { date: '2026-01-16', ticker: 'ALL', event: 'January Options Expiration', impact: 'HIGH' },
-      { date: '2026-01-21', ticker: 'RKLB', event: 'Q4 Earnings Report', impact: 'HIGH' },
-      { date: '2026-01-28', ticker: 'ASTS', event: 'Q4 Earnings Report', impact: 'HIGH' },
-      { date: '2026-02-10', ticker: 'LUNR', event: 'Q4 Earnings Report', impact: 'MEDIUM' },
-      { date: '2026-02-15', ticker: 'LUNR', event: 'IM-2 Lunar Landing Mission', impact: 'HIGH' },
-      { date: '2026-Q1', ticker: 'ACHR', event: 'FAA Type Certification Expected', impact: 'HIGH' },
-      { date: '2026-Q1', ticker: 'JOBY', event: 'FAA Type Certification Expected', impact: 'HIGH' },
-      { date: '2026-Q1', ticker: 'BKSY', event: 'Government Contract Announcement', impact: 'MEDIUM' },
-      { date: '2026-Q2', ticker: 'ASTS', event: 'BlueBird Commercial Service Launch', impact: 'HIGH' },
-      { date: '2026-Q2', ticker: 'RKLB', event: 'Neutron Rocket First Flight', impact: 'HIGH' },
-      { date: '2026-Q2', ticker: 'RDW', event: 'Phantom Space Partnership Update', impact: 'MEDIUM' },
-      { date: '2026-Q3', ticker: 'PL', event: 'Pelican Constellation Expansion', impact: 'MEDIUM' },
-      { date: '2026-Q4', ticker: 'GME', event: 'Holiday Sales Report', impact: 'LOW' }
+      { date: '2026-01-16', ticker: 'ALL', event: 'Options Expiration', impact: 'HIGH' },
+      { date: '2026-02-15', ticker: 'LUNR', event: 'IM-2 Lunar Mission', impact: 'HIGH' },
+      { date: '2026-Q1', ticker: 'ACHR', event: 'FAA Certification', impact: 'HIGH' },
+      { date: '2026-Q1', ticker: 'JOBY', event: 'FAA Certification', impact: 'HIGH' },
+      { date: '2026-Q2', ticker: 'ASTS', event: 'Commercial Launch', impact: 'HIGH' },
+      { date: '2026-Q2', ticker: 'RKLB', event: 'Neutron First Flight', impact: 'HIGH' }
     ];
-    
-    // Demo STOCK positions (MACD-triggered swing trades) - All 10 watchlist stocks
-    const DEMO_STOCK_POSITIONS = [
-      // Space sector - Strong performers
-      { ticker: 'RKLB', shares: 75, entry_price: 68.45, current_price: 72.80, entry_time: '2026-01-02 10:32 AM' },
-      { ticker: 'ASTS', shares: 50, entry_price: 78.20, current_price: 83.47, entry_time: '2026-01-02 11:15 AM' },
-      { ticker: 'LUNR', shares: 100, entry_price: 15.20, current_price: 17.88, entry_time: '2026-01-03 09:45 AM' },
-      { ticker: 'BKSY', shares: 200, entry_price: 3.85, current_price: 4.20, entry_time: '2025-12-30 02:18 PM' },
-      { ticker: 'RDW', shares: 80, entry_price: 13.60, current_price: 15.00, entry_time: '2025-12-27 10:05 AM' },
-      { ticker: 'PL', shares: 150, entry_price: 3.72, current_price: 4.00, entry_time: '2025-12-23 11:30 AM' },
-      // eVTOL sector - Mixed
-      { ticker: 'ACHR', shares: 100, entry_price: 7.85, current_price: 8.13, entry_time: '2025-12-28 09:52 AM' },
-      { ticker: 'JOBY', shares: 60, entry_price: 13.20, current_price: 14.36, entry_time: '2025-12-19 03:15 PM' },
-      { ticker: 'EVEX', shares: 250, entry_price: 3.10, current_price: 2.80, entry_time: '2025-12-18 10:45 AM' },
-      // Meme
-      { ticker: 'GME', shares: 40, entry_price: 25.80, current_price: 27.50, entry_time: '2025-12-20 01:22 PM' }
-    ];
-    
-    // Demo recent activity/alerts - More comprehensive
-    const DEMO_ACTIVITY = [
-      { type: 'trade', title: 'BUY LUNR', subtitle: '100 shares @ $15.20', time: '09:45 AM' },
-      { type: 'alert', title: 'MACD Crossover', subtitle: 'LUNR bullish signal detected', time: '09:44 AM' },
-      { type: 'trade', title: 'BUY ASTS', subtitle: '50 shares @ $78.20', time: 'Yesterday' },
-      { type: 'trade', title: 'BUY RKLB', subtitle: '75 shares @ $68.45', time: 'Yesterday' },
-      { type: 'alert', title: 'MACD Crossover', subtitle: 'ASTS bullish signal detected', time: 'Jan 2' },
-      { type: 'trade', title: 'BUY BKSY', subtitle: '200 shares @ $3.85', time: 'Dec 30' },
-      { type: 'trade', title: 'BUY ACHR', subtitle: '100 shares @ $7.85', time: 'Dec 28' },
-      { type: 'alert', title: 'MACD Crossover', subtitle: 'RDW bullish signal detected', time: 'Dec 27' },
-      { type: 'system', title: 'System Online', subtitle: 'Dashboard initialized', time: 'Dec 15' }
-    ];
-    
-    // Monthly performance data (cumulative % returns since March 2024)
-    const PERFORMANCE_DATA = {
-      labels: ['Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan'],
-      
-      // Benchmarks
-      spy: [0, 1, 5, 9, 14, 12, 16, 20, 26, 32, 34],
-      xar: [0, 2, 8, 12, 18, 22, 28, 35, 42, 48, 52],
-      portfolio: [0, -15, 12, 45, 78, 125, 180, 285, 390, 520, 592],
-      
-      // Individual tickers (% return from March 2024 baseline)
-      RKLB: [0, -18, 15, 85, 180, 350, 520, 780, 1100, 1450, 1633],
-      ASTS: [0, -22, 5, 120, 280, 450, 680, 1200, 2100, 3000, 3239],
-      LUNR: [0, -25, -10, 20, 45, 90, 150, 280, 380, 480, 539],
-      BKSY: [0, -15, 8, 25, 55, 80, 95, 110, 125, 130, 133],
-      RDW: [0, -10, 15, 40, 75, 110, 140, 165, 180, 185, 188],
-      PL: [0, -20, -5, 15, 35, 50, 65, 78, 85, 88, 90],
-      ACHR: [0, -8, 12, 35, 60, 85, 95, 105, 110, 112, 114],
-      JOBY: [0, -12, 5, 28, 55, 90, 120, 155, 175, 185, 187],
-      EVEX: [0, 5, -10, -25, -35, -40, -38, -36, -35, -38, -38],
-      GME: [0, 25, 45, 30, 55, 70, 85, 95, 100, 105, 108]
-    };
-    
-    // Chart.js instance and state
-    let perfChart = null;
-    const chartState = {
-      activeSeries: ['portfolio', 'spy', 'xar']
-    };
-    
-    // Series configuration
-    const seriesConfig = {
-      portfolio: { label: 'Portfolio', color: '#C4846C', borderWidth: 3 },
-      spy: { label: 'S&P 500', color: '#6B7B8A', borderWidth: 2, borderDash: [5, 3] },
-      xar: { label: 'XAR', color: '#B8986B', borderWidth: 2, borderDash: [5, 3] },
-      RKLB: { label: 'RKLB', color: '#C4846C', borderWidth: 2 },
-      ASTS: { label: 'ASTS', color: '#B8986B', borderWidth: 2 },
-      LUNR: { label: 'LUNR', color: '#D4A08A', borderWidth: 2 },
-      BKSY: { label: 'BKSY', color: '#6B7B8A', borderWidth: 2 },
-      RDW: { label: 'RDW', color: '#5C9A6B', borderWidth: 2 },
-      PL: { label: 'PL', color: '#8AB89A', borderWidth: 2 },
-      ACHR: { label: 'ACHR', color: '#CEBA95', borderWidth: 2 },
-      JOBY: { label: 'JOBY', color: '#8B9A7D', borderWidth: 2 },
-      EVEX: { label: 'EVEX', color: '#C45C5C', borderWidth: 2 },
-      GME: { label: 'GME', color: '#5A7247', borderWidth: 2 }
-    };
-    
-    function renderPerformanceChart() {
-      const container = document.getElementById('perf-chart-container');
-      if (!container) return;
-      
-      const data = PERFORMANCE_DATA;
-      const tickers = ['RKLB', 'ASTS', 'LUNR', 'BKSY', 'RDW', 'PL', 'ACHR', 'JOBY', 'EVEX', 'GME'];
-      
-      // Build toggle buttons
-      function buildToggle(key, isActive) {
-        const cfg = seriesConfig[key];
-        const finalVal = data[key][data[key].length - 1];
-        const isPositive = finalVal >= 0;
-        return `
-          <button class="perf-toggle ${isActive ? 'active' : ''}" data-series="${key}" onclick="togglePerfSeries('${key}')">
-            <span class="perf-toggle-dot" style="background: ${cfg.color}"></span>
-            ${cfg.label}
-            <span class="perf-toggle-value ${isPositive ? 'positive' : 'negative'}">${isPositive ? '+' : ''}${finalVal}%</span>
-          </button>
-        `;
-      }
-      
-      // Build initial legend (shows latest values)
-      function buildLegend() {
-        return chartState.activeSeries.map(key => {
-          const cfg = seriesConfig[key];
-          const val = data[key][data[key].length - 1];
-          const isPositive = val >= 0;
-          return `
-            <div class="perf-legend-row" data-series="${key}">
-              <span class="perf-legend-color" style="background: ${cfg.color}"></span>
-              <span class="perf-legend-name">${cfg.label}</span>
-              <span class="perf-legend-value ${isPositive ? 'positive' : 'negative'}">${isPositive ? '+' : ''}${val}%</span>
-            </div>
-          `;
-        }).join('');
-      }
-      
-      container.innerHTML = `
-        <div class="perf-header">
-          <div class="perf-legend" id="perf-legend">
-            ${buildLegend()}
-          </div>
-          <div class="perf-controls">
-            ${buildToggle('portfolio', true)}
-            ${buildToggle('spy', true)}
-            ${buildToggle('xar', true)}
-            ${tickers.map(t => buildToggle(t, false)).join('')}
-          </div>
-        </div>
-        <div class="perf-chart-wrapper">
-          <canvas id="perf-canvas"></canvas>
-        </div>
-        <div class="perf-summary" id="perf-summary"></div>
-      `;
-      
-      initPerfChart();
-    }
-    
-    function initPerfChart() {
-      const ctx = document.getElementById('perf-canvas');
-      if (!ctx) return;
-      
-      // Build initial datasets
-      const initialDatasets = chartState.activeSeries.map(key => {
-        const cfg = seriesConfig[key];
-        return {
-          label: cfg.label,
-          data: PERFORMANCE_DATA[key],
-          borderColor: cfg.color,
-          backgroundColor: 'transparent',
-          borderWidth: cfg.borderWidth,
-          borderDash: cfg.borderDash || [],
-          fill: false,
-          pointBackgroundColor: cfg.color,
-          pointBorderColor: cfg.color
-        };
-      });
-      
-      perfChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: PERFORMANCE_DATA.labels,
-          datasets: initialDatasets
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          interaction: {
-            mode: 'index',
-            intersect: false
-          },
-          plugins: {
-            legend: {
-              display: false
-            },
-            tooltip: {
-              backgroundColor: 'rgba(44, 42, 38, 0.95)',
-              titleColor: '#F5F2ED',
-              bodyColor: '#C4C0B8',
-              borderColor: '#3D3A36',
-              borderWidth: 1,
-              padding: 12,
-              cornerRadius: 6,
-              titleFont: { weight: '600', size: 12 },
-              bodyFont: { size: 11, family: "'JetBrains Mono', monospace" },
-              callbacks: {
-                label: function(context) {
-                  const val = context.parsed.y;
-                  return ` ${context.dataset.label}: ${val >= 0 ? '+' : ''}${val}%`;
-                }
-              }
-            }
-          },
-          scales: {
-            x: {
-              grid: {
-                color: 'rgba(61, 58, 54, 0.5)',
-                drawBorder: false
-              },
-              ticks: {
-                color: '#8A857D',
-                font: { size: 11, family: "'JetBrains Mono', monospace" }
-              }
-            },
-            y: {
-              position: 'right',
-              grid: {
-                color: 'rgba(61, 58, 54, 0.5)',
-                drawBorder: false
-              },
-              ticks: {
-                color: '#8A857D',
-                font: { size: 11, family: "'JetBrains Mono', monospace" },
-                callback: function(value) {
-                  return (value >= 0 ? '+' : '') + value + '%';
-                }
-              }
-            }
-          },
-          elements: {
-            point: {
-              radius: 0,
-              hoverRadius: 5,
-              hoverBorderWidth: 2,
-              hoverBackgroundColor: '#2C2A26'
-            },
-            line: {
-              tension: 0.25
-            }
-          }
-        }
-      });
-      
-      // Update legend and summary
-      rebuildLegend();
-      updatePerfSummary();
-    }
-    
-    function rebuildLegend() {
-      const legend = document.getElementById('perf-legend');
-      if (!legend) return;
-      
-      const data = PERFORMANCE_DATA;
-      legend.innerHTML = chartState.activeSeries.map(key => {
-        const cfg = seriesConfig[key];
-        const val = data[key][data[key].length - 1];
-        const isPositive = val >= 0;
-        return `
-          <div class="perf-legend-row" data-series="${key}">
-            <span class="perf-legend-color" style="background: ${cfg.color}"></span>
-            <span class="perf-legend-name">${cfg.label}</span>
-            <span class="perf-legend-value ${isPositive ? 'positive' : 'negative'}">${isPositive ? '+' : ''}${val}%</span>
-          </div>
-        `;
-      }).join('');
-    }
-    
-    function togglePerfSeries(series) {
-      const idx = chartState.activeSeries.indexOf(series);
-      if (idx > -1) {
-        chartState.activeSeries.splice(idx, 1);
-      } else {
-        chartState.activeSeries.push(series);
-      }
-      
-      // Update button states
-      document.querySelectorAll('.perf-toggle').forEach(btn => {
-        btn.classList.toggle('active', chartState.activeSeries.includes(btn.dataset.series));
-      });
-      
-      updatePerfChart();
-    }
-    
-    function updatePerfChart() {
-      if (!perfChart) return;
-      
-      // Build datasets from active series
-      const datasets = chartState.activeSeries.map(key => {
-        const cfg = seriesConfig[key];
-        return {
-          label: cfg.label,
-          data: PERFORMANCE_DATA[key],
-          borderColor: cfg.color,
-          backgroundColor: 'transparent',
-          borderWidth: cfg.borderWidth,
-          borderDash: cfg.borderDash || [],
-          fill: false,
-          pointBackgroundColor: cfg.color,
-          pointBorderColor: cfg.color
-        };
-      });
-      
-      perfChart.data.datasets = datasets;
-      perfChart.update();
-      
-      // Rebuild the legend with active series
-      rebuildLegend();
-      
-      updatePerfSummary();
-    }
-    
-    function updatePerfSummary() {
-      const data = PERFORMANCE_DATA;
-      const summaryContainer = document.getElementById('perf-summary');
-      if (!summaryContainer) return;
-      
-      const activeTickers = chartState.activeSeries.filter(s => !['portfolio', 'spy', 'xar'].includes(s));
-      let html = '';
-      
-      // Portfolio return
-      if (chartState.activeSeries.includes('portfolio')) {
-        const val = data.portfolio[data.portfolio.length - 1];
-        html += `
-          <div class="perf-summary-item">
-            <div class="perf-summary-label">Portfolio</div>
-            <div class="perf-summary-value positive">+${val}%</div>
-          </div>
-        `;
-      }
-      
-      // Alpha vs S&P
-      if (chartState.activeSeries.includes('portfolio') && chartState.activeSeries.includes('spy')) {
-        const alpha = data.portfolio[data.portfolio.length - 1] - data.spy[data.spy.length - 1];
-        html += `
-          <div class="perf-summary-item">
-            <div class="perf-summary-label">Alpha vs S&P</div>
-            <div class="perf-summary-value positive">+${alpha}%</div>
-          </div>
-        `;
-      }
-      
-      // Best/worst ticker if any selected
-      if (activeTickers.length > 0) {
-        const sorted = activeTickers
-          .map(t => ({ t, val: data[t][data[t].length - 1] }))
-          .sort((a, b) => b.val - a.val);
-        
-        html += `
-          <div class="perf-summary-item">
-            <div class="perf-summary-label">Top: ${sorted[0].t}</div>
-            <div class="perf-summary-value ${sorted[0].val >= 0 ? 'positive' : 'negative'}">${sorted[0].val >= 0 ? '+' : ''}${sorted[0].val}%</div>
-          </div>
-        `;
-        
-        if (activeTickers.length > 1) {
-          const worst = sorted[sorted.length - 1];
-          html += `
-            <div class="perf-summary-item">
-              <div class="perf-summary-label">Low: ${worst.t}</div>
-              <div class="perf-summary-value ${worst.val >= 0 ? 'positive' : 'negative'}">${worst.val >= 0 ? '+' : ''}${worst.val}%</div>
-            </div>
-          `;
-        }
-      }
-      
-      summaryContainer.innerHTML = html;
-    }
     
     function getStaticOptionsData() {
       let totalValue = 0, totalCost = 0, totalDelta = 0;
@@ -2760,16 +1542,16 @@
     
     // Theme/sector definitions
     const tickerThemes = {
-      'RKLB': { theme: 'Space' },
-      'LUNR': { theme: 'Space' },
-      'ASTS': { theme: 'Space' },
-      'BKSY': { theme: 'Space' },
-      'RDW': { theme: 'Space' },
-      'PL': { theme: 'Space' },
-      'ACHR': { theme: 'eVTOL' },
-      'JOBY': { theme: 'eVTOL' },
-      'EVEX': { theme: 'eVTOL' },
-      'GME': { theme: 'Meme' }
+      'RKLB': { theme: 'Space', icon: '🚀' },
+      'LUNR': { theme: 'Space', icon: '🚀' },
+      'ASTS': { theme: 'Space', icon: '🚀' },
+      'BKSY': { theme: 'Space', icon: '🚀' },
+      'RDW': { theme: 'Space', icon: '🚀' },
+      'PL': { theme: 'Space', icon: '🚀' },
+      'ACHR': { theme: 'eVTOL', icon: '🛩️' },
+      'JOBY': { theme: 'eVTOL', icon: '🛩️' },
+      'EVEX': { theme: 'eVTOL', icon: '🛩️' },
+      'GME': { theme: 'Meme', icon: '🎮' }
     };
     
     // 1. Position Sizes - Horizontal Bar Chart
@@ -2902,7 +1684,7 @@
       container.innerHTML = `
         <div class="risk-section">
           <div class="risk-header">
-            <div class="risk-label">Structure Allocation</div>
+            <div class="risk-label"><span class="risk-icon">🎯</span> Structure Allocation</div>
             <div class="risk-stats">$${totalValue.toLocaleString()} total</div>
           </div>
           <div class="risk-bar">
@@ -2937,13 +1719,13 @@
             `).join('')}
           </div>
           <div style="font-size: 0.75rem; color: var(--muted); margin-top: 0.5rem;">
-            Naked LEAPs: Unlimited upside potential, full premium at risk
+            ⚠️ Naked LEAPs: Unlimited upside potential, full premium at risk
           </div>
         </div>
         
         <div class="risk-section">
           <div class="risk-header">
-            <div class="risk-label">Defined Risk</div>
+            <div class="risk-label"><span class="risk-icon">🛡️</span> Defined Risk</div>
           </div>
           <div class="risk-bar">
             ${spreads.map(p => `
@@ -2967,9 +1749,9 @@
       // Group by theme
       const themes = {};
       positions.forEach(p => {
-        const info = tickerThemes[p.ticker] || { theme: 'Other' };
+        const info = tickerThemes[p.ticker] || { theme: 'Other', icon: '📊' };
         if (!themes[info.theme]) {
-          themes[info.theme] = { positions: [], total: 0 };
+          themes[info.theme] = { icon: info.icon, positions: [], total: 0 };
         }
         const cost = p.entry_cost * p.contracts * 100;
         const value = p.current_price * p.contracts * 100;
@@ -2982,7 +1764,7 @@
       container.innerHTML = Object.entries(themes).map(([name, data]) => `
         <div class="theme-group">
           <div class="theme-header">
-            <div class="theme-name">${name}</div>
+            <div class="theme-name"><span class="theme-icon">${data.icon}</span> ${name}</div>
             <div class="theme-total">$${data.total.toLocaleString()}</div>
           </div>
           <div class="theme-grid">
@@ -3154,111 +1936,6 @@
       return prefix + Math.abs(amount).toFixed(2);
     }
     
-    // Render stock positions table
-    function renderStockPositions() {
-      const container = document.getElementById('stock-positions');
-      if (!container) return;
-      
-      if (DEMO_STOCK_POSITIONS.length === 0) {
-        container.innerHTML = `
-          <div class="empty-state-enhanced">
-            
-            <div class="empty-state-title">No Active Positions</div>
-            <div class="empty-state-text">
-              The MACD strategy is monitoring your watchlist for entry signals.
-            </div>
-          </div>
-        `;
-        return;
-      }
-      
-      let totalPnl = 0;
-      let totalCost = 0;
-      let totalValue = 0;
-      
-      const rows = DEMO_STOCK_POSITIONS.map(pos => {
-        const cost = pos.entry_price * pos.shares;
-        const value = pos.current_price * pos.shares;
-        const pnl = value - cost;
-        const pnlPct = ((pos.current_price - pos.entry_price) / pos.entry_price * 100);
-        totalPnl += pnl;
-        totalCost += cost;
-        totalValue += value;
-        const color = tickerColors[pos.ticker] || '#8A857D';
-        const theme = tickerThemes[pos.ticker]?.theme || 'Other';
-        
-        return `
-          <tr>
-            <td><span class="ticker-badge" style="background: ${color}">${pos.ticker}</span></td>
-            <td style="font-size: 0.7rem; color: var(--muted);">${theme}</td>
-            <td style="font-family: var(--font-mono)">${pos.shares}</td>
-            <td style="font-family: var(--font-mono)">$${pos.entry_price.toFixed(2)}</td>
-            <td style="font-family: var(--font-mono)">$${pos.current_price.toFixed(2)}</td>
-            <td style="font-family: var(--font-mono)">$${value.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0})}</td>
-            <td class="${pnl >= 0 ? 'pnl-positive' : 'pnl-negative'}">
-              ${pnl >= 0 ? '+' : ''}$${pnl.toFixed(0)} <span style="opacity: 0.7">(${pnlPct >= 0 ? '+' : ''}${pnlPct.toFixed(1)}%)</span>
-            </td>
-          </tr>
-        `;
-      }).join('');
-      
-      const totalPnlPct = totalCost > 0 ? ((totalValue - totalCost) / totalCost * 100) : 0;
-      
-      container.innerHTML = `
-        <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
-          <table class="options-table" style="min-width: 580px;">
-            <thead>
-              <tr>
-                <th>Ticker</th>
-                <th>Sector</th>
-                <th>Shares</th>
-                <th>Entry</th>
-                <th>Current</th>
-                <th>Value</th>
-                <th>P&L</th>
-              </tr>
-            </thead>
-            <tbody>${rows}</tbody>
-          </table>
-        </div>
-        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; padding: 1rem 0 0; margin-top: 0.75rem; border-top: 1px solid var(--line);">
-          <div style="text-align: center;">
-            <div style="font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em;">Cost Basis</div>
-            <div style="font-family: var(--font-mono); font-size: 1rem; font-weight: 600; color: var(--ink);">$${totalCost.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0})}</div>
-          </div>
-          <div style="text-align: center;">
-            <div style="font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em;">Market Value</div>
-            <div style="font-family: var(--font-mono); font-size: 1rem; font-weight: 600; color: var(--ink);">$${totalValue.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0})}</div>
-          </div>
-          <div style="text-align: center;">
-            <div style="font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em;">Unrealized P&L</div>
-            <div class="${totalPnl >= 0 ? 'pnl-positive' : 'pnl-negative'}" style="font-family: var(--font-mono); font-size: 1rem; font-weight: 600;">
-              ${totalPnl >= 0 ? '+' : ''}$${totalPnl.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0})} <span style="opacity: 0.7; font-size: 0.8rem;">(${totalPnlPct >= 0 ? '+' : ''}${totalPnlPct.toFixed(1)}%)</span>
-            </div>
-          </div>
-        </div>
-      `;
-    }
-    
-    // Render activity feed
-    function renderActivity() {
-      const container = document.getElementById('trades-log');
-      if (!container) return;
-      
-      const items = DEMO_ACTIVITY.map(act => `
-        <div class="activity-item">
-          <div class="activity-icon ${act.type}"></div>
-          <div class="activity-content">
-            <div class="activity-title">${act.title}</div>
-            <div class="activity-subtitle">${act.subtitle}</div>
-          </div>
-          <div class="activity-time">${act.time}</div>
-        </div>
-      `).join('');
-      
-      container.innerHTML = `<div class="activity-feed">${items}</div>`;
-    }
-    
     async function updateStatus() {
       const data = await fetchStatus();
       if (data) updateStatusUI(data);
@@ -3272,32 +1949,11 @@
     // Initial load with countdown - DEMO MODE
     Promise.all([updateStatus(), updateOptions()]).then(() => {
       runCountdown();
-      
-      // Render stock positions and activity
-      renderStockPositions();
-      renderActivity();
-      renderPerformanceChart();
-      
-      // Calculate and update trading tab stats from stock positions
-      let totalStockPnl = 0;
-      DEMO_STOCK_POSITIONS.forEach(pos => {
-        totalStockPnl += (pos.current_price - pos.entry_price) * pos.shares;
-      });
-      
-      document.getElementById('daily-pnl').textContent = (totalStockPnl >= 0 ? '+' : '') + '$' + totalStockPnl.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-      document.getElementById('daily-pnl').classList.add(totalStockPnl >= 0 ? 'positive' : 'negative');
-      document.getElementById('trades-today').textContent = '3';
-      document.getElementById('alerts-count').textContent = DEMO_ACTIVITY.filter(a => a.type === 'alert').length.toString();
-      document.getElementById('positions-count').textContent = DEMO_STOCK_POSITIONS.length.toString();
-      
-      // Update sidebar safety status with realistic data
-      document.getElementById('loss-remaining').textContent = '$200 remaining';
-      document.getElementById('loss-remaining').classList.add('ok');
-      document.getElementById('trades-remaining').textContent = '2 of 5';
-      document.getElementById('trades-progress').style.width = '60%';
-      document.getElementById('market-hours').textContent = 'Closed';
-      document.getElementById('market-hours').classList.add('warning');
-      
+      // Set start time
+      const startTimeEl = document.getElementById('start-time');
+      if (startTimeEl) {
+        startTimeEl.textContent = new Date().toLocaleTimeString();
+      }
       // Force demo badge visible
       const demoBadge = document.getElementById('demo-badge');
       if (demoBadge) demoBadge.style.display = 'inline-flex';
@@ -3307,8 +1963,8 @@
   </script>
   
   <!-- Demo Watermark -->
-  <div class="demo-watermark" style="position: fixed; bottom: 1rem; left: 1rem; display: flex; align-items: center; gap: 0.75rem; padding: 0.625rem 1rem; background: var(--paper); border: 1px solid var(--line); border-radius: 8px; font-size: 0.8125rem; color: var(--ink-light); z-index: 100;">
-    <span>Demo Mode</span>
+  <div style="position: fixed; bottom: 1rem; left: 1rem; display: flex; align-items: center; gap: 0.75rem; padding: 0.625rem 1rem; background: var(--paper); border: 1px solid var(--line); border-radius: 8px; font-size: 0.8125rem; color: var(--ink-light); z-index: 100;">
+    <span>📊 Static Demo — March 2024 → Jan 2025</span>
     <a href="https://haslun.ai" style="color: var(--terracotta); text-decoration: none;">← haslun.ai</a>
   </div>
 </body>
