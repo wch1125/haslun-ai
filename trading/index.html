@@ -8,7 +8,7 @@
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%230a0c0f' width='100' height='100'/%3E%3Ccircle cx='50' cy='50' r='35' fill='none' stroke='%2333ff99' stroke-width='2'/%3E%3Ccircle cx='50' cy='50' r='25' fill='none' stroke='%2333ff99' stroke-width='1' opacity='0.5'/%3E%3Ccircle cx='50' cy='50' r='4' fill='%23ffb347'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Orbitron:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
   <style>
@@ -21,10 +21,10 @@
       --border: #1e2832;
       --border-glow: #2a3a4a;
       --grid-line: rgba(51, 255, 153, 0.08);
-      --text-bright: #e8f4f0;
-      --text: #a8c0b8;
-      --text-muted: #5a7068;
-      --text-dim: #3a4a44;
+      --text-bright: #f0f8f4;
+      --text: #b8d0c8;
+      --text-muted: #6a8078;
+      --text-dim: #4a5a54;
       --phosphor: #33ff99;
       --phosphor-dim: rgba(51, 255, 153, 0.6);
       --phosphor-glow: rgba(51, 255, 153, 0.15);
@@ -35,22 +35,31 @@
       --signal-up: #33ff99;
       --signal-down: #ff6b6b;
       --signal-warn: #ffb347;
+      --font-display: 'Orbitron', sans-serif;
+      --font-body: 'IBM Plex Mono', monospace;
     }
     
     @keyframes scanline { 0% { transform: translateY(-100%); } 100% { transform: translateY(100vh); } }
     @keyframes pulse-glow { 0%, 100% { box-shadow: 0 0 20px rgba(51, 255, 153, 0.1); } 50% { box-shadow: 0 0 30px rgba(51, 255, 153, 0.2); } }
     @keyframes blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
+    @keyframes crt-flicker { 0%, 100% { opacity: 0.12; } 40% { opacity: 0.18; } 60% { opacity: 0.10; } }
+    @keyframes hover-ship { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+    @keyframes beam-pulse { 0%, 100% { opacity: 0.7; } 50% { opacity: 1; } }
+    @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+    @keyframes radar-sweep { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    @keyframes data-glow { from { box-shadow: 0 0 20px rgba(255, 179, 71, 0.5); } to { box-shadow: none; } }
     
     * { box-sizing: border-box; margin: 0; padding: 0; }
     
     body {
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: var(--font-body);
       background: var(--bg-void);
       color: var(--text);
       min-height: 100vh;
       overflow-x: hidden;
     }
     
+    /* CRT scanlines */
     body::before {
       content: '';
       position: fixed;
@@ -58,14 +67,25 @@
       background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 0, 0, 0.15) 2px, rgba(0, 0, 0, 0.15) 4px);
       pointer-events: none;
       z-index: 10000;
+      animation: crt-flicker 3.5s infinite alternate;
     }
     
+    /* Moving scanline + vignette */
     body::after {
       content: '';
       position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: 
+        radial-gradient(ellipse at 50% 50%, transparent 0%, transparent 60%, rgba(0,0,0,0.4) 100%);
+      pointer-events: none;
+      z-index: 9999;
+    }
+    
+    .scan-line {
+      position: fixed;
       top: 0; left: 0; right: 0;
       height: 4px;
-      background: linear-gradient(180deg, transparent, rgba(51, 255, 153, 0.1), transparent);
+      background: linear-gradient(180deg, transparent, rgba(51, 255, 153, 0.08), transparent);
       animation: scanline 8s linear infinite;
       pointer-events: none;
       z-index: 10001;
@@ -80,17 +100,241 @@
       z-index: -1;
     }
     
+    /* LOADING SCREEN */
+    .loading-screen {
+      position: fixed;
+      inset: 0;
+      background: var(--bg-void);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 20000;
+      transition: opacity 0.8s ease, visibility 0.8s ease;
+    }
+    
+    .loading-screen.hidden {
+      opacity: 0;
+      visibility: hidden;
+    }
+    
+    .stars {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(1px 1px at 10% 20%, rgba(255, 255, 255, 0.8), transparent),
+        radial-gradient(1px 1px at 25% 15%, rgba(51, 255, 153, 0.6), transparent),
+        radial-gradient(1px 1px at 40% 35%, rgba(255, 255, 255, 0.7), transparent),
+        radial-gradient(1px 1px at 55% 10%, rgba(255, 179, 71, 0.5), transparent),
+        radial-gradient(1px 1px at 70% 25%, rgba(255, 255, 255, 0.6), transparent),
+        radial-gradient(1px 1px at 85% 40%, rgba(51, 255, 153, 0.4), transparent),
+        radial-gradient(1px 1px at 15% 60%, rgba(255, 255, 255, 0.5), transparent),
+        radial-gradient(1px 1px at 30% 75%, rgba(255, 179, 71, 0.4), transparent),
+        radial-gradient(1px 1px at 60% 65%, rgba(255, 255, 255, 0.6), transparent),
+        radial-gradient(1px 1px at 80% 80%, rgba(51, 255, 153, 0.5), transparent),
+        radial-gradient(1px 1px at 90% 15%, rgba(255, 255, 255, 0.4), transparent),
+        radial-gradient(1px 1px at 5% 85%, rgba(255, 179, 71, 0.3), transparent);
+    }
+    
+    .horizon {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 200px;
+      background: linear-gradient(to top, var(--bg-void) 0%, transparent 100%);
+    }
+    
+    .horizon::before {
+      content: '';
+      position: absolute;
+      bottom: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 300px;
+      height: 120px;
+      background: var(--bg-void);
+      clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+      filter: blur(1px);
+    }
+    
+    .horizon::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 80px;
+      background: linear-gradient(to top, rgba(51, 255, 153, 0.05), transparent);
+    }
+    
+    .launch-scene {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      z-index: 1;
+    }
+    
+    .mothership {
+      position: relative;
+      width: 180px;
+      height: 60px;
+      margin-bottom: 20px;
+      animation: hover-ship 3s ease-in-out infinite;
+    }
+    
+    .mothership-body {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: 
+        radial-gradient(ellipse at 50% 0%, rgba(255, 255, 255, 0.3), transparent 60%),
+        linear-gradient(90deg, #1a1a2e 0%, #2d2d44 50%, #1a1a2e 100%);
+      border-radius: 50%;
+      box-shadow:
+        0 0 30px rgba(51, 255, 153, 0.3),
+        0 0 60px rgba(51, 255, 153, 0.1),
+        inset 0 -10px 20px rgba(0, 0, 0, 0.5);
+    }
+    
+    .mothership-dome {
+      position: absolute;
+      top: -25px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80px;
+      height: 40px;
+      background: 
+        radial-gradient(ellipse at 50% 100%, rgba(51, 255, 153, 0.2), transparent 70%),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.4), rgba(100, 100, 120, 0.8));
+      border-radius: 50% 50% 40% 40%;
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+    }
+    
+    .mothership-lights {
+      position: absolute;
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 8px;
+    }
+    
+    .ship-light {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--amber);
+      box-shadow: 0 0 8px var(--amber), 0 0 16px var(--amber-glow);
+      animation: blink 1.5s ease-in-out infinite;
+    }
+    
+    .ship-light:nth-child(2) { animation-delay: 0.2s; }
+    .ship-light:nth-child(3) { animation-delay: 0.4s; }
+    .ship-light:nth-child(4) { animation-delay: 0.6s; }
+    .ship-light:nth-child(5) { animation-delay: 0.8s; }
+    .ship-light:nth-child(6) { animation-delay: 1.0s; }
+    .ship-light:nth-child(7) { animation-delay: 1.2s; }
+    
+    .tractor-beam {
+      position: absolute;
+      top: 55px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 160px;
+      height: 200px;
+      background: 
+        linear-gradient(to bottom, 
+          rgba(51, 255, 153, 0.6) 0%,
+          rgba(51, 255, 153, 0.3) 30%,
+          rgba(255, 179, 71, 0.2) 60%,
+          transparent 100%
+        );
+      clip-path: polygon(35% 0%, 65% 0%, 100% 100%, 0% 100%);
+      opacity: 0;
+      transition: opacity 0.5s ease;
+      filter: blur(2px);
+      mix-blend-mode: screen;
+    }
+    
+    .tractor-beam.active {
+      opacity: 1;
+      animation: beam-pulse 2s ease-in-out infinite;
+    }
+    
+    .loading-content {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 80px;
+    }
+    
+    .loading-brand {
+      font-family: var(--font-display);
+      font-size: 2rem;
+      font-weight: 600;
+      letter-spacing: 0.25em;
+      color: var(--phosphor);
+      text-shadow: 0 0 30px var(--phosphor-glow), 0 0 60px rgba(51, 255, 153, 0.3);
+      margin-bottom: 0.5rem;
+    }
+    
+    .loading-sub {
+      font-size: 0.7rem;
+      letter-spacing: 0.3em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 2rem;
+    }
+    
+    .countdown {
+      font-family: var(--font-display);
+      font-size: 3.5rem;
+      font-weight: 700;
+      color: var(--amber);
+      text-shadow: 0 0 30px var(--amber-glow), 0 0 60px rgba(255, 179, 71, 0.4);
+      margin-bottom: 1rem;
+    }
+    
+    .countdown.go {
+      color: var(--phosphor);
+      text-shadow: 0 0 30px var(--phosphor-glow);
+      animation: pulse 0.3s ease-in-out 3;
+    }
+    
+    .loading-status {
+      font-size: 0.75rem;
+      letter-spacing: 0.15em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+    
+    /* APP CONTAINER */
+    .app {
+      display: none;
+    }
+    
+    .app.visible {
+      display: block;
+    }
+    
     .header {
       display: flex;
       align-items: center;
       justify-content: space-between;
       padding: 0 1.5rem;
       height: 56px;
-      background: linear-gradient(180deg, var(--bg-panel) 0%, var(--bg-deep) 100%);
+      background: 
+        radial-gradient(ellipse at 0% 0%, rgba(51, 255, 153, 0.15), transparent 50%),
+        linear-gradient(180deg, var(--bg-panel) 0%, var(--bg-deep) 100%);
       border-bottom: 1px solid var(--border);
       position: sticky;
       top: 0;
       z-index: 100;
+      box-shadow: 0 0 30px rgba(51, 255, 153, 0.05);
     }
     
     .header::after {
@@ -105,17 +349,18 @@
     .logo { display: flex; align-items: center; gap: 0.75rem; }
     .logo-mark { width: 32px; height: 32px; }
     .logo-mark svg { width: 100%; height: 100%; }
-    .logo-text { font-family: 'Space Grotesk', sans-serif; font-size: 0.85rem; font-weight: 600; letter-spacing: 0.2em; color: var(--phosphor); text-shadow: 0 0 20px var(--phosphor-glow); }
-    .logo-sub { font-size: 0.55rem; color: var(--text-muted); letter-spacing: 0.15em; margin-top: 2px; }
+    .logo-text { font-family: var(--font-display); font-size: 0.8rem; font-weight: 600; letter-spacing: 0.2em; color: var(--phosphor); text-shadow: 0 0 20px var(--phosphor-glow); }
+    .logo-sub { font-size: 0.5rem; color: var(--text-muted); letter-spacing: 0.15em; margin-top: 2px; font-family: var(--font-body); }
     
-    .nav-tabs { display: flex; gap: 0.25rem; }
+    .nav-tabs { display: flex; gap: 0.5rem; }
     .nav-tab {
-      padding: 0.6rem 1rem;
-      background: transparent;
-      border: 1px solid transparent;
-      border-radius: 0;
+      padding: 0.6rem 1.1rem;
+      background: linear-gradient(to bottom, rgba(51, 255, 153, 0.06), transparent);
+      border: 1px solid var(--border);
+      border-bottom: none;
+      border-radius: 8px 8px 0 0;
       color: var(--text-muted);
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: var(--font-body);
       font-size: 0.7rem;
       font-weight: 500;
       letter-spacing: 0.1em;
@@ -124,9 +369,15 @@
       transition: all 0.2s;
       position: relative;
     }
-    .nav-tab:hover { color: var(--text); background: var(--phosphor-ghost); }
-    .nav-tab.active { color: var(--phosphor); border-color: var(--phosphor-dim); background: var(--phosphor-ghost); text-shadow: 0 0 10px var(--phosphor-glow); }
-    .nav-tab.active::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 1px; background: var(--phosphor); }
+    .nav-tab:hover { color: var(--text); background: linear-gradient(to bottom, rgba(51, 255, 153, 0.1), transparent); }
+    .nav-tab.active { 
+      color: var(--phosphor); 
+      background: linear-gradient(to bottom, rgba(51, 255, 153, 0.15), var(--phosphor-ghost)); 
+      border-color: var(--phosphor-dim);
+      text-shadow: 0 0 10px var(--phosphor-glow);
+      box-shadow: inset 0 2px 0 var(--phosphor), 0 0 20px rgba(51, 255, 153, 0.15);
+    }
+    .nav-tab.active::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: var(--bg-deep); }
     
     .header-right { display: flex; align-items: center; gap: 1.5rem; }
     .status-indicator { display: flex; align-items: center; gap: 0.5rem; padding: 0.4rem 0.75rem; background: var(--bg-card); border: 1px solid var(--border); }
@@ -145,7 +396,15 @@
     .sidebar-title::before { content: '//'; color: var(--phosphor-dim); }
     
     .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
-    .stat-box { padding: 0.75rem; background: var(--bg-card); border: 1px solid var(--border); position: relative; overflow: hidden; }
+    .stat-box { 
+      padding: 0.75rem; 
+      background: 
+        radial-gradient(ellipse at 50% -20%, rgba(51, 255, 153, 0.08), transparent 70%),
+        var(--bg-card); 
+      border: 1px solid var(--border); 
+      position: relative; 
+      overflow: hidden; 
+    }
     .stat-box::before { content: ''; position: absolute; top: 0; left: 0; width: 3px; height: 100%; background: var(--phosphor-dim); opacity: 0.5; }
     .stat-box.highlight::before { background: var(--amber); }
     .stat-label { font-size: 0.55rem; color: var(--text-dim); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.35rem; }
@@ -188,35 +447,84 @@
     .chart-header { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1.25rem; background: var(--bg-panel); border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 0.75rem; }
     .chart-header-left { display: flex; align-items: center; gap: 1.5rem; }
     .ticker-display { display: flex; align-items: baseline; gap: 1rem; }
-    .ticker-symbol { font-size: 1.4rem; font-weight: 600; color: var(--phosphor); letter-spacing: 0.1em; text-shadow: 0 0 20px var(--phosphor-glow); }
+    .ticker-symbol { font-family: var(--font-display); font-size: 1.3rem; font-weight: 600; color: var(--phosphor); letter-spacing: 0.1em; text-shadow: 0 0 20px var(--phosphor-glow); }
     .ticker-price { font-size: 1.1rem; color: var(--text-bright); }
     .ticker-change { font-size: 0.85rem; }
     .ticker-change.positive { color: var(--signal-up); }
     .ticker-change.negative { color: var(--signal-down); }
     
     .control-group { display: flex; gap: 0.25rem; }
-    .ctrl-btn { padding: 0.45rem 0.7rem; background: transparent; border: 1px solid var(--border); color: var(--text-muted); font-family: 'IBM Plex Mono', monospace; font-size: 0.65rem; letter-spacing: 0.08em; cursor: pointer; transition: all 0.15s; }
+    .ctrl-btn { padding: 0.45rem 0.7rem; background: transparent; border: 1px solid var(--border); color: var(--text-muted); font-family: var(--font-body); font-size: 0.65rem; letter-spacing: 0.08em; cursor: pointer; transition: all 0.15s; }
     .ctrl-btn:hover { color: var(--text); border-color: var(--border-glow); background: var(--phosphor-ghost); }
     .ctrl-btn.active { color: var(--phosphor); border-color: var(--phosphor-dim); background: var(--phosphor-ghost); }
     .chart-tools { display: flex; gap: 1rem; align-items: center; }
     .tool-divider { width: 1px; height: 20px; background: var(--border); }
     
-    .chart-container { flex: 1; display: flex; flex-direction: column; padding: 1rem; min-height: 0; }
-    .price-chart-wrapper { flex: 3; position: relative; min-height: 200px; background: var(--bg-panel); border: 1px solid var(--border); padding: 0.5rem; }
-    .macd-chart-wrapper { flex: 1; position: relative; min-height: 100px; background: var(--bg-panel); border: 1px solid var(--border); border-top: none; padding: 0.5rem; }
+    .chart-container { 
+      flex: 1; 
+      display: flex; 
+      flex-direction: column; 
+      padding: 1rem; 
+      min-height: 0; 
+      position: relative;
+    }
+    .chart-container::before {
+      content: '';
+      position: absolute;
+      inset: 1rem;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at center, transparent 0%, transparent 20%, rgba(51, 255, 153, 0.02) 20.5%, transparent 21%),
+        radial-gradient(circle at center, transparent 0%, transparent 40%, rgba(51, 255, 153, 0.02) 40.5%, transparent 41%),
+        radial-gradient(circle at center, transparent 0%, transparent 60%, rgba(51, 255, 153, 0.02) 60.5%, transparent 61%),
+        radial-gradient(circle at center, transparent 0%, transparent 80%, rgba(51, 255, 153, 0.015) 80.5%, transparent 81%);
+      opacity: 0.6;
+      z-index: 1;
+    }
+    .chart-container::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 150%;
+      height: 4px;
+      background: linear-gradient(90deg, transparent 0%, rgba(51, 255, 153, 0.08) 30%, rgba(255, 179, 71, 0.12) 50%, rgba(51, 255, 153, 0.08) 70%, transparent 100%);
+      transform-origin: left center;
+      transform: translateX(-33%) translateY(-50%);
+      animation: radar-sweep 12s linear infinite;
+      pointer-events: none;
+      z-index: 2;
+      mix-blend-mode: screen;
+    }
+    .price-chart-wrapper { flex: 3; position: relative; min-height: 200px; background: radial-gradient(ellipse at 50% 50%, rgba(51, 255, 153, 0.04), transparent 70%) var(--bg-panel); border: 1px solid var(--border); padding: 0.5rem; z-index: 3; }
+    .macd-chart-wrapper { flex: 1; position: relative; min-height: 100px; background: var(--bg-panel); border: 1px solid var(--border); border-top: none; padding: 0.5rem; z-index: 3; }
     
     .positions-content { flex: 1; overflow-y: auto; padding: 1.25rem; }
     .positions-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
-    .metric-card { background: var(--bg-panel); border: 1px solid var(--border); padding: 1.25rem; position: relative; }
+    .metric-card { 
+      background: 
+        radial-gradient(ellipse at 50% -30%, rgba(51, 255, 153, 0.1), transparent 70%),
+        var(--bg-panel); 
+      border: 1px solid var(--border); 
+      padding: 1.25rem; 
+      position: relative; 
+    }
     .metric-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--phosphor), transparent); }
-    .metric-value { font-size: 1.6rem; font-weight: 600; color: var(--text-bright); margin-bottom: 0.35rem; }
+    .metric-value { font-family: var(--font-display); font-size: 1.4rem; font-weight: 600; color: var(--text-bright); margin-bottom: 0.35rem; letter-spacing: 0.05em; }
     .metric-value.positive { color: var(--signal-up); text-shadow: 0 0 20px var(--phosphor-glow); }
     .metric-label { font-size: 0.6rem; color: var(--text-dim); letter-spacing: 0.12em; text-transform: uppercase; }
     
-    .card { background: var(--bg-panel); border: 1px solid var(--border); margin-bottom: 1.25rem; }
+    .card { 
+      background: 
+        radial-gradient(ellipse at 50% -20%, rgba(51, 255, 153, 0.06), transparent 60%),
+        var(--bg-panel); 
+      border: 1px solid var(--border); 
+      margin-bottom: 1.25rem; 
+      box-shadow: 0 0 30px rgba(0,0,0,0.3);
+    }
     .card-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); background: var(--bg-card); }
     .card-label { font-size: 0.55rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--phosphor-dim); margin-bottom: 0.25rem; }
-    .card-title { font-family: 'Space Grotesk', sans-serif; font-size: 1rem; font-weight: 500; color: var(--text-bright); }
+    .card-title { font-family: var(--font-display); font-size: 0.9rem; font-weight: 500; color: var(--text-bright); letter-spacing: 0.1em; text-shadow: 0 0 15px rgba(51, 255, 153, 0.2); }
     .card-body { padding: 1.25rem; }
     
     .data-table { width: 100%; border-collapse: collapse; }
@@ -231,8 +539,8 @@
     .pnl-negative { color: var(--signal-down); }
     
     .chart-tabs { display: flex; gap: 0.25rem; margin-bottom: 1.25rem; }
-    .chart-tab { padding: 0.5rem 0.85rem; background: transparent; border: 1px solid var(--border); color: var(--text-muted); font-family: 'IBM Plex Mono', monospace; font-size: 0.65rem; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; transition: all 0.15s; }
-    .chart-tab:hover, .chart-tab.active { color: var(--phosphor); border-color: var(--phosphor-dim); background: var(--phosphor-ghost); }
+    .chart-tab { padding: 0.5rem 0.85rem; background: transparent; border: 1px solid var(--border); color: var(--text-muted); font-family: var(--font-body); font-size: 0.65rem; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; transition: all 0.15s; }
+    .chart-tab:hover, .chart-tab.active { color: var(--phosphor); border-color: var(--phosphor-dim); background: var(--phosphor-ghost); box-shadow: 0 4px 15px rgba(51, 255, 153, 0.1); }
     .chart-panel { display: none; }
     .chart-panel.active { display: block; }
     
@@ -255,7 +563,7 @@
     
     .summary-row { display: flex; justify-content: space-around; padding: 1rem; background: var(--bg-card); border: 1px solid var(--border); margin-top: 1.25rem; }
     .summary-item { text-align: center; }
-    .summary-value { font-size: 1.1rem; font-weight: 600; color: var(--text-bright); }
+    .summary-value { font-family: var(--font-display); font-size: 1rem; font-weight: 600; color: var(--text-bright); letter-spacing: 0.05em; }
     .summary-value.positive { color: var(--signal-up); }
     .summary-value.negative { color: var(--signal-down); }
     .summary-label { font-size: 0.55rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); margin-top: 0.25rem; }
@@ -273,7 +581,7 @@
     
     .right-sidebar { width: 260px; background: var(--bg-panel); border-left: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; }
     .kill-switch-section { padding: 1.25rem; border-bottom: 1px solid var(--border); }
-    .kill-switch-btn { width: 100%; padding: 0.85rem; border: none; font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: all 0.15s; }
+    .kill-switch-btn { width: 100%; padding: 0.85rem; border: none; font-family: var(--font-body); font-size: 0.75rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: all 0.15s; }
     .kill-switch-btn.stop { background: var(--signal-down); color: #fff; }
     .kill-switch-btn.stop:hover { filter: brightness(1.1); }
     .kill-switch-btn.resume { background: var(--signal-up); color: var(--bg-void); }
@@ -299,9 +607,31 @@
     .activity-subtitle { font-size: 0.65rem; color: var(--text-muted); margin-top: 0.15rem; }
     .activity-time { font-size: 0.55rem; color: var(--text-dim); letter-spacing: 0.05em; }
     
-    .watermark { position: fixed; bottom: 1.25rem; left: 1.25rem; display: flex; align-items: center; gap: 0.85rem; padding: 0.6rem 1rem; background: var(--bg-panel); border: 1px solid var(--border); font-size: 0.7rem; color: var(--text-muted); z-index: 50; }
+    .watermark { position: fixed; bottom: 2.5rem; left: 1.25rem; display: flex; align-items: center; gap: 0.85rem; padding: 0.6rem 1rem; background: var(--bg-panel); border: 1px solid var(--border); font-size: 0.7rem; color: var(--text-muted); z-index: 50; }
     .watermark a { color: var(--amber); text-decoration: none; letter-spacing: 0.05em; }
     .watermark a:hover { text-shadow: 0 0 10px var(--amber-glow); }
+    
+    .status-strip { position: fixed; bottom: 0; left: 0; right: 0; height: 28px; background: var(--bg-panel); border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: flex-end; padding: 0 1.5rem; gap: 2rem; z-index: 100; font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; }
+    .status-item { display: flex; align-items: center; gap: 0.5rem; color: var(--text-dim); }
+    .status-item .dot { width: 6px; height: 6px; border-radius: 50%; }
+    .status-item .dot.green { background: var(--phosphor); box-shadow: 0 0 8px var(--phosphor-glow); }
+    .status-item .dot.amber { background: var(--amber); box-shadow: 0 0 8px var(--amber-glow); }
+    .status-item .value { color: var(--text-muted); }
+    
+    .data-updated { animation: data-glow 0.6s ease-out; }
+    
+    .dev-console { display: none; position: fixed; top: 70px; left: 50%; transform: translateX(-50%); width: 500px; max-width: 90vw; background: var(--bg-panel); border: 1px solid var(--amber-dim); z-index: 200; box-shadow: 0 0 40px rgba(255, 179, 71, 0.2); }
+    .dev-console.visible { display: block; }
+    .dev-console-header { padding: 0.75rem 1rem; background: var(--bg-card); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .dev-console-title { font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--amber); }
+    .dev-console-close { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1rem; }
+    .dev-console-body { padding: 1rem; max-height: 300px; overflow-y: auto; font-size: 0.7rem; line-height: 1.6; }
+    .log-entry { padding: 0.4rem 0; border-bottom: 1px solid var(--border); color: var(--text-muted); }
+    .log-entry .timestamp { color: var(--text-dim); margin-right: 0.75rem; }
+    .log-entry .level { margin-right: 0.5rem; }
+    .log-entry .level.info { color: var(--phosphor); }
+    .log-entry .level.warn { color: var(--amber); }
+    .log-entry .level.error { color: var(--signal-down); }
     
     @media (max-width: 1200px) { .right-sidebar { display: none; } }
     @media (max-width: 900px) { .sidebar { width: 240px; } .positions-grid { grid-template-columns: repeat(2, 1fr); } }
@@ -309,174 +639,263 @@
   </style>
 </head>
 <body>
+  <div class="scan-line"></div>
   <div class="grid-bg"></div>
   
-  <header class="header">
-    <div class="header-left">
-      <div class="logo">
-        <div class="logo-mark">
-          <svg viewBox="0 0 32 32" fill="none">
-            <circle cx="16" cy="16" r="14" stroke="var(--phosphor)" stroke-width="1.5" opacity="0.4"/>
-            <circle cx="16" cy="16" r="10" stroke="var(--phosphor)" stroke-width="1" opacity="0.6"/>
-            <circle cx="16" cy="16" r="6" stroke="var(--phosphor)" stroke-width="1.5"/>
-            <circle cx="16" cy="16" r="2" fill="var(--amber)"/>
-            <line x1="16" y1="2" x2="16" y2="6" stroke="var(--phosphor)" stroke-width="1" opacity="0.5"/>
-            <line x1="16" y1="26" x2="16" y2="30" stroke="var(--phosphor)" stroke-width="1" opacity="0.5"/>
-            <line x1="2" y1="16" x2="6" y2="16" stroke="var(--phosphor)" stroke-width="1" opacity="0.5"/>
-            <line x1="26" y1="16" x2="30" y2="16" stroke="var(--phosphor)" stroke-width="1" opacity="0.5"/>
-          </svg>
+  <!-- LOADING SCREEN -->
+  <div class="loading-screen" id="loading-screen">
+    <div class="stars"></div>
+    <div class="horizon"></div>
+    <div class="launch-scene">
+      <div class="mothership">
+        <div class="mothership-body"></div>
+        <div class="mothership-dome"></div>
+        <div class="mothership-lights">
+          <div class="ship-light"></div>
+          <div class="ship-light"></div>
+          <div class="ship-light"></div>
+          <div class="ship-light"></div>
+          <div class="ship-light"></div>
+          <div class="ship-light"></div>
+          <div class="ship-light"></div>
         </div>
-        <div>
-          <div class="logo-text">HASLUN</div>
-          <div class="logo-sub">MISSION CONTROL</div>
-        </div>
+        <div class="tractor-beam" id="tractor-beam"></div>
       </div>
-      <nav class="nav-tabs">
-        <button class="nav-tab active" data-tab="chart" onclick="switchTab('chart')">TELEMETRY</button>
-        <button class="nav-tab" data-tab="positions" onclick="switchTab('positions')">HOLDINGS</button>
-        <button class="nav-tab" data-tab="options" onclick="switchTab('options')">DERIVATIVES</button>
-        <button class="nav-tab" data-tab="catalysts" onclick="switchTab('catalysts')">EVENTS</button>
-      </nav>
     </div>
-    <div class="header-right">
-      <span class="demo-badge">SIMULATION</span>
-      <div class="status-indicator">
-        <span class="status-dot"></span>
-        <span class="status-text">Market Closed</span>
-      </div>
-      <span class="time-display" id="time-display">--<span class="blink">:</span>--</span>
+    <div class="loading-content">
+      <div class="loading-brand">HASLUN</div>
+      <div class="loading-sub">Mission Control</div>
+      <div class="countdown" id="countdown">3</div>
+      <div class="loading-status" id="loading-status">Awaiting transmission...</div>
     </div>
-  </header>
+  </div>
   
-  <main class="main">
-    <aside class="sidebar">
-      <div class="sidebar-section">
-        <div class="sidebar-title">Portfolio Status</div>
-        <div class="stats-grid">
-          <div class="stat-box highlight"><div class="stat-label">Today P&L</div><div class="stat-value positive">+$1,172</div></div>
-          <div class="stat-box"><div class="stat-label">Total P&L</div><div class="stat-value positive">+$34,015</div></div>
-          <div class="stat-box"><div class="stat-label">Positions</div><div class="stat-value">10</div></div>
-          <div class="stat-box"><div class="stat-label">Win Rate</div><div class="stat-value positive">90%</div></div>
+  <!-- APP -->
+  <div class="app" id="app">
+    <header class="header">
+      <div class="header-left">
+        <div class="logo" onclick="toggleDevConsole()" style="cursor: pointer;" title="Click for systems log">
+          <div class="logo-mark">
+            <svg viewBox="0 0 32 32" fill="none">
+              <circle cx="16" cy="16" r="14" stroke="var(--phosphor)" stroke-width="1.5" opacity="0.4"/>
+              <circle cx="16" cy="16" r="10" stroke="var(--phosphor)" stroke-width="1" opacity="0.6"/>
+              <circle cx="16" cy="16" r="6" stroke="var(--phosphor)" stroke-width="1.5"/>
+              <circle cx="16" cy="16" r="2" fill="var(--amber)"/>
+              <line x1="16" y1="2" x2="16" y2="6" stroke="var(--phosphor)" stroke-width="1" opacity="0.5"/>
+              <line x1="16" y1="26" x2="16" y2="30" stroke="var(--phosphor)" stroke-width="1" opacity="0.5"/>
+              <line x1="2" y1="16" x2="6" y2="16" stroke="var(--phosphor)" stroke-width="1" opacity="0.5"/>
+              <line x1="26" y1="16" x2="30" y2="16" stroke="var(--phosphor)" stroke-width="1" opacity="0.5"/>
+            </svg>
+          </div>
+          <div>
+            <div class="logo-text">HASLUN</div>
+            <div class="logo-sub">MISSION CONTROL</div>
+          </div>
         </div>
+        <nav class="nav-tabs">
+          <button class="nav-tab active" data-tab="chart" onclick="switchTab('chart')">TELEMETRY</button>
+          <button class="nav-tab" data-tab="positions" onclick="switchTab('positions')">HOLDINGS</button>
+          <button class="nav-tab" data-tab="options" onclick="switchTab('options')">DERIVATIVES</button>
+          <button class="nav-tab" data-tab="catalysts" onclick="switchTab('catalysts')">EVENTS</button>
+        </nav>
       </div>
-      <div class="sidebar-section">
-        <div class="sidebar-title">MACD Signal</div>
-        <div class="macd-display">
-          <div class="macd-row"><span class="macd-label">MACD</span><span class="macd-value positive" id="macd-val">0.3642</span></div>
-          <div class="macd-row"><span class="macd-label">Signal</span><span class="macd-value" id="signal-val">0.2570</span></div>
-          <div class="macd-row"><span class="macd-label">Histogram</span><span class="macd-value positive" id="hist-val">0.1073</span></div>
+      <div class="header-right">
+        <span class="demo-badge">SIMULATION</span>
+        <div class="status-indicator">
+          <span class="status-dot"></span>
+          <span class="status-text">Market Closed</span>
         </div>
+        <span class="time-display" id="time-display">--<span class="blink">:</span>--</span>
       </div>
-      <div class="sidebar-section" style="padding-bottom: 0.5rem;"><div class="sidebar-title">Tracking</div></div>
-      <div class="watchlist" id="watchlist"></div>
-    </aside>
+    </header>
     
-    <div class="content">
-      <div class="tab-panel active" id="chart-panel">
-        <div class="chart-header">
-          <div class="chart-header-left">
-            <div class="ticker-display">
-              <span class="ticker-symbol" id="chart-ticker">RKLB</span>
-              <span class="ticker-price" id="chart-price">$72.43</span>
-              <span class="ticker-change positive" id="chart-change">+2.16%</span>
-            </div>
-            <div class="control-group">
-              <button class="ctrl-btn active" data-tf="1D" onclick="setTimeframe('1D')">1D</button>
-              <button class="ctrl-btn" data-tf="45" onclick="setTimeframe('45')">45M</button>
-            </div>
-          </div>
-          <div class="chart-tools">
-            <button class="ctrl-btn active" id="ma-toggle" onclick="toggleMA()">MA</button>
-            <div class="tool-divider"></div>
-            <div class="control-group">
-              <button class="ctrl-btn" data-range="1W" onclick="setRange('1W')">1W</button>
-              <button class="ctrl-btn" data-range="1M" onclick="setRange('1M')">1M</button>
-              <button class="ctrl-btn active" data-range="3M" onclick="setRange('3M')">3M</button>
-              <button class="ctrl-btn" data-range="6M" onclick="setRange('6M')">6M</button>
-              <button class="ctrl-btn" data-range="1Y" onclick="setRange('1Y')">1Y</button>
-              <button class="ctrl-btn" data-range="ALL" onclick="setRange('ALL')">ALL</button>
-            </div>
+    <main class="main">
+      <aside class="sidebar">
+        <div class="sidebar-section">
+          <div class="sidebar-title">Portfolio Status</div>
+          <div class="stats-grid">
+            <div class="stat-box highlight"><div class="stat-label">Today P&L</div><div class="stat-value positive">+$1,172</div></div>
+            <div class="stat-box"><div class="stat-label">Total P&L</div><div class="stat-value positive">+$34,015</div></div>
+            <div class="stat-box"><div class="stat-label">Positions</div><div class="stat-value">10</div></div>
+            <div class="stat-box"><div class="stat-label">Win Rate</div><div class="stat-value positive">90%</div></div>
           </div>
         </div>
-        <div class="chart-container">
-          <div class="price-chart-wrapper"><canvas id="price-chart"></canvas></div>
-          <div class="macd-chart-wrapper"><canvas id="macd-chart"></canvas></div>
+        <div class="sidebar-section">
+          <div class="sidebar-title">MACD Signal</div>
+          <div class="macd-display">
+            <div class="macd-row"><span class="macd-label">MACD</span><span class="macd-value positive" id="macd-val">0.3642</span></div>
+            <div class="macd-row"><span class="macd-label">Signal</span><span class="macd-value" id="signal-val">0.2570</span></div>
+            <div class="macd-row"><span class="macd-label">Histogram</span><span class="macd-value positive" id="hist-val">0.1073</span></div>
+          </div>
         </div>
-      </div>
+        <div class="sidebar-section" style="padding-bottom: 0.5rem;"><div class="sidebar-title">Tracking</div></div>
+        <div class="watchlist" id="watchlist"></div>
+      </aside>
       
-      <div class="tab-panel" id="positions-panel">
-        <div class="positions-content">
-          <div class="positions-grid">
-            <div class="metric-card"><div class="metric-value positive">+$1,172</div><div class="metric-label">Today's P&L</div></div>
-            <div class="metric-card"><div class="metric-value">3</div><div class="metric-label">Trades Today</div></div>
-            <div class="metric-card"><div class="metric-value">$17,536</div><div class="metric-label">Market Value</div></div>
-            <div class="metric-card"><div class="metric-value">10</div><div class="metric-label">Open Positions</div></div>
-          </div>
-          <div class="card">
-            <div class="card-header"><div><div class="card-label">// Active</div><div class="card-title">Stock Positions</div></div></div>
-            <div class="card-body" style="padding: 0;"><table class="data-table"><thead><tr><th>Ticker</th><th>Sector</th><th>Shares</th><th>Entry</th><th>Current</th><th>Value</th><th>P&L</th></tr></thead><tbody id="stock-tbody"></tbody></table></div>
-          </div>
-        </div>
-      </div>
-      
-      <div class="tab-panel" id="options-panel">
-        <div class="positions-content">
-          <div class="positions-grid">
-            <div class="metric-card"><div class="metric-value">$39,315</div><div class="metric-label">Portfolio Value</div></div>
-            <div class="metric-card"><div class="metric-value positive">+$34,015</div><div class="metric-label">Total P&L</div></div>
-            <div class="metric-card"><div class="metric-value">23.55</div><div class="metric-label">Total Delta</div></div>
-            <div class="metric-card"><div class="metric-value">12</div><div class="metric-label">Days to Expiry</div></div>
-          </div>
-          <div class="card">
-            <div class="card-header"><div><div class="card-label">// Analytics</div><div class="card-title">Portfolio Insights</div></div></div>
-            <div class="card-body">
-              <div class="chart-tabs">
-                <button class="chart-tab active" data-chart="sizes" onclick="switchChartTab('sizes')">Position Sizes</button>
-                <button class="chart-tab" data-chart="pnl" onclick="switchChartTab('pnl')">P&L Distribution</button>
+      <div class="content">
+        <div class="tab-panel active" id="chart-panel">
+          <div class="chart-header">
+            <div class="chart-header-left">
+              <div class="ticker-display">
+                <span class="ticker-symbol" id="chart-ticker">RKLB</span>
+                <span class="ticker-price" id="chart-price">$72.43</span>
+                <span class="ticker-change positive" id="chart-change">+2.16%</span>
               </div>
-              <div class="chart-panel active" id="chart-sizes"></div>
-              <div class="chart-panel" id="chart-pnl"></div>
+              <div class="control-group">
+                <button class="ctrl-btn active" data-tf="1D" onclick="setTimeframe('1D')">1D</button>
+                <button class="ctrl-btn" data-tf="45" onclick="setTimeframe('45')">45M</button>
+              </div>
+            </div>
+            <div class="chart-tools">
+              <button class="ctrl-btn active" id="ma-toggle" onclick="toggleMA()">MA</button>
+              <div class="tool-divider"></div>
+              <div class="control-group">
+                <button class="ctrl-btn" data-range="1W" onclick="setRange('1W')">1W</button>
+                <button class="ctrl-btn" data-range="1M" onclick="setRange('1M')">1M</button>
+                <button class="ctrl-btn active" data-range="3M" onclick="setRange('3M')">3M</button>
+                <button class="ctrl-btn" data-range="6M" onclick="setRange('6M')">6M</button>
+                <button class="ctrl-btn" data-range="1Y" onclick="setRange('1Y')">1Y</button>
+                <button class="ctrl-btn" data-range="ALL" onclick="setRange('ALL')">ALL</button>
+              </div>
             </div>
           </div>
-          <div class="card">
-            <div class="card-header"><div><div class="card-label">// LEAPs & Spreads</div><div class="card-title">Options Positions</div></div></div>
-            <div class="card-body" style="padding: 0;"><table class="data-table"><thead><tr><th>Ticker</th><th>Structure</th><th>Strikes</th><th>Entry</th><th>Current</th><th>P&L</th><th>Delta</th></tr></thead><tbody id="options-tbody"></tbody></table></div>
+          <div class="chart-container">
+            <div class="price-chart-wrapper"><canvas id="price-chart"></canvas></div>
+            <div class="macd-chart-wrapper"><canvas id="macd-chart"></canvas></div>
+          </div>
+        </div>
+        
+        <div class="tab-panel" id="positions-panel">
+          <div class="positions-content">
+            <div class="positions-grid">
+              <div class="metric-card"><div class="metric-value positive">+$1,172</div><div class="metric-label">Today's P&L</div></div>
+              <div class="metric-card"><div class="metric-value">3</div><div class="metric-label">Trades Today</div></div>
+              <div class="metric-card"><div class="metric-value">$17,536</div><div class="metric-label">Market Value</div></div>
+              <div class="metric-card"><div class="metric-value">10</div><div class="metric-label">Open Positions</div></div>
+            </div>
+            <div class="card">
+              <div class="card-header"><div><div class="card-label">// Active</div><div class="card-title">Stock Positions</div></div></div>
+              <div class="card-body" style="padding: 0;"><table class="data-table"><thead><tr><th>Ticker</th><th>Sector</th><th>Shares</th><th>Entry</th><th>Current</th><th>Value</th><th>P&L</th></tr></thead><tbody id="stock-tbody"></tbody></table></div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="tab-panel" id="options-panel">
+          <div class="positions-content">
+            <div class="positions-grid">
+              <div class="metric-card"><div class="metric-value">$39,315</div><div class="metric-label">Portfolio Value</div></div>
+              <div class="metric-card"><div class="metric-value positive">+$34,015</div><div class="metric-label">Total P&L</div></div>
+              <div class="metric-card"><div class="metric-value">23.55</div><div class="metric-label">Total Delta</div></div>
+              <div class="metric-card"><div class="metric-value">12</div><div class="metric-label">Days to Expiry</div></div>
+            </div>
+            <div class="card">
+              <div class="card-header"><div><div class="card-label">// Analytics</div><div class="card-title">Portfolio Insights</div></div></div>
+              <div class="card-body">
+                <div class="chart-tabs">
+                  <button class="chart-tab active" data-chart="sizes" onclick="switchChartTab('sizes')">Position Sizes</button>
+                  <button class="chart-tab" data-chart="pnl" onclick="switchChartTab('pnl')">P&L Distribution</button>
+                </div>
+                <div class="chart-panel active" id="chart-sizes"></div>
+                <div class="chart-panel" id="chart-pnl"></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header"><div><div class="card-label">// LEAPs & Spreads</div><div class="card-title">Options Positions</div></div></div>
+              <div class="card-body" style="padding: 0;"><table class="data-table"><thead><tr><th>Ticker</th><th>Structure</th><th>Strikes</th><th>Entry</th><th>Current</th><th>P&L</th><th>Delta</th></tr></thead><tbody id="options-tbody"></tbody></table></div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="tab-panel" id="catalysts-panel">
+          <div class="positions-content">
+            <div class="card">
+              <div class="card-header"><div><div class="card-label">// Upcoming</div><div class="card-title">Market Catalysts</div></div></div>
+              <div class="card-body"><div class="catalyst-list" id="catalyst-list"></div></div>
+            </div>
           </div>
         </div>
       </div>
       
-      <div class="tab-panel" id="catalysts-panel">
-        <div class="positions-content">
-          <div class="card">
-            <div class="card-header"><div><div class="card-label">// Upcoming</div><div class="card-title">Market Catalysts</div></div></div>
-            <div class="card-body"><div class="catalyst-list" id="catalyst-list"></div></div>
+      <aside class="right-sidebar">
+        <div class="kill-switch-section">
+          <div class="sidebar-title">Emergency Control</div>
+          <button class="kill-switch-btn stop" onclick="toggleKillSwitch()">ABORT ALL TRADES</button>
+          <div class="kill-switch-status">System operational</div>
+        </div>
+        <div class="sidebar-section">
+          <div class="sidebar-title">Risk Parameters</div>
+          <div class="safety-list">
+            <div class="safety-item"><span class="safety-label">Daily Loss Limit</span><span class="safety-value ok">$200 remaining</span></div>
+            <div class="safety-item"><span class="safety-label">Trades Remaining</span><span class="safety-value">2 of 5</span></div>
+            <div class="safety-item"><span class="safety-label">Market Status</span><span class="safety-value warning">CLOSED</span></div>
           </div>
         </div>
-      </div>
+        <div class="sidebar-section" style="padding-bottom: 0.5rem;"><div class="sidebar-title">Activity Log</div></div>
+        <div class="activity-feed" id="activity-feed"></div>
+      </aside>
+    </main>
+    
+    <div class="watermark"><span>SIMULATION MODE</span><a href="https://haslun.ai">← haslun.ai</a></div>
+    
+    <div class="status-strip">
+      <div class="status-item"><span class="dot green"></span><span class="value">SYSTEM NOMINAL</span></div>
+      <div class="status-item"><span class="dot green"></span><span class="value">UPLINK ACTIVE</span></div>
+      <div class="status-item"><span class="dot amber"></span><span class="value">MKT CLOSED</span></div>
+      <div class="status-item"><span class="value" id="uptime">UPTIME: 00:00:00</span></div>
     </div>
     
-    <aside class="right-sidebar">
-      <div class="kill-switch-section">
-        <div class="sidebar-title">Emergency Control</div>
-        <button class="kill-switch-btn stop" onclick="toggleKillSwitch()">ABORT ALL TRADES</button>
-        <div class="kill-switch-status">System operational</div>
+    <div class="dev-console" id="dev-console">
+      <div class="dev-console-header">
+        <span class="dev-console-title">// Restricted Systems Log</span>
+        <button class="dev-console-close" onclick="toggleDevConsole()">×</button>
       </div>
-      <div class="sidebar-section">
-        <div class="sidebar-title">Risk Parameters</div>
-        <div class="safety-list">
-          <div class="safety-item"><span class="safety-label">Daily Loss Limit</span><span class="safety-value ok">$200 remaining</span></div>
-          <div class="safety-item"><span class="safety-label">Trades Remaining</span><span class="safety-value">2 of 5</span></div>
-          <div class="safety-item"><span class="safety-label">Market Status</span><span class="safety-value warning">CLOSED</span></div>
-        </div>
+      <div class="dev-console-body">
+        <div class="log-entry"><span class="timestamp">T-00:03:42</span><span class="level info">[INFO]</span> Quantum entanglement link established with LUNR-SAT-07</div>
+        <div class="log-entry"><span class="timestamp">T-00:02:18</span><span class="level info">[INFO]</span> MACD crossover detected: RKLB entering bullish phase</div>
+        <div class="log-entry"><span class="timestamp">T-00:01:55</span><span class="level warn">[WARN]</span> Unusual volume spike detected in ASTS pre-market</div>
+        <div class="log-entry"><span class="timestamp">T-00:01:12</span><span class="level info">[INFO]</span> Portfolio delta exposure within acceptable parameters</div>
+        <div class="log-entry"><span class="timestamp">T-00:00:47</span><span class="level info">[INFO]</span> Neutron telemetry nominal, launch window confirmed</div>
+        <div class="log-entry"><span class="timestamp">T-00:00:23</span><span class="level warn">[WARN]</span> Gamma exposure elevated on RKLB position</div>
+        <div class="log-entry"><span class="timestamp">T-00:00:00</span><span class="level info">[INFO]</span> Mission Control systems initialized</div>
       </div>
-      <div class="sidebar-section" style="padding-bottom: 0.5rem;"><div class="sidebar-title">Activity Log</div></div>
-      <div class="activity-feed" id="activity-feed"></div>
-    </aside>
-  </main>
-  
-  <div class="watermark"><span>SIMULATION MODE</span><a href="https://haslun.ai">← haslun.ai</a></div>
+    </div>
+  </div>
 
   <script>
+    // Loading screen countdown
+    function runCountdown() {
+      const countdown = document.getElementById('countdown');
+      const status = document.getElementById('loading-status');
+      const beam = document.getElementById('tractor-beam');
+      const loadingScreen = document.getElementById('loading-screen');
+      const app = document.getElementById('app');
+      
+      let count = 3;
+      
+      const interval = setInterval(() => {
+        count--;
+        if (count > 0) {
+          countdown.textContent = count;
+          status.textContent = count === 2 ? 'Establishing contact...' : 'Aligning signal...';
+        } else if (count === 0) {
+          countdown.textContent = 'GO';
+          countdown.classList.add('go');
+          beam.classList.add('active');
+          status.textContent = 'Contact established — loading dashboard...';
+        } else {
+          clearInterval(interval);
+          loadingScreen.classList.add('hidden');
+          app.classList.add('visible');
+          init();
+        }
+      }, 1000);
+    }
+    
+    // Start countdown on load
+    window.addEventListener('DOMContentLoaded', () => {
+      setTimeout(runCountdown, 500);
+    });
+    
     let currentTicker = 'RKLB', currentTimeframe = '1D', currentRange = '3M', showMA = true;
     let priceChart = null, macdChart = null, tickerData = {}, statsData = {};
     
@@ -792,7 +1211,22 @@
       }
     }
     
-    init();
+    function toggleDevConsole() {
+      const console = document.getElementById('dev-console');
+      console.classList.toggle('visible');
+    }
+    
+    let startTime = null;
+    function updateUptime() {
+      if (!startTime) startTime = Date.now();
+      const elapsed = Math.floor((Date.now() - startTime) / 1000);
+      const h = String(Math.floor(elapsed / 3600)).padStart(2, '0');
+      const m = String(Math.floor((elapsed % 3600) / 60)).padStart(2, '0');
+      const s = String(elapsed % 60).padStart(2, '0');
+      const el = document.getElementById('uptime');
+      if (el) el.textContent = 'UPTIME: ' + h + ':' + m + ':' + s;
+    }
+    setInterval(updateUptime, 1000);
   </script>
 </body>
 </html>
