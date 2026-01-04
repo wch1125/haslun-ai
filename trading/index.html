@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#0a0c0f">
-  <title>HASLUN MISSION CONTROL</title>
+  <title>HASLUN-BOT \\ PILOT'S COCKPIT</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%230a0c0f' width='100' height='100'/%3E%3Ccircle cx='50' cy='50' r='35' fill='none' stroke='%2333ff99' stroke-width='2'/%3E%3Ccircle cx='50' cy='50' r='25' fill='none' stroke='%2333ff99' stroke-width='1' opacity='0.5'/%3E%3Ccircle cx='50' cy='50' r='4' fill='%23ffb347'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,18 +25,23 @@
       --text: #b8d0c8;
       --text-muted: #6a8078;
       --text-dim: #4a5a54;
-      --phosphor: #33ff99;
-      --phosphor-dim: rgba(51, 255, 153, 0.6);
-      --phosphor-glow: rgba(51, 255, 153, 0.15);
-      --phosphor-ghost: rgba(51, 255, 153, 0.08);
+      --text-soft: #8aa098;
+      /* HSL-based phosphor for color profile control */
+      --accent-hue: 150;
+      --phosphor: hsl(var(--accent-hue), 100%, 60%);
+      --phosphor-dim: hsla(var(--accent-hue), 100%, 60%, 0.6);
+      --phosphor-glow: hsla(var(--accent-hue), 100%, 60%, 0.15);
+      --phosphor-ghost: hsla(var(--accent-hue), 100%, 60%, 0.08);
+      --accent-glow: hsla(var(--accent-hue), 100%, 65%, 0.7);
       --amber: #ffb347;
       --amber-dim: rgba(255, 179, 71, 0.6);
       --amber-glow: rgba(255, 179, 71, 0.15);
-      --signal-up: #33ff99;
+      --signal-up: hsl(var(--accent-hue), 100%, 60%);
       --signal-down: #ff6b6b;
       --signal-warn: #ffb347;
       --font-display: 'Orbitron', sans-serif;
       --font-body: 'IBM Plex Mono', monospace;
+      --font-mono: 'IBM Plex Mono', monospace;
     }
     
     @keyframes scanline { 0% { transform: translateY(-100%); } 100% { transform: translateY(100vh); } }
@@ -120,6 +125,60 @@
     .loading-screen.hidden {
       opacity: 0;
       visibility: hidden;
+    }
+    
+    /* INVADER ARMY BACKDROP */
+    .invader-army {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.45;
+    }
+
+    .invader-row {
+      position: absolute;
+      display: flex;
+      gap: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .invader-row .invader-sprite-small {
+      width: 28px;
+      height: 20px;
+      fill: var(--phosphor);
+      image-rendering: pixelated;
+      shape-rendering: crispEdges;
+      filter:
+        drop-shadow(0 0 6px var(--accent-glow))
+        drop-shadow(0 0 12px hsla(var(--accent-hue), 100%, 60%, 0.4));
+    }
+
+    @keyframes invader-army-march {
+      0%   { transform: translateX(-50%) translateX(-10vw); }
+      50%  { transform: translateX(-50%) translateX(10vw); }
+      100% { transform: translateX(-50%) translateX(-10vw); }
+    }
+
+    @keyframes invader-drop {
+      0%   { transform: translateY(0); }
+      20%  { transform: translateY(20px); }
+      40%  { transform: translateY(40px); }
+      60%  { transform: translateY(60px); }
+      80%  { transform: translateY(80px); }
+      100% { transform: translateY(100px); }
+    }
+
+    .loading-screen.hidden .invader-army {
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+    
+    .loading-inner {
+      position: relative;
+      z-index: 1;
     }
     
     .stars {
@@ -2061,6 +2120,202 @@
       margin-top: 0.15rem;
     }
 
+    /* VACUUM TUBES CLUSTER */
+    .tube-cluster {
+      display: flex;
+      gap: 8px;
+      padding-bottom: 0.5rem;
+    }
+
+    .vacuum-tube {
+      position: relative;
+      width: 18px;
+      height: 40px;
+      border-radius: 10px 10px 4px 4px;
+      background: linear-gradient(to bottom, #05080c, #020305);
+      border: 1px solid #28333f;
+      box-shadow: 0 0 8px rgba(0,0,0,0.7);
+      overflow: hidden;
+    }
+
+    .tube-glass {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 50% 10%, rgba(255,255,255,0.18), transparent 55%);
+      mix-blend-mode: screen;
+      opacity: 0.8;
+    }
+
+    .tube-filament {
+      position: absolute;
+      bottom: 6px;
+      left: 50%;
+      width: 8px;
+      height: 14px;
+      transform: translateX(-50%);
+      background: radial-gradient(circle at 50% 30%, #ffb347, rgba(255,179,71,0.15));
+      border-radius: 999px;
+      box-shadow:
+        0 0 6px rgba(255,179,71,0.8),
+        0 0 18px rgba(255,179,71,0.6);
+      animation: tube-flicker 1.4s infinite steps(2, end);
+    }
+
+    @keyframes tube-flicker {
+      0% { opacity: 0.9; }
+      50% { opacity: 1; }
+      100% { opacity: 0.85; }
+    }
+
+    .tube-cluster.overload .tube-filament {
+      animation: tube-overload 0.12s infinite steps(2, end);
+      box-shadow:
+        0 0 10px rgba(255,255,200,1),
+        0 0 28px rgba(255,179,71,0.9);
+    }
+
+    @keyframes tube-overload {
+      0% { opacity: 0.7; transform: translateX(-50%) scaleY(0.9); }
+      50% { opacity: 1;   transform: translateX(-50%) scaleY(1.1); }
+      100%{ opacity: 0.6; transform: translateX(-50%) scaleY(0.9); }
+    }
+
+    /* HOLOGRAPHIC SHIP PANEL */
+    .holo-card {
+      margin-top: 0.75rem;
+    }
+
+    .holo-body {
+      position: relative;
+      height: 110px;
+      background: radial-gradient(circle at 50% 0%, hsla(var(--accent-hue), 100%, 60%, 0.16), #05080c);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .holo-ship {
+      width: 100%;
+      height: 100%;
+    }
+
+    .holo-line {
+      stroke: var(--phosphor);
+      stroke-width: 1.4;
+      fill: transparent;
+      stroke-linejoin: round;
+      opacity: 0.85;
+      filter: drop-shadow(0 0 6px var(--accent-glow));
+    }
+
+    .holo-scan-line {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--phosphor), transparent);
+      opacity: 0.8;
+      animation: holo-scan 2.4s linear infinite;
+    }
+
+    @keyframes holo-scan {
+      0% { top: 0%; }
+      100% { top: 100%; }
+    }
+
+    /* COLOR PROFILE CONTROL */
+    .color-profile-control {
+      margin-top: 0.4rem;
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      padding: 0.5rem 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .color-label {
+      margin-bottom: 0.35rem;
+    }
+
+    .color-row {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      margin-top: 0.25rem;
+    }
+
+    #color-hue-slider {
+      flex: 1;
+      -webkit-appearance: none;
+      height: 4px;
+      border-radius: 999px;
+      background: linear-gradient(90deg,
+        hsl(90,100%,60%),
+        hsl(140,100%,60%),
+        hsl(190,100%,60%),
+        hsl(220,100%,60%)
+      );
+      outline: none;
+    }
+    #color-hue-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #0b0f14;
+      border: 2px solid var(--phosphor);
+      box-shadow: 0 0 8px var(--accent-glow);
+      cursor: pointer;
+    }
+    #color-hue-slider::-moz-range-thumb {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #0b0f14;
+      border: 2px solid var(--phosphor);
+      box-shadow: 0 0 8px var(--accent-glow);
+      cursor: pointer;
+    }
+
+    .color-preview {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      box-shadow: 0 0 12px var(--accent-glow);
+      background: var(--phosphor);
+    }
+
+    .color-preset-row {
+      margin-top: 0.3rem;
+      display: flex;
+      gap: 0.25rem;
+    }
+    .color-preset-row button {
+      flex: 1;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: #050a10;
+      color: var(--text-soft);
+      font-family: var(--font-mono);
+      font-size: 0.55rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0.2rem 0.3rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .color-preset-row button:hover {
+      border-color: var(--phosphor);
+      color: var(--phosphor);
+    }
+    .color-preset-row button.active {
+      border-color: var(--phosphor);
+      color: var(--phosphor);
+      background: hsla(var(--accent-hue), 100%, 60%, 0.1);
+    }
+
     /* Mobile responsive */
     @media (max-width: 600px) {
       .pipboy-vitals { grid-template-columns: repeat(2, 1fr); }
@@ -2079,107 +2334,115 @@
   
   <!-- LOADING SCREEN -->
   <div class="loading-screen" id="loading-screen">
+    <!-- Background marching army -->
+    <div class="invader-army" id="invader-army" aria-hidden="true">
+      <!-- Rows will be filled via JS -->
+    </div>
+    
     <div class="stars"></div>
     <div class="horizon"></div>
-    <div class="launch-scene">
-      <!-- Pixel Invader Scene -->
-      <div class="pixel-invader-scene">
-        <!-- Background fleet -->
-        <div class="invader-fleet">
-          <svg class="fleet-invader" viewBox="0 0 11 8" fill="var(--phosphor)">
-            <rect x="2" y="0" width="1" height="1"/><rect x="8" y="0" width="1" height="1"/>
-            <rect x="3" y="1" width="1" height="1"/><rect x="7" y="1" width="1" height="1"/>
+    
+    <div class="loading-inner">
+      <div class="launch-scene">
+        <!-- Pixel Invader Scene -->
+        <div class="pixel-invader-scene">
+          <!-- Background fleet -->
+          <div class="invader-fleet">
+            <svg class="fleet-invader" viewBox="0 0 11 8" fill="var(--phosphor)">
+              <rect x="2" y="0" width="1" height="1"/><rect x="8" y="0" width="1" height="1"/>
+              <rect x="3" y="1" width="1" height="1"/><rect x="7" y="1" width="1" height="1"/>
+              <rect x="2" y="2" width="7" height="1"/>
+              <rect x="1" y="3" width="2" height="1"/><rect x="4" y="3" width="3" height="1"/><rect x="8" y="3" width="2" height="1"/>
+              <rect x="0" y="4" width="11" height="1"/>
+              <rect x="0" y="5" width="1" height="1"/><rect x="2" y="5" width="7" height="1"/><rect x="10" y="5" width="1" height="1"/>
+              <rect x="0" y="6" width="1" height="1"/><rect x="2" y="6" width="1" height="1"/><rect x="8" y="6" width="1" height="1"/><rect x="10" y="6" width="1" height="1"/>
+              <rect x="3" y="7" width="2" height="1"/><rect x="6" y="7" width="2" height="1"/>
+            </svg>
+            <svg class="fleet-invader" viewBox="0 0 11 8" fill="var(--phosphor)">
+              <rect x="2" y="0" width="1" height="1"/><rect x="8" y="0" width="1" height="1"/>
+              <rect x="3" y="1" width="1" height="1"/><rect x="7" y="1" width="1" height="1"/>
+              <rect x="2" y="2" width="7" height="1"/>
+              <rect x="1" y="3" width="2" height="1"/><rect x="4" y="3" width="3" height="1"/><rect x="8" y="3" width="2" height="1"/>
+              <rect x="0" y="4" width="11" height="1"/>
+              <rect x="0" y="5" width="1" height="1"/><rect x="2" y="5" width="7" height="1"/><rect x="10" y="5" width="1" height="1"/>
+              <rect x="0" y="6" width="1" height="1"/><rect x="2" y="6" width="1" height="1"/><rect x="8" y="6" width="1" height="1"/><rect x="10" y="6" width="1" height="1"/>
+              <rect x="3" y="7" width="2" height="1"/><rect x="6" y="7" width="2" height="1"/>
+            </svg>
+            <svg class="fleet-invader" viewBox="0 0 11 8" fill="var(--phosphor)">
+              <rect x="2" y="0" width="1" height="1"/><rect x="8" y="0" width="1" height="1"/>
+              <rect x="3" y="1" width="1" height="1"/><rect x="7" y="1" width="1" height="1"/>
+              <rect x="2" y="2" width="7" height="1"/>
+              <rect x="1" y="3" width="2" height="1"/><rect x="4" y="3" width="3" height="1"/><rect x="8" y="3" width="2" height="1"/>
+              <rect x="0" y="4" width="11" height="1"/>
+              <rect x="0" y="5" width="1" height="1"/><rect x="2" y="5" width="7" height="1"/><rect x="10" y="5" width="1" height="1"/>
+              <rect x="0" y="6" width="1" height="1"/><rect x="2" y="6" width="1" height="1"/><rect x="8" y="6" width="1" height="1"/><rect x="10" y="6" width="1" height="1"/>
+              <rect x="3" y="7" width="2" height="1"/><rect x="6" y="7" width="2" height="1"/>
+            </svg>
+            <svg class="fleet-invader" viewBox="0 0 11 8" fill="var(--phosphor)">
+              <rect x="2" y="0" width="1" height="1"/><rect x="8" y="0" width="1" height="1"/>
+              <rect x="3" y="1" width="1" height="1"/><rect x="7" y="1" width="1" height="1"/>
+              <rect x="2" y="2" width="7" height="1"/>
+              <rect x="1" y="3" width="2" height="1"/><rect x="4" y="3" width="3" height="1"/><rect x="8" y="3" width="2" height="1"/>
+              <rect x="0" y="4" width="11" height="1"/>
+              <rect x="0" y="5" width="1" height="1"/><rect x="2" y="5" width="7" height="1"/><rect x="10" y="5" width="1" height="1"/>
+              <rect x="0" y="6" width="1" height="1"/><rect x="2" y="6" width="1" height="1"/><rect x="8" y="6" width="1" height="1"/><rect x="10" y="6" width="1" height="1"/>
+              <rect x="3" y="7" width="2" height="1"/><rect x="6" y="7" width="2" height="1"/>
+            </svg>
+            <svg class="fleet-invader" viewBox="0 0 11 8" fill="var(--phosphor)">
+              <rect x="2" y="0" width="1" height="1"/><rect x="8" y="0" width="1" height="1"/>
+              <rect x="3" y="1" width="1" height="1"/><rect x="7" y="1" width="1" height="1"/>
+              <rect x="2" y="2" width="7" height="1"/>
+              <rect x="1" y="3" width="2" height="1"/><rect x="4" y="3" width="3" height="1"/><rect x="8" y="3" width="2" height="1"/>
+              <rect x="0" y="4" width="11" height="1"/>
+              <rect x="0" y="5" width="1" height="1"/><rect x="2" y="5" width="7" height="1"/><rect x="10" y="5" width="1" height="1"/>
+              <rect x="0" y="6" width="1" height="1"/><rect x="2" y="6" width="1" height="1"/><rect x="8" y="6" width="1" height="1"/><rect x="10" y="6" width="1" height="1"/>
+              <rect x="3" y="7" width="2" height="1"/><rect x="6" y="7" width="2" height="1"/>
+            </svg>
+          </div>
+          
+          <!-- Main invader sprite (classic Space Invaders crab) -->
+          <svg class="pixel-invader" viewBox="0 0 11 8" fill="var(--phosphor)">
+            <!-- Row 0 - antennae -->
+            <rect x="2" y="0" width="1" height="1"/>
+            <rect x="8" y="0" width="1" height="1"/>
+            <!-- Row 1 -->
+            <rect x="3" y="1" width="1" height="1"/>
+            <rect x="7" y="1" width="1" height="1"/>
+            <!-- Row 2 - top of head -->
             <rect x="2" y="2" width="7" height="1"/>
-            <rect x="1" y="3" width="2" height="1"/><rect x="4" y="3" width="3" height="1"/><rect x="8" y="3" width="2" height="1"/>
+            <!-- Row 3 - eyes row -->
+            <rect x="1" y="3" width="2" height="1"/>
+            <rect x="4" y="3" width="3" height="1"/>
+            <rect x="8" y="3" width="2" height="1"/>
+            <!-- Row 4 - full body -->
             <rect x="0" y="4" width="11" height="1"/>
-            <rect x="0" y="5" width="1" height="1"/><rect x="2" y="5" width="7" height="1"/><rect x="10" y="5" width="1" height="1"/>
-            <rect x="0" y="6" width="1" height="1"/><rect x="2" y="6" width="1" height="1"/><rect x="8" y="6" width="1" height="1"/><rect x="10" y="6" width="1" height="1"/>
-            <rect x="3" y="7" width="2" height="1"/><rect x="6" y="7" width="2" height="1"/>
+            <!-- Row 5 - body with gaps -->
+            <rect x="0" y="5" width="1" height="1"/>
+            <rect x="2" y="5" width="7" height="1"/>
+            <rect x="10" y="5" width="1" height="1"/>
+            <!-- Row 6 - legs upper -->
+            <rect x="0" y="6" width="1" height="1"/>
+            <rect x="2" y="6" width="1" height="1"/>
+            <rect x="8" y="6" width="1" height="1"/>
+            <rect x="10" y="6" width="1" height="1"/>
+            <!-- Row 7 - feet -->
+            <rect x="3" y="7" width="2" height="1"/>
+            <rect x="6" y="7" width="2" height="1"/>
           </svg>
-          <svg class="fleet-invader" viewBox="0 0 11 8" fill="var(--phosphor)">
-            <rect x="2" y="0" width="1" height="1"/><rect x="8" y="0" width="1" height="1"/>
-            <rect x="3" y="1" width="1" height="1"/><rect x="7" y="1" width="1" height="1"/>
-            <rect x="2" y="2" width="7" height="1"/>
-            <rect x="1" y="3" width="2" height="1"/><rect x="4" y="3" width="3" height="1"/><rect x="8" y="3" width="2" height="1"/>
-            <rect x="0" y="4" width="11" height="1"/>
-            <rect x="0" y="5" width="1" height="1"/><rect x="2" y="5" width="7" height="1"/><rect x="10" y="5" width="1" height="1"/>
-            <rect x="0" y="6" width="1" height="1"/><rect x="2" y="6" width="1" height="1"/><rect x="8" y="6" width="1" height="1"/><rect x="10" y="6" width="1" height="1"/>
-            <rect x="3" y="7" width="2" height="1"/><rect x="6" y="7" width="2" height="1"/>
-          </svg>
-          <svg class="fleet-invader" viewBox="0 0 11 8" fill="var(--phosphor)">
-            <rect x="2" y="0" width="1" height="1"/><rect x="8" y="0" width="1" height="1"/>
-            <rect x="3" y="1" width="1" height="1"/><rect x="7" y="1" width="1" height="1"/>
-            <rect x="2" y="2" width="7" height="1"/>
-            <rect x="1" y="3" width="2" height="1"/><rect x="4" y="3" width="3" height="1"/><rect x="8" y="3" width="2" height="1"/>
-            <rect x="0" y="4" width="11" height="1"/>
-            <rect x="0" y="5" width="1" height="1"/><rect x="2" y="5" width="7" height="1"/><rect x="10" y="5" width="1" height="1"/>
-            <rect x="0" y="6" width="1" height="1"/><rect x="2" y="6" width="1" height="1"/><rect x="8" y="6" width="1" height="1"/><rect x="10" y="6" width="1" height="1"/>
-            <rect x="3" y="7" width="2" height="1"/><rect x="6" y="7" width="2" height="1"/>
-          </svg>
-          <svg class="fleet-invader" viewBox="0 0 11 8" fill="var(--phosphor)">
-            <rect x="2" y="0" width="1" height="1"/><rect x="8" y="0" width="1" height="1"/>
-            <rect x="3" y="1" width="1" height="1"/><rect x="7" y="1" width="1" height="1"/>
-            <rect x="2" y="2" width="7" height="1"/>
-            <rect x="1" y="3" width="2" height="1"/><rect x="4" y="3" width="3" height="1"/><rect x="8" y="3" width="2" height="1"/>
-            <rect x="0" y="4" width="11" height="1"/>
-            <rect x="0" y="5" width="1" height="1"/><rect x="2" y="5" width="7" height="1"/><rect x="10" y="5" width="1" height="1"/>
-            <rect x="0" y="6" width="1" height="1"/><rect x="2" y="6" width="1" height="1"/><rect x="8" y="6" width="1" height="1"/><rect x="10" y="6" width="1" height="1"/>
-            <rect x="3" y="7" width="2" height="1"/><rect x="6" y="7" width="2" height="1"/>
-          </svg>
-          <svg class="fleet-invader" viewBox="0 0 11 8" fill="var(--phosphor)">
-            <rect x="2" y="0" width="1" height="1"/><rect x="8" y="0" width="1" height="1"/>
-            <rect x="3" y="1" width="1" height="1"/><rect x="7" y="1" width="1" height="1"/>
-            <rect x="2" y="2" width="7" height="1"/>
-            <rect x="1" y="3" width="2" height="1"/><rect x="4" y="3" width="3" height="1"/><rect x="8" y="3" width="2" height="1"/>
-            <rect x="0" y="4" width="11" height="1"/>
-            <rect x="0" y="5" width="1" height="1"/><rect x="2" y="5" width="7" height="1"/><rect x="10" y="5" width="1" height="1"/>
-            <rect x="0" y="6" width="1" height="1"/><rect x="2" y="6" width="1" height="1"/><rect x="8" y="6" width="1" height="1"/><rect x="10" y="6" width="1" height="1"/>
-            <rect x="3" y="7" width="2" height="1"/><rect x="6" y="7" width="2" height="1"/>
-          </svg>
+          
+          <!-- Pixel beam -->
+          <div class="pixel-beam" id="pixel-beam"></div>
+          
+          <!-- Ground reflection -->
+          <div class="pixel-ground" id="pixel-ground"></div>
         </div>
-        
-        <!-- Main invader sprite (classic Space Invaders crab) -->
-        <svg class="pixel-invader" viewBox="0 0 11 8" fill="var(--phosphor)">
-          <!-- Row 0 - antennae -->
-          <rect x="2" y="0" width="1" height="1"/>
-          <rect x="8" y="0" width="1" height="1"/>
-          <!-- Row 1 -->
-          <rect x="3" y="1" width="1" height="1"/>
-          <rect x="7" y="1" width="1" height="1"/>
-          <!-- Row 2 - top of head -->
-          <rect x="2" y="2" width="7" height="1"/>
-          <!-- Row 3 - eyes row -->
-          <rect x="1" y="3" width="2" height="1"/>
-          <rect x="4" y="3" width="3" height="1"/>
-          <rect x="8" y="3" width="2" height="1"/>
-          <!-- Row 4 - full body -->
-          <rect x="0" y="4" width="11" height="1"/>
-          <!-- Row 5 - body with gaps -->
-          <rect x="0" y="5" width="1" height="1"/>
-          <rect x="2" y="5" width="7" height="1"/>
-          <rect x="10" y="5" width="1" height="1"/>
-          <!-- Row 6 - legs upper -->
-          <rect x="0" y="6" width="1" height="1"/>
-          <rect x="2" y="6" width="1" height="1"/>
-          <rect x="8" y="6" width="1" height="1"/>
-          <rect x="10" y="6" width="1" height="1"/>
-          <!-- Row 7 - feet -->
-          <rect x="3" y="7" width="2" height="1"/>
-          <rect x="6" y="7" width="2" height="1"/>
-        </svg>
-        
-        <!-- Pixel beam -->
-        <div class="pixel-beam" id="pixel-beam"></div>
-        
-        <!-- Ground reflection -->
-        <div class="pixel-ground" id="pixel-ground"></div>
       </div>
-    </div>
-    <div class="loading-content">
-      <div class="loading-brand">HASLUN</div>
-      <div class="loading-sub">Mission Control</div>
-      <div class="countdown" id="countdown">3</div>
-      <div class="loading-status" id="loading-status">ESTABLISHING UPLINK...</div>
+      <div class="loading-content">
+        <div class="loading-brand">HASLUN-BOT</div>
+        <div class="loading-sub">Pilot's Cockpit</div>
+        <div class="countdown" id="countdown">3</div>
+        <div class="loading-status" id="loading-status">ESTABLISHING UPLINK...</div>
+      </div>
     </div>
   </div>
   
@@ -2201,8 +2464,8 @@
             </svg>
           </div>
           <div>
-            <div class="logo-text">HASLUN</div>
-            <div class="logo-sub">MISSION CONTROL</div>
+            <div class="logo-text">HASLUN-BOT</div>
+            <div class="logo-sub">PILOT'S COCKPIT</div>
           </div>
         </div>
         <nav class="nav-tabs">
@@ -2264,6 +2527,25 @@
             </div>
           </div>
         </div>
+        
+        <!-- HOLOGRAPHIC SHIP PANEL -->
+        <div class="sidebar-section holo-card">
+          <div class="sidebar-title">
+            <span>// SHIP PROFILE</span>
+            <span id="holo-ticker-label" style="font-size: 0.6rem; color: var(--text-muted); margin-left: 0.5rem;">RKLB · ORBITAL</span>
+          </div>
+          <div class="holo-body">
+            <svg id="holo-ship-svg" class="holo-ship" viewBox="0 0 100 60" aria-hidden="true">
+              <!-- default wireframe -->
+              <polyline points="10,30 30,10 70,10 90,30 70,50 30,50 10,30" class="holo-line"/>
+              <polyline points="30,10 40,5 60,5 70,10" class="holo-line"/>
+              <line x1="25" y1="30" x2="75" y2="30" class="holo-line"/>
+              <line x1="40" y1="50" x2="40" y2="55" class="holo-line"/>
+              <line x1="60" y1="50" x2="60" y2="55" class="holo-line"/>
+            </svg>
+            <div class="holo-scan-line"></div>
+          </div>
+        </div>
         <div class="sidebar-section" style="padding-bottom: 0.5rem;"><div class="sidebar-title">Tracking</div></div>
         <div class="watchlist" id="watchlist"></div>
       </aside>
@@ -2304,6 +2586,20 @@
           <!-- SPIELBERGIAN CONTROL PANEL -->
           <div class="control-panel">
             <div class="panel-header">
+              <div class="tube-cluster" id="tube-cluster">
+                <div class="vacuum-tube">
+                  <div class="tube-glass"></div>
+                  <div class="tube-filament"></div>
+                </div>
+                <div class="vacuum-tube">
+                  <div class="tube-glass"></div>
+                  <div class="tube-filament"></div>
+                </div>
+                <div class="vacuum-tube">
+                  <div class="tube-glass"></div>
+                  <div class="tube-filament"></div>
+                </div>
+              </div>
               <div class="panel-title">▸ SIGNAL PROCESSING ARRAY</div>
               <div class="panel-status">
                 <div class="status-led"><div class="led pulse"></div> SYNC</div>
@@ -2543,6 +2839,15 @@
           <option value="NeonNoir">Neon Noir</option>
         </select>
       </div>
+      
+      <!-- Color Profile Control -->
+      <div class="status-item" style="min-width: 180px;">
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <span class="value" style="font-size: 0.6rem;">HUE</span>
+          <input id="color-hue-slider" type="range" min="80" max="220" value="150" style="flex: 1; height: 4px;" />
+          <div id="color-hue-preview" style="width: 12px; height: 12px; border-radius: 50%; background: hsl(150, 100%, 60%); border: 1px solid var(--border);"></div>
+        </div>
+      </div>
     </div>
     
     <div class="dev-console" id="dev-console">
@@ -2581,12 +2886,12 @@
 
         <div class="about-header">
           <div class="about-label">SIMULATION DOSSIER</div>
-          <h2 class="about-title">What is Haslun Mission Control?</h2>
+          <h2 class="about-title">What is Haslun-Bot Pilot's Cockpit?</h2>
         </div>
 
         <div class="about-body">
           <p>
-            Haslun Mission Control is a <strong>simulated trading deck</strong> for a fictional research fund.
+            Haslun-Bot Pilot's Cockpit is a <strong>simulated trading deck</strong> for a fictional research fund.
             It's part data room, part arcade cabinet, and part mood board for how we think about risk,
             storytelling, and markets.
           </p>
@@ -5086,10 +5391,231 @@
         });
       }
       
+      // =========================================================================
+      // INVADER ARMY INITIALIZATION
+      // =========================================================================
+      function initInvaderArmy() {
+        const army = document.getElementById('invader-army');
+        if (!army) return;
+
+        const spriteSvg = `
+          <svg class="invader-sprite-small" viewBox="0 0 11 8">
+            <rect x="3" y="0" width="1" height="1" />
+            <rect x="7" y="0" width="1" height="1" />
+            <rect x="2" y="1" width="1" height="1" />
+            <rect x="3" y="1" width="1" height="1" />
+            <rect x="4" y="1" width="1" height="1" />
+            <rect x="6" y="1" width="1" height="1" />
+            <rect x="7" y="1" width="1" height="1" />
+            <rect x="8" y="1" width="1" height="1" />
+            <rect x="1" y="2" width="1" height="1" />
+            <rect x="2" y="2" width="1" height="1" />
+            <rect x="3" y="2" width="1" height="1" />
+            <rect x="4" y="2" width="1" height="1" />
+            <rect x="5" y="2" width="1" height="1" />
+            <rect x="6" y="2" width="1" height="1" />
+            <rect x="7" y="2" width="1" height="1" />
+            <rect x="8" y="2" width="1" height="1" />
+            <rect x="9" y="2" width="1" height="1" />
+            <rect x="0" y="3" width="1" height="1" />
+            <rect x="2" y="3" width="1" height="1" />
+            <rect x="3" y="3" width="1" height="1" />
+            <rect x="4" y="3" width="1" height="1" />
+            <rect x="5" y="3" width="1" height="1" />
+            <rect x="6" y="3" width="1" height="1" />
+            <rect x="7" y="3" width="1" height="1" />
+            <rect x="8" y="3" width="1" height="1" />
+            <rect x="10" y="3" width="1" height="1" />
+            <rect x="0" y="4" width="1" height="1" />
+            <rect x="3" y="4" width="1" height="1" />
+            <rect x="7" y="4" width="1" height="1" />
+            <rect x="10" y="4" width="1" height="1" />
+            <rect x="1" y="5" width="1" height="1" />
+            <rect x="2" y="5" width="1" height="1" />
+            <rect x="3" y="5" width="1" height="1" />
+            <rect x="7" y="5" width="1" height="1" />
+            <rect x="8" y="5" width="1" height="1" />
+            <rect x="9" y="5" width="1" height="1" />
+            <rect x="4" y="6" width="1" height="1" />
+            <rect x="5" y="6" width="1" height="1" />
+            <rect x="6" y="6" width="1" height="1" />
+            <rect x="2" y="7" width="1" height="1" />
+            <rect x="3" y="7" width="1" height="1" />
+            <rect x="7" y="7" width="1" height="1" />
+            <rect x="8" y="7" width="1" height="1" />
+          </svg>
+        `;
+
+        const rows = 5;
+        const invadersPerRow = 10;
+        const topOffset = 80;
+        const rowSpacing = 45;
+
+        for (let r = 0; r < rows; r++) {
+          const row = document.createElement('div');
+          row.className = 'invader-row';
+          row.style.top = (topOffset + r * rowSpacing) + 'px';
+
+          const marchDuration = 8 + r * 1.2;
+          const marchDelay = r * 0.4;
+          row.style.animation = `invader-army-march ${marchDuration}s linear ${marchDelay}s infinite alternate`;
+
+          row.innerHTML = new Array(invadersPerRow).fill(spriteSvg).join('');
+          army.appendChild(row);
+        }
+      }
+
+      // =========================================================================
+      // COLOR PROFILE CONTROL (Pip-Boy Style)
+      // =========================================================================
+      function initColorProfileControl() {
+        const slider = document.getElementById('color-hue-slider');
+        const preview = document.getElementById('color-hue-preview');
+        if (!slider || !preview) return;
+
+        const root = document.documentElement;
+
+        function setHue(h) {
+          root.style.setProperty('--accent-hue', h);
+          preview.style.background = `hsl(${h},100%,60%)`;
+          if (typeof logTerminal === 'function') {
+            logTerminal(`color profile set · hue ${h}`);
+          }
+        }
+
+        slider.addEventListener('input', (e) => {
+          setHue(e.target.value);
+        });
+
+        // Initialize
+        setHue(slider.value);
+      }
+
+      // =========================================================================
+      // HOLOGRAPHIC SHIP PANEL
+      // =========================================================================
+      const HOLO_SHIPS = {
+        RKLB: {
+          label: "RKLB · ORBITAL BUS",
+          path: `
+            <polyline points="10,30 30,10 70,10 90,30 70,50 30,50 10,30" class="holo-line"/>
+            <polyline points="30,10 40,5 60,5 70,10" class="holo-line"/>
+            <line x1="25" y1="30" x2="75" y2="30" class="holo-line"/>
+            <line x1="40" y1="50" x2="40" y2="55" class="holo-line"/>
+            <line x1="60" y1="50" x2="60" y2="55" class="holo-line"/>
+          `
+        },
+        LUNR: {
+          label: "LUNR · LUNAR SCOUT",
+          path: `
+            <polyline points="10,35 25,20 40,25 60,25 75,20 90,35 60,45 40,45 10,35" class="holo-line"/>
+            <circle cx="50" cy="23" r="6" class="holo-line"/>
+            <line x1="40" y1="45" x2="35" y2="55" class="holo-line"/>
+            <line x1="60" y1="45" x2="65" y2="55" class="holo-line"/>
+          `
+        },
+        JOBY: {
+          label: "JOBY · EVTOL FRAME",
+          path: `
+            <polyline points="15,35 30,25 70,25 85,35 70,45 30,45 15,35" class="holo-line"/>
+            <circle cx="30" cy="20" r="7" class="holo-line"/>
+            <circle cx="70" cy="20" r="7" class="holo-line"/>
+            <line x1="30" y1="27" x2="30" y2="35" class="holo-line"/>
+            <line x1="70" y1="27" x2="70" y2="35" class="holo-line"/>
+          `
+        },
+        ACHR: {
+          label: "ACHR · ARCHER VTOL",
+          path: `
+            <polyline points="20,30 35,15 65,15 80,30 65,45 35,45 20,30" class="holo-line"/>
+            <circle cx="35" cy="18" r="5" class="holo-line"/>
+            <circle cx="65" cy="18" r="5" class="holo-line"/>
+            <line x1="50" y1="15" x2="50" y2="45" class="holo-line"/>
+          `
+        },
+        ASTS: {
+          label: "ASTS · BLUEBIRD SAT",
+          path: `
+            <rect x="35" y="20" width="30" height="20" rx="2" class="holo-line"/>
+            <line x1="20" y1="30" x2="35" y2="30" class="holo-line"/>
+            <line x1="65" y1="30" x2="80" y2="30" class="holo-line"/>
+            <rect x="10" y="22" width="12" height="16" rx="1" class="holo-line"/>
+            <rect x="78" y="22" width="12" height="16" rx="1" class="holo-line"/>
+          `
+        },
+        BKSY: {
+          label: "BKSY · BLACKSKY SAT",
+          path: `
+            <circle cx="50" cy="30" r="12" class="holo-line"/>
+            <line x1="15" y1="30" x2="38" y2="30" class="holo-line"/>
+            <line x1="62" y1="30" x2="85" y2="30" class="holo-line"/>
+            <rect x="8" y="24" width="10" height="12" rx="1" class="holo-line"/>
+            <rect x="82" y="24" width="10" height="12" rx="1" class="holo-line"/>
+          `
+        },
+        GME: {
+          label: "GME · POWER CORE",
+          path: `
+            <polygon points="50,10 70,25 70,40 50,55 30,40 30,25" class="holo-line"/>
+            <line x1="50" y1="10" x2="50" y2="55" class="holo-line"/>
+            <line x1="30" y1="25" x2="70" y2="25" class="holo-line"/>
+            <line x1="30" y1="40" x2="70" y2="40" class="holo-line"/>
+          `
+        }
+      };
+
+      function updateHoloForTicker(ticker) {
+        const svg = document.getElementById('holo-ship-svg');
+        const labelEl = document.getElementById('holo-ticker-label');
+        if (!svg || !labelEl) return;
+
+        const ship = HOLO_SHIPS[ticker] || HOLO_SHIPS['RKLB'];
+        labelEl.textContent = ship.label;
+        svg.innerHTML = ship.path;
+
+        svg.style.opacity = '0.6';
+        requestAnimationFrame(() => {
+          svg.style.transition = 'opacity 0.3s ease';
+          svg.style.opacity = '1';
+        });
+      }
+
+      // Hook into ticker selection to update holo ship
+      const originalSelectTicker = window.selectTicker;
+      if (typeof originalSelectTicker === 'function') {
+        window.selectTicker = function(ticker) {
+          updateHoloForTicker(ticker);
+          return originalSelectTicker.apply(this, arguments);
+        };
+      }
+
+      // =========================================================================
+      // TUBE OVERLOAD ON RUN ANALYSIS
+      // =========================================================================
+      function initTubeOverload() {
+        const originalRunAnalysis = window.runAnalysis;
+        if (typeof originalRunAnalysis === 'function') {
+          window.runAnalysis = function(e) {
+            const tubes = document.getElementById('tube-cluster');
+            if (tubes) {
+              tubes.classList.add('overload');
+              setTimeout(() => tubes.classList.remove('overload'), 900);
+            }
+            return originalRunAnalysis.apply(this, arguments);
+          };
+        }
+      }
+
+      // Run initializations immediately
+      initInvaderArmy();
+      initColorProfileControl();
+      
       if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initArcade);
+        document.addEventListener('DOMContentLoaded', initTubeOverload);
       } else {
         initArcade();
+        initTubeOverload();
       }
     })();
   </script>
