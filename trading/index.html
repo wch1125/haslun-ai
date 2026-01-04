@@ -251,9 +251,25 @@
     .tab:hover { color: var(--ink-light); }
     .tab.active { color: var(--terracotta); border-bottom-color: var(--terracotta); }
     
-    .main { flex: 1; display: grid; grid-template-columns: 1fr 320px; }
-    .content { padding: 1.5rem; overflow-y: auto; }
-    .sidebar { background: var(--bg-subtle); border-left: 1px solid var(--line); padding: 1.5rem; overflow-y: auto; }
+    .main { 
+      flex: 1; 
+      display: flex;
+      min-height: 0;
+    }
+    .content { 
+      flex: 1;
+      padding: 1.5rem; 
+      overflow-y: auto;
+      min-width: 0;
+    }
+    .sidebar { 
+      width: 320px;
+      flex-shrink: 0;
+      background: var(--bg-subtle); 
+      border-left: 1px solid var(--line); 
+      padding: 1.5rem; 
+      overflow-y: auto; 
+    }
     
     .tab-content { display: none; }
     .tab-content.active { display: block; }
@@ -1023,11 +1039,8 @@
       
       .sidebar {
         width: 100%;
-        order: 2;
-      }
-      
-      .content {
-        order: 1;
+        border-left: none;
+        border-top: 1px solid var(--line);
       }
       
       .stats-grid {
@@ -1045,7 +1058,7 @@
       .header {
         flex-direction: column;
         align-items: flex-start;
-        gap: 1rem;
+        gap: 0.75rem;
         padding: 1rem;
       }
       
@@ -1068,7 +1081,7 @@
       }
       
       .status-item {
-        font-size: 0.75rem;
+        font-size: 0.7rem;
       }
       
       .demo-badge {
@@ -1095,20 +1108,35 @@
         flex-shrink: 0;
       }
       
-      /* Main content */
+      /* Main layout - CRITICAL: Stack vertically */
       .main {
+        flex-direction: column;
+        padding: 0;
+      }
+      
+      .content {
         padding: 1rem;
-        gap: 1rem;
+        width: 100%;
+        overflow-y: visible;
+      }
+      
+      .sidebar {
+        width: 100%;
+        border-left: none;
+        border-top: 1px solid var(--line);
+        padding: 1rem;
+        overflow-y: visible;
       }
       
       /* Stats grid - 2x2 on mobile */
       .stats-grid {
         grid-template-columns: repeat(2, 1fr);
         gap: 0.75rem;
+        margin-bottom: 1rem;
       }
       
       .stat-card {
-        padding: 0.875rem;
+        padding: 0.875rem 0.75rem;
       }
       
       .stat-value {
@@ -1132,7 +1160,7 @@
         padding: 0.875rem 1rem;
         flex-direction: column;
         align-items: flex-start;
-        gap: 0.75rem;
+        gap: 0.5rem;
       }
       
       .card-actions {
@@ -1144,6 +1172,8 @@
       .card-actions .btn {
         flex: 1;
         justify-content: center;
+        font-size: 0.75rem;
+        padding: 0.5rem;
       }
       
       .card-body {
@@ -1159,7 +1189,7 @@
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
         scrollbar-width: none;
-        margin: 0 -1rem;
+        margin: 0 -1rem 1rem -1rem;
         padding: 0 1rem;
       }
       
@@ -1174,14 +1204,18 @@
         flex-shrink: 0;
       }
       
-      /* Bar charts - Adjusted for mobile */
+      /* Bar charts */
+      .bar-chart {
+        gap: 0.5rem;
+      }
+      
       .bar-row {
-        grid-template-columns: 55px 1fr 55px;
+        grid-template-columns: 50px 1fr 50px;
         gap: 0.5rem;
       }
       
       .bar-ticker {
-        font-size: 0.75rem;
+        font-size: 0.7rem;
       }
       
       .bar-ticker-dot {
@@ -1190,26 +1224,30 @@
       }
       
       .bar-track {
-        height: 20px;
+        height: 18px;
       }
       
       .bar-fill-label {
-        font-size: 0.6rem;
+        font-size: 0.55rem;
       }
       
       .bar-value {
-        font-size: 0.7rem;
+        font-size: 0.65rem;
       }
       
-      /* P&L chart mobile */
+      /* P&L chart */
+      .pnl-chart {
+        gap: 0.5rem;
+      }
+      
       .pnl-row {
-        grid-template-columns: 50px 1fr 55px;
+        grid-template-columns: 45px 1fr 50px;
         gap: 0.5rem;
         padding: 0.375rem 0;
       }
       
       .pnl-ticker {
-        font-size: 0.75rem;
+        font-size: 0.7rem;
       }
       
       .pnl-ticker-dot {
@@ -1218,43 +1256,46 @@
       }
       
       .pnl-bar-container {
-        height: 24px;
+        height: 22px;
       }
       
       .pnl-bar-label {
-        font-size: 0.55rem;
+        font-size: 0.5rem;
       }
       
       .pnl-value {
-        font-size: 0.7rem;
+        font-size: 0.65rem;
       }
       
       .pnl-summary {
-        flex-direction: row;
-        padding: 0.625rem;
-        gap: 0.5rem;
+        padding: 0.5rem;
       }
       
       .pnl-summary-value {
-        font-size: 0.9rem;
+        font-size: 0.875rem;
       }
       
       .pnl-summary-label {
-        font-size: 0.55rem;
+        font-size: 0.5rem;
       }
       
-      /* Risk chart mobile */
+      /* Risk chart */
+      .risk-chart {
+        gap: 1rem;
+      }
+      
       .risk-bar {
-        height: 28px;
+        height: 26px;
       }
       
       .risk-segment {
-        font-size: 0.6rem;
-        min-width: 30px;
+        font-size: 0.55rem;
+        min-width: 28px;
       }
       
       .risk-legend {
-        gap: 0.5rem;
+        flex-direction: column;
+        gap: 0.375rem;
       }
       
       .risk-legend-item {
@@ -1267,80 +1308,100 @@
       }
       
       .risk-note {
-        font-size: 0.65rem;
+        font-size: 0.6rem;
       }
       
-      /* Theme chart mobile */
+      /* Theme chart */
+      .theme-chart {
+        gap: 0.75rem;
+      }
+      
       .theme-grid {
         gap: 4px;
       }
       
       .theme-cell {
         padding: 0.375rem 0.5rem;
-        min-width: 55px;
+        min-width: 50px;
       }
       
       .theme-cell-ticker {
-        font-size: 0.65rem;
+        font-size: 0.6rem;
       }
       
       .theme-cell-value {
-        font-size: 0.55rem;
-      }
-      
-      .theme-cell-pnl {
         font-size: 0.5rem;
       }
       
-      /* Tables - Horizontal scroll */
-      .card-body:has(.options-table),
-      .card-body:has(.positions-table) {
+      .theme-cell-pnl {
+        font-size: 0.45rem;
+        padding: 0.1rem 0.2rem;
+      }
+      
+      /* Tables - Horizontal scroll wrapper */
+      .table-scroll-wrapper {
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
+        margin: 0 -1rem;
+        padding: 0 1rem;
       }
       
       .options-table,
       .positions-table {
-        min-width: 600px;
-        font-size: 0.75rem;
+        min-width: 550px;
+        font-size: 0.7rem;
       }
       
       .options-table th,
       .options-table td {
-        padding: 0.625rem 0.5rem;
+        padding: 0.5rem 0.4rem;
       }
       
       .ticker-badge {
-        font-size: 0.65rem;
-        padding: 0.2rem 0.4rem;
+        font-size: 0.6rem;
+        padding: 0.15rem 0.35rem;
       }
       
       .structure-badge {
-        font-size: 0.6rem;
+        font-size: 0.55rem;
+        padding: 0.15rem 0.3rem;
       }
       
       .action-badge {
-        font-size: 0.6rem;
-        padding: 0.2rem 0.4rem;
+        font-size: 0.55rem;
+        padding: 0.15rem 0.3rem;
       }
       
       /* Strategy overview */
       .strategy-overview {
         grid-template-columns: 1fr;
-        gap: 1rem;
+        gap: 0.75rem;
       }
       
       .strategy-section {
-        padding: 0.875rem;
+        padding: 0.75rem;
+      }
+      
+      .strategy-section-title {
+        font-size: 0.6rem;
+        margin-bottom: 0.5rem;
       }
       
       .rules-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr 1fr;
         gap: 0.5rem;
       }
       
       .rule-item {
-        padding: 0.5rem;
+        padding: 0.4rem;
+      }
+      
+      .rule-icon {
+        font-size: 0.875rem;
+      }
+      
+      .rule-text {
+        font-size: 0.65rem;
       }
       
       .watchlist {
@@ -1348,80 +1409,106 @@
       }
       
       .watchlist-item {
-        padding: 0.3rem 0.5rem;
-        font-size: 0.7rem;
+        padding: 0.25rem 0.4rem;
+        font-size: 0.65rem;
+      }
+      
+      /* MACD visual */
+      .macd-line {
+        gap: 0.5rem;
+      }
+      
+      .macd-line-label {
+        font-size: 0.65rem;
+        width: 50px;
+      }
+      
+      .macd-line-bar {
+        height: 5px;
       }
       
       /* Empty state */
       .empty-state-enhanced {
-        padding: 1.5rem 1rem;
+        padding: 1.25rem 1rem;
       }
       
       .empty-state-icon {
-        font-size: 2.5rem;
+        font-size: 2rem;
       }
       
       .empty-state-title {
-        font-size: 1.1rem;
+        font-size: 1rem;
       }
       
       .empty-state-text {
-        font-size: 0.8rem;
+        font-size: 0.75rem;
+        margin-bottom: 1rem;
       }
       
       .empty-state-steps {
-        gap: 1rem;
+        gap: 0.75rem;
       }
       
       .step-number {
-        width: 24px;
-        height: 24px;
-        font-size: 0.7rem;
+        width: 22px;
+        height: 22px;
+        font-size: 0.65rem;
       }
       
       .step-text {
-        font-size: 0.7rem;
+        font-size: 0.65rem;
       }
       
       /* Activity feed */
+      .activity-feed {
+        gap: 0.375rem;
+      }
+      
       .activity-item {
-        padding: 0.625rem;
+        padding: 0.5rem;
+        gap: 0.5rem;
       }
       
       .activity-icon {
-        width: 28px;
-        height: 28px;
-        font-size: 0.75rem;
-      }
-      
-      .activity-title {
-        font-size: 0.75rem;
-      }
-      
-      .activity-subtitle {
+        width: 26px;
+        height: 26px;
         font-size: 0.7rem;
       }
       
+      .activity-title {
+        font-size: 0.7rem;
+      }
+      
+      .activity-subtitle {
+        font-size: 0.65rem;
+      }
+      
       .activity-time {
+        font-size: 0.55rem;
+      }
+      
+      /* Sidebar cards */
+      .kill-switch-card {
+        padding: 1rem;
+        margin-bottom: 1rem;
+      }
+      
+      .kill-switch-label {
         font-size: 0.6rem;
       }
       
-      /* Sidebar on mobile */
-      .sidebar .card {
-        margin-bottom: 0.75rem;
-      }
-      
-      .kill-switch-card {
-        padding: 0.875rem;
-      }
-      
       .kill-switch-btn {
-        padding: 0.625rem;
+        padding: 0.75rem;
         font-size: 0.8rem;
+      }
+      
+      .kill-switch-status {
+        font-size: 0.7rem;
       }
       
       .safety-item {
         padding: 0.375rem 0;
+        margin-bottom: 0.25rem;
       }
       
       .safety-label,
@@ -1431,44 +1518,56 @@
       
       /* Catalysts */
       .catalyst-item {
-        padding: 0.625rem 0;
-      }
-      
-      .catalyst-date {
-        font-size: 0.65rem;
-        min-width: 60px;
-      }
-      
-      .catalyst-ticker {
-        font-size: 0.75rem;
-      }
-      
-      .catalyst-event {
-        font-size: 0.7rem;
-      }
-      
-      .catalyst-impact {
-        font-size: 0.55rem;
-        padding: 0.15rem 0.35rem;
-      }
-      
-      /* Alerts log */
-      .alert-item {
-        font-size: 0.75rem;
-      }
-      
-      /* Demo watermark - adjust for mobile */
-      .demo-watermark {
-        bottom: 0.75rem;
-        left: 0.75rem;
-        padding: 0.5rem 0.75rem;
-        font-size: 0.7rem;
+        padding: 0.5rem 0;
         gap: 0.5rem;
       }
       
-      /* Loading screen mobile */
+      .catalyst-date {
+        font-size: 0.6rem;
+        min-width: 55px;
+      }
+      
+      .catalyst-ticker {
+        font-size: 0.7rem;
+      }
+      
+      .catalyst-event {
+        font-size: 0.65rem;
+      }
+      
+      .catalyst-impact {
+        font-size: 0.5rem;
+        padding: 0.125rem 0.3rem;
+      }
+      
+      /* Alerts */
+      .alert-item {
+        font-size: 0.7rem;
+        padding: 0.5rem;
+      }
+      
+      .empty-state {
+        font-size: 0.75rem;
+        padding: 1rem;
+      }
+      
+      /* Demo watermark */
+      .demo-watermark {
+        bottom: 0.5rem !important;
+        left: 0.5rem !important;
+        padding: 0.4rem 0.6rem !important;
+        font-size: 0.65rem !important;
+        gap: 0.4rem !important;
+      }
+      
+      /* Loading screen */
       .rocket {
-        font-size: 3rem;
+        font-size: 2.5rem;
+      }
+      
+      .rocket-container {
+        height: 80px;
+        margin-bottom: 1rem;
       }
       
       .countdown {
@@ -1476,38 +1575,69 @@
       }
       
       .loading-brand-name {
-        font-size: 1.25rem;
+        font-size: 1.1rem;
       }
       
       .loading-brand-sub {
-        font-size: 0.65rem;
+        font-size: 0.6rem;
       }
       
       .loading-status {
-        font-size: 0.8rem;
+        font-size: 0.75rem;
       }
+      
+      .flame {
+        width: 4px;
+      }
+      
+      .flame:nth-child(1) { height: 14px; }
+      .flame:nth-child(2) { height: 20px; }
+      .flame:nth-child(3) { height: 18px; }
+      .flame:nth-child(4) { height: 20px; }
+      .flame:nth-child(5) { height: 14px; }
     }
     
-    /* Small mobile */
+    /* Extra small mobile */
     @media (max-width: 380px) {
+      .header-title {
+        font-size: 1.1rem;
+      }
+      
       .stats-grid {
-        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
       }
       
       .stat-value {
         font-size: 1.1rem;
       }
       
+      .stat-label {
+        font-size: 0.55rem;
+      }
+      
       .bar-row {
-        grid-template-columns: 45px 1fr 45px;
+        grid-template-columns: 40px 1fr 40px;
+      }
+      
+      .bar-ticker {
+        font-size: 0.6rem;
       }
       
       .pnl-row {
-        grid-template-columns: 45px 1fr 45px;
+        grid-template-columns: 40px 1fr 40px;
       }
       
-      .header-title {
-        font-size: 1.1rem;
+      .pnl-ticker {
+        font-size: 0.6rem;
+      }
+      
+      .rules-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .theme-cell {
+        min-width: 45px;
+        padding: 0.3rem 0.4rem;
       }
     }
     
@@ -1524,6 +1654,12 @@
       
       .theme-cell:active {
         transform: scale(0.98);
+      }
+      
+      /* Remove hover effects on touch */
+      .theme-cell:hover {
+        transform: none;
+        box-shadow: none;
       }
       
       /* Larger touch targets */
