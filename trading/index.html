@@ -1031,75 +1031,97 @@
     }
     
     /* =========================================================================
-       PERFORMANCE CHART - CHART.JS VERSION
+       PERFORMANCE CHART - TRADINGVIEW INSPIRED
        ========================================================================= */
     .perf-chart-container {
       position: relative;
+      background: #131722;
+      border-radius: var(--radius-sm);
+      padding: 1rem;
+      margin: 0 -0.5rem;
     }
+    
+    .perf-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 0.75rem;
+    }
+    
+    .perf-legend {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      min-width: 200px;
+    }
+    
+    .perf-legend-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.75rem;
+      font-family: var(--font-mono);
+    }
+    
+    .perf-legend-color {
+      width: 3px;
+      height: 14px;
+      border-radius: 1px;
+    }
+    
+    .perf-legend-name {
+      color: #787B86;
+      min-width: 70px;
+    }
+    
+    .perf-legend-value {
+      font-weight: 500;
+    }
+    
+    .perf-legend-value.positive { color: #26A69A; }
+    .perf-legend-value.negative { color: #EF5350; }
     
     .perf-controls {
       display: flex;
       flex-wrap: wrap;
-      gap: 0.5rem;
-      margin-bottom: 1.25rem;
-    }
-    
-    .perf-control-section {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-    
-    .perf-control-label {
-      font-size: 0.6rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--muted);
-    }
-    
-    .perf-control-group {
-      display: flex;
-      flex-wrap: wrap;
       gap: 0.375rem;
-      align-items: center;
     }
     
     .perf-toggle {
       display: flex;
       align-items: center;
-      gap: 0.375rem;
-      padding: 0.375rem 0.625rem;
+      gap: 0.35rem;
+      padding: 0.3rem 0.5rem;
       background: transparent;
-      border: 1px solid var(--line);
-      border-radius: 100px;
-      font-size: 0.7rem;
+      border: 1px solid #2A2E39;
+      border-radius: 4px;
+      font-size: 0.65rem;
       font-family: var(--font-body);
-      color: var(--muted);
+      color: #787B86;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all 0.15s ease;
       user-select: none;
     }
     
     .perf-toggle:hover {
-      border-color: var(--ink-light);
-      color: var(--ink-light);
+      border-color: #434651;
+      color: #D1D4DC;
     }
     
     .perf-toggle.active {
-      background: var(--bg-subtle);
-      border-color: transparent;
-      color: var(--ink);
+      background: #2A2E39;
+      border-color: #2A2E39;
+      color: #D1D4DC;
     }
     
     .perf-toggle-dot {
-      width: 8px;
-      height: 8px;
+      width: 6px;
+      height: 6px;
       border-radius: 50%;
-      transition: all 0.2s ease;
     }
     
     .perf-toggle:not(.active) .perf-toggle-dot {
-      opacity: 0.3;
+      opacity: 0.4;
     }
     
     .perf-toggle-value {
@@ -1108,14 +1130,14 @@
       font-weight: 500;
     }
     
-    .perf-toggle-value.positive { color: var(--green); }
-    .perf-toggle-value.negative { color: var(--red); }
+    .perf-toggle-value.positive { color: #26A69A; }
+    .perf-toggle-value.negative { color: #EF5350; }
     .perf-toggle:not(.active) .perf-toggle-value { opacity: 0.5; }
     
     .perf-chart-wrapper {
       position: relative;
-      height: 320px;
-      margin: 0 -0.5rem;
+      height: 350px;
+      margin: 0;
     }
     
     .perf-chart-wrapper canvas {
@@ -1123,38 +1145,62 @@
       height: 100% !important;
     }
     
+    /* Crosshair styling via Chart.js plugin */
+    .perf-crosshair-label {
+      position: absolute;
+      right: 0;
+      background: #2A2E39;
+      color: #D1D4DC;
+      font-size: 0.65rem;
+      font-family: var(--font-mono);
+      padding: 0.2rem 0.4rem;
+      border-radius: 2px;
+      pointer-events: none;
+      transform: translateY(-50%);
+    }
+    
+    .perf-time-label {
+      position: absolute;
+      bottom: 0;
+      background: #2A2E39;
+      color: #D1D4DC;
+      font-size: 0.65rem;
+      font-family: var(--font-mono);
+      padding: 0.2rem 0.4rem;
+      border-radius: 2px;
+      pointer-events: none;
+      transform: translateX(-50%);
+    }
+    
     .perf-summary {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-      gap: 0.5rem;
-      margin-top: 1.25rem;
-      padding-top: 1rem;
-      border-top: 1px solid var(--line);
+      display: flex;
+      gap: 1.5rem;
+      margin-top: 1rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid #2A2E39;
     }
     
     .perf-summary-item {
-      text-align: center;
-      padding: 0.625rem 0.5rem;
-      background: var(--bg);
-      border-radius: var(--radius-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 0.125rem;
     }
     
     .perf-summary-label {
-      font-size: 0.55rem;
+      font-size: 0.6rem;
       text-transform: uppercase;
       letter-spacing: 0.05em;
-      color: var(--muted);
-      margin-bottom: 0.25rem;
+      color: #787B86;
     }
     
     .perf-summary-value {
       font-family: var(--font-mono);
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       font-weight: 600;
     }
     
-    .perf-summary-value.positive { color: var(--green); }
-    .perf-summary-value.negative { color: var(--red); }
+    .perf-summary-value.positive { color: #26A69A; }
+    .perf-summary-value.negative { color: #EF5350; }
     
     /* =========================================================================
        MOBILE RESPONSIVE STYLES
@@ -1313,30 +1359,40 @@
         font-size: 1rem;
       }
       
-      /* Performance chart mobile */
-      .perf-controls {
-        gap: 0.375rem;
-        padding-bottom: 0.75rem;
-        margin-bottom: 0.75rem;
+      /* Performance chart mobile - TradingView style */
+      .perf-chart-container {
+        padding: 0.75rem;
+        margin: 0 -0.5rem;
       }
       
-      .perf-control-group {
+      .perf-header {
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+      
+      .perf-legend {
+        min-width: auto;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 0.5rem 1rem;
+      }
+      
+      .perf-legend-row {
+        font-size: 0.65rem;
+      }
+      
+      .perf-controls {
         gap: 0.25rem;
       }
       
-      .perf-control-label {
-        font-size: 0.55rem;
-        display: none;
-      }
-      
       .perf-toggle {
-        padding: 0.25rem 0.4rem;
-        font-size: 0.6rem;
+        padding: 0.2rem 0.375rem;
+        font-size: 0.55rem;
       }
       
       .perf-toggle-dot {
-        width: 6px;
-        height: 6px;
+        width: 5px;
+        height: 5px;
       }
       
       .perf-toggle-value {
@@ -1344,13 +1400,12 @@
       }
       
       .perf-chart-wrapper {
-        height: 240px;
-        margin: 0 -0.25rem;
+        height: 260px;
       }
       
       .perf-summary {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 0.375rem;
+        flex-wrap: wrap;
+        gap: 1rem;
       }
       
       .perf-summary-item {
@@ -2416,21 +2471,32 @@
         `;
       }
       
+      // Build initial legend (shows latest values)
+      function buildLegend() {
+        return chartState.activeSeries.map(key => {
+          const cfg = seriesConfig[key];
+          const val = data[key][data[key].length - 1];
+          const isPositive = val >= 0;
+          return `
+            <div class="perf-legend-row" data-series="${key}">
+              <span class="perf-legend-color" style="background: ${cfg.color}"></span>
+              <span class="perf-legend-name">${cfg.label}</span>
+              <span class="perf-legend-value ${isPositive ? 'positive' : 'negative'}">${isPositive ? '+' : ''}${val}%</span>
+            </div>
+          `;
+        }).join('');
+      }
+      
       container.innerHTML = `
-        <div class="perf-controls">
-          <div class="perf-control-section">
-            <div class="perf-control-label">Benchmarks</div>
-            <div class="perf-control-group">
-              ${buildToggle('portfolio', true)}
-              ${buildToggle('spy', true)}
-              ${buildToggle('xar', true)}
-            </div>
+        <div class="perf-header">
+          <div class="perf-legend" id="perf-legend">
+            ${buildLegend()}
           </div>
-          <div class="perf-control-section" style="flex: 1;">
-            <div class="perf-control-label">Individual Tickers</div>
-            <div class="perf-control-group">
-              ${tickers.map(t => buildToggle(t, false)).join('')}
-            </div>
+          <div class="perf-controls">
+            ${buildToggle('portfolio', true)}
+            ${buildToggle('spy', true)}
+            ${buildToggle('xar', true)}
+            ${tickers.map(t => buildToggle(t, false)).join('')}
           </div>
         </div>
         <div class="perf-chart-wrapper">
@@ -2442,13 +2508,36 @@
       initPerfChart();
     }
     
+    // Crosshair plugin for TradingView-style interaction
+    const crosshairPlugin = {
+      id: 'crosshair',
+      afterDraw: (chart) => {
+        if (chart.tooltip._active && chart.tooltip._active.length) {
+          const ctx = chart.ctx;
+          const activePoint = chart.tooltip._active[0];
+          const x = activePoint.element.x;
+          const topY = chart.scales.y.top;
+          const bottomY = chart.scales.y.bottom;
+          
+          // Draw vertical crosshair line
+          ctx.save();
+          ctx.beginPath();
+          ctx.moveTo(x, topY);
+          ctx.lineTo(x, bottomY);
+          ctx.lineWidth = 1;
+          ctx.strokeStyle = '#363A45';
+          ctx.setLineDash([3, 3]);
+          ctx.stroke();
+          ctx.restore();
+        }
+      }
+    };
+    
     function initPerfChart() {
       const ctx = document.getElementById('perf-canvas').getContext('2d');
       
-      // Chart.js global config for dark theme
-      Chart.defaults.color = '#8A857D';
-      Chart.defaults.borderColor = '#3D3A36';
-      Chart.defaults.font.family = "'DM Sans', sans-serif";
+      // Register crosshair plugin
+      Chart.register(crosshairPlugin);
       
       perfChart = new Chart(ctx, {
         type: 'line',
@@ -2468,38 +2557,40 @@
               display: false
             },
             tooltip: {
-              backgroundColor: '#2C2A26',
-              titleColor: '#F5F2ED',
-              bodyColor: '#C4C0B8',
-              borderColor: '#3D3A36',
-              borderWidth: 1,
-              padding: 12,
-              cornerRadius: 6,
-              titleFont: { weight: '600', size: 13 },
-              bodyFont: { size: 12 },
-              callbacks: {
-                label: function(context) {
-                  const val = context.parsed.y;
-                  return `${context.dataset.label}: ${val >= 0 ? '+' : ''}${val}%`;
+              enabled: false,
+              external: function(context) {
+                // Update the floating legend with current values
+                const tooltipModel = context.tooltip;
+                if (tooltipModel.opacity === 0) {
+                  // Reset to final values when not hovering
+                  updateLegendValues(-1);
+                  return;
                 }
+                
+                const dataIndex = tooltipModel.dataPoints[0].dataIndex;
+                updateLegendValues(dataIndex);
               }
             }
           },
           scales: {
             x: {
               grid: {
-                display: false
+                color: '#1E222D',
+                drawBorder: false
               },
               ticks: {
+                color: '#787B86',
                 font: { size: 11, family: "'JetBrains Mono', monospace" }
               }
             },
             y: {
+              position: 'right',
               grid: {
-                color: '#3D3A36',
+                color: '#1E222D',
                 drawBorder: false
               },
               ticks: {
+                color: '#787B86',
                 font: { size: 11, family: "'JetBrains Mono', monospace" },
                 callback: function(value) {
                   return (value >= 0 ? '+' : '') + value + '%';
@@ -2510,18 +2601,60 @@
           elements: {
             point: {
               radius: 0,
-              hoverRadius: 5,
+              hoverRadius: 4,
               hoverBorderWidth: 2,
-              hoverBackgroundColor: '#2C2A26'
+              hoverBackgroundColor: '#131722',
+              hoverBorderColor: function(context) {
+                return context.dataset.borderColor;
+              }
             },
             line: {
-              tension: 0.3
+              tension: 0.1,
+              borderCapStyle: 'round',
+              borderJoinStyle: 'round'
             }
           }
         }
       });
       
       updatePerfChart();
+    }
+    
+    function updateLegendValues(dataIndex) {
+      const legend = document.getElementById('perf-legend');
+      if (!legend) return;
+      
+      chartState.activeSeries.forEach(key => {
+        const row = legend.querySelector(`[data-series="${key}"]`);
+        if (!row) return;
+        
+        const valueEl = row.querySelector('.perf-legend-value');
+        const idx = dataIndex >= 0 ? dataIndex : PERFORMANCE_DATA[key].length - 1;
+        const val = PERFORMANCE_DATA[key][idx];
+        const isPositive = val >= 0;
+        
+        valueEl.textContent = (isPositive ? '+' : '') + val + '%';
+        valueEl.className = 'perf-legend-value ' + (isPositive ? 'positive' : 'negative');
+      });
+    }
+    
+    function rebuildLegend() {
+      const legend = document.getElementById('perf-legend');
+      if (!legend) return;
+      
+      const data = PERFORMANCE_DATA;
+      legend.innerHTML = chartState.activeSeries.map(key => {
+        const cfg = seriesConfig[key];
+        const val = data[key][data[key].length - 1];
+        const isPositive = val >= 0;
+        return `
+          <div class="perf-legend-row" data-series="${key}">
+            <span class="perf-legend-color" style="background: ${cfg.color}"></span>
+            <span class="perf-legend-name">${cfg.label}</span>
+            <span class="perf-legend-value ${isPositive ? 'positive' : 'negative'}">${isPositive ? '+' : ''}${val}%</span>
+          </div>
+        `;
+      }).join('');
     }
     
     function togglePerfSeries(series) {
@@ -2560,6 +2693,9 @@
       
       perfChart.data.datasets = datasets;
       perfChart.update('none');
+      
+      // Rebuild the legend with active series
+      rebuildLegend();
       
       updatePerfSummary();
     }
