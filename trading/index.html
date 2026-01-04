@@ -615,10 +615,12 @@
     .trend-status-badge.trend-bull { border-color: rgba(51, 255, 153, 0.5); background: rgba(51, 255, 153, 0.08); }
     .trend-status-badge.trend-bear { border-color: rgba(255, 107, 107, 0.5); background: rgba(255, 107, 107, 0.08); }
     .trend-status-badge.trend-neutral { border-color: rgba(255, 179, 71, 0.5); background: rgba(255, 179, 71, 0.08); }
+    .trend-status-badge.trend-volatile { border-color: rgba(179, 136, 255, 0.5); background: rgba(179, 136, 255, 0.08); }
     .trend-icon { font-size: 1rem; transition: color 0.3s; }
     .trend-status-badge.trend-bull .trend-icon { color: var(--signal-up); text-shadow: 0 0 10px var(--signal-up); }
     .trend-status-badge.trend-bear .trend-icon { color: var(--signal-down); text-shadow: 0 0 10px var(--signal-down); }
     .trend-status-badge.trend-neutral .trend-icon { color: var(--amber); text-shadow: 0 0 10px var(--amber); }
+    .trend-status-badge.trend-volatile .trend-icon { color: #b388ff; text-shadow: 0 0 10px #b388ff; }
     .trend-label { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.1em; color: var(--text-bright); }
     .trend-detail { font-size: 0.65rem; color: var(--text-muted); line-height: 1.4; padding: 0 0.2rem; }
     .trend-subtitle { color: var(--text); font-weight: 500; display: block; margin-bottom: 0.2rem; }
@@ -1521,6 +1523,153 @@
       box-shadow: 0 0 20px rgba(255,102,102,0.2);
     }
     
+    /* ABOUT OVERLAY */
+    .about-trigger {
+      position: fixed;
+      bottom: 16px;
+      right: 18px;
+      z-index: 12000;
+      font-family: var(--font-body);
+      font-size: 0.65rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 0.35rem 0.75rem;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(5, 10, 16, 0.92);
+      color: var(--text-muted);
+      cursor: pointer;
+      backdrop-filter: blur(6px);
+      transition: all 0.2s ease;
+    }
+    .about-trigger:hover {
+      border-color: var(--phosphor);
+      color: var(--phosphor);
+      box-shadow: 0 0 15px var(--phosphor-glow);
+    }
+
+    .about-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 25000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.26s ease;
+    }
+    .about-overlay.visible {
+      pointer-events: auto;
+      opacity: 1;
+    }
+    .about-overlay.hidden {
+      display: none;
+    }
+
+    .about-backdrop {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 50% 0%, rgba(0,0,0,0.3), rgba(0,0,0,0.92));
+      backdrop-filter: blur(4px);
+    }
+
+    .about-panel {
+      position: relative;
+      width: min(620px, 92vw);
+      max-height: 80vh;
+      background: var(--bg-void);
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      box-shadow: 0 0 60px rgba(0,0,0,0.9), 0 0 40px var(--phosphor-glow);
+      padding: 1.5rem 1.6rem 1.3rem;
+      z-index: 1;
+      overflow: hidden;
+    }
+
+    .about-panel::before {
+      content: "";
+      position: absolute;
+      inset: -40%;
+      background-image: linear-gradient(to bottom, rgba(51, 255, 153, 0.06), rgba(51, 255, 153, 0.02));
+      mix-blend-mode: soft-light;
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
+    .about-close {
+      position: absolute;
+      top: 0.9rem;
+      right: 1rem;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: color 0.2s;
+    }
+    .about-close:hover {
+      color: var(--phosphor);
+    }
+
+    .about-header {
+      position: relative;
+      margin-bottom: 0.75rem;
+    }
+
+    .about-label {
+      font-family: var(--font-body);
+      font-size: 0.6rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 0.35rem;
+    }
+
+    .about-title {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: 1.3rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--phosphor);
+      text-shadow: 0 0 20px var(--phosphor-glow);
+    }
+
+    .about-body {
+      position: relative;
+      margin-top: 0.4rem;
+      max-height: 60vh;
+      overflow-y: auto;
+      font-size: 0.82rem;
+      line-height: 1.55;
+      color: var(--text);
+    }
+
+    .about-body p {
+      margin: 0.5rem 0;
+    }
+
+    .about-body ul {
+      margin: 0.4rem 0 0.6rem 1.1rem;
+      padding: 0;
+    }
+    .about-body li {
+      margin: 0.25rem 0;
+    }
+    .about-body strong {
+      color: var(--text-bright);
+    }
+
+    .about-footnote {
+      margin-top: 0.8rem;
+      padding-top: 0.6rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.65rem;
+      color: var(--text-dim);
+      font-style: italic;
+    }
+    
     @media (max-width: 1200px) { .right-sidebar { display: none; } }
     @media (max-width: 900px) { .sidebar { width: 240px; } .positions-grid { grid-template-columns: repeat(2, 1fr); } .arcade-hud { display: none; } }
     @media (max-width: 768px) { .sidebar { display: none; } .positions-grid { grid-template-columns: 1fr 1fr; } .nav-tab { padding: 0.4rem 0.6rem; font-size: 0.6rem; } .terminal-log { display: none; } }
@@ -1874,7 +2023,7 @@
               <div class="control-module">
                 <div class="module-label"><div class="led"></div> Quick Actions</div>
                 <div style="display: flex; flex-direction: column; gap: 0.4rem;">
-                  <button class="push-btn primary" onclick="runAnalysis()">▸ RUN ANALYSIS</button>
+                  <button class="push-btn primary" id="run-analysis-btn" onclick="runAnalysis(event)">▸ RUN ANALYSIS</button>
                   <button class="push-btn" onclick="resetControls()">↺ RESET DEFAULTS</button>
                 </div>
               </div>
@@ -2025,6 +2174,54 @@
     
     <!-- Toast container for pop-up notifications -->
     <div id="toast-container" class="toast-container"></div>
+    
+    <!-- ABOUT / STORY OVERLAY -->
+    <div id="about-overlay" class="about-overlay hidden">
+      <div class="about-backdrop"></div>
+      <div class="about-panel">
+        <button class="about-close" id="about-close-btn">✕</button>
+
+        <div class="about-header">
+          <div class="about-label">SIMULATION DOSSIER</div>
+          <h2 class="about-title">What is Haslun Mission Control?</h2>
+        </div>
+
+        <div class="about-body">
+          <p>
+            Haslun Mission Control is a <strong>simulated trading deck</strong> for a fictional research fund.
+            It's part data room, part arcade cabinet, and part mood board for how we think about risk,
+            storytelling, and markets.
+          </p>
+          <p>
+            All of the panels you see — portfolio status, trend diagnostics, scenario sliders, derivatives console —
+            are wired to <strong>sandbox data</strong>. Nothing here is a live brokerage account, and nothing on this
+            screen is investment advice. It's closer to a flight simulator than an airplane.
+          </p>
+          <p>
+            The idea is simple:
+          </p>
+          <ul>
+            <li>Treat a portfolio like a <strong>spaceship</strong>: engines, shields, navigation, and unknown signals.</li>
+            <li>Let visitors <strong>twist the knobs</strong> — smoothing, volatility, forecast range — and watch telemetry respond.</li>
+            <li>Use playful language and retro graphics to make quantitative ideas feel <strong>legible and human</strong>.</li>
+          </ul>
+          <p>
+            You're invited to wander: click into positions, stress-test scenarios, and trigger the mission log. Follow curiosity,
+            not performance.
+          </p>
+          <p>
+            In short: this is a <strong>toy control room for serious topics</strong> — a place where corporate structure, 
+            creative practice, and market structure overlap on one weird, glowing screen.
+          </p>
+          <p class="about-footnote">
+            Note: All values and scenarios here are for illustrative and educational purposes only, not a recommendation to buy or sell any security.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- About trigger button -->
+    <button class="about-trigger" id="about-trigger-btn">? ABOUT THIS SIMULATION</button>
   </div>
 
   <script>
@@ -2462,8 +2659,8 @@
       return entry ? entry.flavor : '';
     }
     
-    // Get trend state based on price and MACD data
-    function getTrendState(price, ma100, ma150, ma200, macdVal) {
+    // Get trend state based on price, MACD data, and volatility
+    function getTrendState(price, ma100, ma150, ma200, macdVal, volScore) {
       if (!price || !ma200) return HASLUN_GLOSSARY.trend_analyzing;
       
       const aboveMa100 = price > ma100;
@@ -2471,28 +2668,29 @@
       const aboveMa200 = price > ma200;
       const macdPositive = macdVal > 0;
       const nearMa100 = Math.abs(price - ma100) / price < 0.015;
+      const volHigh = (volScore || 0) > 30;
       
-      // FULL THRUST: Above all MAs with positive momentum
-      if (aboveMa200 && aboveMa150 && macdPositive) {
+      // FULL THRUST: Above all MAs with positive momentum and calm vol
+      if (aboveMa200 && aboveMa150 && macdPositive && !volHigh) {
         return HASLUN_GLOSSARY.trend_full_thrust;
       }
       
-      // REVERSAL ATTEMPT: Above short-term but below long-term
-      if (aboveMa100 && !aboveMa200 && macdPositive) {
+      // REVERSAL ATTEMPT: Above short-term but below long-term, calm vol
+      if (aboveMa100 && !aboveMa200 && macdPositive && !volHigh) {
         return HASLUN_GLOSSARY.trend_reversal_attempt;
       }
       
-      // DRIFTING: Near MAs with weak momentum
-      if (nearMa100 && Math.abs(macdVal) < 0.1) {
+      // DRIFTING: Near MAs with weak momentum and tame vol
+      if (nearMa100 && Math.abs(macdVal) < 0.1 && !volHigh) {
         return HASLUN_GLOSSARY.trend_drifting;
       }
       
       // REENTRY RISK: Below long-term with negative momentum
-      if (!aboveMa200 && !macdPositive) {
+      if (!aboveMa200 && !macdPositive && !volHigh) {
         return HASLUN_GLOSSARY.trend_reentry_risk;
       }
       
-      // NEBULOUS: Mixed signals
+      // NEBULOUS: High volatility OR mixed signals
       return HASLUN_GLOSSARY.trend_nebula;
     }
     
@@ -2584,17 +2782,37 @@
       logTerminal('risk exposure → ' + profile.label.toLowerCase());
     }
     
-    // Calculate volatility score from price data
+    // Get current price series for a ticker based on timeframe
+    function getCurrentSeriesForTicker(data) {
+      if (!data) return [];
+      return currentTimeframe === '1D' ? data.daily : data.intraday;
+    }
+    
+    // Calculate volatility score from price data (returns 0-40 scaled value)
     function calculateVolatility(data) {
       if (!data || data.length < 10) return 0;
       const returns = [];
       for (let i = 1; i < data.length; i++) {
-        const ret = (data[i].c - data[i-1].c) / data[i-1].c;
+        const prev = data[i-1].c;
+        const curr = data[i].c;
+        if (!prev || !curr) continue;
+        const ret = (curr - prev) / prev;
         returns.push(ret);
       }
+      if (returns.length < 5) return 0;
       const mean = returns.reduce((a, b) => a + b, 0) / returns.length;
       const variance = returns.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / returns.length;
-      return Math.sqrt(variance) * Math.sqrt(252) * 100; // Annualized volatility
+      const stdev = Math.sqrt(variance);
+      // Scale roughly into a 0-40 range for LED bar (annualized %)
+      const scaled = stdev * Math.sqrt(252) * 100;
+      return Math.max(0, Math.min(40, scaled));
+    }
+    
+    // Get volatility score for a specific ticker
+    function getVolScoreForTicker(ticker) {
+      const data = tickerData[ticker];
+      const series = getCurrentSeriesForTicker(data);
+      return calculateVolatility(series);
     }
     
     // Update volatility display
@@ -2718,10 +2936,9 @@
       }, 0) / DEMO_STOCK_POSITIONS.length;
       updatePortfolioMood(totalDailyPnl);
       
-      // Initialize volatility display
-      const tickerDataCurrent = tickerData[currentTicker];
-      if (tickerDataCurrent && tickerDataCurrent.daily) {
-        const vol = calculateVolatility(tickerDataCurrent.daily.slice(-30));
+      // Initialize volatility display using data-driven score
+      const vol = getVolScoreForTicker(currentTicker);
+      if (vol > 0) {
         updateVolatilityDisplay(vol);
       }
       
@@ -2772,6 +2989,12 @@
         updateTrendStatus(data);
         updateVolumeStatus(data);
         resetSimulation();
+        
+        // Update volatility display for new ticker
+        const vol = getVolScoreForTicker(ticker);
+        if (vol > 0) {
+          updateVolatilityDisplay(vol);
+        }
       }
       
       document.querySelectorAll('.watchlist-item').forEach(el => {
@@ -2940,6 +3163,9 @@
       const g200 = last.g200;
       const macdVal = last.macd || 0;
       
+      // Compute volatility score for current ticker
+      const volScore = getVolScoreForTicker(currentTicker);
+      
       const badgeEl = document.getElementById('trend-status-badge');
       const labelEl = document.getElementById('trend-status-label');
       const detailEl = document.getElementById('trend-status-detail');
@@ -2950,16 +3176,16 @@
       document.getElementById('ma150-val').textContent = g150 ? '$' + g150.toFixed(2) : '--';
       document.getElementById('ma200-val').textContent = g200 ? '$' + g200.toFixed(2) : '--';
       
-      // Use glossary-based trend state calculation
-      const trendState = getTrendState(price, g100, g150, g200, macdVal);
+      // Use glossary-based trend state calculation with volatility
+      const trendState = getTrendState(price, g100, g150, g200, macdVal, volScore);
       
       // Determine CSS mode class
       let mode = 'neutral';
       if (trendState === HASLUN_GLOSSARY.trend_full_thrust) mode = 'bull';
       else if (trendState === HASLUN_GLOSSARY.trend_reentry_risk) mode = 'bear';
+      else if (trendState === HASLUN_GLOSSARY.trend_nebula) mode = 'volatile';
       else if (trendState === HASLUN_GLOSSARY.trend_reversal_attempt) mode = 'neutral';
       else if (trendState === HASLUN_GLOSSARY.trend_drifting) mode = 'neutral';
-      else if (trendState === HASLUN_GLOSSARY.trend_nebula) mode = 'neutral';
       
       // Update UI with glossary content
       labelEl.textContent = trendState.label;
@@ -2971,6 +3197,11 @@
       
       badgeEl.className = 'trend-status-badge trend-' + mode;
       badgeEl.title = trendState.flavor; // Add flavor as hover tooltip
+      
+      // Apply dynamic border color from glossary
+      if (trendState.color) {
+        badgeEl.style.borderColor = trendState.color;
+      }
     }
     
     function updateVolumeStatus(data) {
@@ -3305,8 +3536,8 @@
       controlState.risk = riskLevel;
     }
     
-    function runAnalysis() {
-      const btn = event.target;
+    function runAnalysis(e) {
+      const btn = e && e.currentTarget ? e.currentTarget : document.getElementById('run-analysis-btn');
       btn.textContent = '◌ ANALYZING...';
       btn.disabled = true;
       
@@ -3322,12 +3553,13 @@
         if (ledIndex > leds.length) {
           clearInterval(ledInterval);
           
-          // Generate random volatility
-          const newVol = (15 + Math.random() * 20).toFixed(1);
+          // Compute data-driven volatility score
+          const volScore = getVolScoreForTicker(currentTicker) || (15 + Math.random() * 20);
+          const newVol = volScore.toFixed(1);
           document.getElementById('vol-display').textContent = newVol;
           
-          // Update LED array based on volatility
-          const volLevel = Math.ceil((parseFloat(newVol) / 40) * 8);
+          // Update LED array based on volatility (0-40 mapped to 0-8 LEDs)
+          const volLevel = Math.ceil((volScore / 40) * leds.length);
           leds.forEach((led, i) => {
             led.classList.remove('on', 'amber', 'red');
             if (i < volLevel) {
@@ -3656,8 +3888,48 @@
         initSfxToggle();
         initTabTracking();
         renderMissions();
+        initAboutOverlay();
         logTerminal('arcade module initialized');
         logTerminal('system ready · awaiting input');
+      }
+      
+      // About Overlay Controller
+      function initAboutOverlay() {
+        const overlay = document.getElementById('about-overlay');
+        const trigger = document.getElementById('about-trigger-btn');
+        const closeBtn = document.getElementById('about-close-btn');
+
+        if (!overlay || !trigger || !closeBtn) return;
+
+        function openAbout() {
+          overlay.classList.remove('hidden');
+          requestAnimationFrame(() => {
+            overlay.classList.add('visible');
+          });
+          logTerminal('about overlay opened · simulation dossier viewed');
+          beep(440, 0.08);
+        }
+
+        function closeAbout() {
+          overlay.classList.remove('visible');
+          setTimeout(() => overlay.classList.add('hidden'), 260);
+          beep(330, 0.06);
+        }
+
+        trigger.addEventListener('click', openAbout);
+        closeBtn.addEventListener('click', closeAbout);
+
+        overlay.addEventListener('click', (e) => {
+          if (e.target === overlay || e.target.classList.contains('about-backdrop')) {
+            closeAbout();
+          }
+        });
+
+        window.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' && overlay.classList.contains('visible')) {
+            closeAbout();
+          }
+        });
       }
       
       if (document.readyState === 'loading') {
