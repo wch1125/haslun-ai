@@ -176,86 +176,275 @@
       z-index: 1;
     }
     
+    /* SOPHISTICATED UFO DESIGN */
+    @keyframes ufo-hover { 
+      0%, 100% { transform: translateY(0) rotate(-1deg); } 
+      25% { transform: translateY(-6px) rotate(0.5deg); }
+      50% { transform: translateY(-10px) rotate(1deg); } 
+      75% { transform: translateY(-4px) rotate(-0.5deg); }
+    }
+    @keyframes dome-pulse { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
+    @keyframes ring-rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    @keyframes light-chase { 
+      0% { opacity: 0.3; } 
+      10% { opacity: 1; } 
+      20% { opacity: 0.3; } 
+      100% { opacity: 0.3; } 
+    }
+    @keyframes engine-glow { 0%, 100% { opacity: 0.6; filter: blur(3px); } 50% { opacity: 1; filter: blur(6px); } }
+    @keyframes beam-shimmer { 
+      0% { background-position: 0% 0%; } 
+      100% { background-position: 200% 0%; } 
+    }
+    
     .mothership {
       position: relative;
-      width: 180px;
-      height: 60px;
-      margin-bottom: 20px;
-      animation: hover-ship 3s ease-in-out infinite;
+      width: 280px;
+      height: 140px;
+      margin-bottom: 30px;
+      animation: ufo-hover 4s ease-in-out infinite;
+      filter: drop-shadow(0 30px 40px rgba(0,0,0,0.8));
     }
     
+    /* Main hull - sleek saucer shape */
     .mothership-body {
       position: absolute;
-      width: 100%;
-      height: 100%;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 240px;
+      height: 50px;
       background: 
-        radial-gradient(ellipse at 50% 0%, rgba(255, 255, 255, 0.3), transparent 60%),
-        linear-gradient(90deg, #1a1a2e 0%, #2d2d44 50%, #1a1a2e 100%);
+        linear-gradient(180deg, 
+          #5a6070 0%, 
+          #3d4250 15%,
+          #2a2f3d 40%,
+          #1a1d26 70%,
+          #0d0f14 100%
+        );
       border-radius: 50%;
       box-shadow:
-        0 0 30px rgba(51, 255, 153, 0.3),
-        0 0 60px rgba(51, 255, 153, 0.1),
-        inset 0 -10px 20px rgba(0, 0, 0, 0.5);
+        0 -2px 0 rgba(255,255,255,0.15),
+        0 4px 20px rgba(0,0,0,0.8),
+        inset 0 -15px 30px rgba(0,0,0,0.6),
+        inset 0 5px 10px rgba(255,255,255,0.05);
     }
     
+    /* Hull detail ring */
+    .mothership-body::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 200px;
+      height: 42px;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 50%;
+      box-shadow: inset 0 0 20px rgba(51, 255, 153, 0.1);
+    }
+    
+    /* Panel lines on hull */
+    .mothership-body::after {
+      content: '';
+      position: absolute;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 180px;
+      height: 1px;
+      background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(255,255,255,0.2) 20%,
+        rgba(255,255,255,0.3) 50%,
+        rgba(255,255,255,0.2) 80%,
+        transparent 100%
+      );
+    }
+    
+    /* Glass dome with internal glow */
     .mothership-dome {
       position: absolute;
-      top: -25px;
+      top: 15px;
       left: 50%;
       transform: translateX(-50%);
-      width: 80px;
-      height: 40px;
+      width: 100px;
+      height: 55px;
       background: 
-        radial-gradient(ellipse at 50% 100%, rgba(51, 255, 153, 0.2), transparent 70%),
-        linear-gradient(to bottom, rgba(255, 255, 255, 0.4), rgba(100, 100, 120, 0.8));
-      border-radius: 50% 50% 40% 40%;
-      box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+        radial-gradient(ellipse at 30% 30%, rgba(255,255,255,0.4) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 80%, rgba(51, 255, 153, 0.3) 0%, transparent 60%),
+        linear-gradient(180deg, 
+          rgba(120, 140, 160, 0.9) 0%,
+          rgba(80, 100, 120, 0.8) 30%,
+          rgba(40, 50, 60, 0.9) 100%
+        );
+      border-radius: 50% 50% 45% 45%;
+      box-shadow: 
+        0 -1px 0 rgba(255,255,255,0.4),
+        inset 0 -20px 40px rgba(51, 255, 153, 0.15),
+        inset 0 10px 20px rgba(255,255,255,0.1),
+        0 0 30px rgba(51, 255, 153, 0.2);
+      animation: dome-pulse 3s ease-in-out infinite;
     }
     
-    .mothership-lights {
+    /* Dome highlight */
+    .mothership-dome::before {
+      content: '';
       position: absolute;
-      bottom: 8px;
+      top: 8px;
+      left: 15px;
+      width: 35px;
+      height: 20px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.5) 0%, transparent 100%);
+      border-radius: 50%;
+    }
+    
+    /* Inner dome cockpit glow */
+    .mothership-dome::after {
+      content: '';
+      position: absolute;
+      bottom: 5px;
       left: 50%;
       transform: translateX(-50%);
+      width: 40px;
+      height: 15px;
+      background: radial-gradient(ellipse, rgba(51, 255, 153, 0.6) 0%, transparent 70%);
+      filter: blur(3px);
+    }
+    
+    /* Running lights container - positioned around hull */
+    .mothership-lights {
+      position: absolute;
+      bottom: 35px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 220px;
+      height: 30px;
       display: flex;
-      gap: 8px;
+      justify-content: space-around;
+      align-items: center;
     }
     
     .ship-light {
-      width: 6px;
-      height: 6px;
+      width: 8px;
+      height: 8px;
       border-radius: 50%;
-      background: var(--amber);
-      box-shadow: 0 0 8px var(--amber), 0 0 16px var(--amber-glow);
-      animation: blink 1.5s ease-in-out infinite;
+      background: radial-gradient(circle, var(--amber) 0%, #ff6600 100%);
+      box-shadow: 
+        0 0 6px var(--amber), 
+        0 0 12px var(--amber),
+        0 0 20px rgba(255, 179, 71, 0.5);
+      animation: light-chase 2s linear infinite;
     }
     
-    .ship-light:nth-child(2) { animation-delay: 0.2s; }
-    .ship-light:nth-child(3) { animation-delay: 0.4s; }
-    .ship-light:nth-child(4) { animation-delay: 0.6s; }
-    .ship-light:nth-child(5) { animation-delay: 0.8s; }
-    .ship-light:nth-child(6) { animation-delay: 1.0s; }
-    .ship-light:nth-child(7) { animation-delay: 1.2s; }
+    .ship-light:nth-child(1) { animation-delay: 0s; }
+    .ship-light:nth-child(2) { animation-delay: 0.15s; }
+    .ship-light:nth-child(3) { animation-delay: 0.3s; }
+    .ship-light:nth-child(4) { animation-delay: 0.45s; }
+    .ship-light:nth-child(5) { animation-delay: 0.6s; }
+    .ship-light:nth-child(6) { animation-delay: 0.75s; }
+    .ship-light:nth-child(7) { animation-delay: 0.9s; }
+    .ship-light:nth-child(8) { animation-delay: 1.05s; }
+    .ship-light:nth-child(9) { animation-delay: 1.2s; }
     
-    .tractor-beam {
+    /* Engine pods on sides */
+    .engine-pod {
       position: absolute;
-      top: 55px;
+      bottom: 28px;
+      width: 35px;
+      height: 18px;
+      background: linear-gradient(180deg, #4a5060 0%, #2a2f3d 50%, #1a1d26 100%);
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.6);
+    }
+    
+    .engine-pod.left { left: 15px; }
+    .engine-pod.right { right: 15px; }
+    
+    .engine-pod::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
       left: 50%;
       transform: translateX(-50%);
-      width: 160px;
-      height: 200px;
+      width: 20px;
+      height: 8px;
+      background: radial-gradient(ellipse at 50% 0%, rgba(51, 255, 153, 0.8) 0%, rgba(0, 255, 150, 0.4) 50%, transparent 100%);
+      animation: engine-glow 1.5s ease-in-out infinite;
+    }
+    
+    /* Antenna/sensor array on top */
+    .sensor-array {
+      position: absolute;
+      top: 5px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 4px;
+      height: 15px;
+      background: linear-gradient(180deg, #ff3366 0%, #666 100%);
+      border-radius: 2px;
+    }
+    
+    .sensor-array::before {
+      content: '';
+      position: absolute;
+      top: -2px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 6px;
+      height: 6px;
+      background: #ff3366;
+      border-radius: 50%;
+      box-shadow: 0 0 8px #ff3366, 0 0 15px rgba(255, 51, 102, 0.5);
+      animation: blink 1s ease-in-out infinite;
+    }
+    
+    /* Sophisticated tractor beam */
+    .tractor-beam {
+      position: absolute;
+      top: 68px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 180px;
+      height: 220px;
       background: 
-        linear-gradient(to bottom, 
-          rgba(51, 255, 153, 0.6) 0%,
-          rgba(51, 255, 153, 0.3) 30%,
-          rgba(255, 179, 71, 0.2) 60%,
+        linear-gradient(180deg,
+          rgba(51, 255, 153, 0.7) 0%,
+          rgba(51, 255, 153, 0.4) 10%,
+          rgba(51, 255, 153, 0.2) 30%,
+          rgba(255, 179, 71, 0.15) 50%,
+          rgba(255, 179, 71, 0.05) 80%,
           transparent 100%
         );
-      clip-path: polygon(35% 0%, 65% 0%, 100% 100%, 0% 100%);
+      clip-path: polygon(30% 0%, 70% 0%, 100% 100%, 0% 100%);
       opacity: 0;
-      transition: opacity 0.5s ease;
-      filter: blur(2px);
-      mix-blend-mode: screen;
+      transition: opacity 0.6s ease;
+    }
+    
+    .tractor-beam::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: 
+        repeating-linear-gradient(
+          0deg,
+          transparent,
+          transparent 4px,
+          rgba(255,255,255,0.03) 4px,
+          rgba(255,255,255,0.03) 8px
+        );
+      animation: beam-shimmer 3s linear infinite;
+    }
+    
+    .tractor-beam::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60%;
+      height: 100%;
+      background: radial-gradient(ellipse at 50% 0%, rgba(51, 255, 153, 0.3) 0%, transparent 70%);
     }
     
     .tractor-beam.active {
@@ -664,6 +853,478 @@
     
     .data-updated { animation: data-glow 0.6s ease-out; }
     
+    /* ============================================
+       SPIELBERGIAN CONTROL PANEL
+       ============================================ */
+    @keyframes led-blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0.3; } }
+    @keyframes led-pulse { 0%, 100% { opacity: 0.5; box-shadow: 0 0 3px currentColor; } 50% { opacity: 1; box-shadow: 0 0 8px currentColor, 0 0 15px currentColor; } }
+    @keyframes gauge-sweep { 0% { transform: rotate(-45deg); } 100% { transform: rotate(225deg); } }
+    @keyframes scanner-line { 0% { left: 5%; } 100% { left: 85%; } }
+    @keyframes data-stream { 0% { background-position: 0 0; } 100% { background-position: 0 20px; } }
+    
+    .control-panel {
+      background: 
+        linear-gradient(180deg, rgba(20, 25, 35, 0.95) 0%, rgba(15, 18, 25, 0.98) 100%);
+      border: 1px solid var(--border);
+      border-top: 2px solid var(--phosphor-dim);
+      margin: 0.75rem;
+      margin-top: 0;
+      padding: 1rem;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .control-panel::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent 0%, var(--phosphor) 50%, transparent 100%);
+      opacity: 0.5;
+    }
+    
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .panel-title {
+      font-family: var(--font-display);
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      color: var(--phosphor);
+      text-shadow: 0 0 10px var(--phosphor-glow);
+    }
+    
+    .panel-status {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+    
+    .status-led {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.55rem;
+      letter-spacing: 0.08em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+    }
+    
+    .led {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--phosphor);
+      box-shadow: 0 0 6px var(--phosphor), 0 0 12px var(--phosphor-glow);
+    }
+    
+    .led.amber { background: var(--amber); box-shadow: 0 0 6px var(--amber), 0 0 12px var(--amber-glow); animation: led-blink 1s infinite; }
+    .led.red { background: #ff4444; box-shadow: 0 0 6px #ff4444; }
+    .led.pulse { animation: led-pulse 2s ease-in-out infinite; }
+    
+    .control-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+    }
+    
+    /* Control Module Base */
+    .control-module {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 0.75rem;
+      position: relative;
+    }
+    
+    .control-module::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--phosphor-dim), transparent);
+    }
+    
+    .module-label {
+      font-size: 0.5rem;
+      letter-spacing: 0.15em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      margin-bottom: 0.6rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    
+    .module-label .led { width: 4px; height: 4px; }
+    
+    /* Rotary Knob */
+    .knob-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .knob {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: 
+        radial-gradient(circle at 30% 30%, #4a5060 0%, #2a2f3d 50%, #1a1d26 100%);
+      border: 2px solid #3a4050;
+      position: relative;
+      cursor: pointer;
+      box-shadow: 
+        0 4px 8px rgba(0,0,0,0.5),
+        inset 0 2px 4px rgba(255,255,255,0.1);
+      transition: transform 0.1s;
+    }
+    
+    .knob:hover {
+      border-color: var(--phosphor-dim);
+      box-shadow: 
+        0 4px 8px rgba(0,0,0,0.5),
+        0 0 15px var(--phosphor-ghost),
+        inset 0 2px 4px rgba(255,255,255,0.1);
+    }
+    
+    .knob::before {
+      content: '';
+      position: absolute;
+      top: 5px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 3px;
+      height: 12px;
+      background: var(--phosphor);
+      border-radius: 2px;
+      box-shadow: 0 0 6px var(--phosphor);
+    }
+    
+    .knob::after {
+      content: '';
+      position: absolute;
+      inset: 4px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .knob-marks {
+      position: absolute;
+      inset: -8px;
+      border-radius: 50%;
+    }
+    
+    .knob-value {
+      font-family: var(--font-display);
+      font-size: 0.8rem;
+      color: var(--text-bright);
+      text-shadow: 0 0 10px var(--phosphor-ghost);
+    }
+    
+    /* Toggle Switch */
+    .toggle-container {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    
+    .toggle-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.3rem 0;
+    }
+    
+    .toggle-label {
+      font-size: 0.6rem;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+    }
+    
+    .toggle-switch {
+      width: 36px;
+      height: 18px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      position: relative;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .toggle-switch::before {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 12px;
+      height: 12px;
+      background: #666;
+      border-radius: 50%;
+      transition: all 0.2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+    }
+    
+    .toggle-switch.active {
+      background: var(--phosphor-ghost);
+      border-color: var(--phosphor-dim);
+    }
+    
+    .toggle-switch.active::before {
+      left: 20px;
+      background: var(--phosphor);
+      box-shadow: 0 0 8px var(--phosphor);
+    }
+    
+    /* Mini Gauge */
+    .gauge-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    
+    .mini-gauge {
+      width: 60px;
+      height: 35px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 30px 30px 0 0;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .gauge-fill {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(0deg, var(--phosphor) 0%, var(--phosphor-dim) 100%);
+      transition: height 0.5s ease;
+      opacity: 0.8;
+    }
+    
+    .gauge-needle {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      width: 2px;
+      height: 28px;
+      background: #fff;
+      transform-origin: bottom center;
+      transform: rotate(-45deg);
+      transition: transform 0.5s ease;
+      box-shadow: 0 0 4px #fff;
+    }
+    
+    .gauge-marks {
+      position: absolute;
+      inset: 0;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .gauge-value {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+    
+    /* Slider Control */
+    .slider-container {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    
+    .slider-track {
+      height: 6px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      position: relative;
+      cursor: pointer;
+    }
+    
+    .slider-fill {
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      background: linear-gradient(90deg, var(--phosphor) 0%, var(--amber) 100%);
+      border-radius: 3px;
+      transition: width 0.1s;
+    }
+    
+    .slider-thumb {
+      position: absolute;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 14px;
+      height: 14px;
+      background: radial-gradient(circle at 30% 30%, #5a6070 0%, #3a4050 100%);
+      border: 2px solid var(--phosphor-dim);
+      border-radius: 50%;
+      cursor: grab;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+    }
+    
+    .slider-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.5rem;
+      color: var(--text-dim);
+      letter-spacing: 0.08em;
+    }
+    
+    /* Scanner Display */
+    .scanner-display {
+      height: 40px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .scanner-grid {
+      position: absolute;
+      inset: 0;
+      background: 
+        repeating-linear-gradient(0deg, transparent, transparent 9px, rgba(51, 255, 153, 0.1) 9px, rgba(51, 255, 153, 0.1) 10px),
+        repeating-linear-gradient(90deg, transparent, transparent 9px, rgba(51, 255, 153, 0.1) 9px, rgba(51, 255, 153, 0.1) 10px);
+    }
+    
+    .scanner-line {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: var(--phosphor);
+      box-shadow: 0 0 10px var(--phosphor), 0 0 20px var(--phosphor);
+      animation: scanner-line 2s linear infinite;
+    }
+    
+    .scanner-blips {
+      position: absolute;
+      inset: 0;
+    }
+    
+    .blip {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      background: var(--amber);
+      border-radius: 50%;
+      box-shadow: 0 0 6px var(--amber);
+      animation: led-pulse 1.5s ease-in-out infinite;
+    }
+    
+    /* LED Array */
+    .led-array {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 4px;
+    }
+    
+    .array-led {
+      width: 8px;
+      height: 8px;
+      border-radius: 2px;
+      background: #333;
+      border: 1px solid #444;
+    }
+    
+    .array-led.on { 
+      background: var(--phosphor); 
+      box-shadow: 0 0 6px var(--phosphor);
+    }
+    
+    .array-led.amber { 
+      background: var(--amber); 
+      box-shadow: 0 0 6px var(--amber);
+    }
+    
+    .array-led.red { 
+      background: #ff4444; 
+      box-shadow: 0 0 6px #ff4444;
+    }
+    
+    /* Numeric Display */
+    .numeric-display {
+      background: #0a0c0f;
+      border: 1px solid var(--border);
+      padding: 0.4rem 0.6rem;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 0.25rem;
+    }
+    
+    .display-digit {
+      font-family: var(--font-display);
+      font-size: 1rem;
+      color: var(--phosphor);
+      text-shadow: 0 0 8px var(--phosphor);
+      letter-spacing: 0.05em;
+    }
+    
+    .display-unit {
+      font-size: 0.5rem;
+      color: var(--text-dim);
+      margin-left: 0.25rem;
+    }
+    
+    /* Push Button */
+    .push-btn {
+      width: 100%;
+      padding: 0.5rem;
+      background: linear-gradient(180deg, #4a5060 0%, #2a2f3d 100%);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.1s;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .push-btn:hover {
+      border-color: var(--phosphor-dim);
+      color: var(--phosphor);
+    }
+    
+    .push-btn:active {
+      transform: translateY(1px);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    }
+    
+    .push-btn.primary {
+      background: linear-gradient(180deg, rgba(51, 255, 153, 0.3) 0%, rgba(51, 255, 153, 0.1) 100%);
+      border-color: var(--phosphor-dim);
+      color: var(--phosphor);
+    }
+    
+    @media (max-width: 1000px) {
+      .control-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    
+    @media (max-width: 600px) {
+      .control-grid { grid-template-columns: 1fr; }
+      .control-panel { padding: 0.75rem; }
+    }
+    
     .dev-console { display: none; position: fixed; top: 70px; left: 50%; transform: translateX(-50%); width: 500px; max-width: 90vw; background: var(--bg-panel); border: 1px solid var(--amber-dim); z-index: 200; box-shadow: 0 0 40px rgba(255, 179, 71, 0.2); }
     .dev-console.visible { display: block; }
     .dev-console-header { padding: 0.75rem 1rem; background: var(--bg-card); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
@@ -692,9 +1353,14 @@
     <div class="horizon"></div>
     <div class="launch-scene">
       <div class="mothership">
-        <div class="mothership-body"></div>
+        <div class="sensor-array"></div>
         <div class="mothership-dome"></div>
+        <div class="mothership-body"></div>
+        <div class="engine-pod left"></div>
+        <div class="engine-pod right"></div>
         <div class="mothership-lights">
+          <div class="ship-light"></div>
+          <div class="ship-light"></div>
           <div class="ship-light"></div>
           <div class="ship-light"></div>
           <div class="ship-light"></div>
@@ -822,6 +1488,132 @@
           <div class="chart-container">
             <div class="price-chart-wrapper"><canvas id="price-chart"></canvas></div>
             <div class="macd-chart-wrapper"><canvas id="macd-chart"></canvas></div>
+          </div>
+          
+          <!-- SPIELBERGIAN CONTROL PANEL -->
+          <div class="control-panel">
+            <div class="panel-header">
+              <div class="panel-title">▸ SIGNAL PROCESSING ARRAY</div>
+              <div class="panel-status">
+                <div class="status-led"><div class="led pulse"></div> SYNC</div>
+                <div class="status-led"><div class="led amber"></div> DATA</div>
+                <div class="status-led"><div class="led"></div> LINK</div>
+              </div>
+            </div>
+            
+            <div class="control-grid">
+              <!-- Smoothing Knob -->
+              <div class="control-module">
+                <div class="module-label"><div class="led pulse"></div> Signal Smoothing</div>
+                <div class="knob-container">
+                  <div class="knob" id="knob-smoothing" data-value="50" onclick="cycleKnob('smoothing')">
+                    <div class="knob-marks"></div>
+                  </div>
+                  <div class="knob-value" id="smoothing-value">50%</div>
+                </div>
+              </div>
+              
+              <!-- Forecast Range Knob -->
+              <div class="control-module">
+                <div class="module-label"><div class="led amber"></div> Forecast Range</div>
+                <div class="knob-container">
+                  <div class="knob" id="knob-forecast" data-value="30" onclick="cycleKnob('forecast')">
+                    <div class="knob-marks"></div>
+                  </div>
+                  <div class="knob-value" id="forecast-value">30 DAYS</div>
+                </div>
+              </div>
+              
+              <!-- Risk Profile Gauge -->
+              <div class="control-module">
+                <div class="module-label"><div class="led"></div> Risk Exposure</div>
+                <div class="gauge-container">
+                  <div class="mini-gauge">
+                    <div class="gauge-fill" id="risk-fill" style="height: 60%;"></div>
+                    <div class="gauge-needle" id="risk-needle" style="transform: rotate(65deg);"></div>
+                    <div class="gauge-marks"></div>
+                  </div>
+                  <div class="gauge-value" id="risk-value">MODERATE</div>
+                </div>
+              </div>
+              
+              <!-- Volatility Display -->
+              <div class="control-module">
+                <div class="module-label"><div class="led pulse amber"></div> Volatility Index</div>
+                <div class="numeric-display">
+                  <span class="display-digit" id="vol-display">24.7</span>
+                  <span class="display-unit">σ</span>
+                </div>
+                <div class="led-array" style="margin-top: 0.5rem;">
+                  <div class="array-led on"></div>
+                  <div class="array-led on"></div>
+                  <div class="array-led on"></div>
+                  <div class="array-led on"></div>
+                  <div class="array-led amber"></div>
+                  <div class="array-led"></div>
+                  <div class="array-led"></div>
+                  <div class="array-led"></div>
+                </div>
+              </div>
+              
+              <!-- Toggle Switches -->
+              <div class="control-module">
+                <div class="module-label"><div class="led"></div> Display Filters</div>
+                <div class="toggle-container">
+                  <div class="toggle-row">
+                    <span class="toggle-label">Momentum Overlay</span>
+                    <div class="toggle-switch active" id="toggle-momentum" onclick="toggleSwitch('momentum')"></div>
+                  </div>
+                  <div class="toggle-row">
+                    <span class="toggle-label">Volume Heatmap</span>
+                    <div class="toggle-switch" id="toggle-heatmap" onclick="toggleSwitch('heatmap')"></div>
+                  </div>
+                  <div class="toggle-row">
+                    <span class="toggle-label">Alert Markers</span>
+                    <div class="toggle-switch active" id="toggle-alerts" onclick="toggleSwitch('alerts')"></div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Sensitivity Slider -->
+              <div class="control-module">
+                <div class="module-label"><div class="led amber"></div> Alert Sensitivity</div>
+                <div class="slider-container">
+                  <div class="slider-track" id="sensitivity-track" onclick="handleSliderClick(event, 'sensitivity')">
+                    <div class="slider-fill" id="sensitivity-fill" style="width: 65%;"></div>
+                    <div class="slider-thumb" id="sensitivity-thumb" style="left: 65%;"></div>
+                  </div>
+                  <div class="slider-labels">
+                    <span>LOW</span>
+                    <span>MED</span>
+                    <span>HIGH</span>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Scanner Display -->
+              <div class="control-module">
+                <div class="module-label"><div class="led pulse"></div> Market Scanner</div>
+                <div class="scanner-display">
+                  <div class="scanner-grid"></div>
+                  <div class="scanner-line"></div>
+                  <div class="scanner-blips">
+                    <div class="blip" style="top: 25%; left: 20%;"></div>
+                    <div class="blip" style="top: 60%; left: 45%;"></div>
+                    <div class="blip" style="top: 35%; left: 70%;"></div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Action Buttons -->
+              <div class="control-module">
+                <div class="module-label"><div class="led"></div> Quick Actions</div>
+                <div style="display: flex; flex-direction: column; gap: 0.4rem;">
+                  <button class="push-btn primary" onclick="runAnalysis()">▸ RUN ANALYSIS</button>
+                  <button class="push-btn" onclick="resetControls()">↺ RESET DEFAULTS</button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
         
@@ -1500,6 +2292,236 @@
       const console = document.getElementById('dev-console');
       console.classList.toggle('visible');
     }
+    
+    // ============================================
+    // CONTROL PANEL INTERACTIVITY
+    // ============================================
+    
+    const controlState = {
+      smoothing: 50,
+      forecast: 30,
+      sensitivity: 65,
+      momentum: true,
+      heatmap: false,
+      alerts: true,
+      risk: 60
+    };
+    
+    // Knob rotation values
+    const knobSettings = {
+      smoothing: { values: [0, 25, 50, 75, 100], labels: ['0%', '25%', '50%', '75%', '100%'], current: 2 },
+      forecast: { values: [7, 14, 30, 60, 90], labels: ['7 DAYS', '14 DAYS', '30 DAYS', '60 DAYS', '90 DAYS'], current: 2 }
+    };
+    
+    function cycleKnob(knobId) {
+      const settings = knobSettings[knobId];
+      settings.current = (settings.current + 1) % settings.values.length;
+      
+      const knob = document.getElementById('knob-' + knobId);
+      const valueEl = document.getElementById(knobId + '-value');
+      
+      // Rotate knob (each step is ~60 degrees)
+      const rotation = (settings.current - 2) * 60;
+      knob.style.transform = 'rotate(' + rotation + 'deg)';
+      
+      // Update value display
+      valueEl.textContent = settings.labels[settings.current];
+      controlState[knobId] = settings.values[settings.current];
+      
+      // Visual feedback
+      knob.style.boxShadow = '0 4px 8px rgba(0,0,0,0.5), 0 0 20px var(--phosphor-glow), inset 0 2px 4px rgba(255,255,255,0.1)';
+      setTimeout(() => {
+        knob.style.boxShadow = '';
+      }, 200);
+      
+      // Trigger chart update effect
+      flashUpdate();
+      logControlChange(knobId.toUpperCase() + ' set to ' + settings.labels[settings.current]);
+    }
+    
+    function toggleSwitch(switchId) {
+      const toggle = document.getElementById('toggle-' + switchId);
+      const isActive = toggle.classList.toggle('active');
+      controlState[switchId] = isActive;
+      
+      // Visual feedback in log
+      logControlChange(switchId.toUpperCase() + ' ' + (isActive ? 'ENABLED' : 'DISABLED'));
+      
+      // Apply effects based on switch
+      if (switchId === 'momentum' && priceChart) {
+        // Toggle MA visibility
+        showMA = isActive;
+        document.getElementById('ma-toggle').classList.toggle('active', isActive);
+        updateCharts();
+      }
+      
+      flashUpdate();
+    }
+    
+    function handleSliderClick(event, sliderId) {
+      const track = document.getElementById(sliderId + '-track');
+      const fill = document.getElementById(sliderId + '-fill');
+      const thumb = document.getElementById(sliderId + '-thumb');
+      
+      const rect = track.getBoundingClientRect();
+      const percent = Math.max(0, Math.min(100, ((event.clientX - rect.left) / rect.width) * 100));
+      
+      fill.style.width = percent + '%';
+      thumb.style.left = percent + '%';
+      controlState[sliderId] = Math.round(percent);
+      
+      // Update risk gauge based on sensitivity
+      updateRiskGauge(percent);
+      logControlChange('SENSITIVITY adjusted to ' + Math.round(percent) + '%');
+      flashUpdate();
+    }
+    
+    function updateRiskGauge(sensitivity) {
+      // Risk inversely correlates with sensitivity (more sensitive = catches more risk)
+      const riskLevel = 100 - (sensitivity * 0.4);
+      const needle = document.getElementById('risk-needle');
+      const fill = document.getElementById('risk-fill');
+      const value = document.getElementById('risk-value');
+      
+      // Needle rotation: -45deg (low) to 225deg (high)
+      const rotation = -45 + (riskLevel / 100 * 180);
+      needle.style.transform = 'rotate(' + rotation + 'deg)';
+      fill.style.height = riskLevel + '%';
+      
+      if (riskLevel < 33) {
+        value.textContent = 'LOW';
+        fill.style.background = 'var(--phosphor)';
+      } else if (riskLevel < 66) {
+        value.textContent = 'MODERATE';
+        fill.style.background = 'linear-gradient(0deg, var(--amber) 0%, var(--phosphor) 100%)';
+      } else {
+        value.textContent = 'HIGH';
+        fill.style.background = 'linear-gradient(0deg, #ff4444 0%, var(--amber) 100%)';
+      }
+      
+      controlState.risk = riskLevel;
+    }
+    
+    function runAnalysis() {
+      const btn = event.target;
+      btn.textContent = '◌ ANALYZING...';
+      btn.disabled = true;
+      
+      // Animate LED array
+      const leds = document.querySelectorAll('.led-array .array-led');
+      let ledIndex = 0;
+      const ledInterval = setInterval(() => {
+        leds.forEach((led, i) => {
+          led.classList.remove('on', 'amber');
+          if (i <= ledIndex) led.classList.add('on');
+        });
+        ledIndex++;
+        if (ledIndex > leds.length) {
+          clearInterval(ledInterval);
+          
+          // Generate random volatility
+          const newVol = (15 + Math.random() * 20).toFixed(1);
+          document.getElementById('vol-display').textContent = newVol;
+          
+          // Update LED array based on volatility
+          const volLevel = Math.ceil((parseFloat(newVol) / 40) * 8);
+          leds.forEach((led, i) => {
+            led.classList.remove('on', 'amber', 'red');
+            if (i < volLevel) {
+              if (i < 4) led.classList.add('on');
+              else if (i < 6) led.classList.add('amber');
+              else led.classList.add('red');
+            }
+          });
+          
+          btn.textContent = '▸ RUN ANALYSIS';
+          btn.disabled = false;
+          
+          logControlChange('ANALYSIS COMPLETE — Vol: ' + newVol + 'σ');
+        }
+      }, 100);
+      
+      flashUpdate();
+    }
+    
+    function resetControls() {
+      // Reset knobs
+      knobSettings.smoothing.current = 2;
+      knobSettings.forecast.current = 2;
+      document.getElementById('knob-smoothing').style.transform = 'rotate(0deg)';
+      document.getElementById('knob-forecast').style.transform = 'rotate(0deg)';
+      document.getElementById('smoothing-value').textContent = '50%';
+      document.getElementById('forecast-value').textContent = '30 DAYS';
+      
+      // Reset toggles
+      document.getElementById('toggle-momentum').classList.add('active');
+      document.getElementById('toggle-heatmap').classList.remove('active');
+      document.getElementById('toggle-alerts').classList.add('active');
+      
+      // Reset slider
+      document.getElementById('sensitivity-fill').style.width = '65%';
+      document.getElementById('sensitivity-thumb').style.left = '65%';
+      
+      // Reset gauge
+      updateRiskGauge(65);
+      
+      // Reset state
+      Object.assign(controlState, {
+        smoothing: 50,
+        forecast: 30,
+        sensitivity: 65,
+        momentum: true,
+        heatmap: false,
+        alerts: true
+      });
+      
+      logControlChange('ALL CONTROLS RESET TO DEFAULTS');
+      flashUpdate();
+    }
+    
+    function flashUpdate() {
+      // Flash the panel header to show update
+      const header = document.querySelector('.panel-header');
+      if (header) {
+        header.style.background = 'rgba(51, 255, 153, 0.1)';
+        setTimeout(() => {
+          header.style.background = '';
+        }, 150);
+      }
+    }
+    
+    function logControlChange(message) {
+      // Add to activity feed
+      const feed = document.getElementById('activity-feed');
+      if (!feed) return;
+      
+      const now = new Date();
+      const time = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+      
+      const alertSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
+      
+      const item = document.createElement('div');
+      item.className = 'activity-item';
+      item.innerHTML = '<div class="activity-icon alert">' + alertSvg + '</div>' +
+        '<div class="activity-content"><div class="activity-title">Control Update</div><div class="activity-subtitle">' + message + '</div></div>' +
+        '<div class="activity-time">' + time + '</div>';
+      
+      feed.insertBefore(item, feed.firstChild);
+      
+      // Keep only last 10 items
+      while (feed.children.length > 10) {
+        feed.removeChild(feed.lastChild);
+      }
+    }
+    
+    // Animate scanner blips periodically
+    setInterval(() => {
+      const blips = document.querySelectorAll('.scanner-blips .blip');
+      blips.forEach(blip => {
+        blip.style.top = (10 + Math.random() * 70) + '%';
+        blip.style.left = (10 + Math.random() * 70) + '%';
+      });
+    }, 3000);
     
     let startTime = null;
     function updateUptime() {
