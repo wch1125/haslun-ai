@@ -1038,6 +1038,20 @@
       text-shadow: 0 0 10px var(--phosphor-ghost);
     }
     
+    .knob-band-label {
+      font-family: var(--font-body);
+      font-size: 0.55rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-top: 0.25rem;
+      transition: color 0.2s ease;
+    }
+    
+    .knob-band-label.raw { color: var(--signal-down); }
+    .knob-band-label.balanced { color: var(--phosphor-dim); }
+    .knob-band-label.deep { color: #47d4ff; }
+    
     /* Toggle Switch */
     .toggle-container {
       display: flex;
@@ -1647,13 +1661,13 @@
         <nav class="nav-tabs">
           <button class="nav-tab active" data-tab="chart" onclick="switchTab('chart')">TELEMETRY</button>
           <button class="nav-tab" data-tab="positions" onclick="switchTab('positions')">HOLDINGS</button>
-          <button class="nav-tab" data-tab="options" onclick="switchTab('options')" title="Levers, pulleys, and very opinionated probability curves.">DERIVATIVES</button>
+          <button class="nav-tab" data-tab="options" data-glossary-id="derivatives_tab" onclick="switchTab('options')">DERIVATIVES</button>
           <button class="nav-tab" data-tab="catalysts" onclick="switchTab('catalysts')">EVENTS</button>
         </nav>
       </div>
       <div class="header-right">
-        <span class="demo-badge" title="Simulated capital. Real ego.">SIMULATION</span>
-        <div class="status-indicator">
+        <span class="demo-badge" data-glossary-id="mode_simulation">SIMULATION</span>
+        <div class="status-indicator" data-glossary-id="status_mkt_closed">
           <span class="status-dot"></span>
           <span class="status-text">Market Closed</span>
         </div>
@@ -1666,10 +1680,10 @@
         <div class="sidebar-section">
           <div class="sidebar-title">Portfolio Status</div>
           <div class="stats-grid">
-            <div class="stat-box highlight" title="How much the market liked you today, before feelings reset at the open."><div class="stat-label">Today P&L</div><div class="stat-value positive">+$1,172</div></div>
-            <div class="stat-box" title="Lifetime score since the moment you pressed START on this universe."><div class="stat-label">Total P&L</div><div class="stat-value positive">+$34,015</div></div>
-            <div class="stat-box" title="How many plates you're spinning in zero gravity."><div class="stat-label">Positions</div><div class="stat-value">10</div></div>
-            <div class="stat-box" title="Hit rate. Accuracy stat. Bragging-rights fuel."><div class="stat-label">Win Rate</div><div class="stat-value positive">90%</div></div>
+            <div class="stat-box highlight" data-glossary-id="today_pnl"><div class="stat-label">Today P&L</div><div class="stat-value positive">+$1,172</div></div>
+            <div class="stat-box" data-glossary-id="total_pnl"><div class="stat-label">Total P&L</div><div class="stat-value positive">+$34,015</div></div>
+            <div class="stat-box" data-glossary-id="positions_count"><div class="stat-label">Positions</div><div class="stat-value">10</div></div>
+            <div class="stat-box" data-glossary-id="win_rate"><div class="stat-label">Win Rate</div><div class="stat-value positive">90%</div></div>
           </div>
           <div class="portfolio-mood" id="portfolio-mood">
             <span class="mood-label">STEADY CLIMB</span>
@@ -1677,11 +1691,11 @@
           </div>
         </div>
         <div class="sidebar-section">
-          <div class="sidebar-title" title="Momentum gauge. Shows when rockets are over-fuelled or stalling out.">MACD Signal</div>
+          <div class="sidebar-title" data-glossary-id="macd">MACD Signal</div>
           <div class="macd-display">
-            <div class="macd-row"><span class="macd-label">MACD</span><span class="macd-value positive" id="macd-val">0.3642</span></div>
-            <div class="macd-row"><span class="macd-label">Signal</span><span class="macd-value" id="signal-val">0.2570</span></div>
-            <div class="macd-row"><span class="macd-label">Histogram</span><span class="macd-value positive" id="hist-val">0.1073</span></div>
+            <div class="macd-row"><span class="macd-label" data-glossary-id="macd">MACD</span><span class="macd-value positive" id="macd-val">0.3642</span></div>
+            <div class="macd-row"><span class="macd-label" data-glossary-id="macd_signal">Signal</span><span class="macd-value" id="signal-val">0.2570</span></div>
+            <div class="macd-row"><span class="macd-label" data-glossary-id="macd_histogram">Histogram</span><span class="macd-value positive" id="hist-val">0.1073</span></div>
           </div>
           <div class="macd-status" id="macd-status">
             <span class="macd-status-label">Momentum quiet</span>
@@ -1754,18 +1768,19 @@
             <div class="control-grid">
               <!-- Smoothing Knob -->
               <div class="control-module">
-                <div class="module-label"><div class="led pulse"></div> Signal Smoothing</div>
+                <div class="module-label" data-glossary-id="sig_smoothing"><div class="led pulse"></div> Signal Smoothing</div>
                 <div class="knob-container">
                   <div class="knob" id="knob-smoothing" data-value="50" onclick="cycleKnob('smoothing')">
                     <div class="knob-marks"></div>
                   </div>
                   <div class="knob-value" id="smoothing-value">50%</div>
+                  <div class="knob-band-label" id="smoothing-band-label">BALANCED</div>
                 </div>
               </div>
               
               <!-- Forecast Range Knob -->
               <div class="control-module">
-                <div class="module-label"><div class="led amber"></div> Forecast Range</div>
+                <div class="module-label" data-glossary-id="sig_forecast_range"><div class="led amber"></div> Forecast Range</div>
                 <div class="knob-container">
                   <div class="knob" id="knob-forecast" data-value="30" onclick="cycleKnob('forecast')">
                     <div class="knob-marks"></div>
@@ -1776,7 +1791,7 @@
               
               <!-- Risk Profile Gauge -->
               <div class="control-module">
-                <div class="module-label"><div class="led"></div> Risk Exposure</div>
+                <div class="module-label" data-glossary-id="sig_risk_exposure"><div class="led"></div> Risk Exposure</div>
                 <div class="gauge-container">
                   <div class="mini-gauge">
                     <div class="gauge-fill" id="risk-fill" style="height: 60%;"></div>
@@ -1789,7 +1804,7 @@
               
               <!-- Volatility Display -->
               <div class="control-module">
-                <div class="module-label"><div class="led pulse amber"></div> Volatility Index</div>
+                <div class="module-label" data-glossary-id="sig_vol_index"><div class="led pulse amber"></div> Volatility Index</div>
                 <div class="numeric-display">
                   <span class="display-digit" id="vol-display">24.7</span>
                   <span class="display-unit">σ</span>
@@ -1811,15 +1826,15 @@
                 <div class="module-label"><div class="led"></div> Display Filters</div>
                 <div class="toggle-container">
                   <div class="toggle-row">
-                    <span class="toggle-label">Momentum Overlay</span>
+                    <span class="toggle-label" data-glossary-id="sig_display_momentum">Momentum Overlay</span>
                     <div class="toggle-switch active" id="toggle-momentum" onclick="toggleSwitch('momentum')"></div>
                   </div>
                   <div class="toggle-row">
-                    <span class="toggle-label">Volume Heatmap</span>
+                    <span class="toggle-label" data-glossary-id="sig_display_heatmap">Volume Heatmap</span>
                     <div class="toggle-switch" id="toggle-heatmap" onclick="toggleSwitch('heatmap')"></div>
                   </div>
                   <div class="toggle-row">
-                    <span class="toggle-label">Alert Markers</span>
+                    <span class="toggle-label" data-glossary-id="sig_display_alerts">Alert Markers</span>
                     <div class="toggle-switch active" id="toggle-alerts" onclick="toggleSwitch('alerts')"></div>
                   </div>
                 </div>
@@ -1827,7 +1842,7 @@
               
               <!-- Sensitivity Slider -->
               <div class="control-module">
-                <div class="module-label"><div class="led amber"></div> Alert Sensitivity</div>
+                <div class="module-label" data-glossary-id="sig_alert_sensitivity"><div class="led amber"></div> Alert Sensitivity</div>
                 <div class="slider-container">
                   <div class="slider-track" id="sensitivity-track" onclick="handleSliderClick(event, 'sensitivity')">
                     <div class="slider-fill" id="sensitivity-fill" style="width: 65%;"></div>
@@ -1843,7 +1858,7 @@
               
               <!-- Scanner Display -->
               <div class="control-module">
-                <div class="module-label"><div class="led pulse"></div> Market Scanner</div>
+                <div class="module-label" data-glossary-id="sig_market_scanner"><div class="led pulse"></div> Market Scanner</div>
                 <div class="scanner-display">
                   <div class="scanner-grid"></div>
                   <div class="scanner-line"></div>
@@ -1885,10 +1900,10 @@
         <div class="tab-panel" id="options-panel">
           <div class="positions-content">
             <div class="positions-grid">
-              <div class="metric-card"><div class="metric-value">$39,315</div><div class="metric-label">Portfolio Value</div></div>
-              <div class="metric-card"><div class="metric-value positive">+$34,015</div><div class="metric-label">Total P&L</div></div>
-              <div class="metric-card"><div class="metric-value">23.55</div><div class="metric-label">Total Delta</div></div>
-              <div class="metric-card"><div class="metric-value">12</div><div class="metric-label">Days to Expiry</div></div>
+              <div class="metric-card" data-glossary-id="portfolio_value"><div class="metric-value">$39,315</div><div class="metric-label">Portfolio Value</div></div>
+              <div class="metric-card" data-glossary-id="total_pnl"><div class="metric-value positive">+$34,015</div><div class="metric-label">Total P&L</div></div>
+              <div class="metric-card" data-glossary-id="total_delta"><div class="metric-value">23.55</div><div class="metric-label">Total Delta</div></div>
+              <div class="metric-card" data-glossary-id="days_to_expiry"><div class="metric-value">12</div><div class="metric-label">Days to Expiry</div></div>
             </div>
             <div class="card">
               <div class="card-header"><div><div class="card-label">// Analytics</div><div class="card-title">Portfolio Insights</div></div></div>
@@ -1921,7 +1936,7 @@
       <aside class="right-sidebar">
         <div class="kill-switch-section">
           <div class="sidebar-title">Emergency Control</div>
-          <button class="kill-switch-btn stop" onclick="toggleKillSwitch()" title="Emergency exit. Does not apply to your feelings.">ABORT ALL TRADES</button>
+          <button class="kill-switch-btn stop" data-glossary-id="abort_all_trades" onclick="toggleKillSwitch()">ABORT ALL TRADES</button>
           <div class="kill-switch-status">System operational</div>
         </div>
         <div class="sidebar-section">
@@ -2234,6 +2249,104 @@
         tooltip: "Synthetic volatility score derived from recent price swings.",
         flavor: "How much the market is wiggling while you try to act composed."
       },
+      sig_display_momentum: {
+        label: "Momentum Overlay",
+        category: "control",
+        tooltip: "Toggle MACD / trend overlays on the main chart.",
+        flavor: "Draws the invisible wind the rockets are flying through."
+      },
+      sig_display_heatmap: {
+        label: "Volume Heatmap",
+        category: "control",
+        tooltip: "Show volume intensity as background shading on the chart.",
+        flavor: "Where the crowd actually showed up versus where they just talked big."
+      },
+      sig_display_alerts: {
+        label: "Alert Markers",
+        category: "control",
+        tooltip: "Display crossover events and custom triggers as icons on the chart.",
+        flavor: "Little neon post-its on the timeline saying 'something weird happened here'."
+      },
+      sig_alert_sensitivity: {
+        label: "Alert Sensitivity",
+        category: "control",
+        tooltip: "Controls how easily the system raises visual alerts.",
+        flavor: "Slide right to let the system panic for you. Slide left if you enjoy surprises."
+      },
+      sig_market_scanner: {
+        label: "Market Scanner",
+        category: "metric",
+        tooltip: "Compressed view of recent signals across the watchlist.",
+        flavor: "Radar sweep. Blips mean 'look here', not 'buy here'. Probably."
+      },
+      
+      // ---------- CORE PORTFOLIO METRICS ----------
+      today_pnl: {
+        label: "Today's P&L",
+        category: "metric",
+        unit: "USD",
+        tooltip: "Profit or loss generated since the start of the current trading day.",
+        flavor: "How much the market liked you today, before feelings reset at the open."
+      },
+      total_pnl: {
+        label: "Total P&L",
+        category: "metric",
+        unit: "USD",
+        tooltip: "Cumulative profit or loss for this simulation since inception.",
+        flavor: "Lifetime score since the moment you pressed START on this universe."
+      },
+      positions_count: {
+        label: "Positions",
+        category: "metric",
+        tooltip: "Number of tickers currently held in the portfolio.",
+        flavor: "How many plates you're spinning in zero gravity."
+      },
+      win_rate: {
+        label: "Win Rate",
+        category: "metric",
+        unit: "%",
+        tooltip: "Percentage of closed trades that ended with positive P&L.",
+        flavor: "Hit rate. Accuracy stat. Bragging-rights fuel."
+      },
+      portfolio_value: {
+        label: "Portfolio Value",
+        category: "metric",
+        unit: "USD",
+        tooltip: "Current market value of all open positions plus cash.",
+        flavor: "What your empire is worth if you slammed the SELL ALL button."
+      },
+      total_delta: {
+        label: "Total Delta",
+        category: "metric",
+        tooltip: "Sensitivity of the options book to a $1 move in the underlying basket.",
+        flavor: "How violently the cockpit shakes when prices nudge."
+      },
+      days_to_expiry: {
+        label: "Days to Expiry",
+        category: "metric",
+        tooltip: "Time remaining until the primary options cycle expires.",
+        flavor: "How long until the clock runs out on this particular boss fight."
+      },
+      
+      // ---------- MACD & MOMENTUM ----------
+      macd: {
+        label: "MACD",
+        category: "metric",
+        tooltip: "Moving Average Convergence Divergence: fast EMA minus slow EMA of price.",
+        flavor: "Momentum gauge. Shows when rockets are over-fuelled or stalling out."
+      },
+      macd_signal: {
+        label: "Signal",
+        category: "metric",
+        tooltip: "EMA of the MACD line. Crossovers often signal trend shifts.",
+        flavor: "The grown-up in the room telling MACD to calm down (or speed up)."
+      },
+      macd_histogram: {
+        label: "Histogram",
+        category: "metric",
+        tooltip: "MACD minus Signal. Bars above/below zero show relative momentum.",
+        flavor: "The heartbeat monitor for trend strength. Flatline not recommended."
+      },
       
       // ---------- DERIVATIVES / OPTIONS ----------
       strat_naked_leap: {
@@ -2248,11 +2361,41 @@
         tooltip: "Call spread benefitting from moderate price appreciation.",
         flavor: "Not trying to reach Mars. Just happy to clear the atmosphere."
       },
+      strat_bear_spread: {
+        label: "Bear Spread",
+        category: "strategy",
+        tooltip: "Put or call spread positioned for a controlled downside move.",
+        flavor: "You don't need a crash, just a dignified stumble."
+      },
+      derivatives_tab: {
+        label: "Derivatives",
+        category: "navigation",
+        tooltip: "Options and structured positions with defined risk profiles.",
+        flavor: "Levers, pulleys, and very opinionated probability curves."
+      },
       greek_delta: {
         label: "Delta",
         category: "metric",
         tooltip: "First derivative of option price with respect to underlying price.",
         flavor: "How loudly this option screams when the stock twitches."
+      },
+      greek_theta: {
+        label: "Theta",
+        category: "metric",
+        tooltip: "Daily time decay of the option's value.",
+        flavor: "Rent you pay for living in the future."
+      },
+      greek_gamma: {
+        label: "Gamma",
+        category: "metric",
+        tooltip: "Rate of change of delta as the underlying moves.",
+        flavor: "How quickly a calm trade turns dramatic when price gets ideas."
+      },
+      greek_vega: {
+        label: "Vega",
+        category: "metric",
+        tooltip: "Sensitivity of option price to changes in volatility.",
+        flavor: "Mood swing multiplier. When volatility sulks, these feel it first."
       },
       
       // ---------- GLOBAL STATES ----------
@@ -2369,6 +2512,109 @@
       return PORTFOLIO_MOODS.hull_rattle;
     }
     
+    // Update portfolio mood display dynamically
+    function updatePortfolioMood(dailyPnlPercent) {
+      const mood = getPortfolioMood(dailyPnlPercent);
+      const moodEl = document.getElementById('portfolio-mood');
+      if (!moodEl) return;
+      
+      const labelEl = moodEl.querySelector('.mood-label');
+      const copyEl = moodEl.querySelector('.mood-copy');
+      
+      if (labelEl) labelEl.textContent = mood.label;
+      if (copyEl) copyEl.textContent = mood.copy;
+      
+      // Update mood class
+      moodEl.className = 'portfolio-mood';
+      if (dailyPnlPercent >= 2) moodEl.classList.add('boost');
+      else if (dailyPnlPercent >= 0) moodEl.classList.add('climb');
+      else if (dailyPnlPercent >= -1) moodEl.classList.add('turbulence');
+      else moodEl.classList.add('rattle');
+    }
+    
+    // Attach glossary tooltips to all elements with data-glossary-id
+    function attachGlossaryTooltips() {
+      document.querySelectorAll('[data-glossary-id]').forEach(el => {
+        const id = el.getAttribute('data-glossary-id');
+        const entry = HASLUN_GLOSSARY[id];
+        if (!entry) return;
+        
+        // Build tooltip with both serious and flavor text
+        const tooltip = entry.tooltip + (entry.flavor ? '\n\n"' + entry.flavor + '"' : '');
+        el.setAttribute('title', tooltip);
+        el.style.cursor = 'help';
+      });
+    }
+    
+    // Scenario Engine: Update smoothing band label
+    function updateSmoothingBandLabel(value) {
+      const el = document.getElementById('smoothing-band-label');
+      if (!el) return;
+      let text = 'BALANCED';
+      if (value < 30) text = 'RAW FEED';
+      else if (value > 70) text = 'DEEP FILTER';
+      el.textContent = text;
+    }
+    
+    // Scenario Engine: Update forecast display
+    function updateForecastDisplay(days) {
+      const el = document.getElementById('forecast-value');
+      if (el) el.textContent = days + ' DAYS';
+      logTerminal('forecast range → ' + days + ' days');
+    }
+    
+    // Scenario Engine: Update risk profile
+    function updateRiskProfile(level) {
+      const fill = document.getElementById('risk-fill');
+      const needle = document.getElementById('risk-needle');
+      const value = document.getElementById('risk-value');
+      
+      const profiles = {
+        conservative: { height: 30, angle: 25, label: 'CONSERVATIVE' },
+        moderate: { height: 50, angle: 65, label: 'MODERATE' },
+        aggressive: { height: 75, angle: 105, label: 'AGGRESSIVE' },
+        maximum: { height: 95, angle: 145, label: 'MAXIMUM' }
+      };
+      
+      const profile = profiles[level] || profiles.moderate;
+      if (fill) fill.style.height = profile.height + '%';
+      if (needle) needle.style.transform = 'rotate(' + profile.angle + 'deg)';
+      if (value) value.textContent = profile.label;
+      
+      logTerminal('risk exposure → ' + profile.label.toLowerCase());
+    }
+    
+    // Calculate volatility score from price data
+    function calculateVolatility(data) {
+      if (!data || data.length < 10) return 0;
+      const returns = [];
+      for (let i = 1; i < data.length; i++) {
+        const ret = (data[i].c - data[i-1].c) / data[i-1].c;
+        returns.push(ret);
+      }
+      const mean = returns.reduce((a, b) => a + b, 0) / returns.length;
+      const variance = returns.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / returns.length;
+      return Math.sqrt(variance) * Math.sqrt(252) * 100; // Annualized volatility
+    }
+    
+    // Update volatility display
+    function updateVolatilityDisplay(vol) {
+      const display = document.getElementById('vol-display');
+      if (display) display.textContent = vol.toFixed(1);
+      
+      // Update LED array based on volatility
+      const leds = document.querySelectorAll('.led-array .array-led');
+      const numLit = Math.min(8, Math.floor(vol / 10));
+      leds.forEach((led, i) => {
+        led.className = 'array-led';
+        if (i < numLit) {
+          if (i >= 6) led.classList.add('red');
+          else if (i >= 4) led.classList.add('amber');
+          else led.classList.add('on');
+        }
+      });
+    }
+    
     const DEMO_STOCK_POSITIONS = [
       { ticker: 'RKLB', shares: 75, entry_price: 68.45, current_price: 72.80 },
       { ticker: 'ASTS', shares: 50, entry_price: 78.20, current_price: 83.47 },
@@ -2461,6 +2707,23 @@
       renderCatalysts();
       renderActivity();
       renderPositionCharts();
+      
+      // Initialize glossary tooltips
+      attachGlossaryTooltips();
+      
+      // Calculate and update portfolio mood based on demo data
+      const totalDailyPnl = DEMO_STOCK_POSITIONS.reduce((sum, pos) => {
+        const dailyChange = (pos.current_price - pos.entry_price) / pos.entry_price * 100;
+        return sum + dailyChange;
+      }, 0) / DEMO_STOCK_POSITIONS.length;
+      updatePortfolioMood(totalDailyPnl);
+      
+      // Initialize volatility display
+      const tickerDataCurrent = tickerData[currentTicker];
+      if (tickerDataCurrent && tickerDataCurrent.daily) {
+        const vol = calculateVolatility(tickerDataCurrent.daily.slice(-30));
+        updateVolatilityDisplay(vol);
+      }
       
       // Mission log startup message
       setTimeout(() => {
@@ -2963,6 +3226,16 @@
       setTimeout(() => {
         knob.style.boxShadow = '';
       }, 200);
+      
+      // Update band label for smoothing knob
+      if (knobId === 'smoothing') {
+        updateSmoothingBandLabel(settings.values[settings.current]);
+      }
+      
+      // Update forecast display for forecast knob
+      if (knobId === 'forecast') {
+        updateForecastDisplay(settings.values[settings.current]);
+      }
       
       // Trigger chart update effect
       flashUpdate();
