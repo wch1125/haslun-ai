@@ -104,13 +104,17 @@
     .loading-screen {
       position: fixed;
       inset: 0;
-      background: var(--bg-void);
+      background: 
+        radial-gradient(ellipse at 50% 30%, rgba(10, 20, 25, 1) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 100%, rgba(51, 255, 153, 0.03) 0%, transparent 40%),
+        var(--bg-void);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       z-index: 20000;
       transition: opacity 0.8s ease, visibility 0.8s ease;
+      overflow: hidden;
     }
     
     .loading-screen.hidden {
@@ -122,18 +126,37 @@
       position: absolute;
       inset: 0;
       background:
-        radial-gradient(1px 1px at 10% 20%, rgba(255, 255, 255, 0.8), transparent),
-        radial-gradient(1px 1px at 25% 15%, rgba(51, 255, 153, 0.6), transparent),
-        radial-gradient(1px 1px at 40% 35%, rgba(255, 255, 255, 0.7), transparent),
-        radial-gradient(1px 1px at 55% 10%, rgba(255, 179, 71, 0.5), transparent),
-        radial-gradient(1px 1px at 70% 25%, rgba(255, 255, 255, 0.6), transparent),
-        radial-gradient(1px 1px at 85% 40%, rgba(51, 255, 153, 0.4), transparent),
-        radial-gradient(1px 1px at 15% 60%, rgba(255, 255, 255, 0.5), transparent),
-        radial-gradient(1px 1px at 30% 75%, rgba(255, 179, 71, 0.4), transparent),
-        radial-gradient(1px 1px at 60% 65%, rgba(255, 255, 255, 0.6), transparent),
-        radial-gradient(1px 1px at 80% 80%, rgba(51, 255, 153, 0.5), transparent),
-        radial-gradient(1px 1px at 90% 15%, rgba(255, 255, 255, 0.4), transparent),
-        radial-gradient(1px 1px at 5% 85%, rgba(255, 179, 71, 0.3), transparent);
+        /* Distant nebula glow */
+        radial-gradient(ellipse at 30% 20%, rgba(51, 255, 153, 0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at 70% 80%, rgba(255, 179, 71, 0.05) 0%, transparent 40%),
+        /* Star layers - varying sizes and colors */
+        radial-gradient(1px 1px at 5% 8%, rgba(255, 255, 255, 0.9), transparent),
+        radial-gradient(1px 1px at 12% 25%, rgba(51, 255, 153, 0.8), transparent),
+        radial-gradient(1.5px 1.5px at 18% 12%, rgba(255, 255, 255, 0.95), transparent),
+        radial-gradient(1px 1px at 25% 45%, rgba(255, 255, 255, 0.7), transparent),
+        radial-gradient(1px 1px at 32% 18%, rgba(255, 179, 71, 0.6), transparent),
+        radial-gradient(1px 1px at 40% 65%, rgba(51, 255, 153, 0.7), transparent),
+        radial-gradient(1.5px 1.5px at 48% 35%, rgba(255, 255, 255, 0.85), transparent),
+        radial-gradient(1px 1px at 55% 8%, rgba(255, 255, 255, 0.6), transparent),
+        radial-gradient(1px 1px at 62% 52%, rgba(51, 255, 153, 0.5), transparent),
+        radial-gradient(1px 1px at 70% 22%, rgba(255, 255, 255, 0.8), transparent),
+        radial-gradient(1px 1px at 78% 68%, rgba(255, 179, 71, 0.5), transparent),
+        radial-gradient(1.5px 1.5px at 85% 15%, rgba(255, 255, 255, 0.9), transparent),
+        radial-gradient(1px 1px at 92% 42%, rgba(51, 255, 153, 0.6), transparent),
+        radial-gradient(1px 1px at 8% 72%, rgba(255, 255, 255, 0.5), transparent),
+        radial-gradient(1px 1px at 22% 88%, rgba(255, 179, 71, 0.4), transparent),
+        radial-gradient(1px 1px at 45% 78%, rgba(255, 255, 255, 0.6), transparent),
+        radial-gradient(1px 1px at 68% 92%, rgba(51, 255, 153, 0.5), transparent),
+        radial-gradient(1px 1px at 88% 85%, rgba(255, 255, 255, 0.4), transparent),
+        radial-gradient(1px 1px at 95% 5%, rgba(255, 255, 255, 0.5), transparent),
+        radial-gradient(1px 1px at 3% 55%, rgba(51, 255, 153, 0.4), transparent);
+      animation: star-drift 20s ease-in-out infinite alternate;
+    }
+    
+    @keyframes star-drift {
+      0% { transform: translate3d(0, 0, 0); opacity: 0.85; }
+      50% { transform: translate3d(-2px, -1px, 0); opacity: 1; }
+      100% { transform: translate3d(1px, 2px, 0); opacity: 0.8; }
     }
     
     .horizon {
@@ -141,31 +164,34 @@
       bottom: 0;
       left: 0;
       right: 0;
-      height: 200px;
-      background: linear-gradient(to top, var(--bg-void) 0%, transparent 100%);
+      height: 250px;
+      background: 
+        linear-gradient(to top, 
+          rgba(5, 6, 8, 1) 0%,
+          rgba(5, 6, 8, 0.95) 20%,
+          rgba(51, 255, 153, 0.08) 60%,
+          transparent 100%
+        );
+      pointer-events: none;
     }
     
+    /* Subtle ground reflection */
     .horizon::before {
       content: '';
       position: absolute;
-      bottom: 60px;
+      bottom: 0;
       left: 50%;
       transform: translateX(-50%);
-      width: 300px;
-      height: 120px;
-      background: var(--bg-void);
-      clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
-      filter: blur(1px);
-    }
-    
-    .horizon::after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 80px;
-      background: linear-gradient(to top, rgba(51, 255, 153, 0.05), transparent);
+      width: 60%;
+      height: 3px;
+      background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(51, 255, 153, 0.3) 30%,
+        rgba(51, 255, 153, 0.5) 50%,
+        rgba(51, 255, 153, 0.3) 70%,
+        transparent 100%
+      );
+      filter: blur(2px);
     }
     
     .launch-scene {
@@ -176,280 +202,384 @@
       z-index: 1;
     }
     
-    /* SOPHISTICATED UFO DESIGN */
+    /* =========================================================================
+       CINEMATIC UFO DESIGN — Close Encounters meets Arrival
+       ========================================================================= */
+    
     @keyframes ufo-hover { 
-      0%, 100% { transform: translateY(0) rotate(-1deg); } 
-      25% { transform: translateY(-6px) rotate(0.5deg); }
-      50% { transform: translateY(-10px) rotate(1deg); } 
-      75% { transform: translateY(-4px) rotate(-0.5deg); }
+      0%, 100% { transform: translate3d(0, 0, 0) rotate(-0.5deg); } 
+      25% { transform: translate3d(1px, -6px, 0) rotate(0.3deg); }
+      50% { transform: translate3d(-1px, -10px, 0) rotate(0.8deg); } 
+      75% { transform: translate3d(2px, -4px, 0) rotate(-0.3deg); }
     }
-    @keyframes dome-pulse { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
-    @keyframes ring-rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-    @keyframes light-chase { 
-      0% { opacity: 0.3; } 
-      10% { opacity: 1; } 
-      20% { opacity: 0.3; } 
-      100% { opacity: 0.3; } 
+    
+    @keyframes ufo-tilt {
+      0%, 100% { transform: rotate(0deg); }
+      50% { transform: rotate(-1deg); }
     }
-    @keyframes engine-glow { 0%, 100% { opacity: 0.6; filter: blur(3px); } 50% { opacity: 1; filter: blur(6px); } }
-    @keyframes beam-shimmer { 
-      0% { background-position: 0% 0%; } 
-      100% { background-position: 200% 0%; } 
+    
+    @keyframes dome-inner-glow { 
+      0%, 100% { opacity: 0.4; } 
+      50% { opacity: 0.8; } 
+    }
+    
+    @keyframes light-sequence { 
+      0%, 100% { opacity: 0.4; box-shadow: 0 0 4px var(--amber); }
+      15% { opacity: 1; box-shadow: 0 0 12px var(--amber), 0 0 24px var(--amber-glow); }
+      30% { opacity: 0.4; box-shadow: 0 0 4px var(--amber); }
+    }
+    
+    @keyframes hull-shimmer {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 0.6; }
+    }
+    
+    @keyframes beam-scan {
+      0% { opacity: 0.6; transform: translateX(-50%) scaleX(0.95); }
+      50% { opacity: 1; transform: translateX(-50%) scaleX(1.05); }
+      100% { opacity: 0.6; transform: translateX(-50%) scaleX(0.95); }
+    }
+    
+    @keyframes beam-particles {
+      0% { background-position: 0 0; }
+      100% { background-position: 0 30px; }
+    }
+    
+    @keyframes halo-pulse {
+      0%, 100% { opacity: 0.5; transform: translateX(-50%) scale(1); }
+      50% { opacity: 0.8; transform: translateX(-50%) scale(1.02); }
+    }
+    
+    @keyframes beacon-blink {
+      0%, 45% { opacity: 1; }
+      50%, 100% { opacity: 0.2; }
     }
     
     .mothership {
       position: relative;
-      width: 280px;
-      height: 140px;
-      margin-bottom: 30px;
-      animation: ufo-hover 4s ease-in-out infinite;
-      filter: drop-shadow(0 30px 40px rgba(0,0,0,0.8));
+      width: 320px;
+      height: 160px;
+      margin-bottom: 40px;
+      animation: ufo-hover 5s ease-in-out infinite;
+      filter: drop-shadow(0 40px 60px rgba(0,0,0,0.9));
     }
     
-    /* Main hull - sleek saucer shape */
-    .mothership-body {
+    /* Atmospheric halo beneath ship */
+    .ufo-halo {
       position: absolute;
-      bottom: 20px;
+      bottom: -30px;
       left: 50%;
       transform: translateX(-50%);
-      width: 240px;
-      height: 50px;
+      width: 400px;
+      height: 120px;
+      background: radial-gradient(ellipse at 50% 20%, rgba(51, 255, 153, 0.15) 0%, transparent 70%);
+      filter: blur(20px);
+      animation: halo-pulse 4s ease-in-out infinite;
+      pointer-events: none;
+    }
+    
+    /* Main saucer hull - layered metallic effect */
+    .mothership-body {
+      position: absolute;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 280px;
+      height: 55px;
       background: 
         linear-gradient(180deg, 
-          #5a6070 0%, 
-          #3d4250 15%,
-          #2a2f3d 40%,
-          #1a1d26 70%,
-          #0d0f14 100%
+          rgba(90, 100, 115, 1) 0%, 
+          rgba(55, 62, 75, 1) 20%,
+          rgba(35, 40, 52, 1) 50%,
+          rgba(20, 24, 32, 1) 80%,
+          rgba(10, 12, 18, 1) 100%
         );
       border-radius: 50%;
       box-shadow:
-        0 -2px 0 rgba(255,255,255,0.15),
-        0 4px 20px rgba(0,0,0,0.8),
-        inset 0 -15px 30px rgba(0,0,0,0.6),
-        inset 0 5px 10px rgba(255,255,255,0.05);
+        0 -1px 0 rgba(255,255,255,0.2),
+        0 1px 0 rgba(0,0,0,0.8),
+        inset 0 -20px 40px rgba(0,0,0,0.5),
+        inset 0 8px 16px rgba(255,255,255,0.05),
+        0 0 60px rgba(51, 255, 153, 0.2);
     }
     
-    /* Hull detail ring */
+    /* Hull highlight band */
     .mothership-body::before {
+      content: '';
+      position: absolute;
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 240px;
+      height: 1px;
+      background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(255,255,255,0.4) 30%,
+        rgba(255,255,255,0.5) 50%,
+        rgba(255,255,255,0.4) 70%,
+        transparent 100%
+      );
+    }
+    
+    /* Hull panel seam */
+    .mothership-body::after {
       content: '';
       position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      width: 200px;
-      height: 42px;
-      border: 1px solid rgba(255,255,255,0.1);
+      width: 220px;
+      height: 35px;
+      border: 1px solid rgba(255,255,255,0.06);
       border-radius: 50%;
-      box-shadow: inset 0 0 20px rgba(51, 255, 153, 0.1);
+      animation: hull-shimmer 6s ease-in-out infinite;
     }
     
-    /* Panel lines on hull */
-    .mothership-body::after {
-      content: '';
-      position: absolute;
-      top: 12px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 180px;
-      height: 1px;
-      background: linear-gradient(90deg, 
-        transparent 0%, 
-        rgba(255,255,255,0.2) 20%,
-        rgba(255,255,255,0.3) 50%,
-        rgba(255,255,255,0.2) 80%,
-        transparent 100%
-      );
-    }
-    
-    /* Glass dome with internal glow */
+    /* Glass dome - volumetric lighting */
     .mothership-dome {
       position: absolute;
-      top: 15px;
+      top: 20px;
       left: 50%;
       transform: translateX(-50%);
-      width: 100px;
-      height: 55px;
+      width: 120px;
+      height: 65px;
+      border-radius: 50% 50% 48% 48%;
       background: 
-        radial-gradient(ellipse at 30% 30%, rgba(255,255,255,0.4) 0%, transparent 50%),
-        radial-gradient(ellipse at 50% 80%, rgba(51, 255, 153, 0.3) 0%, transparent 60%),
+        radial-gradient(ellipse at 25% 25%, rgba(255,255,255,0.6) 0%, transparent 40%),
+        radial-gradient(ellipse at 50% 90%, rgba(51, 255, 153, 0.25) 0%, transparent 50%),
         linear-gradient(180deg, 
-          rgba(120, 140, 160, 0.9) 0%,
-          rgba(80, 100, 120, 0.8) 30%,
-          rgba(40, 50, 60, 0.9) 100%
+          rgba(140, 160, 180, 0.95) 0%,
+          rgba(80, 95, 115, 0.9) 30%,
+          rgba(40, 50, 65, 0.95) 70%,
+          rgba(20, 28, 40, 0.98) 100%
         );
-      border-radius: 50% 50% 45% 45%;
       box-shadow: 
-        0 -1px 0 rgba(255,255,255,0.4),
-        inset 0 -20px 40px rgba(51, 255, 153, 0.15),
-        inset 0 10px 20px rgba(255,255,255,0.1),
-        0 0 30px rgba(51, 255, 153, 0.2);
-      animation: dome-pulse 3s ease-in-out infinite;
+        0 -2px 0 rgba(255,255,255,0.5),
+        inset 0 -25px 50px rgba(51, 255, 153, 0.12),
+        inset 0 15px 30px rgba(255,255,255,0.08),
+        0 0 40px rgba(51, 255, 153, 0.25),
+        0 0 80px rgba(51, 255, 153, 0.1);
     }
     
-    /* Dome highlight */
+    /* Dome specular highlight */
     .mothership-dome::before {
       content: '';
       position: absolute;
-      top: 8px;
-      left: 15px;
-      width: 35px;
-      height: 20px;
-      background: linear-gradient(135deg, rgba(255,255,255,0.5) 0%, transparent 100%);
+      top: 10px;
+      left: 18px;
+      width: 40px;
+      height: 25px;
+      background: linear-gradient(145deg, rgba(255,255,255,0.7) 0%, transparent 100%);
       border-radius: 50%;
+      filter: blur(1px);
     }
     
-    /* Inner dome cockpit glow */
+    /* Inner cockpit glow */
     .mothership-dome::after {
       content: '';
       position: absolute;
-      bottom: 5px;
+      bottom: 8px;
       left: 50%;
       transform: translateX(-50%);
-      width: 40px;
-      height: 15px;
-      background: radial-gradient(ellipse, rgba(51, 255, 153, 0.6) 0%, transparent 70%);
-      filter: blur(3px);
+      width: 50px;
+      height: 20px;
+      background: radial-gradient(ellipse, rgba(51, 255, 153, 0.5) 0%, transparent 70%);
+      filter: blur(4px);
+      animation: dome-inner-glow 3s ease-in-out infinite;
     }
     
-    /* Running lights container - positioned around hull */
+    /* Running lights ring */
     .mothership-lights {
       position: absolute;
-      bottom: 35px;
+      bottom: 42px;
       left: 50%;
       transform: translateX(-50%);
-      width: 220px;
-      height: 30px;
+      width: 240px;
+      height: 20px;
       display: flex;
       justify-content: space-around;
       align-items: center;
     }
     
     .ship-light {
-      width: 8px;
-      height: 8px;
+      width: 10px;
+      height: 10px;
       border-radius: 50%;
-      background: radial-gradient(circle, var(--amber) 0%, #ff6600 100%);
+      background: radial-gradient(circle at 30% 30%, #ffd080 0%, var(--amber) 50%, #cc8020 100%);
       box-shadow: 
-        0 0 6px var(--amber), 
-        0 0 12px var(--amber),
-        0 0 20px rgba(255, 179, 71, 0.5);
-      animation: light-chase 2s linear infinite;
+        0 0 8px var(--amber), 
+        0 0 16px var(--amber),
+        0 0 32px rgba(255, 179, 71, 0.4);
+      animation: light-sequence 2.5s ease-in-out infinite;
     }
     
     .ship-light:nth-child(1) { animation-delay: 0s; }
-    .ship-light:nth-child(2) { animation-delay: 0.15s; }
-    .ship-light:nth-child(3) { animation-delay: 0.3s; }
-    .ship-light:nth-child(4) { animation-delay: 0.45s; }
-    .ship-light:nth-child(5) { animation-delay: 0.6s; }
-    .ship-light:nth-child(6) { animation-delay: 0.75s; }
-    .ship-light:nth-child(7) { animation-delay: 0.9s; }
-    .ship-light:nth-child(8) { animation-delay: 1.05s; }
-    .ship-light:nth-child(9) { animation-delay: 1.2s; }
+    .ship-light:nth-child(2) { animation-delay: 0.2s; }
+    .ship-light:nth-child(3) { animation-delay: 0.4s; }
+    .ship-light:nth-child(4) { animation-delay: 0.6s; }
+    .ship-light:nth-child(5) { animation-delay: 0.8s; }
+    .ship-light:nth-child(6) { animation-delay: 1.0s; }
+    .ship-light:nth-child(7) { animation-delay: 1.2s; }
+    .ship-light:nth-child(8) { animation-delay: 1.4s; }
+    .ship-light:nth-child(9) { animation-delay: 1.6s; }
     
-    /* Engine pods on sides */
+    /* Engine nacelles */
     .engine-pod {
       position: absolute;
-      bottom: 28px;
-      width: 35px;
-      height: 18px;
-      background: linear-gradient(180deg, #4a5060 0%, #2a2f3d 50%, #1a1d26 100%);
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.6);
+      bottom: 38px;
+      width: 40px;
+      height: 20px;
+      background: linear-gradient(180deg, 
+        rgba(70, 80, 95, 1) 0%, 
+        rgba(40, 48, 60, 1) 50%, 
+        rgba(20, 25, 35, 1) 100%
+      );
+      border-radius: 10px;
+      box-shadow: 
+        0 2px 8px rgba(0,0,0,0.6),
+        inset 0 1px 2px rgba(255,255,255,0.1);
     }
     
-    .engine-pod.left { left: 15px; }
-    .engine-pod.right { right: 15px; }
+    .engine-pod.left { left: 12px; }
+    .engine-pod.right { right: 12px; }
     
+    /* Engine glow */
+    .engine-pod::before {
+      content: '';
+      position: absolute;
+      bottom: -6px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 24px;
+      height: 12px;
+      background: radial-gradient(ellipse at 50% 0%, 
+        rgba(51, 255, 153, 0.9) 0%, 
+        rgba(51, 255, 153, 0.4) 40%, 
+        transparent 70%
+      );
+      filter: blur(3px);
+      animation: dome-inner-glow 2s ease-in-out infinite;
+    }
+    
+    /* Engine detail line */
     .engine-pod::after {
       content: '';
       position: absolute;
-      bottom: -4px;
+      top: 50%;
       left: 50%;
-      transform: translateX(-50%);
-      width: 20px;
-      height: 8px;
-      background: radial-gradient(ellipse at 50% 0%, rgba(51, 255, 153, 0.8) 0%, rgba(0, 255, 150, 0.4) 50%, transparent 100%);
-      animation: engine-glow 1.5s ease-in-out infinite;
+      transform: translate(-50%, -50%);
+      width: 28px;
+      height: 1px;
+      background: rgba(255,255,255,0.15);
     }
     
-    /* Antenna/sensor array on top */
+    /* Top sensor/beacon */
     .sensor-array {
       position: absolute;
-      top: 5px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 4px;
-      height: 15px;
-      background: linear-gradient(180deg, #ff3366 0%, #666 100%);
-      border-radius: 2px;
-    }
-    
-    .sensor-array::before {
-      content: '';
-      position: absolute;
-      top: -2px;
+      top: 8px;
       left: 50%;
       transform: translateX(-50%);
       width: 6px;
-      height: 6px;
-      background: #ff3366;
-      border-radius: 50%;
-      box-shadow: 0 0 8px #ff3366, 0 0 15px rgba(255, 51, 102, 0.5);
-      animation: blink 1s ease-in-out infinite;
+      height: 18px;
+      background: linear-gradient(180deg, 
+        rgba(100, 110, 120, 1) 0%,
+        rgba(60, 68, 80, 1) 100%
+      );
+      border-radius: 3px 3px 2px 2px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.4);
     }
     
-    /* Sophisticated tractor beam */
-    .tractor-beam {
+    /* Beacon light */
+    .sensor-array::before {
+      content: '';
       position: absolute;
-      top: 68px;
+      top: -4px;
       left: 50%;
       transform: translateX(-50%);
-      width: 180px;
-      height: 220px;
-      background: 
-        linear-gradient(180deg,
-          rgba(51, 255, 153, 0.7) 0%,
-          rgba(51, 255, 153, 0.4) 10%,
-          rgba(51, 255, 153, 0.2) 30%,
-          rgba(255, 179, 71, 0.15) 50%,
-          rgba(255, 179, 71, 0.05) 80%,
-          transparent 100%
-        );
-      clip-path: polygon(30% 0%, 70% 0%, 100% 100%, 0% 100%);
-      opacity: 0;
-      transition: opacity 0.6s ease;
+      width: 8px;
+      height: 8px;
+      background: radial-gradient(circle, #ff4466 0%, #cc2244 100%);
+      border-radius: 50%;
+      box-shadow: 
+        0 0 8px #ff4466, 
+        0 0 16px rgba(255, 68, 102, 0.6),
+        0 0 32px rgba(255, 68, 102, 0.3);
+      animation: beacon-blink 1.2s ease-in-out infinite;
     }
     
+    /* Scanner/tractor beam - volumetric cone */
+    .tractor-beam {
+      position: absolute;
+      top: 82px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 200px;
+      height: 260px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.8s ease;
+    }
+    
+    /* Beam outer glow */
     .tractor-beam::before {
       content: '';
       position: absolute;
-      inset: 0;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      height: 100%;
       background: 
-        repeating-linear-gradient(
-          0deg,
-          transparent,
-          transparent 4px,
-          rgba(255,255,255,0.03) 4px,
-          rgba(255,255,255,0.03) 8px
+        linear-gradient(180deg,
+          rgba(51, 255, 153, 0.7) 0%,
+          rgba(51, 255, 153, 0.35) 15%,
+          rgba(255, 179, 71, 0.2) 40%,
+          rgba(255, 179, 71, 0.08) 70%,
+          transparent 100%
         );
-      animation: beam-shimmer 3s linear infinite;
+      clip-path: polygon(35% 0%, 65% 0%, 100% 100%, 0% 100%);
+      filter: blur(2px);
+      animation: beam-scan 3s ease-in-out infinite;
     }
     
+    /* Beam scan lines */
     .tractor-beam::after {
       content: '';
       position: absolute;
       top: 0;
       left: 50%;
       transform: translateX(-50%);
+      width: 100%;
+      height: 100%;
+      background: 
+        repeating-linear-gradient(180deg,
+          transparent 0px,
+          transparent 4px,
+          rgba(255,255,255,0.04) 4px,
+          rgba(255,255,255,0.04) 6px
+        );
+      clip-path: polygon(35% 0%, 65% 0%, 100% 100%, 0% 100%);
+      animation: beam-particles 2s linear infinite;
+    }
+    
+    /* Inner beam core */
+    .beam-core {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
       width: 60%;
       height: 100%;
-      background: radial-gradient(ellipse at 50% 0%, rgba(51, 255, 153, 0.3) 0%, transparent 70%);
+      background: radial-gradient(ellipse at 50% 0%, 
+        rgba(255, 255, 255, 0.3) 0%, 
+        rgba(51, 255, 153, 0.15) 30%,
+        transparent 70%
+      );
+      clip-path: polygon(40% 0%, 60% 0%, 85% 100%, 15% 100%);
     }
     
     .tractor-beam.active {
       opacity: 1;
-      animation: beam-pulse 2s ease-in-out infinite;
     }
     
     .loading-content {
@@ -458,47 +588,86 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      margin-top: 80px;
+      margin-top: 60px;
     }
     
     .loading-brand {
       font-family: var(--font-display);
-      font-size: 2rem;
+      font-size: 2.5rem;
       font-weight: 600;
-      letter-spacing: 0.25em;
+      letter-spacing: 0.3em;
       color: var(--phosphor);
-      text-shadow: 0 0 30px var(--phosphor-glow), 0 0 60px rgba(51, 255, 153, 0.3);
+      text-shadow: 
+        0 0 30px var(--phosphor-glow), 
+        0 0 60px rgba(51, 255, 153, 0.3),
+        0 0 100px rgba(51, 255, 153, 0.15);
       margin-bottom: 0.5rem;
+      animation: brand-glow 3s ease-in-out infinite;
+    }
+    
+    @keyframes brand-glow {
+      0%, 100% { opacity: 0.9; text-shadow: 0 0 30px var(--phosphor-glow), 0 0 60px rgba(51, 255, 153, 0.3); }
+      50% { opacity: 1; text-shadow: 0 0 40px var(--phosphor-glow), 0 0 80px rgba(51, 255, 153, 0.4), 0 0 120px rgba(51, 255, 153, 0.2); }
     }
     
     .loading-sub {
-      font-size: 0.7rem;
-      letter-spacing: 0.3em;
+      font-size: 0.75rem;
+      letter-spacing: 0.4em;
       color: var(--text-muted);
       text-transform: uppercase;
-      margin-bottom: 2rem;
+      margin-bottom: 2.5rem;
+      opacity: 0.8;
     }
     
     .countdown {
       font-family: var(--font-display);
-      font-size: 3.5rem;
+      font-size: 4rem;
       font-weight: 700;
       color: var(--amber);
-      text-shadow: 0 0 30px var(--amber-glow), 0 0 60px rgba(255, 179, 71, 0.4);
-      margin-bottom: 1rem;
+      text-shadow: 
+        0 0 30px var(--amber-glow), 
+        0 0 60px rgba(255, 179, 71, 0.5),
+        0 0 100px rgba(255, 179, 71, 0.25);
+      margin-bottom: 1.5rem;
+      min-width: 80px;
+      text-align: center;
     }
     
     .countdown.go {
       color: var(--phosphor);
-      text-shadow: 0 0 30px var(--phosphor-glow);
-      animation: pulse 0.3s ease-in-out 3;
+      text-shadow: 
+        0 0 40px var(--phosphor-glow),
+        0 0 80px rgba(51, 255, 153, 0.6);
+      animation: countdown-flash 0.4s ease-out 3;
+    }
+    
+    @keyframes countdown-flash {
+      0% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.15); opacity: 1; }
+      100% { transform: scale(1); opacity: 0.9; }
     }
     
     .loading-status {
-      font-size: 0.75rem;
-      letter-spacing: 0.15em;
+      font-size: 0.8rem;
+      letter-spacing: 0.2em;
       color: var(--text-muted);
       text-transform: uppercase;
+      position: relative;
+      padding-left: 1rem;
+    }
+    
+    /* Terminal cursor effect */
+    .loading-status::before {
+      content: '▸';
+      position: absolute;
+      left: 0;
+      color: var(--phosphor);
+      animation: cursor-blink 1s step-end infinite;
+    }
+    
+    @keyframes cursor-blink {
+      0%, 50% { opacity: 1; }
+      51%, 100% { opacity: 0; }
     }
     
     /* APP CONTAINER */
@@ -1352,6 +1521,7 @@
     <div class="stars"></div>
     <div class="horizon"></div>
     <div class="launch-scene">
+      <div class="ufo-halo"></div>
       <div class="mothership">
         <div class="sensor-array"></div>
         <div class="mothership-dome"></div>
@@ -1369,7 +1539,9 @@
           <div class="ship-light"></div>
           <div class="ship-light"></div>
         </div>
-        <div class="tractor-beam" id="tractor-beam"></div>
+        <div class="tractor-beam" id="tractor-beam">
+          <div class="beam-core"></div>
+        </div>
       </div>
     </div>
     <div class="loading-content">
