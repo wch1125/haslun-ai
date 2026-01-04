@@ -675,6 +675,26 @@
     .watchlist-change { font-size: 0.7rem; margin-top: 0.15rem; }
     .watchlist-change.positive { color: var(--signal-up); }
     .watchlist-change.negative { color: var(--signal-down); }
+    .watchlist-info-btn { 
+      position: absolute;
+      left: 0.5rem;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 18px;
+      height: 18px;
+      padding: 0;
+      border: none;
+      background: transparent;
+      color: var(--text-dim);
+      font-size: 0.6rem;
+      cursor: pointer;
+      opacity: 0;
+      transition: all 0.15s;
+      z-index: 5;
+    }
+    .watchlist-item:hover .watchlist-info-btn { opacity: 0.6; }
+    .watchlist-info-btn:hover { opacity: 1 !important; color: var(--phosphor); transform: translateY(-50%) scale(1.2); }
+    .watchlist-item { padding-left: 1.75rem; }
     
     .content { flex: 1; display: flex; flex-direction: column; min-width: 0; overflow: hidden; background: var(--bg-deep); }
     .tab-panel { display: none; flex: 1; flex-direction: column; overflow: hidden; }
@@ -770,6 +790,20 @@
     
     .ticker-tag { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.3rem 0.6rem; background: var(--bg-input); border: 1px solid var(--border); font-size: 0.75rem; font-weight: 600; color: var(--text-bright); letter-spacing: 0.05em; }
     .ticker-dot { width: 6px; height: 6px; border-radius: 50%; }
+    .dossier-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-dim);
+      font-size: 0.6rem;
+      cursor: pointer;
+      padding: 0;
+      margin-right: 0.25rem;
+      opacity: 0.4;
+      transition: all 0.15s;
+    }
+    .ticker-tag:hover .dossier-btn,
+    .position-row:hover .dossier-btn { opacity: 0.8; }
+    .dossier-btn:hover { opacity: 1 !important; color: var(--phosphor); transform: scale(1.3); }
     .structure-tag { display: inline-block; padding: 0.25rem 0.5rem; background: var(--bg-input); border: 1px solid var(--border); font-size: 0.6rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); }
     .pnl-positive { color: var(--signal-up); }
     .pnl-negative { color: var(--signal-down); }
@@ -1670,6 +1704,370 @@
       font-style: italic;
     }
     
+    /* =========================================================================
+       PIP-BOY TICKER DOSSIER — Retro terminal style popup
+       ========================================================================= */
+    .pipboy-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 26000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+    .pipboy-overlay.visible {
+      pointer-events: auto;
+      opacity: 1;
+    }
+    .pipboy-overlay.hidden {
+      display: none;
+    }
+
+    .pipboy-backdrop {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at center, rgba(0,0,0,0.7), rgba(0,0,0,0.95));
+      backdrop-filter: blur(6px);
+    }
+
+    .pipboy-container {
+      position: relative;
+      width: min(800px, 95vw);
+      max-height: 85vh;
+      background: 
+        linear-gradient(180deg, rgba(8, 12, 18, 0.98) 0%, rgba(5, 8, 12, 0.99) 100%);
+      border-radius: 12px;
+      border: 2px solid var(--phosphor-dim);
+      box-shadow: 
+        0 0 60px rgba(0,0,0,0.9),
+        0 0 40px var(--phosphor-glow),
+        inset 0 0 100px rgba(51, 255, 153, 0.03);
+      overflow: hidden;
+      z-index: 1;
+    }
+
+    /* CRT scanlines overlay */
+    .pipboy-container::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, 0.15) 2px,
+        rgba(0, 0, 0, 0.15) 4px
+      );
+      pointer-events: none;
+      z-index: 100;
+    }
+
+    /* Phosphor glow effect */
+    .pipboy-container::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 50% 0%, rgba(51, 255, 153, 0.08), transparent 60%);
+      pointer-events: none;
+      z-index: 99;
+    }
+
+    .pipboy-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(51, 255, 153, 0.08), transparent);
+    }
+
+    .pipboy-title-block {
+      flex: 1;
+    }
+
+    .pipboy-codename {
+      font-family: var(--font-display);
+      font-size: 0.6rem;
+      letter-spacing: 0.25em;
+      color: var(--text-dim);
+      margin-bottom: 0.25rem;
+    }
+
+    .pipboy-ticker-name {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      margin: 0;
+      text-shadow: 0 0 20px var(--phosphor-glow);
+    }
+
+    .pipboy-sector {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+      letter-spacing: 0.08em;
+    }
+
+    .pipboy-threat {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.35rem;
+    }
+
+    .pipboy-threat-label {
+      font-size: 0.55rem;
+      letter-spacing: 0.15em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+    }
+
+    .pipboy-threat-level {
+      font-family: var(--font-display);
+      font-size: 0.75rem;
+      letter-spacing: 0.12em;
+      padding: 0.3rem 0.6rem;
+      border: 1px solid;
+      border-radius: 4px;
+    }
+    .pipboy-threat-level.low { color: var(--phosphor); border-color: var(--phosphor-dim); background: var(--phosphor-ghost); }
+    .pipboy-threat-level.moderate { color: var(--amber); border-color: var(--amber-dim); background: rgba(255, 179, 71, 0.1); }
+    .pipboy-threat-level.high { color: #ff6b6b; border-color: rgba(255, 107, 107, 0.5); background: rgba(255, 107, 107, 0.1); }
+    .pipboy-threat-level.extreme { color: #ff4444; border-color: #ff4444; background: rgba(255, 68, 68, 0.15); animation: pulse 1.5s ease-in-out infinite; }
+    .pipboy-threat-level.chaotic { color: #b388ff; border-color: #b388ff; background: rgba(179, 136, 255, 0.1); animation: pulse 1s ease-in-out infinite; }
+
+    .pipboy-close {
+      position: absolute;
+      top: 0.75rem;
+      right: 0.75rem;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 0.75rem;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      z-index: 101;
+    }
+    .pipboy-close:hover {
+      color: var(--phosphor);
+      border-color: var(--phosphor-dim);
+    }
+
+    /* Dial Navigation */
+    .pipboy-nav {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-card);
+    }
+
+    .pipboy-dial {
+      flex: 1;
+      padding: 0.65rem 0.5rem;
+      background: transparent;
+      border: none;
+      border-right: 1px solid var(--border);
+      color: var(--text-muted);
+      font-family: var(--font-body);
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.15s;
+      position: relative;
+    }
+    .pipboy-dial:last-child { border-right: none; }
+    .pipboy-dial:hover {
+      color: var(--phosphor);
+      background: var(--phosphor-ghost);
+    }
+    .pipboy-dial.active {
+      color: var(--phosphor);
+      background: rgba(51, 255, 153, 0.1);
+    }
+    .pipboy-dial.active::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--phosphor);
+      box-shadow: 0 0 8px var(--phosphor);
+    }
+
+    /* Content Panels */
+    .pipboy-body {
+      padding: 1rem 1.25rem;
+      max-height: calc(85vh - 180px);
+      overflow-y: auto;
+    }
+
+    .pipboy-panel {
+      display: none;
+    }
+    .pipboy-panel.active {
+      display: block;
+      animation: pipboy-fade 0.2s ease;
+    }
+
+    @keyframes pipboy-fade {
+      from { opacity: 0; transform: translateY(5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .pipboy-section {
+      margin-bottom: 1.25rem;
+    }
+
+    .pipboy-section-title {
+      font-family: var(--font-display);
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      color: var(--phosphor);
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+      padding-bottom: 0.35rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .pipboy-text {
+      font-size: 0.8rem;
+      line-height: 1.55;
+      color: var(--text);
+    }
+
+    .pipboy-lore {
+      font-size: 0.75rem;
+      line-height: 1.5;
+      color: var(--text-muted);
+      font-style: italic;
+      padding: 0.75rem;
+      background: var(--bg-card);
+      border-left: 2px solid var(--phosphor-dim);
+      margin-top: 0.75rem;
+    }
+
+    /* Vitals Grid */
+    .pipboy-vitals {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.75rem;
+    }
+
+    .pipboy-vital {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 0.6rem;
+      text-align: center;
+    }
+
+    .pipboy-vital-value {
+      font-family: var(--font-display);
+      font-size: 0.85rem;
+      color: var(--text-bright);
+      margin-bottom: 0.25rem;
+    }
+
+    .pipboy-vital-label {
+      font-size: 0.55rem;
+      letter-spacing: 0.1em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+    }
+
+    /* Catalyst List */
+    .pipboy-catalyst {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.6rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .pipboy-catalyst:last-child { border-bottom: none; }
+
+    .pipboy-catalyst-date {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      min-width: 80px;
+    }
+
+    .pipboy-catalyst-event {
+      flex: 1;
+      font-size: 0.75rem;
+      color: var(--text);
+    }
+
+    .pipboy-catalyst-impact {
+      font-size: 0.55rem;
+      letter-spacing: 0.1em;
+      padding: 0.2rem 0.5rem;
+      border: 1px solid;
+      text-transform: uppercase;
+    }
+    .pipboy-catalyst-impact.high { color: #ff6b6b; border-color: rgba(255, 107, 107, 0.5); }
+    .pipboy-catalyst-impact.medium { color: var(--amber); border-color: var(--amber-dim); }
+    .pipboy-catalyst-impact.low { color: var(--phosphor); border-color: var(--phosphor-dim); }
+
+    /* Risk List */
+    .pipboy-risk {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      padding: 0.4rem 0;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+    .pipboy-risk::before {
+      content: '⚠';
+      color: var(--amber);
+      font-size: 0.65rem;
+    }
+
+    /* Stats Bar */
+    .pipboy-stats-bar {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.75rem 1.25rem;
+      background: var(--bg-card);
+      border-top: 1px solid var(--border);
+    }
+
+    .pipboy-stat {
+      text-align: center;
+    }
+
+    .pipboy-stat-value {
+      font-family: var(--font-display);
+      font-size: 0.9rem;
+      color: var(--text-bright);
+    }
+    .pipboy-stat-value.positive { color: var(--phosphor); }
+    .pipboy-stat-value.negative { color: #ff6b6b; }
+
+    .pipboy-stat-label {
+      font-size: 0.5rem;
+      letter-spacing: 0.1em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      margin-top: 0.15rem;
+    }
+
+    /* Mobile responsive */
+    @media (max-width: 600px) {
+      .pipboy-vitals { grid-template-columns: repeat(2, 1fr); }
+      .pipboy-dial { font-size: 0.5rem; padding: 0.5rem 0.25rem; }
+      .pipboy-ticker-name { font-size: 1.1rem; }
+    }
+    
     @media (max-width: 1200px) { .right-sidebar { display: none; } }
     @media (max-width: 900px) { .sidebar { width: 240px; } .positions-grid { grid-template-columns: repeat(2, 1fr); } .arcade-hud { display: none; } }
     @media (max-width: 768px) { .sidebar { display: none; } .positions-grid { grid-template-columns: 1fr 1fr; } .nav-tab { padding: 0.4rem 0.6rem; font-size: 0.6rem; } .terminal-log { display: none; } }
@@ -2220,6 +2618,89 @@
       </div>
     </div>
 
+    <!-- PIP-BOY TICKER DOSSIER OVERLAY -->
+    <div id="pipboy-overlay" class="pipboy-overlay hidden">
+      <div class="pipboy-backdrop"></div>
+      <div class="pipboy-container">
+        <button class="pipboy-close" id="pipboy-close-btn">✕</button>
+        
+        <div class="pipboy-header">
+          <div class="pipboy-title-block">
+            <div class="pipboy-codename" id="pipboy-codename">CODENAME: ELECTRON</div>
+            <h2 class="pipboy-ticker-name" id="pipboy-ticker-name">RKLB</h2>
+            <div class="pipboy-sector" id="pipboy-sector">Space Launch & Satellites</div>
+          </div>
+          <div class="pipboy-threat">
+            <div class="pipboy-threat-label">VOLATILITY THREAT</div>
+            <div class="pipboy-threat-level moderate" id="pipboy-threat">MODERATE</div>
+          </div>
+        </div>
+
+        <nav class="pipboy-nav">
+          <button class="pipboy-dial active" data-panel="overview">◈ OVERVIEW</button>
+          <button class="pipboy-dial" data-panel="thesis">◉ THESIS</button>
+          <button class="pipboy-dial" data-panel="catalysts">▲ CATALYSTS</button>
+          <button class="pipboy-dial" data-panel="risks">⚠ RISKS</button>
+          <button class="pipboy-dial" data-panel="vitals">◐ VITALS</button>
+        </nav>
+
+        <div class="pipboy-body">
+          <!-- OVERVIEW PANEL -->
+          <div class="pipboy-panel active" id="panel-overview">
+            <div class="pipboy-section">
+              <div class="pipboy-section-title">Mission Brief</div>
+              <p class="pipboy-text" id="pipboy-summary">Loading...</p>
+            </div>
+            <div class="pipboy-lore" id="pipboy-lore">
+              "Loading tactical assessment..."
+            </div>
+          </div>
+
+          <!-- THESIS PANEL -->
+          <div class="pipboy-panel" id="panel-thesis">
+            <div class="pipboy-section">
+              <div class="pipboy-section-title">Investment Thesis</div>
+              <p class="pipboy-text" id="pipboy-thesis">Loading...</p>
+            </div>
+          </div>
+
+          <!-- CATALYSTS PANEL -->
+          <div class="pipboy-panel" id="panel-catalysts">
+            <div class="pipboy-section">
+              <div class="pipboy-section-title">Upcoming Catalysts</div>
+              <div id="pipboy-catalysts-list">
+                <!-- Catalysts inserted here -->
+              </div>
+            </div>
+          </div>
+
+          <!-- RISKS PANEL -->
+          <div class="pipboy-panel" id="panel-risks">
+            <div class="pipboy-section">
+              <div class="pipboy-section-title">Risk Factors</div>
+              <div id="pipboy-risks-list">
+                <!-- Risks inserted here -->
+              </div>
+            </div>
+          </div>
+
+          <!-- VITALS PANEL -->
+          <div class="pipboy-panel" id="panel-vitals">
+            <div class="pipboy-section">
+              <div class="pipboy-section-title">Company Vitals</div>
+              <div class="pipboy-vitals" id="pipboy-vitals-grid">
+                <!-- Vitals inserted here -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="pipboy-stats-bar" id="pipboy-stats-bar">
+          <!-- Live stats from current data inserted here -->
+        </div>
+      </div>
+    </div>
+
     <!-- About trigger button -->
     <button class="about-trigger" id="about-trigger-btn">? ABOUT THIS SIMULATION</button>
   </div>
@@ -2286,6 +2767,441 @@
     };
     
     const rangeDays = { '1W': 7, '1M': 30, '3M': 90, '6M': 180, '1Y': 365, 'ALL': 9999 };
+    
+    // =========================================================================
+    // TICKER PROFILES — Pip-Boy style dossiers for each position
+    // =========================================================================
+    const TICKER_PROFILES = {
+      RKLB: {
+        name: "Rocket Lab USA",
+        codename: "ELECTRON",
+        sector: "Space Launch & Satellites",
+        threat_level: "MODERATE",
+        summary: "Small-launch pioneer now building medium-lift Neutron rocket. Vertically integrated: they make the rocket, the satellite bus, and increasingly the payload itself.",
+        thesis: "Rocket Lab is betting that owning the entire stack — from launch to spacecraft to ground systems — creates compounding margin advantages as the space economy scales.",
+        catalysts: [
+          { date: "Q1 2026", event: "Neutron First Flight", impact: "HIGH" },
+          { date: "Ongoing", event: "Electron Launch Cadence", impact: "MEDIUM" },
+          { date: "2026", event: "Space Systems Revenue Growth", impact: "HIGH" }
+        ],
+        risks: [
+          "Neutron development delays or cost overruns",
+          "SpaceX pricing pressure on rideshare market",
+          "Customer concentration in government contracts"
+        ],
+        vitals: {
+          founded: 2006,
+          hq: "Long Beach, CA",
+          employees: "~1,800",
+          launches: "50+"
+        },
+        lore: "In the orbital logistics game, Electron is the reliable shuttle bus — small, frequent, precise. Neutron is the freight train they're building next. If it works, they'll own both lanes of the highway to space."
+      },
+      LUNR: {
+        name: "Intuitive Machines",
+        codename: "MOONSHOT",
+        sector: "Lunar Services",
+        threat_level: "HIGH",
+        summary: "Commercial lunar lander company. First private US company to soft-land on the Moon (IM-1, Feb 2024). NASA CLPS contractor building recurring lunar delivery business.",
+        thesis: "The Moon is becoming infrastructure. Intuitive Machines is positioning as the FedEx of cislunar space — delivering payloads, building navigation networks, and eventually operating surface systems.",
+        catalysts: [
+          { date: "Feb 2026", event: "IM-2 Lunar Landing", impact: "HIGH" },
+          { date: "2026", event: "Lunar Data Network Contracts", impact: "MEDIUM" },
+          { date: "2027", event: "IM-3 Mission", impact: "HIGH" }
+        ],
+        risks: [
+          "Mission failure risk (space is hard)",
+          "NASA budget dependency",
+          "Long timeline to profitability"
+        ],
+        vitals: {
+          founded: 2013,
+          hq: "Houston, TX",
+          employees: "~500",
+          landings: "1 (IM-1)"
+        },
+        lore: "They tipped over on landing and still counted it as a win. That's not copium — that's the reality of lunar exploration. Every data point is gold. They're learning faster than anyone else in the West."
+      },
+      ASTS: {
+        name: "AST SpaceMobile",
+        codename: "BLUEBIRD",
+        sector: "Space-Based Cellular",
+        threat_level: "EXTREME",
+        summary: "Building the first space-based cellular broadband network. Giant satellites (64m² arrays) connect directly to unmodified smartphones. If it works, it's the biggest addressable market in telecom history.",
+        thesis: "5 billion people have phones. 90% of Earth has no cellular coverage. AST is building orbital cell towers to close that gap — no new hardware required on the ground.",
+        catalysts: [
+          { date: "Q1 2026", event: "Commercial Service Launch", impact: "HIGH" },
+          { date: "2026", event: "Block 2 Satellite Deployment", impact: "HIGH" },
+          { date: "Ongoing", event: "MNO Partnership Expansion", impact: "MEDIUM" }
+        ],
+        risks: [
+          "Unproven technology at scale",
+          "Regulatory complexity across jurisdictions",
+          "Capital-intensive deployment phase",
+          "Competition from Starlink Direct-to-Cell"
+        ],
+        vitals: {
+          founded: 2017,
+          hq: "Midland, TX",
+          employees: "~500",
+          satellites: "5 (BlueBird test constellation)"
+        },
+        lore: "The satellites are the size of basketball courts. The engineering is borderline absurd. But if they pull it off, every phone on Earth becomes a satellite phone. That's not a product — that's a paradigm shift."
+      },
+      ACHR: {
+        name: "Archer Aviation",
+        codename: "MIDNIGHT",
+        sector: "eVTOL / Urban Air Mobility",
+        threat_level: "MODERATE",
+        summary: "Electric vertical takeoff and landing aircraft for urban air taxi service. Partnership with United Airlines. Manufacturing facility in Georgia.",
+        thesis: "Traffic is broken. Archer is betting that electric flight becomes cheap and quiet enough to create a new transportation layer above cities.",
+        catalysts: [
+          { date: "Q1 2026", event: "FAA Type Certification", impact: "HIGH" },
+          { date: "2026", event: "Commercial Launch (UAE)", impact: "HIGH" },
+          { date: "2027", event: "US Commercial Operations", impact: "HIGH" }
+        ],
+        risks: [
+          "FAA certification timeline uncertainty",
+          "Battery energy density limitations",
+          "Infrastructure buildout costs",
+          "Public acceptance of urban air traffic"
+        ],
+        vitals: {
+          founded: 2018,
+          hq: "San Jose, CA",
+          employees: "~900",
+          aircraft: "Midnight (4+1 passenger)"
+        },
+        lore: "The Jetsons promised us flying cars. Archer is delivering electric helicopters that don't sound like helicopters. Close enough."
+      },
+      JOBY: {
+        name: "Joby Aviation",
+        codename: "S4",
+        sector: "eVTOL / Urban Air Mobility",
+        threat_level: "MODERATE",
+        summary: "Furthest along in eVTOL certification. Toyota-backed. Building manufacturing at scale. Air taxi service planned for 2025.",
+        thesis: "First mover advantage in a winner-take-most market. Joby has more flight hours, more capital, and more regulatory progress than any competitor.",
+        catalysts: [
+          { date: "2025-2026", event: "FAA Type Certification", impact: "HIGH" },
+          { date: "2025", event: "Initial Commercial Ops (Dubai)", impact: "HIGH" },
+          { date: "2026", event: "US Market Launch", impact: "HIGH" }
+        ],
+        risks: [
+          "Certification delays",
+          "High cash burn pre-revenue",
+          "Competitive pressure from Archer, Lilium",
+          "Noise and safety perception issues"
+        ],
+        vitals: {
+          founded: 2009,
+          hq: "Santa Cruz, CA",
+          employees: "~1,500",
+          aircraft: "S4 (4+1 passenger)"
+        },
+        lore: "They've been at this longer than anyone. The Toyota money helps. But the real moat is the million+ miles of flight test data. That's not something you can buy."
+      },
+      GME: {
+        name: "GameStop Corp",
+        codename: "DIAMOND HANDS",
+        sector: "Retail / Meme",
+        threat_level: "CHAOTIC",
+        summary: "Video game retailer turned meme stock phenomenon. Now pivoting toward... something. Cash-rich balance sheet. Ryan Cohen steering the ship into uncharted waters.",
+        thesis: "This isn't a thesis. This is volatility exposure with a side of cultural commentary. The balance sheet is real; the business model is TBD.",
+        catalysts: [
+          { date: "Ongoing", event: "Social Media Sentiment Spikes", impact: "HIGH" },
+          { date: "Unknown", event: "Strategic Pivot Announcements", impact: "MEDIUM" },
+          { date: "Quarterly", event: "Earnings Surprises", impact: "MEDIUM" }
+        ],
+        risks: [
+          "Fundamental business decline in physical games",
+          "Meme momentum can reverse violently",
+          "No clear path to sustainable growth",
+          "Regulatory scrutiny on retail trading"
+        ],
+        vitals: {
+          founded: 1984,
+          hq: "Grapevine, TX",
+          employees: "~8,000",
+          stores: "~4,000"
+        },
+        lore: "The stock that broke the internet in 2021. Whether it's a movement, a trade, or a cautionary tale depends on your entry price and your exit strategy. We hold it because the volatility is useful. Not financial advice."
+      },
+      BKSY: {
+        name: "BlackSky Technology",
+        codename: "SPECTRA",
+        sector: "Geospatial Intelligence",
+        threat_level: "LOW",
+        summary: "Real-time Earth observation satellite constellation. AI-powered analytics platform. Defense and intelligence community customers.",
+        thesis: "Imagery is becoming a utility. BlackSky is building the always-on, AI-analyzed feed of what's happening on Earth — updated hourly, not daily.",
+        catalysts: [
+          { date: "Ongoing", event: "Constellation Expansion", impact: "MEDIUM" },
+          { date: "2026", event: "Gen-3 Satellite Deployment", impact: "MEDIUM" },
+          { date: "Ongoing", event: "Government Contract Wins", impact: "MEDIUM" }
+        ],
+        risks: [
+          "Competition from Planet, Maxar",
+          "Government budget cycles",
+          "Small constellation limits revisit rates"
+        ],
+        vitals: {
+          founded: 2014,
+          hq: "Herndon, VA",
+          employees: "~350",
+          satellites: "18"
+        },
+        lore: "They photograph the same spot on Earth multiple times per day. The value isn't in any single image — it's in the delta. What changed? When? That's intelligence."
+      },
+      RDW: {
+        name: "Redwire Corporation",
+        codename: "FORGE",
+        sector: "Space Infrastructure",
+        threat_level: "LOW",
+        summary: "Space infrastructure company. On-orbit manufacturing, solar arrays, sensors. Rolls up smaller space tech companies. Supplies components across the industry.",
+        thesis: "Every satellite needs stuff — solar panels, antennas, sensors, structures. Redwire is the Home Depot of space hardware.",
+        catalysts: [
+          { date: "Ongoing", event: "M&A Integration", impact: "MEDIUM" },
+          { date: "2026", event: "In-Space Manufacturing Demos", impact: "MEDIUM" },
+          { date: "Ongoing", event: "NASA/DoD Contracts", impact: "MEDIUM" }
+        ],
+        risks: [
+          "Integration risk from acquisitions",
+          "Customer concentration",
+          "Supply chain dependencies"
+        ],
+        vitals: {
+          founded: 2020,
+          hq: "Jacksonville, FL",
+          employees: "~700",
+          facilities: "20+"
+        },
+        lore: "While everyone argues about who gets to launch the rockets, Redwire quietly sells picks and shovels to all of them. Boring but effective."
+      },
+      PL: {
+        name: "Planet Labs",
+        codename: "DOVE",
+        sector: "Earth Observation",
+        threat_level: "LOW",
+        summary: "Largest Earth observation satellite constellation. Daily imaging of the entire planet. Commercial, government, and NGO customers.",
+        thesis: "A daily photo of every spot on Earth creates unprecedented visibility into human activity. Agriculture, supply chains, climate — it's all visible from orbit.",
+        catalysts: [
+          { date: "Ongoing", event: "Data Services Revenue Growth", impact: "MEDIUM" },
+          { date: "2026", event: "Pelican Constellation Launch", impact: "MEDIUM" },
+          { date: "Ongoing", event: "Government Contract Expansion", impact: "MEDIUM" }
+        ],
+        risks: [
+          "Path to profitability unclear",
+          "Competition from free/low-cost imagery",
+          "Data commoditization pressure"
+        ],
+        vitals: {
+          founded: 2010,
+          hq: "San Francisco, CA",
+          employees: "~800",
+          satellites: "200+"
+        },
+        lore: "They image the entire Earth every single day. Every field, every port, every construction site. The value is in what you can see changing over time."
+      },
+      EVEX: {
+        name: "Eve Holding",
+        codename: "VECTOR",
+        sector: "eVTOL / Urban Air Mobility",
+        threat_level: "MODERATE",
+        summary: "Embraer-backed eVTOL company. Leveraging decades of aerospace manufacturing experience. Urban air mobility focus with global ambitions.",
+        thesis: "Embraer knows how to build and certify aircraft at scale. Eve inherits that DNA for the electric age.",
+        catalysts: [
+          { date: "2026", event: "Prototype Flight Testing", impact: "MEDIUM" },
+          { date: "2027", event: "Certification Progress", impact: "HIGH" },
+          { date: "Ongoing", event: "Pre-order Conversions", impact: "MEDIUM" }
+        ],
+        risks: [
+          "Later to market than Joby/Archer",
+          "Brazil HQ complicates US certification",
+          "Competitive pressure in crowded market"
+        ],
+        vitals: {
+          founded: 2020,
+          hq: "Melbourne, FL / São Paulo",
+          employees: "~600",
+          aircraft: "eVTOL (4+1 passenger)"
+        },
+        lore: "The Embraer connection is the whole story. These are the people who built the E-Jets. They know certification, they know manufacturing, they know airlines."
+      },
+      KTOS: {
+        name: "Kratos Defense",
+        codename: "VALKYRIE",
+        sector: "Defense Technology",
+        threat_level: "LOW",
+        summary: "Unmanned systems and hypersonic tech. Affordable attritable drones for the DoD. Satellite ground systems. The affordable end of the defense contractor spectrum.",
+        thesis: "Future warfare is drone warfare. Kratos builds the cheap, expendable, AI-piloted aircraft that will fly alongside manned fighters.",
+        catalysts: [
+          { date: "Ongoing", event: "CCA Program Contracts", impact: "HIGH" },
+          { date: "2026", event: "Hypersonic Testing", impact: "MEDIUM" },
+          { date: "Ongoing", event: "DoD Budget Allocations", impact: "MEDIUM" }
+        ],
+        risks: [
+          "Defense budget politics",
+          "Program cancellation risk",
+          "Competition from larger primes"
+        ],
+        vitals: {
+          founded: 1994,
+          hq: "Colorado Springs, CO",
+          employees: "~3,500",
+          focus: "Drones, Missiles, Space"
+        },
+        lore: "While Lockheed builds the $100M jets, Kratos builds the $2M wingmen. In an era of attrition warfare, cheap and many beats expensive and few."
+      },
+      IRDM: {
+        name: "Iridium Communications",
+        codename: "CONSTELLATION",
+        sector: "Satellite Communications",
+        threat_level: "LOW",
+        summary: "Global satellite phone and IoT network. 66-satellite constellation provides pole-to-pole coverage. Government, maritime, aviation customers.",
+        thesis: "The original satellite phone network, now focused on IoT and specialty markets where Starlink can't compete on coverage or reliability.",
+        catalysts: [
+          { date: "Ongoing", event: "IoT Revenue Growth", impact: "MEDIUM" },
+          { date: "Ongoing", event: "Government Contract Renewals", impact: "MEDIUM" },
+          { date: "Long-term", event: "Next-Gen Constellation Planning", impact: "LOW" }
+        ],
+        risks: [
+          "Technology disruption from LEO constellations",
+          "Limited growth runway",
+          "Commodity pricing pressure"
+        ],
+        vitals: {
+          founded: 2000,
+          hq: "McLean, VA",
+          employees: "~600",
+          satellites: "66 active"
+        },
+        lore: "They went bankrupt once and came back. The constellation is paid for. The cash flows. It's not sexy, but it's the only network that works everywhere on Earth."
+      },
+      MP: {
+        name: "MP Materials",
+        codename: "RARE EARTH",
+        sector: "Critical Minerals",
+        threat_level: "LOW",
+        summary: "Largest rare earth mining and processing company in the Western Hemisphere. Mountain Pass mine in California. Essential materials for EVs, wind turbines, defense systems.",
+        thesis: "China controls 60%+ of rare earth processing. MP is the US answer to that dependency. National security meets clean energy transition.",
+        catalysts: [
+          { date: "Ongoing", event: "Magnetics Facility Ramp", impact: "HIGH" },
+          { date: "2026", event: "Downstream Processing Expansion", impact: "MEDIUM" },
+          { date: "Ongoing", event: "Auto OEM Supply Deals", impact: "MEDIUM" }
+        ],
+        risks: [
+          "Commodity price volatility",
+          "China supply chain disruption",
+          "Environmental/permitting challenges"
+        ],
+        vitals: {
+          founded: 2017,
+          hq: "Las Vegas, NV",
+          employees: "~800",
+          facility: "Mountain Pass Mine"
+        },
+        lore: "Every EV motor, every wind turbine, every F-35 needs rare earths. China has the market cornered. MP is the insurance policy."
+      },
+      HON: {
+        name: "Honeywell International",
+        codename: "INDUSTRIAL",
+        sector: "Aerospace & Industrial",
+        threat_level: "LOW",
+        summary: "Diversified industrial conglomerate. Aerospace systems, building technologies, performance materials. The boring backbone of global infrastructure.",
+        thesis: "When everyone else is chasing moonshots, sometimes you want the company that makes the avionics, the thermostats, and the jet engines.",
+        catalysts: [
+          { date: "Ongoing", event: "Aerospace Aftermarket Growth", impact: "MEDIUM" },
+          { date: "Ongoing", event: "Energy Transition Products", impact: "MEDIUM" },
+          { date: "Quarterly", event: "Earnings & Guidance", impact: "LOW" }
+        ],
+        risks: [
+          "Industrial cyclicality",
+          "Conglomerate discount",
+          "Spin-off execution risk"
+        ],
+        vitals: {
+          founded: 1906,
+          hq: "Charlotte, NC",
+          employees: "~95,000",
+          segments: "Aerospace, Building Tech, PMT, SPS"
+        },
+        lore: "Not every position needs to be a moonshot. Sometimes you hold the company that makes parts for everyone else's moonshots."
+      },
+      ATI: {
+        name: "ATI Inc",
+        codename: "ALLOY",
+        sector: "Specialty Materials",
+        threat_level: "LOW",
+        summary: "Specialty materials company. Titanium, nickel alloys, specialty steels. Aerospace, defense, energy markets. When you need metal that doesn't melt, bend, or corrode.",
+        thesis: "Next-gen aircraft and turbines require exotic alloys. ATI is one of the few Western suppliers who can make them at scale.",
+        catalysts: [
+          { date: "Ongoing", event: "Aerospace Production Ramp", impact: "MEDIUM" },
+          { date: "Ongoing", event: "Defense Spending Tailwinds", impact: "MEDIUM" },
+          { date: "Ongoing", event: "Titanium Supply Constraints", impact: "LOW" }
+        ],
+        risks: [
+          "Aerospace cycle sensitivity",
+          "Raw material cost volatility",
+          "Labor and energy costs"
+        ],
+        vitals: {
+          founded: 1996,
+          hq: "Dallas, TX",
+          employees: "~6,000",
+          materials: "Titanium, Nickel, Steel"
+        },
+        lore: "The materials science behind every jet engine. Unglamorous, essential, and very hard to replicate."
+      },
+      CACI: {
+        name: "CACI International",
+        codename: "INTEL",
+        sector: "Defense & Intelligence",
+        threat_level: "LOW",
+        summary: "Defense and intelligence IT services. Cybersecurity, signals intelligence, mission support. The quiet contractor that does the classified work.",
+        thesis: "Government never stops needing IT and intelligence services. CACI has the clearances and the contracts.",
+        catalysts: [
+          { date: "Ongoing", event: "Contract Wins", impact: "MEDIUM" },
+          { date: "Ongoing", event: "M&A Activity", impact: "MEDIUM" },
+          { date: "Ongoing", event: "Defense Budget Stability", impact: "LOW" }
+        ],
+        risks: [
+          "Contract recompete risk",
+          "Clearance/talent constraints",
+          "Budget uncertainty"
+        ],
+        vitals: {
+          founded: 1962,
+          hq: "Reston, VA",
+          employees: "~23,000",
+          clearances: "High"
+        },
+        lore: "When you need something done in the classified world, CACI picks up the phone. Boring to everyone except the people who need them."
+      },
+      LOAR: {
+        name: "Loar Holdings",
+        codename: "COMPONENT",
+        sector: "Aerospace Components",
+        threat_level: "LOW",
+        summary: "Aerospace and defense component manufacturer. Actuators, valves, and precision systems. The small parts that make the big machines work.",
+        thesis: "Aerospace OEMs are ramping production. Every aircraft needs thousands of precision components. Loar makes them.",
+        catalysts: [
+          { date: "Ongoing", event: "Aircraft Production Ramp", impact: "MEDIUM" },
+          { date: "Ongoing", event: "Aftermarket Growth", impact: "MEDIUM" },
+          { date: "Ongoing", event: "M&A Integration", impact: "LOW" }
+        ],
+        risks: [
+          "Customer concentration",
+          "Supply chain disruptions",
+          "Integration execution"
+        ],
+        vitals: {
+          founded: 2012,
+          hq: "White Plains, NY",
+          employees: "~2,500",
+          products: "Aerospace Components"
+        },
+        lore: "Another picks-and-shovels play. While everyone argues about which plane is best, Loar sells parts to all of them."
+      }
+    };
     
     // =========================================================================
     // HASLUN GLOSSARY — Tooltips, flavor text, and lore system
@@ -3332,7 +4248,10 @@
         const pnl = (pos.current_price - pos.entry_price) * pos.shares;
         const pnlPct = ((pos.current_price - pos.entry_price) / pos.entry_price * 100);
         const color = tickerColors[pos.ticker] || '#33ff99';
-        return '<tr><td><span class="ticker-tag"><span class="ticker-dot" style="background: ' + color + '"></span>' + pos.ticker + '</span></td>' +
+        const hasDossier = TICKER_PROFILES[pos.ticker] ? true : false;
+        const dossierBtn = hasDossier ? '<button class="dossier-btn" onclick="openTickerDossier(\'' + pos.ticker + '\')">◉</button>' : '';
+        return '<tr class="position-row" data-ticker="' + pos.ticker + '">' +
+          '<td><span class="ticker-tag">' + dossierBtn + '<span class="ticker-dot" style="background: ' + color + '"></span>' + pos.ticker + '</span></td>' +
           '<td style="color: var(--text-dim); font-size: 0.65rem; letter-spacing: 0.05em;">' + (tickerThemes[pos.ticker] || '') + '</td>' +
           '<td>' + pos.shares + '</td><td>$' + pos.entry_price.toFixed(2) + '</td><td>$' + pos.current_price.toFixed(2) + '</td>' +
           '<td>$' + value.toLocaleString() + '</td>' +
@@ -3345,7 +4264,10 @@
         const pnl = (pos.current - pos.entry) * pos.contracts * 100;
         const pnlPct = ((pos.current - pos.entry) / pos.entry * 100);
         const color = tickerColors[pos.ticker] || '#33ff99';
-        return '<tr><td><span class="ticker-tag"><span class="ticker-dot" style="background: ' + color + '"></span>' + pos.ticker + '</span></td>' +
+        const hasDossier = TICKER_PROFILES[pos.ticker] ? true : false;
+        const dossierBtn = hasDossier ? '<button class="dossier-btn" onclick="openTickerDossier(\'' + pos.ticker + '\')">◉</button>' : '';
+        return '<tr class="position-row" data-ticker="' + pos.ticker + '">' +
+          '<td><span class="ticker-tag">' + dossierBtn + '<span class="ticker-dot" style="background: ' + color + '"></span>' + pos.ticker + '</span></td>' +
           '<td><span class="structure-tag">' + pos.structure + '</span></td><td>' + pos.strikes + '</td>' +
           '<td>$' + pos.entry.toFixed(2) + '</td><td>$' + pos.current.toFixed(2) + '</td>' +
           '<td class="' + (pnl >= 0 ? 'pnl-positive' : 'pnl-negative') + '">' + (pnl >= 0 ? '+' : '') + '$' + pnl.toFixed(0) + ' (' + (pnlPct >= 0 ? '+' : '') + pnlPct.toFixed(0) + '%)</td>' +
@@ -3889,8 +4811,240 @@
         initTabTracking();
         renderMissions();
         initAboutOverlay();
+        initPipboyDossier();
         logTerminal('arcade module initialized');
         logTerminal('system ready · awaiting input');
+      }
+      
+      // =========================================================================
+      // PIP-BOY TICKER DOSSIER CONTROLLER
+      // =========================================================================
+      function initPipboyDossier() {
+        const overlay = document.getElementById('pipboy-overlay');
+        const closeBtn = document.getElementById('pipboy-close-btn');
+        const dials = document.querySelectorAll('.pipboy-dial');
+        
+        if (!overlay || !closeBtn) return;
+        
+        let currentDossierTicker = null;
+        
+        // Open dossier for a specific ticker
+        window.openTickerDossier = function(ticker) {
+          const profile = TICKER_PROFILES[ticker];
+          if (!profile) {
+            logTerminal('ERROR: No dossier found for ' + ticker);
+            return;
+          }
+          
+          currentDossierTicker = ticker;
+          const color = tickerColors[ticker] || 'var(--phosphor)';
+          
+          // Update header
+          document.getElementById('pipboy-codename').textContent = 'CODENAME: ' + profile.codename;
+          const tickerNameEl = document.getElementById('pipboy-ticker-name');
+          tickerNameEl.textContent = ticker + ' — ' + profile.name;
+          tickerNameEl.style.color = color;
+          document.getElementById('pipboy-sector').textContent = profile.sector;
+          
+          // Update threat level
+          const threatEl = document.getElementById('pipboy-threat');
+          const threatClass = profile.threat_level.toLowerCase().replace(' ', '');
+          threatEl.textContent = profile.threat_level;
+          threatEl.className = 'pipboy-threat-level ' + threatClass;
+          
+          // Update overview panel
+          document.getElementById('pipboy-summary').textContent = profile.summary;
+          document.getElementById('pipboy-lore').textContent = '"' + profile.lore + '"';
+          
+          // Update thesis panel
+          document.getElementById('pipboy-thesis').textContent = profile.thesis;
+          
+          // Update catalysts panel
+          const catalystsEl = document.getElementById('pipboy-catalysts-list');
+          catalystsEl.innerHTML = profile.catalysts.map(cat => `
+            <div class="pipboy-catalyst">
+              <div class="pipboy-catalyst-date">${cat.date}</div>
+              <div class="pipboy-catalyst-event">${cat.event}</div>
+              <div class="pipboy-catalyst-impact ${cat.impact.toLowerCase()}">${cat.impact}</div>
+            </div>
+          `).join('');
+          
+          // Update risks panel
+          const risksEl = document.getElementById('pipboy-risks-list');
+          risksEl.innerHTML = profile.risks.map(risk => `
+            <div class="pipboy-risk">${risk}</div>
+          `).join('');
+          
+          // Update vitals panel
+          const vitalsEl = document.getElementById('pipboy-vitals-grid');
+          vitalsEl.innerHTML = Object.entries(profile.vitals).map(([key, val]) => `
+            <div class="pipboy-vital">
+              <div class="pipboy-vital-value">${val}</div>
+              <div class="pipboy-vital-label">${key.replace(/_/g, ' ')}</div>
+            </div>
+          `).join('');
+          
+          // Update stats bar with live data if available
+          updatePipboyStats(ticker);
+          
+          // Reset to overview panel
+          dials.forEach(d => d.classList.remove('active'));
+          dials[0].classList.add('active');
+          document.querySelectorAll('.pipboy-panel').forEach(p => p.classList.remove('active'));
+          document.getElementById('panel-overview').classList.add('active');
+          
+          // Show overlay
+          overlay.classList.remove('hidden');
+          requestAnimationFrame(() => {
+            overlay.classList.add('visible');
+          });
+          
+          logTerminal('DOSSIER ACCESSED: ' + ticker + ' [' + profile.codename + ']');
+          beep(523, 0.06);
+          setTimeout(() => beep(659, 0.06), 80);
+        };
+        
+        // Update live stats in the stats bar
+        function updatePipboyStats(ticker) {
+          const statsBar = document.getElementById('pipboy-stats-bar');
+          const data = tickerData[ticker];
+          
+          if (!data) {
+            statsBar.innerHTML = `
+              <div class="pipboy-stat">
+                <div class="pipboy-stat-value">--</div>
+                <div class="pipboy-stat-label">Price</div>
+              </div>
+              <div class="pipboy-stat">
+                <div class="pipboy-stat-value">--</div>
+                <div class="pipboy-stat-label">Change</div>
+              </div>
+              <div class="pipboy-stat">
+                <div class="pipboy-stat-value">--</div>
+                <div class="pipboy-stat-label">Volume</div>
+              </div>
+              <div class="pipboy-stat">
+                <div class="pipboy-stat-value">--</div>
+                <div class="pipboy-stat-label">Volatility</div>
+              </div>
+            `;
+            return;
+          }
+          
+          const series = data.daily || data.intraday || [];
+          const last = series[series.length - 1] || {};
+          const prev = series[series.length - 2] || {};
+          
+          const price = last.c || 0;
+          const change = prev.c ? ((last.c - prev.c) / prev.c * 100) : 0;
+          const volume = last.v || 0;
+          const vol = getVolScoreForTicker(ticker) || 0;
+          
+          const changeClass = change >= 0 ? 'positive' : 'negative';
+          const changeSign = change >= 0 ? '+' : '';
+          
+          statsBar.innerHTML = `
+            <div class="pipboy-stat">
+              <div class="pipboy-stat-value">$${price.toFixed(2)}</div>
+              <div class="pipboy-stat-label">Price</div>
+            </div>
+            <div class="pipboy-stat">
+              <div class="pipboy-stat-value ${changeClass}">${changeSign}${change.toFixed(2)}%</div>
+              <div class="pipboy-stat-label">Change</div>
+            </div>
+            <div class="pipboy-stat">
+              <div class="pipboy-stat-value">${formatVolume(volume)}</div>
+              <div class="pipboy-stat-label">Volume</div>
+            </div>
+            <div class="pipboy-stat">
+              <div class="pipboy-stat-value">${vol.toFixed(1)}σ</div>
+              <div class="pipboy-stat-label">Volatility</div>
+            </div>
+          `;
+        }
+        
+        function formatVolume(v) {
+          if (v >= 1e9) return (v / 1e9).toFixed(1) + 'B';
+          if (v >= 1e6) return (v / 1e6).toFixed(1) + 'M';
+          if (v >= 1e3) return (v / 1e3).toFixed(1) + 'K';
+          return v.toString();
+        }
+        
+        // Close dossier
+        function closeDossier() {
+          overlay.classList.remove('visible');
+          setTimeout(() => overlay.classList.add('hidden'), 200);
+          beep(330, 0.05);
+          logTerminal('dossier closed');
+        }
+        
+        closeBtn.addEventListener('click', closeDossier);
+        
+        overlay.addEventListener('click', (e) => {
+          if (e.target === overlay || e.target.classList.contains('pipboy-backdrop')) {
+            closeDossier();
+          }
+        });
+        
+        window.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' && overlay.classList.contains('visible')) {
+            closeDossier();
+          }
+        });
+        
+        // Dial navigation
+        dials.forEach(dial => {
+          dial.addEventListener('click', () => {
+            const panel = dial.dataset.panel;
+            
+            dials.forEach(d => d.classList.remove('active'));
+            dial.classList.add('active');
+            
+            document.querySelectorAll('.pipboy-panel').forEach(p => p.classList.remove('active'));
+            document.getElementById('panel-' + panel).classList.add('active');
+            
+            beep(440, 0.04);
+          });
+        });
+        
+        // Keyboard navigation with left/right arrows
+        window.addEventListener('keydown', (e) => {
+          if (!overlay.classList.contains('visible')) return;
+          
+          const dialArr = Array.from(dials);
+          const activeIdx = dialArr.findIndex(d => d.classList.contains('active'));
+          
+          if (e.key === 'ArrowRight' && activeIdx < dialArr.length - 1) {
+            dialArr[activeIdx + 1].click();
+          } else if (e.key === 'ArrowLeft' && activeIdx > 0) {
+            dialArr[activeIdx - 1].click();
+          }
+        });
+        
+        // Wire up watchlist items to open dossier on double-click or info button
+        document.querySelectorAll('.watchlist-item').forEach(item => {
+          const tickerEl = item.querySelector('.watchlist-ticker');
+          if (!tickerEl) return;
+          
+          const ticker = tickerEl.textContent.trim();
+          
+          // Add info button
+          const infoBtn = document.createElement('button');
+          infoBtn.className = 'watchlist-info-btn';
+          infoBtn.innerHTML = '◉';
+          infoBtn.title = 'Open Dossier';
+          infoBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openTickerDossier(ticker);
+          });
+          
+          // Insert before the ticker name or at the start
+          const wrapper = item.querySelector('.watchlist-info') || item;
+          wrapper.style.position = 'relative';
+          item.insertBefore(infoBtn, item.firstChild);
+        });
+        
+        logTerminal('pip-boy dossier system initialized');
       }
       
       // About Overlay Controller
