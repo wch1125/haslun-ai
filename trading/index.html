@@ -12,6 +12,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root {
       --bg: #1A1918; --bg-subtle: #242220; --paper: #2C2A26;
@@ -1030,7 +1031,7 @@
     }
     
     /* =========================================================================
-       PERFORMANCE CHART - ENHANCED INTERACTIVE VERSION
+       PERFORMANCE CHART - CHART.JS VERSION
        ========================================================================= */
     .perf-chart-container {
       position: relative;
@@ -1040,9 +1041,20 @@
       display: flex;
       flex-wrap: wrap;
       gap: 0.5rem;
-      margin-bottom: 1rem;
-      padding-bottom: 1rem;
-      border-bottom: 1px solid var(--line);
+      margin-bottom: 1.25rem;
+    }
+    
+    .perf-control-section {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    
+    .perf-control-label {
+      font-size: 0.6rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
     }
     
     .perf-control-group {
@@ -1052,38 +1064,30 @@
       align-items: center;
     }
     
-    .perf-control-label {
-      font-size: 0.65rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--muted);
-      margin-right: 0.25rem;
-    }
-    
     .perf-toggle {
       display: flex;
       align-items: center;
       gap: 0.375rem;
-      padding: 0.3rem 0.5rem;
-      background: var(--bg);
+      padding: 0.375rem 0.625rem;
+      background: transparent;
       border: 1px solid var(--line);
-      border-radius: var(--radius-sm);
+      border-radius: 100px;
       font-size: 0.7rem;
       font-family: var(--font-body);
       color: var(--muted);
       cursor: pointer;
-      transition: all var(--transition-fast);
+      transition: all 0.2s ease;
       user-select: none;
     }
     
     .perf-toggle:hover {
-      border-color: var(--line-strong);
+      border-color: var(--ink-light);
       color: var(--ink-light);
     }
     
     .perf-toggle.active {
       background: var(--bg-subtle);
-      border-color: var(--line-strong);
+      border-color: transparent;
       color: var(--ink);
     }
     
@@ -1091,156 +1095,52 @@
       width: 8px;
       height: 8px;
       border-radius: 50%;
-      opacity: 0.4;
-      transition: opacity var(--transition-fast);
+      transition: all 0.2s ease;
     }
     
-    .perf-toggle.active .perf-toggle-dot {
-      opacity: 1;
+    .perf-toggle:not(.active) .perf-toggle-dot {
+      opacity: 0.3;
     }
     
     .perf-toggle-value {
       font-family: var(--font-mono);
-      font-size: 0.65rem;
-      margin-left: 0.25rem;
+      font-size: 0.6rem;
+      font-weight: 500;
     }
     
     .perf-toggle-value.positive { color: var(--green); }
     .perf-toggle-value.negative { color: var(--red); }
-    
-    .perf-divider {
-      width: 1px;
-      height: 24px;
-      background: var(--line);
-      margin: 0 0.5rem;
-    }
+    .perf-toggle:not(.active) .perf-toggle-value { opacity: 0.5; }
     
     .perf-chart-wrapper {
       position: relative;
-      height: 300px;
-      margin-left: 50px;
-      margin-right: 15px;
+      height: 320px;
+      margin: 0 -0.5rem;
     }
     
-    .perf-chart {
-      position: absolute;
-      inset: 0;
-      border-left: 1px solid var(--line);
-      border-bottom: 1px solid var(--line);
-    }
-    
-    .perf-chart-grid {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      pointer-events: none;
-    }
-    
-    .perf-chart-grid-line {
-      border-top: 1px dashed var(--line);
-      position: relative;
-    }
-    
-    .perf-chart-grid-line::before {
-      content: attr(data-value);
-      position: absolute;
-      left: -50px;
-      top: -8px;
-      font-size: 0.6rem;
-      color: var(--muted);
-      font-family: var(--font-mono);
-      width: 45px;
-      text-align: right;
-    }
-    
-    .perf-chart-zero-line {
-      position: absolute;
-      left: 0;
-      right: 0;
-      border-top: 1px solid var(--line-strong);
-    }
-    
-    .perf-chart-svg {
-      position: absolute;
-      inset: 0;
-      overflow: visible;
-    }
-    
-    .perf-chart-svg svg {
-      width: 100%;
-      height: 100%;
-      overflow: visible;
-    }
-    
-    .perf-line {
-      fill: none;
-      stroke-width: 2;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-      transition: opacity 0.3s ease;
-    }
-    
-    .perf-line.dimmed {
-      opacity: 0.15;
-    }
-    
-    .perf-line.benchmark {
-      stroke-dasharray: 4 2;
-      stroke-width: 1.5;
-    }
-    
-    /* Signal flags */
-    .perf-signal {
-      cursor: pointer;
-      transition: transform 0.2s ease;
-    }
-    
-    .perf-signal:hover {
-      transform: scale(1.3);
-    }
-    
-    .perf-signal-flag {
-      fill: var(--green);
-    }
-    
-    .perf-signal-flag.sell {
-      fill: var(--red);
-    }
-    
-    .perf-chart-x-axis {
-      display: flex;
-      justify-content: space-between;
-      padding: 0.5rem 0 0;
-      margin-left: 50px;
-      margin-right: 15px;
-    }
-    
-    .perf-chart-x-label {
-      font-size: 0.6rem;
-      color: var(--muted);
-      font-family: var(--font-mono);
+    .perf-chart-wrapper canvas {
+      width: 100% !important;
+      height: 100% !important;
     }
     
     .perf-summary {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-      gap: 0.75rem;
-      margin-top: 1rem;
+      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+      gap: 0.5rem;
+      margin-top: 1.25rem;
       padding-top: 1rem;
       border-top: 1px solid var(--line);
     }
     
     .perf-summary-item {
       text-align: center;
-      padding: 0.5rem;
+      padding: 0.625rem 0.5rem;
       background: var(--bg);
       border-radius: var(--radius-sm);
     }
     
     .perf-summary-label {
-      font-size: 0.6rem;
+      font-size: 0.55rem;
       text-transform: uppercase;
       letter-spacing: 0.05em;
       color: var(--muted);
@@ -1249,42 +1149,12 @@
     
     .perf-summary-value {
       font-family: var(--font-mono);
-      font-size: 1rem;
+      font-size: 0.95rem;
       font-weight: 600;
     }
     
     .perf-summary-value.positive { color: var(--green); }
     .perf-summary-value.negative { color: var(--red); }
-    
-    /* Tooltip */
-    .perf-tooltip {
-      position: absolute;
-      background: var(--paper);
-      border: 1px solid var(--line);
-      border-radius: var(--radius-sm);
-      padding: 0.5rem 0.75rem;
-      font-size: 0.7rem;
-      pointer-events: none;
-      opacity: 0;
-      transition: opacity 0.2s ease;
-      z-index: 10;
-      white-space: nowrap;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    }
-    
-    .perf-tooltip.visible {
-      opacity: 1;
-    }
-    
-    .perf-tooltip-title {
-      font-weight: 600;
-      color: var(--ink);
-      margin-bottom: 0.25rem;
-    }
-    
-    .perf-tooltip-detail {
-      color: var(--ink-light);
-    }
     
     /* =========================================================================
        MOBILE RESPONSIVE STYLES
@@ -1470,38 +1340,17 @@
       }
       
       .perf-toggle-value {
-        font-size: 0.55rem;
-      }
-      
-      .perf-divider {
-        height: 18px;
-        margin: 0 0.25rem;
+        font-size: 0.5rem;
       }
       
       .perf-chart-wrapper {
-        height: 220px;
-        margin-left: 40px;
-        margin-right: 10px;
-      }
-      
-      .perf-chart-grid-line::before {
-        left: -40px;
-        font-size: 0.5rem;
-        width: 36px;
-      }
-      
-      .perf-chart-x-axis {
-        margin-left: 40px;
-        margin-right: 10px;
-      }
-      
-      .perf-chart-x-label {
-        font-size: 0.45rem;
+        height: 240px;
+        margin: 0 -0.25rem;
       }
       
       .perf-summary {
         grid-template-columns: repeat(2, 1fr);
-        gap: 0.5rem;
+        gap: 0.375rem;
       }
       
       .perf-summary-item {
@@ -1513,7 +1362,7 @@
       }
       
       .perf-summary-value {
-        font-size: 0.85rem;
+        font-size: 0.8rem;
       }
       
       /* Chart tabs - Scrollable */
@@ -2502,10 +2351,8 @@
     ];
     
     // Monthly performance data (cumulative % returns since March 2024)
-    // Includes individual ticker performance with MACD signal dates
     const PERFORMANCE_DATA = {
       labels: ['Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan'],
-      months: ['2024-03', '2024-04', '2024-05', '2024-06', '2024-07', '2024-08', '2024-09', '2024-10', '2024-11', '2024-12', '2025-01'],
       
       // Benchmarks
       spy: [0, 1, 5, 9, 14, 12, 16, 20, 26, 32, 34],
@@ -2525,27 +2372,29 @@
       GME: [0, 25, 45, 30, 55, 70, 85, 95, 100, 105, 108]
     };
     
-    // MACD signals (month index where buy signal triggered)
-    const MACD_SIGNALS = {
-      RKLB: [{ month: 2, type: 'buy' }, { month: 6, type: 'buy' }],
-      ASTS: [{ month: 2, type: 'buy' }, { month: 5, type: 'buy' }],
-      LUNR: [{ month: 3, type: 'buy' }, { month: 7, type: 'buy' }],
-      BKSY: [{ month: 2, type: 'buy' }],
-      RDW: [{ month: 2, type: 'buy' }, { month: 6, type: 'buy' }],
-      PL: [{ month: 3, type: 'buy' }],
-      ACHR: [{ month: 2, type: 'buy' }, { month: 5, type: 'buy' }],
-      JOBY: [{ month: 2, type: 'buy' }, { month: 7, type: 'buy' }],
-      EVEX: [{ month: 1, type: 'buy' }, { month: 4, type: 'sell' }],
-      GME: [{ month: 1, type: 'buy' }, { month: 4, type: 'buy' }]
-    };
-    
-    // Chart state
+    // Chart.js instance and state
+    let perfChart = null;
     const chartState = {
-      activeSeries: ['portfolio', 'spy', 'xar'],
-      hoveredSeries: null
+      activeSeries: ['portfolio', 'spy', 'xar']
     };
     
-    // Render interactive performance chart
+    // Series configuration
+    const seriesConfig = {
+      portfolio: { label: 'Portfolio', color: '#C4846C', borderWidth: 3 },
+      spy: { label: 'S&P 500', color: '#6B7B8A', borderWidth: 2, borderDash: [5, 3] },
+      xar: { label: 'XAR', color: '#B8986B', borderWidth: 2, borderDash: [5, 3] },
+      RKLB: { label: 'RKLB', color: '#C4846C', borderWidth: 2 },
+      ASTS: { label: 'ASTS', color: '#B8986B', borderWidth: 2 },
+      LUNR: { label: 'LUNR', color: '#D4A08A', borderWidth: 2 },
+      BKSY: { label: 'BKSY', color: '#6B7B8A', borderWidth: 2 },
+      RDW: { label: 'RDW', color: '#5C9A6B', borderWidth: 2 },
+      PL: { label: 'PL', color: '#8AB89A', borderWidth: 2 },
+      ACHR: { label: 'ACHR', color: '#CEBA95', borderWidth: 2 },
+      JOBY: { label: 'JOBY', color: '#8B9A7D', borderWidth: 2 },
+      EVEX: { label: 'EVEX', color: '#C45C5C', borderWidth: 2 },
+      GME: { label: 'GME', color: '#5A7247', borderWidth: 2 }
+    };
+    
     function renderPerformanceChart() {
       const container = document.getElementById('perf-chart-container');
       if (!container) return;
@@ -2553,63 +2402,124 @@
       const data = PERFORMANCE_DATA;
       const tickers = ['RKLB', 'ASTS', 'LUNR', 'BKSY', 'RDW', 'PL', 'ACHR', 'JOBY', 'EVEX', 'GME'];
       
-      // Build controls HTML
-      const benchmarkToggles = `
-        <div class="perf-control-group">
-          <span class="perf-control-label">Benchmarks</span>
-          <button class="perf-toggle active" data-series="portfolio" onclick="togglePerfSeries('portfolio')">
-            <span class="perf-toggle-dot" style="background: var(--terracotta)"></span>
-            Portfolio
-            <span class="perf-toggle-value positive">+${data.portfolio[data.portfolio.length-1]}%</span>
-          </button>
-          <button class="perf-toggle active" data-series="spy" onclick="togglePerfSeries('spy')">
-            <span class="perf-toggle-dot" style="background: var(--slate)"></span>
-            SPY
-            <span class="perf-toggle-value positive">+${data.spy[data.spy.length-1]}%</span>
-          </button>
-          <button class="perf-toggle active" data-series="xar" onclick="togglePerfSeries('xar')">
-            <span class="perf-toggle-dot" style="background: var(--gold)"></span>
-            XAR
-            <span class="perf-toggle-value positive">+${data.xar[data.xar.length-1]}%</span>
-          </button>
-        </div>
-      `;
-      
-      const tickerToggles = tickers.map(t => {
-        const finalVal = data[t][data[t].length - 1];
-        const color = tickerColors[t];
+      // Build toggle buttons
+      function buildToggle(key, isActive) {
+        const cfg = seriesConfig[key];
+        const finalVal = data[key][data[key].length - 1];
         const isPositive = finalVal >= 0;
         return `
-          <button class="perf-toggle" data-series="${t}" onclick="togglePerfSeries('${t}')">
-            <span class="perf-toggle-dot" style="background: ${color}"></span>
-            ${t}
+          <button class="perf-toggle ${isActive ? 'active' : ''}" data-series="${key}" onclick="togglePerfSeries('${key}')">
+            <span class="perf-toggle-dot" style="background: ${cfg.color}"></span>
+            ${cfg.label}
             <span class="perf-toggle-value ${isPositive ? 'positive' : 'negative'}">${isPositive ? '+' : ''}${finalVal}%</span>
           </button>
         `;
-      }).join('');
+      }
       
       container.innerHTML = `
         <div class="perf-controls">
-          ${benchmarkToggles}
-          <div class="perf-divider"></div>
-          <div class="perf-control-group">
-            <span class="perf-control-label">Tickers</span>
-            ${tickerToggles}
+          <div class="perf-control-section">
+            <div class="perf-control-label">Benchmarks</div>
+            <div class="perf-control-group">
+              ${buildToggle('portfolio', true)}
+              ${buildToggle('spy', true)}
+              ${buildToggle('xar', true)}
+            </div>
+          </div>
+          <div class="perf-control-section" style="flex: 1;">
+            <div class="perf-control-label">Individual Tickers</div>
+            <div class="perf-control-group">
+              ${tickers.map(t => buildToggle(t, false)).join('')}
+            </div>
           </div>
         </div>
         <div class="perf-chart-wrapper">
-          <div class="perf-chart">
-            <div class="perf-chart-grid" id="perf-grid"></div>
-            <div class="perf-chart-zero-line" id="perf-zero"></div>
-            <div class="perf-chart-svg" id="perf-svg"></div>
-          </div>
-          <div class="perf-tooltip" id="perf-tooltip"></div>
-        </div>
-        <div class="perf-chart-x-axis">
-          ${data.labels.map(l => `<span class="perf-chart-x-label">${l}</span>`).join('')}
+          <canvas id="perf-canvas"></canvas>
         </div>
         <div class="perf-summary" id="perf-summary"></div>
       `;
+      
+      initPerfChart();
+    }
+    
+    function initPerfChart() {
+      const ctx = document.getElementById('perf-canvas').getContext('2d');
+      
+      // Chart.js global config for dark theme
+      Chart.defaults.color = '#8A857D';
+      Chart.defaults.borderColor = '#3D3A36';
+      Chart.defaults.font.family = "'DM Sans', sans-serif";
+      
+      perfChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: PERFORMANCE_DATA.labels,
+          datasets: []
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: {
+            mode: 'index',
+            intersect: false
+          },
+          plugins: {
+            legend: {
+              display: false
+            },
+            tooltip: {
+              backgroundColor: '#2C2A26',
+              titleColor: '#F5F2ED',
+              bodyColor: '#C4C0B8',
+              borderColor: '#3D3A36',
+              borderWidth: 1,
+              padding: 12,
+              cornerRadius: 6,
+              titleFont: { weight: '600', size: 13 },
+              bodyFont: { size: 12 },
+              callbacks: {
+                label: function(context) {
+                  const val = context.parsed.y;
+                  return `${context.dataset.label}: ${val >= 0 ? '+' : ''}${val}%`;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: {
+                display: false
+              },
+              ticks: {
+                font: { size: 11, family: "'JetBrains Mono', monospace" }
+              }
+            },
+            y: {
+              grid: {
+                color: '#3D3A36',
+                drawBorder: false
+              },
+              ticks: {
+                font: { size: 11, family: "'JetBrains Mono', monospace" },
+                callback: function(value) {
+                  return (value >= 0 ? '+' : '') + value + '%';
+                }
+              }
+            }
+          },
+          elements: {
+            point: {
+              radius: 0,
+              hoverRadius: 5,
+              hoverBorderWidth: 2,
+              hoverBackgroundColor: '#2C2A26'
+            },
+            line: {
+              tension: 0.3
+            }
+          }
+        }
+      });
       
       updatePerfChart();
     }
@@ -2622,198 +2532,93 @@
         chartState.activeSeries.push(series);
       }
       
-      // Update toggle button state
+      // Update button states
       document.querySelectorAll('.perf-toggle').forEach(btn => {
-        const s = btn.dataset.series;
-        btn.classList.toggle('active', chartState.activeSeries.includes(s));
+        btn.classList.toggle('active', chartState.activeSeries.includes(btn.dataset.series));
       });
       
       updatePerfChart();
     }
     
     function updatePerfChart() {
-      const data = PERFORMANCE_DATA;
-      const allSeries = ['portfolio', 'spy', 'xar', 'RKLB', 'ASTS', 'LUNR', 'BKSY', 'RDW', 'PL', 'ACHR', 'JOBY', 'EVEX', 'GME'];
+      if (!perfChart) return;
       
-      // Calculate Y range from active series only
-      let allValues = [];
-      chartState.activeSeries.forEach(s => {
-        if (data[s]) allValues = allValues.concat(data[s]);
+      // Build datasets from active series
+      const datasets = chartState.activeSeries.map(key => {
+        const cfg = seriesConfig[key];
+        return {
+          label: cfg.label,
+          data: PERFORMANCE_DATA[key],
+          borderColor: cfg.color,
+          backgroundColor: cfg.color + '20',
+          borderWidth: cfg.borderWidth,
+          borderDash: cfg.borderDash || [],
+          fill: false,
+          pointBackgroundColor: cfg.color
+        };
       });
       
-      if (allValues.length === 0) allValues = [0, 100];
+      perfChart.data.datasets = datasets;
+      perfChart.update('none');
       
-      const maxVal = Math.max(...allValues);
-      const minVal = Math.min(...allValues);
-      const padding = Math.max(50, (maxVal - minVal) * 0.1);
-      const yMax = Math.ceil((maxVal + padding) / 100) * 100;
-      const yMin = Math.floor((minVal - padding) / 100) * 100;
-      const yRange = yMax - yMin;
-      
-      // Generate grid lines
-      const gridContainer = document.getElementById('perf-grid');
-      const step = yRange > 1000 ? 500 : yRange > 500 ? 200 : 100;
-      const gridLines = [];
-      for (let v = yMax; v >= yMin; v -= step) {
-        gridLines.push(v);
-      }
-      gridContainer.innerHTML = gridLines.map(v => 
-        `<div class="perf-chart-grid-line" data-value="${v > 0 ? '+' : ''}${v}%"></div>`
-      ).join('');
-      
-      // Position zero line
-      const zeroLine = document.getElementById('perf-zero');
-      if (yMin < 0 && yMax > 0) {
-        const zeroY = ((yMax - 0) / yRange) * 100;
-        zeroLine.style.top = zeroY + '%';
-        zeroLine.style.display = 'block';
-      } else {
-        zeroLine.style.display = 'none';
-      }
-      
-      // Helper to convert values to SVG path
-      function toPath(values) {
-        return values.map((val, i) => {
-          const x = (i / (values.length - 1)) * 100;
-          const y = ((yMax - val) / yRange) * 100;
-          return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
-        }).join(' ');
-      }
-      
-      // Helper to get point coordinates
-      function getPoint(values, idx) {
-        const x = (idx / (values.length - 1)) * 100;
-        const y = ((yMax - values[idx]) / yRange) * 100;
-        return { x, y };
-      }
-      
-      // Build SVG
-      const svgContainer = document.getElementById('perf-svg');
-      let svgContent = '<svg viewBox="0 0 100 100" preserveAspectRatio="none">';
-      
-      // Series colors
-      const seriesColors = {
-        portfolio: 'var(--terracotta)',
-        spy: 'var(--slate)',
-        xar: 'var(--gold)',
-        ...tickerColors
-      };
-      
-      // Draw lines for all series (dimmed if not active)
-      allSeries.forEach(s => {
-        if (!data[s]) return;
-        const isActive = chartState.activeSeries.includes(s);
-        const isBenchmark = ['portfolio', 'spy', 'xar'].includes(s);
-        const color = seriesColors[s];
-        const strokeWidth = s === 'portfolio' ? 2.5 : isBenchmark ? 1.5 : 2;
-        const dashArray = isBenchmark && s !== 'portfolio' ? '4 2' : 'none';
-        const opacity = isActive ? 1 : 0;
-        
-        svgContent += `
-          <path 
-            class="perf-line ${isActive ? '' : 'dimmed'}" 
-            d="${toPath(data[s])}" 
-            stroke="${color}" 
-            stroke-width="${strokeWidth}"
-            stroke-dasharray="${dashArray}"
-            style="opacity: ${opacity}"
-            vector-effect="non-scaling-stroke"
-            data-series="${s}"
-          />
-        `;
-        
-        // Add signal flags for tickers
-        if (!isBenchmark && isActive && MACD_SIGNALS[s]) {
-          MACD_SIGNALS[s].forEach(signal => {
-            const pt = getPoint(data[s], signal.month);
-            const flagColor = signal.type === 'buy' ? 'var(--green)' : 'var(--red)';
-            svgContent += `
-              <g class="perf-signal" transform="translate(${pt.x}, ${pt.y})">
-                <circle r="1.5" fill="${flagColor}" vector-effect="non-scaling-stroke"/>
-                <path d="M0,-1.5 L0,-5 L3,-3.5 L0,-2" fill="${flagColor}" vector-effect="non-scaling-stroke" transform="scale(0.8)"/>
-              </g>
-            `;
-          });
-        }
-      });
-      
-      svgContent += '</svg>';
-      svgContainer.innerHTML = svgContent;
-      
-      // Update summary
       updatePerfSummary();
     }
     
     function updatePerfSummary() {
       const data = PERFORMANCE_DATA;
       const summaryContainer = document.getElementById('perf-summary');
+      if (!summaryContainer) return;
       
-      // Calculate stats from active series
       const activeTickers = chartState.activeSeries.filter(s => !['portfolio', 'spy', 'xar'].includes(s));
+      let html = '';
       
-      let summaryHTML = '';
-      
-      // Always show portfolio if active
+      // Portfolio return
       if (chartState.activeSeries.includes('portfolio')) {
         const val = data.portfolio[data.portfolio.length - 1];
-        summaryHTML += `
+        html += `
           <div class="perf-summary-item">
-            <div class="perf-summary-label">Portfolio Return</div>
+            <div class="perf-summary-label">Portfolio</div>
             <div class="perf-summary-value positive">+${val}%</div>
           </div>
         `;
       }
       
-      // Show benchmark comparison
-      if (chartState.activeSeries.includes('spy')) {
-        const val = data.spy[data.spy.length - 1];
-        summaryHTML += `
+      // Alpha vs S&P
+      if (chartState.activeSeries.includes('portfolio') && chartState.activeSeries.includes('spy')) {
+        const alpha = data.portfolio[data.portfolio.length - 1] - data.spy[data.spy.length - 1];
+        html += `
           <div class="perf-summary-item">
-            <div class="perf-summary-label">vs S&P 500</div>
-            <div class="perf-summary-value positive">+${data.portfolio[data.portfolio.length-1] - val}%</div>
+            <div class="perf-summary-label">Alpha vs S&P</div>
+            <div class="perf-summary-value positive">+${alpha}%</div>
           </div>
         `;
       }
       
-      // Best and worst performer if tickers shown
+      // Best/worst ticker if any selected
       if (activeTickers.length > 0) {
-        const tickerReturns = activeTickers.map(t => ({
-          ticker: t,
-          return: data[t][data[t].length - 1]
-        })).sort((a, b) => b.return - a.return);
+        const sorted = activeTickers
+          .map(t => ({ t, val: data[t][data[t].length - 1] }))
+          .sort((a, b) => b.val - a.val);
         
-        const best = tickerReturns[0];
-        const worst = tickerReturns[tickerReturns.length - 1];
-        
-        summaryHTML += `
+        html += `
           <div class="perf-summary-item">
-            <div class="perf-summary-label">Best: ${best.ticker}</div>
-            <div class="perf-summary-value ${best.return >= 0 ? 'positive' : 'negative'}">${best.return >= 0 ? '+' : ''}${best.return}%</div>
+            <div class="perf-summary-label">Top: ${sorted[0].t}</div>
+            <div class="perf-summary-value ${sorted[0].val >= 0 ? 'positive' : 'negative'}">${sorted[0].val >= 0 ? '+' : ''}${sorted[0].val}%</div>
           </div>
         `;
         
         if (activeTickers.length > 1) {
-          summaryHTML += `
+          const worst = sorted[sorted.length - 1];
+          html += `
             <div class="perf-summary-item">
-              <div class="perf-summary-label">Worst: ${worst.ticker}</div>
-              <div class="perf-summary-value ${worst.return >= 0 ? 'positive' : 'negative'}">${worst.return >= 0 ? '+' : ''}${worst.return}%</div>
+              <div class="perf-summary-label">Low: ${worst.t}</div>
+              <div class="perf-summary-value ${worst.val >= 0 ? 'positive' : 'negative'}">${worst.val >= 0 ? '+' : ''}${worst.val}%</div>
             </div>
           `;
         }
       }
       
-      // Signal count
-      const signalCount = activeTickers.reduce((sum, t) => sum + (MACD_SIGNALS[t]?.length || 0), 0);
-      if (signalCount > 0) {
-        summaryHTML += `
-          <div class="perf-summary-item">
-            <div class="perf-summary-label">MACD Signals</div>
-            <div class="perf-summary-value">${signalCount}</div>
-          </div>
-        `;
-      }
-      
-      summaryContainer.innerHTML = summaryHTML;
+      summaryContainer.innerHTML = html;
     }
     
     function getStaticOptionsData() {
