@@ -769,6 +769,25 @@
                   <div class="console-row" id="tm-histo-row"><span>HISTO</span><span id="tm-histo">--</span></div>
                 </div>
                 
+                <!-- Ship Systems Panel (reactive to indicators) -->
+                <div class="console-section ship-systems-section">
+                  <div class="console-title">// SHIP SYSTEMS</div>
+                  <ul class="ship-systems-list" id="ship-systems-list">
+                    <li class="system-row"><span class="system-name">THRUSTERS</span><span class="system-state system-idle">IDLE</span></li>
+                    <li class="system-row"><span class="system-name">HULL</span><span class="system-state system-stable">STABLE</span></li>
+                    <li class="system-row"><span class="system-name">SENSORS</span><span class="system-state system-idle">NOMINAL</span></li>
+                    <li class="system-row"><span class="system-name">WARP DRIVE</span><span class="system-state system-locked">LOCKED</span></li>
+                  </ul>
+                </div>
+                
+                <!-- Objectives / Milestones -->
+                <div class="console-section objectives-section">
+                  <div class="console-title">// OBJECTIVES</div>
+                  <ul class="objectives-list" id="ship-objectives-list">
+                    <li class="objective-row pending"><span class="objective-icon">◇</span><span class="objective-text">Awaiting signal lock...</span></li>
+                  </ul>
+                </div>
+                
                 <div class="console-section console-log">
                   <div class="console-title">// BRIDGE FEED</div>
                   <div class="console-log-lines" id="telemetry-log">

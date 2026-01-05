@@ -1049,6 +1049,158 @@
       color: var(--signal-down);
     }
     
+    /* ═══════════════════════════════════════════════════════════════════════════
+       SHIP SYSTEMS PANEL (reactive to indicators)
+       ═══════════════════════════════════════════════════════════════════════════ */
+    
+    .ship-systems-section,
+    .objectives-section {
+      padding: 0.5rem 0.75rem;
+    }
+    
+    .ship-systems-list,
+    .objectives-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    
+    .system-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.35rem 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    }
+    
+    .system-row:last-child {
+      border-bottom: none;
+    }
+    
+    .system-name {
+      font-family: var(--font-mono);
+      font-size: 0.52rem;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+    
+    .system-state {
+      font-family: var(--font-display);
+      font-size: 0.5rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      padding: 0.15rem 0.4rem;
+      border-radius: 3px;
+      text-transform: uppercase;
+    }
+    
+    /* System states */
+    .system-idle {
+      color: var(--text-dim);
+      background: rgba(255, 255, 255, 0.05);
+    }
+    
+    .system-stable {
+      color: var(--phosphor-dim);
+      background: rgba(51, 255, 153, 0.08);
+    }
+    
+    .system-upgraded {
+      color: var(--phosphor);
+      background: rgba(51, 255, 153, 0.15);
+      box-shadow: 0 0 8px rgba(51, 255, 153, 0.2);
+      animation: system-pulse 2s ease-in-out infinite;
+    }
+    
+    .system-enhanced {
+      color: #47d4ff;
+      background: rgba(71, 212, 255, 0.12);
+    }
+    
+    .system-strained {
+      color: var(--amber);
+      background: rgba(255, 179, 71, 0.12);
+    }
+    
+    .system-damaged {
+      color: #ff4f6d;
+      background: rgba(255, 79, 109, 0.15);
+      animation: system-warn 1s ease-in-out infinite;
+    }
+    
+    .system-locked {
+      color: var(--text-dim);
+      opacity: 0.45;
+      background: rgba(255, 255, 255, 0.03);
+    }
+    
+    .system-acquired {
+      color: #c39dff;
+      background: rgba(195, 157, 255, 0.12);
+      box-shadow: 0 0 6px rgba(195, 157, 255, 0.15);
+    }
+    
+    @keyframes system-pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+    
+    @keyframes system-warn {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    
+    /* Objectives */
+    .objective-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.4rem;
+      padding: 0.3rem 0;
+      font-family: var(--font-mono);
+      font-size: 0.5rem;
+      line-height: 1.4;
+    }
+    
+    .objective-icon {
+      flex-shrink: 0;
+      font-size: 0.55rem;
+    }
+    
+    .objective-text {
+      color: var(--text-muted);
+    }
+    
+    .objective-row.pending .objective-icon {
+      color: var(--text-dim);
+      opacity: 0.5;
+    }
+    
+    .objective-row.achieved .objective-icon {
+      color: var(--phosphor);
+    }
+    
+    .objective-row.achieved .objective-text {
+      color: var(--phosphor-dim);
+    }
+    
+    .objective-row.warning .objective-icon {
+      color: var(--amber);
+    }
+    
+    .objective-row.warning .objective-text {
+      color: var(--amber);
+      opacity: 0.9;
+    }
+    
+    .objective-row.milestone .objective-icon {
+      color: #c39dff;
+    }
+    
+    .objective-row.milestone .objective-text {
+      color: #c39dff;
+    }
+    
     /* Telemetry footer strip */
     .telemetry-footer-strip {
       display: flex;

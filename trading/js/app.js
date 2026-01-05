@@ -445,6 +445,91 @@
     };
     
     // =========================================================================
+    // SHIP OVERLAY PLUGIN — Draws active ship sprite at last price point
+    // =========================================================================
+    
+    // Cache for the ship overlay image
+    let shipOverlayImage = null;
+    let shipOverlayTicker = null;
+    
+    /**
+     * Load ship image for overlay (cached)
+     */
+    function loadShipOverlayImage(ticker) {
+      if (shipOverlayTicker === ticker && shipOverlayImage) {
+        return Promise.resolve(shipOverlayImage);
+      }
+      
+      return new Promise((resolve) => {
+        // Use SHIP_SPRITES for sprite paths
+        const spritePath = (window.SHIP_SPRITES && window.SHIP_SPRITES[ticker]) || window.DEFAULT_SHIP_SPRITE;
+        if (!spritePath) {
+          resolve(null);
+          return;
+        }
+        
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+          shipOverlayImage = img;
+          shipOverlayTicker = ticker;
+          resolve(img);
+        };
+        img.onerror = () => {
+          console.warn('Failed to load ship overlay for', ticker);
+          resolve(null);
+        };
+        img.src = spritePath;
+      });
+    }
+    
+    const shipOverlayPlugin = {
+      id: 'shipOverlayPlugin',
+      
+      afterDatasetsDraw(chart) {
+        // Only draw on the main price dataset (index 0)
+        const meta = chart.getDatasetMeta(0);
+        if (!meta || !meta.data || !meta.data.length) return;
+        
+        const lastPoint = meta.data[meta.data.length - 1];
+        if (!lastPoint) return;
+        
+        const img = shipOverlayImage;
+        if (!img) return;
+        
+        const ctx = chart.ctx;
+        const x = lastPoint.x;
+        const y = lastPoint.y;
+        
+        // Ship size (responsive)
+        const size = 28;
+        const halfSize = size / 2;
+        
+        // Subtle hover animation
+        const t = performance.now() * 0.002;
+        const hoverOffset = Math.sin(t) * 2;
+        
+        ctx.save();
+        
+        // Glow effect behind ship
+        ctx.shadowColor = tickerColors[currentTicker] || '#33ff99';
+        ctx.shadowBlur = 12;
+        ctx.globalAlpha = 0.85;
+        
+        // Draw ship sprite
+        ctx.drawImage(
+          img,
+          x - halfSize,
+          y - halfSize + hoverOffset,
+          size,
+          size
+        );
+        
+        ctx.restore();
+      }
+    };
+    
+    // =========================================================================
     // TICKER_PROFILES — Loaded from js/data/ticker-profiles.js
     // Access via: window.TICKER_PROFILES
     // =========================================================================
@@ -1400,6 +1485,14 @@
         updateTelemetryShipSprite(ticker);
       }
       
+      // Load ship image for chart overlay
+      loadShipOverlayImage(ticker).then(() => {
+        // Redraw chart to show ship overlay
+        if (priceChart) {
+          priceChart.update('none');
+        }
+      });
+      
       document.querySelectorAll('.watchlist-item').forEach(el => {
         const tickerEl = el.querySelector('.watchlist-ticker');
         el.classList.toggle('active', tickerEl && tickerEl.textContent === ticker);
@@ -1923,7 +2016,7 @@
             }
           }
         },
-        plugins: [arcadeCRTPlugin, ribbonJitterPlugin]
+        plugins: [arcadeCRTPlugin, ribbonJitterPlugin, shipOverlayPlugin]
       });
       
       if (macdChart) macdChart.destroy();
@@ -1948,6 +2041,13 @@
       } catch (e) {
         // non-fatal, log for debugging
         console.warn('Captain\'s Log update failed:', e);
+      }
+      
+      // Update Ship Systems panel (reactive to indicators)
+      try {
+        updateShipSystems(source, closes);
+      } catch (e) {
+        console.warn('Ship Systems update failed:', e);
       }
     }
     
@@ -2082,6 +2182,210 @@
           </div>
         `;
       }).join('');
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // SHIP SYSTEMS — Reactive state derived from indicators
+    // ═══════════════════════════════════════════════════════════════════════════
+    
+    /**
+     * Compute ship systems state from chart data
+     * Systems react to EMA spread, MACD histogram, volatility
+     */
+    function computeShipSystems(source, closes) {
+      if (!source || source.length < 20) {
+        return getDefaultSystems();
+      }
+      
+      const n = source.length;
+      const latest = source[n - 1];
+      
+      // Compute EMA values for spread calculation
+      const ema21 = calcEMA(closes, 21);
+      const ema55 = calcEMA(closes, 55);
+      const currentEma21 = ema21[ema21.length - 1] || 0;
+      const currentEma55 = ema55[ema55.length - 1] || 0;
+      const currentPrice = latest.c;
+      
+      // EMA spread (normalized)
+      const emaSpread = currentEma55 > 0 ? (currentEma21 - currentEma55) / currentEma55 : 0;
+      
+      // MACD metrics
+      const macdHist = latest.hist || 0;
+      const macd = latest.macd || 0;
+      const signal = latest.signal || 0;
+      
+      // Volatility (simple measure: range vs price)
+      const recentBars = source.slice(-14);
+      const highs = recentBars.map(d => d.h || d.c);
+      const lows = recentBars.map(d => d.l || d.c);
+      const avgRange = highs.reduce((s, h, i) => s + (h - lows[i]), 0) / recentBars.length;
+      const volatility = currentPrice > 0 ? (avgRange / currentPrice) * 100 : 0;
+      
+      // Trend strength (count bars where EMA21 > EMA55)
+      let trendBars = 0;
+      for (let i = Math.max(0, n - 20); i < n; i++) {
+        if (ema21[i] > ema55[i]) trendBars++;
+      }
+      const sustainedTrend = trendBars >= 15;
+      
+      // Build systems state
+      const systems = [];
+      
+      // THRUSTERS: EMA expanding + positive momentum
+      if (emaSpread > 0.03 && macdHist > 0) {
+        systems.push({ name: 'THRUSTERS', state: 'UPGRADED', stateClass: 'system-upgraded' });
+      } else if (emaSpread > 0 && macd > signal) {
+        systems.push({ name: 'THRUSTERS', state: 'ACTIVE', stateClass: 'system-stable' });
+      } else {
+        systems.push({ name: 'THRUSTERS', state: 'IDLE', stateClass: 'system-idle' });
+      }
+      
+      // HULL: Volatility stress
+      if (volatility > 4) {
+        systems.push({ name: 'HULL', state: 'DAMAGED', stateClass: 'system-damaged' });
+      } else if (volatility > 2.5) {
+        systems.push({ name: 'HULL', state: 'STRAINED', stateClass: 'system-strained' });
+      } else {
+        systems.push({ name: 'HULL', state: 'STABLE', stateClass: 'system-stable' });
+      }
+      
+      // SENSORS: Vol spike + clean crossover
+      const recentCrossover = Math.abs(macd - signal) > 0.1 && macdHist !== 0;
+      if (volatility > 2 && recentCrossover) {
+        systems.push({ name: 'SENSORS', state: 'ENHANCED', stateClass: 'system-enhanced' });
+      } else if (macdHist !== 0) {
+        systems.push({ name: 'SENSORS', state: 'NOMINAL', stateClass: 'system-stable' });
+      } else {
+        systems.push({ name: 'SENSORS', state: 'SCANNING', stateClass: 'system-idle' });
+      }
+      
+      // WARP DRIVE: Sustained trend unlocks it
+      if (sustainedTrend && emaSpread > 0.02) {
+        systems.push({ name: 'WARP DRIVE', state: 'ACQUIRED', stateClass: 'system-acquired' });
+      } else if (trendBars >= 10) {
+        systems.push({ name: 'WARP DRIVE', state: 'CHARGING', stateClass: 'system-strained' });
+      } else {
+        systems.push({ name: 'WARP DRIVE', state: 'LOCKED', stateClass: 'system-locked' });
+      }
+      
+      return systems;
+    }
+    
+    function getDefaultSystems() {
+      return [
+        { name: 'THRUSTERS', state: 'IDLE', stateClass: 'system-idle' },
+        { name: 'HULL', state: 'STABLE', stateClass: 'system-stable' },
+        { name: 'SENSORS', state: 'NOMINAL', stateClass: 'system-stable' },
+        { name: 'WARP DRIVE', state: 'LOCKED', stateClass: 'system-locked' }
+      ];
+    }
+    
+    /**
+     * Render ship systems to the sidebar panel
+     */
+    function renderShipSystems(systems) {
+      const el = document.getElementById('ship-systems-list');
+      if (!el) return;
+      
+      el.innerHTML = systems.map(s => `
+        <li class="system-row">
+          <span class="system-name">${escapeHtml(s.name)}</span>
+          <span class="system-state ${s.stateClass}">${escapeHtml(s.state)}</span>
+        </li>
+      `).join('');
+    }
+    
+    /**
+     * Compute objectives/milestones from systems and signals
+     */
+    function computeObjectives(systems, source) {
+      const objectives = [];
+      
+      // Find system states
+      const thrusters = systems.find(s => s.name === 'THRUSTERS');
+      const hull = systems.find(s => s.name === 'HULL');
+      const warp = systems.find(s => s.name === 'WARP DRIVE');
+      const sensors = systems.find(s => s.name === 'SENSORS');
+      
+      // Thrusters upgraded achievement
+      if (thrusters && thrusters.state === 'UPGRADED') {
+        objectives.push({
+          icon: '◆',
+          text: 'Thrusters upgraded (trend acceleration)',
+          type: 'achieved'
+        });
+      }
+      
+      // Hull stress warning
+      if (hull && (hull.state === 'STRAINED' || hull.state === 'DAMAGED')) {
+        objectives.push({
+          icon: '⚠',
+          text: `Hull ${hull.state.toLowerCase()} (volatility spike)`,
+          type: 'warning'
+        });
+      }
+      
+      // Warp drive milestone
+      if (warp && warp.state === 'ACQUIRED') {
+        objectives.push({
+          icon: '★',
+          text: 'Warp capability unlocked (macro trend)',
+          type: 'milestone'
+        });
+      } else if (warp && warp.state === 'CHARGING') {
+        objectives.push({
+          icon: '◇',
+          text: 'Warp drive charging (trend forming)',
+          type: 'pending'
+        });
+      }
+      
+      // Sensors enhanced
+      if (sensors && sensors.state === 'ENHANCED') {
+        objectives.push({
+          icon: '◆',
+          text: 'Sensors enhanced (signal clarity)',
+          type: 'achieved'
+        });
+      }
+      
+      // If no notable objectives, show default
+      if (objectives.length === 0) {
+        objectives.push({
+          icon: '◇',
+          text: 'Monitoring signal conditions...',
+          type: 'pending'
+        });
+      }
+      
+      return objectives.slice(0, 4); // Cap at 4 objectives
+    }
+    
+    /**
+     * Render objectives to the sidebar panel
+     */
+    function renderObjectives(objectives) {
+      const el = document.getElementById('ship-objectives-list');
+      if (!el) return;
+      
+      el.innerHTML = objectives.map(o => `
+        <li class="objective-row ${o.type}">
+          <span class="objective-icon">${o.icon}</span>
+          <span class="objective-text">${escapeHtml(o.text)}</span>
+        </li>
+      `).join('');
+    }
+    
+    /**
+     * Master update function for Ship Systems panel
+     */
+    function updateShipSystems(source, closes) {
+      const systems = computeShipSystems(source, closes);
+      renderShipSystems(systems);
+      
+      const objectives = computeObjectives(systems, source);
+      renderObjectives(objectives);
     }
     
     // Update the telemetry side console with current data
