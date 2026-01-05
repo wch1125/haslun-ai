@@ -43,6 +43,61 @@
       z-index: 9999;
     }
     
+    /* Page Navigation (matches index.html grouped nav) */
+    .page-nav {
+      display: flex;
+      gap: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .page-nav .nav-link {
+      padding: 0.6rem 1.1rem;
+      background: linear-gradient(to bottom, rgba(51, 255, 153, 0.06), transparent);
+      border: 1px solid var(--border);
+      border-bottom: none;
+      border-radius: 8px 8px 0 0;
+      color: var(--text-dim);
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    
+    .page-nav .nav-link:hover {
+      color: var(--text);
+      background: linear-gradient(to bottom, rgba(51, 255, 153, 0.1), transparent);
+    }
+    
+    .page-nav .nav-link.active {
+      color: var(--phosphor);
+      background: linear-gradient(to bottom, rgba(51, 255, 153, 0.15), rgba(51, 255, 153, 0.05));
+      border-color: var(--phosphor-dim);
+      text-shadow: 0 0 10px var(--phosphor-dim);
+      box-shadow: inset 0 2px 0 var(--phosphor);
+    }
+    
+    /* Breadcrumb */
+    .page-path {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(0, 0, 0, 0.25);
+      font-size: 0.65rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+    }
+    
+    .page-path .path-group { color: var(--phosphor); opacity: 0.85; }
+    .page-path .path-sep { opacity: 0.5; }
+    .page-path .path-leaf { opacity: 0.85; }
+    
     .container { max-width: 1600px; margin: 0 auto; padding: 1.5rem; }
     
     /* Header */
@@ -392,14 +447,28 @@
   </style>
 </head>
 <body>
+  <!-- Navigation (matches index.html) -->
+  <nav class="page-nav">
+    <a href="index.html#chart" class="nav-link">TELEMETRY</a>
+    <a href="index.html#positions" class="nav-link active">OPERATIONS</a>
+    <a href="index.html#arcade" class="nav-link">TRAINING</a>
+  </nav>
+  
+  <!-- Breadcrumb -->
+  <div class="page-path">
+    <span class="path-group">OPERATIONS</span>
+    <span class="path-sep">›</span>
+    <span class="path-leaf">DERIVATIVES</span>
+  </div>
+  
   <div class="container">
     <!-- Header -->
     <header class="header">
       <div class="header-title">
-        <h1>⚔️ MISSION COMMAND</h1>
+        <h1>[MISSION COMMAND]</h1>
         <div class="subtitle">Derivatives Training Sandbox</div>
       </div>
-      <button class="back-btn" onclick="returnToDashboard()">← Dashboard</button>
+      <button class="back-btn" onclick="returnToDashboard()">‹ Dashboard</button>
     </header>
     
     <!-- Controls -->
@@ -460,7 +529,7 @@
         <div class="panel-body">
           <div class="active-missions-list" id="active-missions-list">
             <div class="empty-state zero-state-missions">
-              <div class="zero-state-icon">⚔️</div>
+              <div class="zero-state-icon">[MIS]</div>
               <div class="zero-state-title">No active missions</div>
               <div class="zero-state-copy">Launch operations to observe how market conditions evolve over time.</div>
             </div>
@@ -528,7 +597,7 @@
     <!-- Step 3: Fleet Bay Panel -->
     <div class="fleet-bay">
       <div class="fleet-bay-header" onclick="UI.toggleFleetBay()">
-        <span class="fleet-bay-title">🚀 FLEET BAY</span>
+        <span class="fleet-bay-title">▲ FLEET BAY</span>
         <span class="fleet-bay-toggle" id="fleet-bay-toggle">▼ Expand</span>
       </div>
       <div class="fleet-bay-content" id="fleet-bay-content">
@@ -730,7 +799,7 @@
         const stats = [
           { key: 'hull', name: 'Hull', icon: '🛡️' },
           { key: 'firepower', name: 'Firepower', icon: '⚡' },
-          { key: 'sensors', name: 'Sensors', icon: '📡' },
+          { key: 'sensors', name: 'Sensors', icon: '◈' },
           { key: 'fuel', name: 'Fuel', icon: '⛽' },
           { key: 'threat', name: 'Threat', icon: '⚠️', inverted: true }
         ];
@@ -897,7 +966,7 @@
         if (missions.length === 0) {
           this.activeMissionsList.innerHTML = `
             <div class="empty-state zero-state-missions">
-              <div class="zero-state-icon">⚔️</div>
+              <div class="zero-state-icon">[MIS]</div>
               <div class="zero-state-title">No missions yet</div>
               <div class="zero-state-copy">Select a sector above and launch a mission to observe how market conditions evolve over time.</div>
             </div>`;
@@ -1193,7 +1262,7 @@
               <div class="fleet-ship benchmark" title="Benchmark asset — not assignable as support">
                 <div class="fleet-ship-ticker">${ship.ticker}</div>
                 <div class="fleet-ship-name">${ship.name}</div>
-                <div class="fleet-ship-role BENCHMARK">📊 BENCHMARK</div>
+                <div class="fleet-ship-role BENCHMARK">≡ BENCHMARK</div>
               </div>`;
           } else {
             const isLocked = locked[ship.ticker];

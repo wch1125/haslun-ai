@@ -8515,6 +8515,178 @@
     }
 
     /* ═══════════════════════════════════════════════════════════════════════════
+       TELEMETRY CONTEXT BAY (responsive)
+       Desktop: fills empty space as a docked bay
+       Mobile: becomes a bottom sheet
+       ═══════════════════════════════════════════════════════════════════════════ */
+    
+    .context-bay {
+      margin-top: 12px;
+      border: 1px solid var(--border);
+      background: rgba(0, 0, 0, 0.35);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    
+    .context-bay-handle {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      background: rgba(0, 0, 0, 0.25);
+      border: none;
+      color: var(--text);
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-size: 0.65rem;
+      font-family: var(--font-mono);
+      transition: background 150ms ease;
+    }
+    
+    .context-bay-handle:hover {
+      background: rgba(51, 255, 153, 0.08);
+    }
+    
+    .context-bay-handle .handle-glyph {
+      color: var(--phosphor);
+      opacity: 0.85;
+      font-size: 0.9rem;
+    }
+    
+    .context-bay-handle .handle-title {
+      flex: 1;
+      text-align: left;
+      color: var(--text-muted);
+    }
+    
+    .context-bay-handle .handle-state {
+      color: var(--phosphor);
+      opacity: 0.75;
+    }
+    
+    .context-bay-content {
+      max-height: 260px;
+      transition: max-height 220ms ease, opacity 220ms ease;
+      opacity: 1;
+      overflow: hidden;
+    }
+    
+    .context-bay.collapsed .context-bay-content {
+      max-height: 0px;
+      opacity: 0;
+    }
+    
+    .context-bay-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      padding: 12px;
+    }
+    
+    .context-panel {
+      border: 1px solid var(--border);
+      background: rgba(0, 0, 0, 0.25);
+      border-radius: 4px;
+      padding: 10px 10px 12px;
+    }
+    
+    .context-panel .panel-title {
+      font-size: 0.6rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      font-family: var(--font-mono);
+    }
+    
+    .context-panel .panel-body {
+      font-family: var(--font-mono);
+    }
+    
+    .ribbon-meter {
+      height: 10px;
+      border-radius: 2px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+    }
+    
+    .ribbon-meter-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--phosphor), rgba(51, 255, 153, 0.5));
+      box-shadow: 0 0 12px rgba(51, 255, 153, 0.25);
+      transition: width 240ms ease;
+    }
+    
+    .ribbon-readout {
+      margin-top: 8px;
+      font-size: 0.7rem;
+      color: var(--text);
+      opacity: 0.9;
+    }
+    
+    #signal-radar {
+      font-size: 0.65rem;
+      color: var(--text);
+      opacity: 0.85;
+      line-height: 1.5;
+    }
+    
+    .feed-mini {
+      max-height: 150px;
+      overflow: hidden;
+      color: var(--text);
+      opacity: 0.85;
+      font-size: 0.65rem;
+      line-height: 1.4;
+    }
+    
+    .feed-mini .feed-line {
+      padding: 2px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    .feed-mini .feed-line:last-child {
+      border-bottom: none;
+    }
+    
+    /* Tablet: 2 columns */
+    @media (max-width: 1100px) {
+      .context-bay-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+    
+    /* Mobile: bottom sheet */
+    @media (max-width: 720px) {
+      .context-bay {
+        position: fixed;
+        left: 10px;
+        right: 10px;
+        bottom: 110px; /* above mobile nav + quick stats */
+        z-index: 60;
+        margin: 0;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
+      }
+      
+      .context-bay-content {
+        max-height: 55vh;
+      }
+      
+      .context-bay-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .feed-mini {
+        max-height: 22vh;
+      }
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════════════
        CONTEXT FOCUS — Page-Behind Awareness
        Subtle emphasis when ShipBrief is open
        ═══════════════════════════════════════════════════════════════════════════ */

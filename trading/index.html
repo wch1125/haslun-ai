@@ -768,6 +768,39 @@
               <span class="status-chip" id="tm-mode-chip"><span class="dot"></span>MODE · TELEMETRY</span>
               <span class="status-chip" id="tm-range-chip"><span class="dot"></span>RANGE · 3M</span>
             </div>
+            
+            <!-- TELEMETRY CONTEXT BAY (responsive) -->
+            <section id="telemetry-context-bay" class="context-bay collapsed" aria-label="Telemetry Context Bay">
+              <button class="context-bay-handle" type="button" onclick="toggleContextBay()" aria-expanded="false">
+                <span class="handle-glyph">≋</span>
+                <span class="handle-title">CONTEXT BAY</span>
+                <span class="handle-state" id="context-bay-state">EXPAND</span>
+              </button>
+              
+              <div class="context-bay-content" role="region" aria-live="polite">
+                <div class="context-bay-grid">
+                  <div class="context-panel" id="panel-ribbon">
+                    <div class="panel-title">RIBBON STATE</div>
+                    <div class="panel-body">
+                      <div class="ribbon-meter">
+                        <div class="ribbon-meter-bar" id="ribbon-meter-bar"></div>
+                      </div>
+                      <div class="ribbon-readout" id="ribbon-readout">—</div>
+                    </div>
+                  </div>
+                  
+                  <div class="context-panel" id="panel-signal">
+                    <div class="panel-title">SIGNAL RADAR</div>
+                    <div class="panel-body" id="signal-radar">—</div>
+                  </div>
+                  
+                  <div class="context-panel" id="panel-feed">
+                    <div class="panel-title">BRIDGE FEED</div>
+                    <div class="panel-body feed-mini" id="bridge-feed-mini">—</div>
+                  </div>
+                </div>
+              </div>
+            </section>
           </div>
           
           <!-- SPIELBERGIAN CONTROL PANEL -->

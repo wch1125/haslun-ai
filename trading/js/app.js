@@ -1614,6 +1614,92 @@
       updateCharts();
     }
     
+    // =========================================================================
+    // CONTEXT BAY (Step 4)
+    // =========================================================================
+    
+    function toggleContextBay(force) {
+      const bay = document.getElementById('telemetry-context-bay');
+      if (!bay) return;
+      
+      const shouldOpen = (typeof force === 'boolean')
+        ? force
+        : bay.classList.contains('collapsed');
+      
+      bay.classList.toggle('collapsed', !shouldOpen);
+      
+      const btn = bay.querySelector('.context-bay-handle');
+      const state = document.getElementById('context-bay-state');
+      if (btn) btn.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+      if (state) state.textContent = shouldOpen ? 'COLLAPSE' : 'EXPAND';
+    }
+    
+    function updateContextBay() {
+      const bar = document.getElementById('ribbon-meter-bar');
+      const readout = document.getElementById('ribbon-readout');
+      const radar = document.getElementById('signal-radar');
+      const feed = document.getElementById('bridge-feed-mini');
+      
+      if (!bar || !readout || !radar || !feed) return;
+      if (!window.currentTicker) return;
+      
+      const closes = window.currentSeriesCloses || [];
+      if (!closes.length) {
+        readout.textContent = 'NO DATA';
+        bar.style.width = '0%';
+        return;
+      }
+      
+      // Calculate EMA spread for ribbon state
+      const ema8 = calcEMA(closes, 8);
+      const ema89 = calcEMA(closes, 89);
+      const last = closes[closes.length - 1];
+      const a = ema8[ema8.length - 1];
+      const b = ema89[ema89.length - 1];
+      
+      if (!Number.isFinite(last) || !Number.isFinite(a) || !Number.isFinite(b)) {
+        readout.textContent = 'CALIBRATING...';
+        bar.style.width = '0%';
+        return;
+      }
+      
+      // Calculate spread as percentage of price
+      const spread = Math.abs(a - b) / Math.max(1e-6, last);
+      // Map to 0..1 (tuned for visual feel)
+      const norm = Math.max(0, Math.min(1, spread / 0.15));
+      const pct = Math.round(norm * 100);
+      
+      bar.style.width = `${pct}%`;
+      const state = (pct < 25) ? 'COMPRESSED' : (pct < 60) ? 'NEUTRAL' : 'EXPANDING';
+      readout.textContent = state;
+      
+      // Signal radar: aggregate from existing UI elements
+      const volBadge = document.querySelector('.vol-badge');
+      const signalStatus = document.querySelector('.signal-status');
+      const vol = volBadge ? volBadge.textContent.trim() : '—';
+      const signal = signalStatus ? signalStatus.textContent.trim() : '—';
+      radar.textContent = `VOL: ${vol}  |  SIGNAL: ${signal}  |  RIBBON: ${state}`;
+      
+      // Bridge feed mini: pull recent log entries
+      const logLines = Array.from(document.querySelectorAll('#telemetry-log .log-entry'))
+        .slice(-3)
+        .map(el => el.textContent.trim())
+        .filter(Boolean);
+      
+      if (logLines.length) {
+        feed.innerHTML = logLines.map(l => `<div class="feed-line">${escapeHtml(l)}</div>`).join('');
+      } else {
+        feed.innerHTML = '<div class="feed-line">AWAITING TELEMETRY...</div>';
+      }
+    }
+    
+    // Simple HTML sanitizer
+    function escapeHtml(s) {
+      return (s || '').replace(/[&<>"']/g, c => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[c]));
+    }
+    
     function updateCharts() {
       const data = tickerData[currentTicker];
       if (!data) return;
@@ -1643,6 +1729,9 @@
       const labels = source.map(d => new Date(d.t));
       const closes = source.map(d => d.c);
       const color = tickerColors[currentTicker] || '#33ff99';
+      
+      // Store closes for Context Bay access
+      window.currentSeriesCloses = closes;
       
       // Calculate proper Y-axis bounds with padding
       const minPrice = Math.min(...closes);
@@ -1788,6 +1877,7 @@
       
       // Update telemetry side console
       updateTelemetryConsole(source, closes);
+      updateContextBay();
     }
     
     // Update the telemetry side console with current data
@@ -2095,6 +2185,11 @@
     function switchTab(tabName) {
       // Toggle panel visibility
       document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === tabName + '-panel'));
+      
+      // Auto-collapse Context Bay when leaving Telemetry
+      if (tabName !== 'chart') {
+        toggleContextBay(false);
+      }
       
       // Determine which group this tab belongs to
       const group = getPrimaryGroup(tabName);
