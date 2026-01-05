@@ -1,0 +1,7060 @@
+    
+    // Loading screen countdown (data-driven fleet)
+    function clamp(n,a,b){ return Math.max(a, Math.min(b,n)); }
+
+    const PerformanceCache = {
+      byTicker: {},
+      async get(ticker){
+        const t = (ticker||"").toUpperCase();
+        if (this.byTicker[t]) return this.byTicker[t];
+        try{
+          const res = await fetch('data/' + t.toLowerCase() + '.json');
+          const data = await res.json();
+          const daily = Array.isArray(data.daily) ? data.daily : [];
+          const intra = Array.isArray(data.intraday15) ? data.intraday15 : (Array.isArray(data.intraday) ? data.intraday : []);
+          const closesDaily = daily.slice(-6).map(x=>Number(x.c)).filter(Number.isFinite);
+          const closesIntra  = intra.slice(-40).map(x=>Number(x.c)).filter(Number.isFinite);
+
+          // Daily return from last two daily closes
+          let r1d = 0;
+          if (closesDaily.length >= 2){
+            const prev = closesDaily[closesDaily.length-2];
+            const last = closesDaily[closesDaily.length-1];
+            if (prev) r1d = ((last-prev)/prev)*100;
+          }
+
+          // Volatility from intraday returns (std dev of pct changes)
+          let vol = 0;
+          if (closesIntra.length >= 6){
+            const rets = [];
+            for (let i=1;i<closesIntra.length;i++){
+              const a = closesIntra[i-1], b = closesIntra[i];
+              if (a) rets.push(((b-a)/a)*100);
+            }
+            if (rets.length){
+              const mean = rets.reduce((s,x)=>s+x,0)/rets.length;
+              const variance = rets.reduce((s,x)=>s+(x-mean)*(x-mean),0)/rets.length;
+              vol = Math.sqrt(variance);
+            }
+          }
+
+          // Momentum slope (simple: last - first over window, pct)
+          let mom = 0;
+          if (closesIntra.length >= 10){
+            const first = closesIntra[0], last = closesIntra[closesIntra.length-1];
+            if (first) mom = ((last-first)/first)*100;
+          }
+
+          const out = { r1d, vol, mom, closesIntra };
+          this.byTicker[t] = out;
+          return out;
+        } catch(e){
+          const out = { r1d: 0, vol: 0, mom: 0, closesIntra: [] };
+          this.byTicker[t] = out;
+          return out;
+        }
+      }
+    };
+
+    function drawSparkline(canvas, closes, color){
+      if (!canvas || !canvas.getContext) return;
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width, h = canvas.height;
+      ctx.clearRect(0,0,w,h);
+
+      if (!closes || closes.length < 2) return;
+
+      const min = Math.min(...closes);
+      const max = Math.max(...closes);
+      const range = Math.max(1e-9, max-min);
+
+      // faint grid
+      ctx.globalAlpha = 0.12;
+      ctx.fillStyle = '#ffffff';
+      for (let x=0; x<w; x+=10) ctx.fillRect(x, 0, 1, h);
+      for (let y=0; y<h; y+=8) ctx.fillRect(0, y, w, 1);
+
+      // line
+      ctx.globalAlpha = 0.95;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      for (let i=0;i<closes.length;i++){
+        const x = (i/(closes.length-1))*(w-2)+1;
+        const y = h - 2 - ((closes[i]-min)/range)*(h-4);
+        if (i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+      }
+      ctx.stroke();
+
+      // last dot
+      const lx = (w-2)+1;
+      const ly = h - 2 - ((closes[closes.length-1]-min)/range)*(h-4);
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(lx, ly, 2.3, 0, Math.PI*2);
+      ctx.fill();
+    }
+
+    async function createLoadingFleet(){
+      const fleetLayer = document.getElementById('loading-fleet');
+      if (!fleetLayer || !window.SHIP_SPRITES) return;
+
+      fleetLayer.innerHTML = '';
+      const tickers = Object.keys(SHIP_SPRITES);
+
+      // Figure out elite winners based on actual daily return from series (fallback to statsData if present)
+      const perfList = [];
+      for (const t of tickers){
+        const perf = await PerformanceCache.get(t);
+        let r = perf.r1d;
+        if ((!Number.isFinite(r) || r === 0) && window.statsData && statsData[t] && Number.isFinite(statsData[t].return_1d)){
+          r = statsData[t].return_1d;
+        }
+        perfList.push({ t, r });
+      }
+      perfList.sort((a,b)=> (b.r ?? -Infinity) - (a.r ?? -Infinity));
+      const eliteSet = new Set(perfList.slice(0, Math.min(3, perfList.length)).map(x=>x.t));
+
+      // Normalize returns for speed mapping
+      const valid = perfList.map(x=>x.r).filter(v=>Number.isFinite(v));
+      const minR = valid.length ? Math.min(...valid) : -2;
+      const maxR = valid.length ? Math.max(...valid) :  2;
+      const range = Math.max(0.0001, maxR-minR);
+
+      const shipCount = Math.max(20, tickers.length * 2);
+
+      for (let i=0;i<shipCount;i++){
+        const ticker = tickers[i % tickers.length];
+        const perf = await PerformanceCache.get(ticker);
+
+        // Wrapper so we can attach sparkline + sprite together
+        const wrap = document.createElement('div');
+        wrap.className = 'loading-ship-wrap' + (eliteSet.has(ticker) ? ' elite' : '');
+        wrap.dataset.ticker = ticker;
+
+        // Lane placement
+        const x = eliteSet.has(ticker) ? (35 + Math.random()*30) : (Math.random()*100);
+        wrap.style.setProperty('--x', x + '%');
+
+        // Glow color by ticker (fallback)
+        const glow = (window.tickerColors && tickerColors[ticker]) ? tickerColors[ticker] : '#33ff99';
+        wrap.style.setProperty('--shipGlow', glow);
+
+        // Sparkline color reflects momentum (green up, red down)
+        const sparkColor = (perf.mom >= 0) ? 'rgba(51,255,153,0.95)' : 'rgba(255,107,107,0.95)';
+        wrap.style.setProperty('--sparkGlow', sparkColor);
+
+        // Scale influenced by volatility (more volatile = slightly larger / more presence)
+        const baseScale = 0.75 + Math.random()*0.55;
+        const volBoost = 1 + clamp(perf.vol/6, 0, 0.25);
+        const scale = (eliteSet.has(ticker) ? baseScale*1.12 : baseScale) * volBoost;
+        wrap.style.setProperty('--scale', scale.toFixed(2));
+
+        // Duration based on daily return: winners faster, losers slower
+        let r = perf.r1d;
+        if ((!Number.isFinite(r) || r === 0) && window.statsData && statsData[ticker] && Number.isFinite(statsData[ticker].return_1d)){
+          r = statsData[ticker].return_1d;
+        }
+        const norm = clamp((r - minR) / range, 0, 1);
+        const fast = 3.0, slow = 10.0;
+        let duration = slow - (slow-fast)*norm;
+        if (eliteSet.has(ticker)) duration *= 0.78;
+
+        // Stagger start
+        const delay = -Math.random()*duration;
+        wrap.style.setProperty('--duration', duration.toFixed(2)+'s');
+        wrap.style.setProperty('--delay', delay.toFixed(2)+'s');
+
+        // Sparkline canvas (tiny HUD above ship)
+        const canvas = document.createElement('canvas');
+        canvas.className = 'ship-spark';
+        canvas.width = 110;
+        canvas.height = 34;
+
+        // Draw from last ~30 closes
+        const closes = (perf.closesIntra && perf.closesIntra.length) ? perf.closesIntra.slice(-30) : [];
+        drawSparkline(canvas, closes, sparkColor);
+
+        // Ship badge
+        const badge = document.createElement('div');
+        badge.className = 'ship-badge';
+        badge.textContent = eliteSet.has(ticker) ? (ticker + ' ★') : ticker;
+
+        // Sprite
+        const img = document.createElement('img');
+        img.src = SHIP_SPRITES[ticker];
+        img.alt = ticker + ' ship';
+
+        wrap.appendChild(canvas);
+        wrap.appendChild(badge);
+        wrap.appendChild(img);
+        fleetLayer.appendChild(wrap);
+      }
+    }
+
+    async function runCountdown() {
+      const countdown = document.getElementById('countdown');
+      const status = document.getElementById('loading-status');
+      const beam = document.getElementById('pixel-beam');
+      const ground = document.getElementById('pixel-ground');
+      const loadingScreen = document.getElementById('loading-screen');
+      const app = document.getElementById('app');
+
+      let count = 3;
+
+      const arcadeMessages = [
+        'ESTABLISHING UPLINK...',
+        'SYNCHING FLEET TELEMETRY...',
+        'CALIBRATING THRUST VECTORS...'
+      ];
+
+      // Start the animated, data-driven fleet
+      createLoadingFleet();
+
+      const interval = setInterval(() => {
+        count--;
+        if (count > 0) {
+          countdown.textContent = count;
+          status.textContent = arcadeMessages[3 - count - 1] || 'INITIALIZING...';
+        } else if (count === 0) {
+          countdown.textContent = 'GO';
+          countdown.classList.add('go');
+          if (beam) beam.classList.add('active');
+          if (ground) ground.classList.add('active');
+          status.textContent = 'COCKPIT ONLINE — CLEAR FOR LAUNCH';
+        } else {
+          clearInterval(interval);
+          loadingScreen.classList.add('hidden');
+          app.classList.add('visible');
+          init();
+        }
+      }, 1000);
+    }
+
+    // Start countdown on load
+
+    window.addEventListener('DOMContentLoaded', () => {
+      setTimeout(runCountdown, 500);
+    });
+    
+    let currentTicker = 'RKLB', currentTimeframe = '1D', currentRange = '3M', showMA = true;
+    let priceChart = null, macdChart = null, tickerData = {}, statsData = {};
+    
+    const tickerColors = {
+      'RKLB': '#33ff99', 'LUNR': '#47d4ff', 'ASTS': '#ffb347', 'ACHR': '#ff6b9d',
+      'JOBY': '#b388ff', 'GME': '#ff6b6b', 'BKSY': '#47d4ff', 'RDW': '#33ff99',
+      'PL': '#b388ff', 'EVEX': '#ff6b9d', 'MP': '#ffb347', 'KTOS': '#47d4ff',
+      'IRDM': '#33ff99', 'HON': '#b388ff', 'ATI': '#ffb347', 'CACI': '#47d4ff', 'LOAR': '#ff6b9d',
+      'COHR': '#47d4ff', 'GE': '#ff6b6b', 'LHX': '#33ff99', 'RTX': '#ff6b6b'
+    };
+    
+    const tickerThemes = {
+      'RKLB': 'SPACE', 'LUNR': 'SPACE', 'ASTS': 'SPACE', 'BKSY': 'SPACE',
+      'RDW': 'SPACE', 'PL': 'SPACE', 'IRDM': 'SPACE', 'KTOS': 'DEFENSE',
+      'ACHR': 'eVTOL', 'JOBY': 'eVTOL', 'EVEX': 'eVTOL', 'GME': 'MEME',
+      'MP': 'MATERIALS', 'HON': 'INDUSTRIAL', 'ATI': 'MATERIALS',
+      'CACI': 'DEFENSE', 'LOAR': 'AEROSPACE',
+      'COHR': 'OPTICS', 'GE': 'INDUSTRIAL', 'LHX': 'DEFENSE', 'RTX': 'DEFENSE'
+    };
+    
+    const rangeDays = { '1W': 7, '1M': 30, '3M': 90, '6M': 180, '1Y': 365, 'ALL': 9999 };
+    
+    // =========================================================================
+    // TICKER PROFILES — Pip-Boy style dossiers for each position
+    // =========================================================================
+    const TICKER_PROFILES = {
+      RKLB: {
+        name: "Rocket Lab USA",
+        codename: "ELECTRON",
+        sector: "Space Launch & Satellites",
+        threat_level: "MODERATE",
+        summary: "Small-launch pioneer now building medium-lift Neutron rocket. Vertically integrated: they make the rocket, the satellite bus, and increasingly the payload itself.",
+        thesis: "Rocket Lab is betting that owning the entire stack — from launch to spacecraft to ground systems — creates compounding margin advantages as the space economy scales.",
+        catalysts: [
+          { date: "Q1 2026", event: "Neutron First Flight", impact: "HIGH" },
+          { date: "Ongoing", event: "Electron Launch Cadence", impact: "MEDIUM" },
+          { date: "2026", event: "Space Systems Revenue Growth", impact: "HIGH" }
+        ],
+        risks: [
+          "Neutron development delays or cost overruns",
+          "SpaceX pricing pressure on rideshare market",
+          "Customer concentration in government contracts"
+        ],
+        vitals: {
+          founded: 2006,
+          hq: "Long Beach, CA",
+          employees: "~1,800",
+          launches: "50+"
+        },
+        lore: "In the orbital logistics game, Electron is the reliable shuttle bus — small, frequent, precise. Neutron is the freight train they're building next. If it works, they'll own both lanes of the highway to space."
+      },
+      LUNR: {
+        name: "Intuitive Machines",
+        codename: "MOONSHOT",
+        sector: "Lunar Services",
+        threat_level: "HIGH",
+        summary: "Commercial lunar lander company. First private US company to soft-land on the Moon (IM-1, Feb 2024). NASA CLPS contractor building recurring lunar delivery business.",
+        thesis: "The Moon is becoming infrastructure. Intuitive Machines is positioning as the FedEx of cislunar space — delivering payloads, building navigation networks, and eventually operating surface systems.",
+        catalysts: [
+          { date: "Feb 2026", event: "IM-2 Lunar Landing", impact: "HIGH" },
+          { date: "2026", event: "Lunar Data Network Contracts", impact: "MEDIUM" },
+          { date: "2027", event: "IM-3 Mission", impact: "HIGH" }
+        ],
+        risks: [
+          "Mission failure risk (space is hard)",
+          "NASA budget dependency",
+          "Long timeline to profitability"
+        ],
+        vitals: {
+          founded: 2013,
+          hq: "Houston, TX",
+          employees: "~500",
+          landings: "1 (IM-1)"
+        },
+        lore: "They tipped over on landing and still counted it as a win. That's not copium — that's the reality of lunar exploration. Every data point is gold. They're learning faster than anyone else in the West."
+      },
+      ASTS: {
+        name: "AST SpaceMobile",
+        codename: "BLUEBIRD",
+        sector: "Space-Based Cellular",
+        threat_level: "EXTREME",
+        summary: "Building the first space-based cellular broadband network. Giant satellites (64m² arrays) connect directly to unmodified smartphones. If it works, it's the biggest addressable market in telecom history.",
+        thesis: "5 billion people have phones. 90% of Earth has no cellular coverage. AST is building orbital cell towers to close that gap — no new hardware required on the ground.",
+        catalysts: [
+          { date: "Q1 2026", event: "Commercial Service Launch", impact: "HIGH" },
+          { date: "2026", event: "Block 2 Satellite Deployment", impact: "HIGH" },
+          { date: "Ongoing", event: "MNO Partnership Expansion", impact: "MEDIUM" }
+        ],
+        risks: [
+          "Unproven technology at scale",
+          "Regulatory complexity across jurisdictions",
+          "Capital-intensive deployment phase",
+          "Competition from Starlink Direct-to-Cell"
+        ],
+        vitals: {
+          founded: 2017,
+          hq: "Midland, TX",
+          employees: "~500",
+          satellites: "5 (BlueBird test constellation)"
+        },
+        lore: "The satellites are the size of basketball courts. The engineering is borderline absurd. But if they pull it off, every phone on Earth becomes a satellite phone. That's not a product — that's a paradigm shift."
+      },
+      ACHR: {
+        name: "Archer Aviation",
+        codename: "MIDNIGHT",
+        sector: "eVTOL / Urban Air Mobility",
+        threat_level: "MODERATE",
+        summary: "Electric vertical takeoff and landing aircraft for urban air taxi service. Partnership with United Airlines. Manufacturing facility in Georgia.",
+        thesis: "Traffic is broken. Archer is betting that electric flight becomes cheap and quiet enough to create a new transportation layer above cities.",
+        catalysts: [
+          { date: "Q1 2026", event: "FAA Type Certification", impact: "HIGH" },
+          { date: "2026", event: "Commercial Launch (UAE)", impact: "HIGH" },
+          { date: "2027", event: "US Commercial Operations", impact: "HIGH" }
+        ],
+        risks: [
+          "FAA certification timeline uncertainty",
+          "Battery energy density limitations",
+          "Infrastructure buildout costs",
+          "Public acceptance of urban air traffic"
+        ],
+        vitals: {
+          founded: 2018,
+          hq: "San Jose, CA",
+          employees: "~900",
+          aircraft: "Midnight (4+1 passenger)"
+        },
+        lore: "The Jetsons promised us flying cars. Archer is delivering electric helicopters that don't sound like helicopters. Close enough."
+      },
+      JOBY: {
+        name: "Joby Aviation",
+        codename: "S4",
+        sector: "eVTOL / Urban Air Mobility",
+        threat_level: "MODERATE",
+        summary: "Furthest along in eVTOL certification. Toyota-backed. Building manufacturing at scale. Air taxi service planned for 2025.",
+        thesis: "First mover advantage in a winner-take-most market. Joby has more flight hours, more capital, and more regulatory progress than any competitor.",
+        catalysts: [
+          { date: "2025-2026", event: "FAA Type Certification", impact: "HIGH" },
+          { date: "2025", event: "Initial Commercial Ops (Dubai)", impact: "HIGH" },
+          { date: "2026", event: "US Market Launch", impact: "HIGH" }
+        ],
+        risks: [
+          "Certification delays",
+          "High cash burn pre-revenue",
+          "Competitive pressure from Archer, Lilium",
+          "Noise and safety perception issues"
+        ],
+        vitals: {
+          founded: 2009,
+          hq: "Santa Cruz, CA",
+          employees: "~1,500",
+          aircraft: "S4 (4+1 passenger)"
+        },
+        lore: "They've been at this longer than anyone. The Toyota money helps. But the real moat is the million+ miles of flight test data. That's not something you can buy."
+      },
+      GME: {
+        name: "GameStop Corp",
+        codename: "DIAMOND HANDS",
+        sector: "Retail / Meme",
+        threat_level: "CHAOTIC",
+        summary: "Video game retailer turned meme stock phenomenon. Now pivoting toward... something. Cash-rich balance sheet. Ryan Cohen steering the ship into uncharted waters.",
+        thesis: "This isn't a thesis. This is volatility exposure with a side of cultural commentary. The balance sheet is real; the business model is TBD.",
+        catalysts: [
+          { date: "Ongoing", event: "Social Media Sentiment Spikes", impact: "HIGH" },
+          { date: "Unknown", event: "Strategic Pivot Announcements", impact: "MEDIUM" },
+          { date: "Quarterly", event: "Earnings Surprises", impact: "MEDIUM" }
+        ],
+        risks: [
+          "Fundamental business decline in physical games",
+          "Meme momentum can reverse violently",
+          "No clear path to sustainable growth",
+          "Regulatory scrutiny on retail trading"
+        ],
+        vitals: {
+          founded: 1984,
+          hq: "Grapevine, TX",
+          employees: "~8,000",
+          stores: "~4,000"
+        },
+        lore: "The stock that broke the internet in 2021. Whether it's a movement, a trade, or a cautionary tale depends on your entry price and your exit strategy. We hold it because the volatility is useful. Not financial advice."
+      },
+      BKSY: {
+        name: "BlackSky Technology",
+        codename: "SPECTRA",
+        sector: "Geospatial Intelligence",
+        threat_level: "LOW",
+        summary: "Real-time Earth observation satellite constellation. AI-powered analytics platform. Defense and intelligence community customers.",
+        thesis: "Imagery is becoming a utility. BlackSky is building the always-on, AI-analyzed feed of what's happening on Earth — updated hourly, not daily.",
+        catalysts: [
+          { date: "Ongoing", event: "Constellation Expansion", impact: "MEDIUM" },
+          { date: "2026", event: "Gen-3 Satellite Deployment", impact: "MEDIUM" },
+          { date: "Ongoing", event: "Government Contract Wins", impact: "MEDIUM" }
+        ],
+        risks: [
+          "Competition from Planet, Maxar",
+          "Government budget cycles",
+          "Small constellation limits revisit rates"
+        ],
+        vitals: {
+          founded: 2014,
+          hq: "Herndon, VA",
+          employees: "~350",
+          satellites: "18"
+        },
+        lore: "They photograph the same spot on Earth multiple times per day. The value isn't in any single image — it's in the delta. What changed? When? That's intelligence."
+      },
+      RDW: {
+        name: "Redwire Corporation",
+        codename: "FORGE",
+        sector: "Space Infrastructure",
+        threat_level: "LOW",
+        summary: "Space infrastructure company. On-orbit manufacturing, solar arrays, sensors. Rolls up smaller space tech companies. Supplies components across the industry.",
+        thesis: "Every satellite needs stuff — solar panels, antennas, sensors, structures. Redwire is the Home Depot of space hardware.",
+        catalysts: [
+          { date: "Ongoing", event: "M&A Integration", impact: "MEDIUM" },
+          { date: "2026", event: "In-Space Manufacturing Demos", impact: "MEDIUM" },
+          { date: "Ongoing", event: "NASA/DoD Contracts", impact: "MEDIUM" }
+        ],
+        risks: [
+          "Integration risk from acquisitions",
+          "Customer concentration",
+          "Supply chain dependencies"
+        ],
+        vitals: {
+          founded: 2020,
+          hq: "Jacksonville, FL",
+          employees: "~700",
+          facilities: "20+"
+        },
+        lore: "While everyone argues about who gets to launch the rockets, Redwire quietly sells picks and shovels to all of them. Boring but effective."
+      },
+      PL: {
+        name: "Planet Labs",
+        codename: "DOVE",
+        sector: "Earth Observation",
+        threat_level: "LOW",
+        summary: "Largest Earth observation satellite constellation. Daily imaging of the entire planet. Commercial, government, and NGO customers.",
+        thesis: "A daily photo of every spot on Earth creates unprecedented visibility into human activity. Agriculture, supply chains, climate — it's all visible from orbit.",
+        catalysts: [
+          { date: "Ongoing", event: "Data Services Revenue Growth", impact: "MEDIUM" },
+          { date: "2026", event: "Pelican Constellation Launch", impact: "MEDIUM" },
+          { date: "Ongoing", event: "Government Contract Expansion", impact: "MEDIUM" }
+        ],
+        risks: [
+          "Path to profitability unclear",
+          "Competition from free/low-cost imagery",
+          "Data commoditization pressure"
+        ],
+        vitals: {
+          founded: 2010,
+          hq: "San Francisco, CA",
+          employees: "~800",
+          satellites: "200+"
+        },
+        lore: "They image the entire Earth every single day. Every field, every port, every construction site. The value is in what you can see changing over time."
+      },
+      EVEX: {
+        name: "Eve Holding",
+        codename: "VECTOR",
+        sector: "eVTOL / Urban Air Mobility",
+        threat_level: "MODERATE",
+        summary: "Embraer-backed eVTOL company. Leveraging decades of aerospace manufacturing experience. Urban air mobility focus with global ambitions.",
+        thesis: "Embraer knows how to build and certify aircraft at scale. Eve inherits that DNA for the electric age.",
+        catalysts: [
+          { date: "2026", event: "Prototype Flight Testing", impact: "MEDIUM" },
+          { date: "2027", event: "Certification Progress", impact: "HIGH" },
+          { date: "Ongoing", event: "Pre-order Conversions", impact: "MEDIUM" }
+        ],
+        risks: [
+          "Later to market than Joby/Archer",
+          "Brazil HQ complicates US certification",
+          "Competitive pressure in crowded market"
+        ],
+        vitals: {
+          founded: 2020,
+          hq: "Melbourne, FL / São Paulo",
+          employees: "~600",
+          aircraft: "eVTOL (4+1 passenger)"
+        },
+        lore: "The Embraer connection is the whole story. These are the people who built the E-Jets. They know certification, they know manufacturing, they know airlines."
+      },
+      KTOS: {
+        name: "Kratos Defense",
+        codename: "VALKYRIE",
+        sector: "Defense Technology",
+        threat_level: "LOW",
+        summary: "Unmanned systems and hypersonic tech. Affordable attritable drones for the DoD. Satellite ground systems. The affordable end of the defense contractor spectrum.",
+        thesis: "Future warfare is drone warfare. Kratos builds the cheap, expendable, AI-piloted aircraft that will fly alongside manned fighters.",
+        catalysts: [
+          { date: "Ongoing", event: "CCA Program Contracts", impact: "HIGH" },
+          { date: "2026", event: "Hypersonic Testing", impact: "MEDIUM" },
+          { date: "Ongoing", event: "DoD Budget Allocations", impact: "MEDIUM" }
+        ],
+        risks: [
+          "Defense budget politics",
+          "Program cancellation risk",
+          "Competition from larger primes"
+        ],
+        vitals: {
+          founded: 1994,
+          hq: "Colorado Springs, CO",
+          employees: "~3,500",
+          focus: "Drones, Missiles, Space"
+        },
+        lore: "While Lockheed builds the $100M jets, Kratos builds the $2M wingmen. In an era of attrition warfare, cheap and many beats expensive and few."
+      },
+      IRDM: {
+        name: "Iridium Communications",
+        codename: "CONSTELLATION",
+        sector: "Satellite Communications",
+        threat_level: "LOW",
+        summary: "Global satellite phone and IoT network. 66-satellite constellation provides pole-to-pole coverage. Government, maritime, aviation customers.",
+        thesis: "The original satellite phone network, now focused on IoT and specialty markets where Starlink can't compete on coverage or reliability.",
+        catalysts: [
+          { date: "Ongoing", event: "IoT Revenue Growth", impact: "MEDIUM" },
+          { date: "Ongoing", event: "Government Contract Renewals", impact: "MEDIUM" },
+          { date: "Long-term", event: "Next-Gen Constellation Planning", impact: "LOW" }
+        ],
+        risks: [
+          "Technology disruption from LEO constellations",
+          "Limited growth runway",
+          "Commodity pricing pressure"
+        ],
+        vitals: {
+          founded: 2000,
+          hq: "McLean, VA",
+          employees: "~600",
+          satellites: "66 active"
+        },
+        lore: "They went bankrupt once and came back. The constellation is paid for. The cash flows. It's not sexy, but it's the only network that works everywhere on Earth."
+      },
+      MP: {
+        name: "MP Materials",
+        codename: "RARE EARTH",
+        sector: "Critical Minerals",
+        threat_level: "LOW",
+        summary: "Largest rare earth mining and processing company in the Western Hemisphere. Mountain Pass mine in California. Essential materials for EVs, wind turbines, defense systems.",
+        thesis: "China controls 60%+ of rare earth processing. MP is the US answer to that dependency. National security meets clean energy transition.",
+        catalysts: [
+          { date: "Ongoing", event: "Magnetics Facility Ramp", impact: "HIGH" },
+          { date: "2026", event: "Downstream Processing Expansion", impact: "MEDIUM" },
+          { date: "Ongoing", event: "Auto OEM Supply Deals", impact: "MEDIUM" }
+        ],
+        risks: [
+          "Commodity price volatility",
+          "China supply chain disruption",
+          "Environmental/permitting challenges"
+        ],
+        vitals: {
+          founded: 2017,
+          hq: "Las Vegas, NV",
+          employees: "~800",
+          facility: "Mountain Pass Mine"
+        },
+        lore: "Every EV motor, every wind turbine, every F-35 needs rare earths. China has the market cornered. MP is the insurance policy."
+      },
+      HON: {
+        name: "Honeywell International",
+        codename: "INDUSTRIAL",
+        sector: "Aerospace & Industrial",
+        threat_level: "LOW",
+        summary: "Diversified industrial conglomerate. Aerospace systems, building technologies, performance materials. The boring backbone of global infrastructure.",
+        thesis: "When everyone else is chasing moonshots, sometimes you want the company that makes the avionics, the thermostats, and the jet engines.",
+        catalysts: [
+          { date: "Ongoing", event: "Aerospace Aftermarket Growth", impact: "MEDIUM" },
+          { date: "Ongoing", event: "Energy Transition Products", impact: "MEDIUM" },
+          { date: "Quarterly", event: "Earnings & Guidance", impact: "LOW" }
+        ],
+        risks: [
+          "Industrial cyclicality",
+          "Conglomerate discount",
+          "Spin-off execution risk"
+        ],
+        vitals: {
+          founded: 1906,
+          hq: "Charlotte, NC",
+          employees: "~95,000",
+          segments: "Aerospace, Building Tech, PMT, SPS"
+        },
+        lore: "Not every position needs to be a moonshot. Sometimes you hold the company that makes parts for everyone else's moonshots."
+      },
+      ATI: {
+        name: "ATI Inc",
+        codename: "ALLOY",
+        sector: "Specialty Materials",
+        threat_level: "LOW",
+        summary: "Specialty materials company. Titanium, nickel alloys, specialty steels. Aerospace, defense, energy markets. When you need metal that doesn't melt, bend, or corrode.",
+        thesis: "Next-gen aircraft and turbines require exotic alloys. ATI is one of the few Western suppliers who can make them at scale.",
+        catalysts: [
+          { date: "Ongoing", event: "Aerospace Production Ramp", impact: "MEDIUM" },
+          { date: "Ongoing", event: "Defense Spending Tailwinds", impact: "MEDIUM" },
+          { date: "Ongoing", event: "Titanium Supply Constraints", impact: "LOW" }
+        ],
+        risks: [
+          "Aerospace cycle sensitivity",
+          "Raw material cost volatility",
+          "Labor and energy costs"
+        ],
+        vitals: {
+          founded: 1996,
+          hq: "Dallas, TX",
+          employees: "~6,000",
+          materials: "Titanium, Nickel, Steel"
+        },
+        lore: "The materials science behind every jet engine. Unglamorous, essential, and very hard to replicate."
+      },
+      CACI: {
+        name: "CACI International",
+        codename: "INTEL",
+        sector: "Defense & Intelligence",
+        threat_level: "LOW",
+        summary: "Defense and intelligence IT services. Cybersecurity, signals intelligence, mission support. The quiet contractor that does the classified work.",
+        thesis: "Government never stops needing IT and intelligence services. CACI has the clearances and the contracts.",
+        catalysts: [
+          { date: "Ongoing", event: "Contract Wins", impact: "MEDIUM" },
+          { date: "Ongoing", event: "M&A Activity", impact: "MEDIUM" },
+          { date: "Ongoing", event: "Defense Budget Stability", impact: "LOW" }
+        ],
+        risks: [
+          "Contract recompete risk",
+          "Clearance/talent constraints",
+          "Budget uncertainty"
+        ],
+        vitals: {
+          founded: 1962,
+          hq: "Reston, VA",
+          employees: "~23,000",
+          clearances: "High"
+        },
+        lore: "When you need something done in the classified world, CACI picks up the phone. Boring to everyone except the people who need them."
+      },
+      LOAR: {
+        name: "Loar Holdings",
+        codename: "COMPONENT",
+        sector: "Aerospace Components",
+        threat_level: "LOW",
+        summary: "Aerospace and defense component manufacturer. Actuators, valves, and precision systems. The small parts that make the big machines work.",
+        thesis: "Aerospace OEMs are ramping production. Every aircraft needs thousands of precision components. Loar makes them.",
+        catalysts: [
+          { date: "Ongoing", event: "Aircraft Production Ramp", impact: "MEDIUM" },
+          { date: "Ongoing", event: "Aftermarket Growth", impact: "MEDIUM" },
+          { date: "Ongoing", event: "M&A Integration", impact: "LOW" }
+        ],
+        risks: [
+          "Customer concentration",
+          "Supply chain disruptions",
+          "Integration execution"
+        ],
+        vitals: {
+          founded: 2012,
+          hq: "White Plains, NY",
+          employees: "~2,500",
+          products: "Aerospace Components"
+        },
+        lore: "Another picks-and-shovels play. While everyone argues about which plane is best, Loar sells parts to all of them."
+      },
+      KTOS: {
+        name: "Kratos Defense",
+        codename: "KRATOS",
+        sector: "Defense & Drones",
+        threat_level: "ELEVATED",
+        summary: "Defense contractor specializing in unmanned aerial drones, satellite communications, and microwave products. A leader in target drones and tactical UAVs.",
+        thesis: "As conflicts become increasingly drone-centric, Kratos is positioned as a pure-play on autonomous combat systems and affordable attritable aircraft.",
+        catalysts: [
+          { date: "2026", event: "Valkyrie Drone Program Expansion", impact: "HIGH" },
+          { date: "Ongoing", event: "DOD Budget Allocations", impact: "MEDIUM" }
+        ],
+        risks: [
+          "Government contract dependencies",
+          "Competition from larger primes",
+          "Drone technology commoditization"
+        ],
+        vitals: { founded: 1994, hq: "San Diego, CA", employees: "~3,500", products: "Drones & Defense Systems" },
+        lore: "Named after the Greek god of strength. Building the expendable combat drones that might define warfare's future."
+      },
+      COHR: {
+        name: "Coherent Corp",
+        codename: "PRISM",
+        sector: "Optics & Photonics",
+        threat_level: "MODERATE",
+        summary: "Global leader in laser technology, optical materials, and photonic components. Products enable everything from fiber optics to semiconductor manufacturing.",
+        thesis: "Lasers are the future of manufacturing, communications, and defense. Coherent owns key technologies across all three verticals.",
+        catalysts: [
+          { date: "2026", event: "AI Datacenter Optical Demand", impact: "HIGH" },
+          { date: "Ongoing", event: "EUV Lithography Components", impact: "MEDIUM" }
+        ],
+        risks: [
+          "Cyclical semiconductor demand",
+          "China exposure",
+          "Integration of II-VI acquisition"
+        ],
+        vitals: { founded: 1971, hq: "Saxonburg, PA", employees: "~28,000", products: "Lasers & Optical Components" },
+        lore: "When you need a laser for anything from eye surgery to chip manufacturing, odds are Coherent made a piece of it."
+      },
+      RTX: {
+        name: "RTX Corporation",
+        codename: "RAYTHEON",
+        sector: "Aerospace & Defense",
+        threat_level: "LOW",
+        summary: "Defense and aerospace giant formed from Raytheon and United Technologies merger. Makes everything from jet engines to missiles to avionics.",
+        thesis: "The defense prime thesis: geopolitical instability is the new normal, and Western militaries are rebuilding after decades of underinvestment.",
+        catalysts: [
+          { date: "Ongoing", event: "Global Defense Spending Increase", impact: "HIGH" },
+          { date: "2026", event: "GTF Engine Production Ramp", impact: "MEDIUM" }
+        ],
+        risks: [
+          "Pratt & Whitney engine issues",
+          "Supply chain constraints",
+          "Government budget politics"
+        ],
+        vitals: { founded: 2020, hq: "Arlington, VA", employees: "~180,000", products: "Defense Systems & Aircraft Engines" },
+        lore: "When the world gets dangerous, the phone rings in Arlington. The ultimate 'sleep at night' defense holding."
+      },
+      LHX: {
+        name: "L3Harris Technologies",
+        codename: "HELIX",
+        sector: "Defense Electronics",
+        threat_level: "LOW",
+        summary: "Defense electronics powerhouse specializing in communications, sensors, and space systems. A key supplier across all military branches.",
+        thesis: "Modern warfare is electronic warfare. L3Harris makes the eyes, ears, and nervous system of the US military.",
+        catalysts: [
+          { date: "2026", event: "Space Force Contract Awards", impact: "HIGH" },
+          { date: "Ongoing", event: "EW System Modernization", impact: "MEDIUM" }
+        ],
+        risks: [
+          "Integration complexity",
+          "Classified program dependencies",
+          "Defense budget volatility"
+        ],
+        vitals: { founded: 2019, hq: "Melbourne, FL", employees: "~47,000", products: "Defense Electronics & Communications" },
+        lore: "If it beeps, blinks, or broadcasts on a battlefield, L3Harris probably had a hand in it."
+      },
+      GE: {
+        name: "GE Aerospace",
+        codename: "SPECTRE",
+        sector: "Aerospace & Industrial",
+        threat_level: "MODERATE",
+        summary: "The jet engine division of the former conglomerate, now a pure-play aerospace company. Makes engines for Boeing, Airbus, and military aircraft.",
+        thesis: "Aviation is recovering post-pandemic, and GE makes the engines that power most of the world's commercial and military aircraft.",
+        catalysts: [
+          { date: "2026", event: "LEAP Engine Production Increase", impact: "HIGH" },
+          { date: "Ongoing", event: "Aftermarket Services Revenue", impact: "MEDIUM" }
+        ],
+        risks: [
+          "Boeing 737 MAX production issues",
+          "Supply chain constraints",
+          "New engine development costs"
+        ],
+        vitals: { founded: 1892, hq: "Evendale, OH", employees: "~52,000", products: "Aircraft Engines & Services" },
+        lore: "When you hear a jet overhead, there's a good chance GE built what's making that sound. Industrial aviation royalty."
+      }
+    };
+    
+    // =========================================================================
+    // HASLUN GLOSSARY — Tooltips, flavor text, and lore system
+    // =========================================================================
+    const HASLUN_GLOSSARY = {
+      // ---------- CORE PORTFOLIO METRICS ----------
+      today_pnl: {
+        label: "Today's P&L",
+        category: "metric",
+        unit: "USD",
+        tooltip: "Profit or loss generated since the start of the current trading day.",
+        flavor: "How much the market liked you today, before feelings reset at the open."
+      },
+      total_pnl: {
+        label: "Total P&L",
+        category: "metric",
+        unit: "USD",
+        tooltip: "Cumulative profit or loss for this simulation since inception.",
+        flavor: "Lifetime score since the moment you pressed START on this universe."
+      },
+      positions_count: {
+        label: "Positions",
+        category: "metric",
+        tooltip: "Number of tickers currently held in the portfolio.",
+        flavor: "How many plates you're spinning in zero gravity."
+      },
+      win_rate: {
+        label: "Win Rate",
+        category: "metric",
+        unit: "%",
+        tooltip: "Percentage of closed trades that ended with positive P&L.",
+        flavor: "Hit rate. Accuracy stat. Bragging-rights fuel."
+      },
+      portfolio_value: {
+        label: "Portfolio Value",
+        category: "metric",
+        unit: "USD",
+        tooltip: "Current market value of all open positions plus cash.",
+        flavor: "What your empire is worth if you slammed the SELL ALL button."
+      },
+      total_delta: {
+        label: "Total Delta",
+        category: "metric",
+        tooltip: "Sensitivity of the options book to a $1 move in the underlying basket.",
+        flavor: "How violently the cockpit shakes when prices nudge."
+      },
+      days_to_expiry: {
+        label: "Days to Expiry",
+        category: "metric",
+        tooltip: "Time remaining until the primary options cycle expires.",
+        flavor: "How long until the clock runs out on this particular boss fight."
+      },
+      
+      // ---------- MACD & MOMENTUM ----------
+      macd: {
+        label: "MACD",
+        category: "metric",
+        tooltip: "Moving Average Convergence Divergence: fast EMA minus slow EMA of price.",
+        flavor: "Momentum gauge. Shows when rockets are over-fuelled or stalling out."
+      },
+      macd_signal: {
+        label: "Signal",
+        category: "metric",
+        tooltip: "EMA of the MACD line. Crossovers often signal trend shifts.",
+        flavor: "The grown-up in the room telling MACD to calm down (or speed up)."
+      },
+      macd_histogram: {
+        label: "Histogram",
+        category: "metric",
+        tooltip: "MACD minus Signal. Bars above/below zero show relative momentum.",
+        flavor: "The heartbeat monitor for trend strength. Flatline not recommended."
+      },
+      
+      // ---------- TREND STATUS STATES ----------
+      trend_analyzing: {
+        label: "ANALYZING…",
+        category: "state",
+        icon: "◌",
+        color: "var(--text-muted)",
+        tooltip: "System is ingesting data and calculating trend classification.",
+        flavor: "Coffee being poured into the machine. Please stand by.",
+        subtitle: "Awaiting data…",
+        body: "Scanning telemetry feed for recognizable patterns."
+      },
+      trend_full_thrust: {
+        label: "FULL THRUST",
+        category: "state",
+        icon: "▲",
+        color: "var(--phosphor)",
+        tooltip: "Price above long-term averages with bullish momentum.",
+        flavor: "Engines lit, nose up, telemetry green. Strap in.",
+        subtitle: "All systems green.",
+        body: "Price above 200-day line with positive momentum. Trend uptrend confirmed until proven otherwise."
+      },
+      trend_reversal_attempt: {
+        label: "REVERSAL ATTEMPT",
+        category: "state",
+        icon: "◈",
+        color: "var(--amber)",
+        tooltip: "Price recovering above short/mid MAs but below long-term baseline.",
+        flavor: "Ship has stopped crashing. Jury still out on actual flying.",
+        subtitle: "Course correction underway.",
+        body: "Price has climbed back above the short-term baseline but hasn't cleared the long-term ceiling. Reversal in progress; turbulence expected."
+      },
+      trend_drifting: {
+        label: "DRIFTING",
+        category: "state",
+        icon: "◇",
+        color: "#47d4ff",
+        tooltip: "Price oscillating around key averages with weak directional bias.",
+        flavor: "Coasting in orbit. Safe, but nothing cinematic.",
+        subtitle: "Stable orbit.",
+        body: "Price hugging moving averages with low momentum. No clear directional bias; good time for coffee or long emails."
+      },
+      trend_reentry_risk: {
+        label: "REENTRY RISK",
+        category: "state",
+        icon: "▼",
+        color: "#ff6b6b",
+        tooltip: "Price below major moving averages with bearish momentum.",
+        flavor: "Heat shield glowing. Consider which side of the planet you want to land on.",
+        subtitle: "Altitude loss detected.",
+        body: "Price below long-term trend with negative momentum. Downside pressure present; check heat shield and position sizing."
+      },
+      trend_nebula: {
+        label: "NEBULOUS",
+        category: "state",
+        icon: "※",
+        color: "#b388ff",
+        tooltip: "High volatility and conflicting signals; no clear trend.",
+        flavor: "In a cosmic dust cloud. Instruments insist everything is 'fine'.",
+        subtitle: "Signal degraded.",
+        body: "Choppy, sideways, mean-reverting mess. Indicators argue with each other; system recommends humility."
+      },
+      
+      // ---------- SIGNAL PROCESSING ARRAY ----------
+      sig_smoothing: {
+        label: "Signal Smoothing",
+        category: "control",
+        tooltip: "Adjusts how much short-term noise is filtered from price and MACD.",
+        flavor: "Turn right to make charts look wise and slow. Turn left for chaos TV."
+      },
+      sig_forecast_range: {
+        label: "Forecast Range",
+        category: "control",
+        tooltip: "How far into the future the simulation projects price paths.",
+        flavor: "How many days ahead you want to pretend you can see."
+      },
+      sig_risk_exposure: {
+        label: "Risk Exposure",
+        category: "control",
+        tooltip: "Scenario profile from defensive to aggressive. Scales drift and leverage in simulations.",
+        flavor: "How spicy you want the universe to feel right now."
+      },
+      sig_vol_index: {
+        label: "Volatility Index",
+        category: "metric",
+        tooltip: "Synthetic volatility score derived from recent price swings.",
+        flavor: "How much the market is wiggling while you try to act composed."
+      },
+      sig_display_momentum: {
+        label: "Momentum Overlay",
+        category: "control",
+        tooltip: "Toggle MACD / trend overlays on the main chart.",
+        flavor: "Draws the invisible wind the rockets are flying through."
+      },
+      sig_display_heatmap: {
+        label: "Volume Heatmap",
+        category: "control",
+        tooltip: "Show volume intensity as background shading on the chart.",
+        flavor: "Where the crowd actually showed up versus where they just talked big."
+      },
+      sig_display_alerts: {
+        label: "Alert Markers",
+        category: "control",
+        tooltip: "Display crossover events and custom triggers as icons on the chart.",
+        flavor: "Little neon post-its on the timeline saying 'something weird happened here'."
+      },
+      sig_alert_sensitivity: {
+        label: "Alert Sensitivity",
+        category: "control",
+        tooltip: "Controls how easily the system raises visual alerts.",
+        flavor: "Slide right to let the system panic for you. Slide left if you enjoy surprises."
+      },
+      sig_market_scanner: {
+        label: "Market Scanner",
+        category: "metric",
+        tooltip: "Compressed view of recent signals across the watchlist.",
+        flavor: "Radar sweep. Blips mean 'look here', not 'buy here'. Probably."
+      },
+      
+      // ---------- CORE PORTFOLIO METRICS ----------
+      today_pnl: {
+        label: "Today's P&L",
+        category: "metric",
+        unit: "USD",
+        tooltip: "Profit or loss generated since the start of the current trading day.",
+        flavor: "How much the market liked you today, before feelings reset at the open."
+      },
+      total_pnl: {
+        label: "Total P&L",
+        category: "metric",
+        unit: "USD",
+        tooltip: "Cumulative profit or loss for this simulation since inception.",
+        flavor: "Lifetime score since the moment you pressed START on this universe."
+      },
+      positions_count: {
+        label: "Positions",
+        category: "metric",
+        tooltip: "Number of tickers currently held in the portfolio.",
+        flavor: "How many plates you're spinning in zero gravity."
+      },
+      win_rate: {
+        label: "Win Rate",
+        category: "metric",
+        unit: "%",
+        tooltip: "Percentage of closed trades that ended with positive P&L.",
+        flavor: "Hit rate. Accuracy stat. Bragging-rights fuel."
+      },
+      portfolio_value: {
+        label: "Portfolio Value",
+        category: "metric",
+        unit: "USD",
+        tooltip: "Current market value of all open positions plus cash.",
+        flavor: "What your empire is worth if you slammed the SELL ALL button."
+      },
+      total_delta: {
+        label: "Total Delta",
+        category: "metric",
+        tooltip: "Sensitivity of the options book to a $1 move in the underlying basket.",
+        flavor: "How violently the cockpit shakes when prices nudge."
+      },
+      days_to_expiry: {
+        label: "Days to Expiry",
+        category: "metric",
+        tooltip: "Time remaining until the primary options cycle expires.",
+        flavor: "How long until the clock runs out on this particular boss fight."
+      },
+      
+      // ---------- MACD & MOMENTUM ----------
+      macd: {
+        label: "MACD",
+        category: "metric",
+        tooltip: "Moving Average Convergence Divergence: fast EMA minus slow EMA of price.",
+        flavor: "Momentum gauge. Shows when rockets are over-fuelled or stalling out."
+      },
+      macd_signal: {
+        label: "Signal",
+        category: "metric",
+        tooltip: "EMA of the MACD line. Crossovers often signal trend shifts.",
+        flavor: "The grown-up in the room telling MACD to calm down (or speed up)."
+      },
+      macd_histogram: {
+        label: "Histogram",
+        category: "metric",
+        tooltip: "MACD minus Signal. Bars above/below zero show relative momentum.",
+        flavor: "The heartbeat monitor for trend strength. Flatline not recommended."
+      },
+      
+      // ---------- DERIVATIVES / OPTIONS ----------
+      strat_naked_leap: {
+        label: "Naked LEAP",
+        category: "strategy",
+        tooltip: "Long-dated call with no offsetting hedge.",
+        flavor: "Maximum optimism. Minimum adult supervision."
+      },
+      strat_bull_spread: {
+        label: "Bull Spread",
+        category: "strategy",
+        tooltip: "Call spread benefitting from moderate price appreciation.",
+        flavor: "Not trying to reach Mars. Just happy to clear the atmosphere."
+      },
+      strat_bear_spread: {
+        label: "Bear Spread",
+        category: "strategy",
+        tooltip: "Put or call spread positioned for a controlled downside move.",
+        flavor: "You don't need a crash, just a dignified stumble."
+      },
+      derivatives_tab: {
+        label: "Derivatives",
+        category: "navigation",
+        tooltip: "Options and structured positions with defined risk profiles.",
+        flavor: "Levers, pulleys, and very opinionated probability curves."
+      },
+      greek_delta: {
+        label: "Delta",
+        category: "metric",
+        tooltip: "First derivative of option price with respect to underlying price.",
+        flavor: "How loudly this option screams when the stock twitches."
+      },
+      greek_theta: {
+        label: "Theta",
+        category: "metric",
+        tooltip: "Daily time decay of the option's value.",
+        flavor: "Rent you pay for living in the future."
+      },
+      greek_gamma: {
+        label: "Gamma",
+        category: "metric",
+        tooltip: "Rate of change of delta as the underlying moves.",
+        flavor: "How quickly a calm trade turns dramatic when price gets ideas."
+      },
+      greek_vega: {
+        label: "Vega",
+        category: "metric",
+        tooltip: "Sensitivity of option price to changes in volatility.",
+        flavor: "Mood swing multiplier. When volatility sulks, these feel it first."
+      },
+      
+      // ---------- GLOBAL STATES ----------
+      mode_simulation: {
+        label: "Simulation Mode",
+        category: "state",
+        tooltip: "All data and trades are running in sandbox mode.",
+        flavor: "Play money. Real feelings."
+      },
+      status_uplink_active: {
+        label: "Uplink Active",
+        category: "state",
+        tooltip: "Connection to data stream is healthy.",
+        flavor: "Someone, somewhere, is still sending numbers."
+      },
+      status_system_nominal: {
+        label: "System Nominal",
+        category: "state",
+        tooltip: "No major errors or warnings detected.",
+        flavor: "Everything is fine, which is statistically suspicious."
+      },
+      status_mkt_closed: {
+        label: "Market Closed",
+        category: "state",
+        tooltip: "Exchange session has ended; prices are static.",
+        flavor: "The casino lights are off, but the spreadsheets are still awake."
+      },
+      abort_all_trades: {
+        label: "Abort All Trades",
+        category: "control",
+        tooltip: "Emergency liquidation of all open positions.",
+        flavor: "Emergency exit. Does not apply to your feelings."
+      }
+    };
+    
+    // Portfolio mood states based on daily P&L percentage
+    const PORTFOLIO_MOODS = {
+      thruster_boost: { threshold: 2, label: "THRUSTER BOOST", color: "var(--phosphor)", copy: "Portfolio making energetic upward noises." },
+      steady_climb: { threshold: 0, label: "STEADY CLIMB", color: "var(--phosphor-dim)", copy: "Green enough to feel smug, not enough to tweet about." },
+      minor_turbulence: { threshold: -1, label: "MINOR TURBULENCE", color: "var(--amber)", copy: "Seatbelts on, beverage carts still operational." },
+      hull_rattle: { threshold: -999, label: "HULL RATTLE", color: "#ff6b6b", copy: "Today's lesson: gravity always wins eventually." }
+    };
+    
+    // MACD status messages
+    const MACD_STATES = {
+      bullish_cross: { label: "Bullish crossover", copy: "Engines pushing above baseline." },
+      bearish_cross: { label: "Bearish crossover", copy: "Thrust vector pointing down." },
+      weak_signal: { label: "Momentum quiet", copy: "Coasting on inertia." },
+      divergence: { label: "Divergence watch", copy: "Price and momentum disagree." }
+    };
+    
+    // Glossary helper functions
+    function getGlossary(id) {
+      return HASLUN_GLOSSARY[id] || null;
+    }
+    
+    function getTooltip(id) {
+      const entry = HASLUN_GLOSSARY[id];
+      return entry ? entry.tooltip : '';
+    }
+    
+    function getFlavor(id) {
+      const entry = HASLUN_GLOSSARY[id];
+      return entry ? entry.flavor : '';
+    }
+    
+    // Get trend state based on price, MACD data, and volatility
+    function getTrendState(price, ma100, ma150, ma200, macdVal, volScore) {
+      if (!price || !ma200) return HASLUN_GLOSSARY.trend_analyzing;
+      
+      const aboveMa100 = price > ma100;
+      const aboveMa150 = price > ma150;
+      const aboveMa200 = price > ma200;
+      const macdPositive = macdVal > 0;
+      const nearMa100 = Math.abs(price - ma100) / price < 0.015;
+      const volHigh = (volScore || 0) > 30;
+      
+      // FULL THRUST: Above all MAs with positive momentum and calm vol
+      if (aboveMa200 && aboveMa150 && macdPositive && !volHigh) {
+        return HASLUN_GLOSSARY.trend_full_thrust;
+      }
+      
+      // REVERSAL ATTEMPT: Above short-term but below long-term, calm vol
+      if (aboveMa100 && !aboveMa200 && macdPositive && !volHigh) {
+        return HASLUN_GLOSSARY.trend_reversal_attempt;
+      }
+      
+      // DRIFTING: Near MAs with weak momentum and tame vol
+      if (nearMa100 && Math.abs(macdVal) < 0.1 && !volHigh) {
+        return HASLUN_GLOSSARY.trend_drifting;
+      }
+      
+      // REENTRY RISK: Below long-term with negative momentum
+      if (!aboveMa200 && !macdPositive && !volHigh) {
+        return HASLUN_GLOSSARY.trend_reentry_risk;
+      }
+      
+      // NEBULOUS: High volatility OR mixed signals
+      return HASLUN_GLOSSARY.trend_nebula;
+    }
+    
+    // Get MACD status
+    function getMacdStatus(macd, signal, hist) {
+      if (Math.abs(hist) < 0.05) return MACD_STATES.weak_signal;
+      if (macd > signal && hist > 0) return MACD_STATES.bullish_cross;
+      if (macd < signal && hist < 0) return MACD_STATES.bearish_cross;
+      return MACD_STATES.weak_signal;
+    }
+    
+    // Get portfolio mood
+    function getPortfolioMood(dailyPnlPercent) {
+      if (dailyPnlPercent >= 2) return PORTFOLIO_MOODS.thruster_boost;
+      if (dailyPnlPercent >= 0) return PORTFOLIO_MOODS.steady_climb;
+      if (dailyPnlPercent >= -1) return PORTFOLIO_MOODS.minor_turbulence;
+      return PORTFOLIO_MOODS.hull_rattle;
+    }
+    
+    // Update portfolio mood display dynamically
+    function updatePortfolioMood(dailyPnlPercent) {
+      const mood = getPortfolioMood(dailyPnlPercent);
+      const moodEl = document.getElementById('portfolio-mood');
+      if (!moodEl) return;
+      
+      const labelEl = moodEl.querySelector('.mood-label');
+      const copyEl = moodEl.querySelector('.mood-copy');
+      
+      if (labelEl) labelEl.textContent = mood.label;
+      if (copyEl) copyEl.textContent = mood.copy;
+      
+      // Update mood class
+      moodEl.className = 'portfolio-mood';
+      if (dailyPnlPercent >= 2) moodEl.classList.add('boost');
+      else if (dailyPnlPercent >= 0) moodEl.classList.add('climb');
+      else if (dailyPnlPercent >= -1) moodEl.classList.add('turbulence');
+      else moodEl.classList.add('rattle');
+    }
+    
+    // Attach glossary tooltips to all elements with data-glossary-id
+    function attachGlossaryTooltips() {
+      document.querySelectorAll('[data-glossary-id]').forEach(el => {
+        const id = el.getAttribute('data-glossary-id');
+        const entry = HASLUN_GLOSSARY[id];
+        if (!entry) return;
+        
+        // Build tooltip with both serious and flavor text
+        const tooltip = entry.tooltip + (entry.flavor ? '\n\n"' + entry.flavor + '"' : '');
+        el.setAttribute('title', tooltip);
+        el.style.cursor = 'help';
+      });
+    }
+    
+    // Scenario Engine: Update smoothing band label
+    function updateSmoothingBandLabel(value) {
+      const el = document.getElementById('smoothing-band-label');
+      if (!el) return;
+      let text = 'BALANCED';
+      if (value < 30) text = 'RAW FEED';
+      else if (value > 70) text = 'DEEP FILTER';
+      el.textContent = text;
+    }
+    
+    // Scenario Engine: Update forecast display
+    function updateForecastDisplay(days) {
+      const el = document.getElementById('forecast-value');
+      if (el) el.textContent = days + ' DAYS';
+      logTerminal('forecast range → ' + days + ' days');
+    }
+    
+    // Scenario Engine: Update risk profile
+    function updateRiskProfile(level) {
+      const fill = document.getElementById('risk-fill');
+      const needle = document.getElementById('risk-needle');
+      const value = document.getElementById('risk-value');
+      
+      const profiles = {
+        conservative: { height: 30, angle: 25, label: 'CONSERVATIVE' },
+        moderate: { height: 50, angle: 65, label: 'MODERATE' },
+        aggressive: { height: 75, angle: 105, label: 'AGGRESSIVE' },
+        maximum: { height: 95, angle: 145, label: 'MAXIMUM' }
+      };
+      
+      const profile = profiles[level] || profiles.moderate;
+      if (fill) fill.style.height = profile.height + '%';
+      if (needle) needle.style.transform = 'rotate(' + profile.angle + 'deg)';
+      if (value) value.textContent = profile.label;
+      
+      logTerminal('risk exposure → ' + profile.label.toLowerCase());
+    }
+    
+    // Get current price series for a ticker based on timeframe
+    function getCurrentSeriesForTicker(data) {
+      if (!data) return [];
+      return currentTimeframe === '1D' ? data.daily : data.intraday;
+    }
+    
+    // Calculate volatility score from price data (returns 0-40 scaled value)
+    function calculateVolatility(data) {
+      if (!data || data.length < 10) return 0;
+      const returns = [];
+      for (let i = 1; i < data.length; i++) {
+        const prev = data[i-1].c;
+        const curr = data[i].c;
+        if (!prev || !curr) continue;
+        const ret = (curr - prev) / prev;
+        returns.push(ret);
+      }
+      if (returns.length < 5) return 0;
+      const mean = returns.reduce((a, b) => a + b, 0) / returns.length;
+      const variance = returns.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / returns.length;
+      const stdev = Math.sqrt(variance);
+      // Scale roughly into a 0-40 range for LED bar (annualized %)
+      const scaled = stdev * Math.sqrt(252) * 100;
+      return Math.max(0, Math.min(40, scaled));
+    }
+    
+    // Get volatility score for a specific ticker
+    function getVolScoreForTicker(ticker) {
+      const data = tickerData[ticker];
+      const series = getCurrentSeriesForTicker(data);
+      return calculateVolatility(series);
+    }
+    
+    // Update volatility display
+    function updateVolatilityDisplay(vol) {
+      const display = document.getElementById('vol-display');
+      if (display) display.textContent = vol.toFixed(1);
+      
+      // Update LED array based on volatility
+      const leds = document.querySelectorAll('.led-array .array-led');
+      const numLit = Math.min(8, Math.floor(vol / 10));
+      leds.forEach((led, i) => {
+        led.className = 'array-led';
+        if (i < numLit) {
+          if (i >= 6) led.classList.add('red');
+          else if (i >= 4) led.classList.add('amber');
+          else led.classList.add('on');
+        }
+      });
+    }
+    
+    const DEMO_STOCK_POSITIONS = [
+      { ticker: 'RKLB', shares: 75, entry_price: 68.45, current_price: 72.80 },
+      { ticker: 'ASTS', shares: 50, entry_price: 78.20, current_price: 83.47 },
+      { ticker: 'LUNR', shares: 100, entry_price: 15.20, current_price: 17.88 },
+      { ticker: 'BKSY', shares: 200, entry_price: 3.85, current_price: 4.20 },
+      { ticker: 'RDW', shares: 80, entry_price: 13.60, current_price: 15.00 },
+      { ticker: 'PL', shares: 150, entry_price: 3.72, current_price: 4.00 },
+      { ticker: 'ACHR', shares: 100, entry_price: 7.85, current_price: 8.13 },
+      { ticker: 'JOBY', shares: 60, entry_price: 13.20, current_price: 14.36 },
+      { ticker: 'EVEX', shares: 250, entry_price: 3.10, current_price: 2.80 },
+      { ticker: 'GME', shares: 40, entry_price: 25.80, current_price: 27.50 },
+      { ticker: 'KTOS', shares: 120, entry_price: 22.50, current_price: 24.80 },
+      { ticker: 'COHR', shares: 30, entry_price: 85.20, current_price: 92.40 },
+      { ticker: 'RTX', shares: 25, entry_price: 118.50, current_price: 124.20 },
+      { ticker: 'LHX', shares: 20, entry_price: 215.00, current_price: 228.50 },
+      { ticker: 'GE', shares: 45, entry_price: 168.30, current_price: 175.60 }
+    ];
+    
+    const DEMO_OPTIONS = [
+      { ticker: 'RKLB', structure: 'Naked LEAP', strikes: '$5', entry: 1.85, current: 68.50, delta: 0.95, contracts: 3 },
+      { ticker: 'ASTS', structure: 'Bull Spread', strikes: '$5/$15', entry: 2.40, current: 9.85, delta: 0.48, contracts: 4 },
+      { ticker: 'LUNR', structure: 'Naked LEAP', strikes: '$5', entry: 1.20, current: 13.50, delta: 0.92, contracts: 5 },
+      { ticker: 'BKSY', structure: 'Bull Spread', strikes: '$2/$5', entry: 0.95, current: 2.80, delta: 0.55, contracts: 5 },
+      { ticker: 'RDW', structure: 'Bull Spread', strikes: '$4/$8', entry: 1.40, current: 3.90, delta: 0.62, contracts: 3 },
+      { ticker: 'PL', structure: 'Bull Spread', strikes: '$2/$4', entry: 0.55, current: 1.85, delta: 0.58, contracts: 5 },
+      { ticker: 'ACHR', structure: 'Naked LEAP', strikes: '$5', entry: 1.65, current: 4.20, delta: 0.72, contracts: 3 },
+      { ticker: 'JOBY', structure: 'Bull Spread', strikes: '$5/$10', entry: 1.80, current: 5.40, delta: 0.65, contracts: 3 },
+      { ticker: 'EVEX', structure: 'Bull Spread', strikes: '$3/$6', entry: 0.85, current: 0.35, delta: 0.28, contracts: 4 },
+      { ticker: 'GME', structure: 'Bull Spread', strikes: '$12/$20', entry: 3.20, current: 7.80, delta: 0.72, contracts: 2 },
+      { ticker: 'KTOS', structure: 'Bull Spread', strikes: '$18/$25', entry: 2.15, current: 5.40, delta: 0.68, contracts: 4 },
+      { ticker: 'COHR', structure: 'Naked LEAP', strikes: '$70', entry: 8.50, current: 24.20, delta: 0.88, contracts: 2 },
+      { ticker: 'RTX', structure: 'Bull Spread', strikes: '$100/$120', entry: 6.80, current: 18.50, delta: 0.75, contracts: 2 },
+      { ticker: 'LHX', structure: 'Naked LEAP', strikes: '$180', entry: 12.40, current: 42.80, delta: 0.82, contracts: 1 },
+      { ticker: 'GE', structure: 'Bull Spread', strikes: '$150/$180', entry: 8.20, current: 22.40, delta: 0.78, contracts: 2 }
+    ];
+    
+    const DEMO_CATALYSTS = [
+      { date: '2026-01-16', ticker: 'ALL', event: 'January Options Expiration', impact: 'HIGH' },
+      { date: '2026-01-21', ticker: 'RKLB', event: 'Q4 Earnings Report', impact: 'HIGH' },
+      { date: '2026-01-28', ticker: 'ASTS', event: 'Q4 Earnings Report', impact: 'HIGH' },
+      { date: '2026-02-10', ticker: 'LUNR', event: 'Q4 Earnings Report', impact: 'MEDIUM' },
+      { date: '2026-02-15', ticker: 'LUNR', event: 'IM-2 Lunar Landing Mission', impact: 'HIGH' },
+      { date: '2026-Q1', ticker: 'ACHR', event: 'FAA Type Certification Expected', impact: 'HIGH' },
+      { date: '2026-Q1', ticker: 'JOBY', event: 'FAA Type Certification Expected', impact: 'HIGH' },
+      { date: '2026-Q2', ticker: 'ASTS', event: 'BlueBird Commercial Service Launch', impact: 'HIGH' },
+      { date: '2026-Q2', ticker: 'RKLB', event: 'Neutron Rocket First Flight', impact: 'HIGH' }
+    ];
+    
+    const DEMO_ACTIVITY = [
+      { type: 'trade', title: 'BUY LUNR', subtitle: '100 shares @ $15.20', time: '09:45' },
+      { type: 'alert', title: 'MACD Crossover', subtitle: 'LUNR bullish signal', time: '09:44' },
+      { type: 'trade', title: 'BUY ASTS', subtitle: '50 shares @ $78.20', time: 'PREV' },
+      { type: 'trade', title: 'BUY RKLB', subtitle: '75 shares @ $68.45', time: 'PREV' },
+      { type: 'alert', title: 'MACD Crossover', subtitle: 'ASTS bullish signal', time: 'JAN02' }
+    ];
+    
+    // Arcade-style SVG icons
+    const invaderSvg = '<svg viewBox="0 0 11 8" fill="currentColor"><rect x="2" y="0" width="1" height="1"/><rect x="8" y="0" width="1" height="1"/><rect x="3" y="1" width="1" height="1"/><rect x="7" y="1" width="1" height="1"/><rect x="2" y="2" width="7" height="1"/><rect x="1" y="3" width="2" height="1"/><rect x="4" y="3" width="3" height="1"/><rect x="8" y="3" width="2" height="1"/><rect x="0" y="4" width="11" height="1"/><rect x="0" y="5" width="1" height="1"/><rect x="2" y="5" width="7" height="1"/><rect x="10" y="5" width="1" height="1"/></svg>';
+    const scenarioSvg = '<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="5"/><path d="M7 4v3l2 2"/></svg>';
+    const bonusSvg = '<svg viewBox="0 0 14 14" fill="currentColor"><path d="M7 1l1.5 4.5H13l-3.5 3 1.5 4.5L7 10l-4 3 1.5-4.5L1 5.5h4.5z"/></svg>';
+    
+    // Mission log helper for scenario engine
+    function pushMissionLog(entry) {
+      const feed = document.getElementById('activity-feed');
+      if (!feed) return;
+      
+      const icons = { trade: tradeSvg, alert: alertSvg, invader: invaderSvg, scenario: scenarioSvg, bonus: bonusSvg };
+      const time = entry.time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      
+      const item = document.createElement('div');
+      item.className = 'activity-item';
+      item.innerHTML = 
+        '<div class="activity-icon ' + (entry.type || 'alert') + '">' + (icons[entry.type] || alertSvg) + '</div>' +
+        '<div class="activity-content"><div class="activity-title' + (entry.arcade ? ' arcade' : '') + '">' + entry.title + '</div>' +
+        '<div class="activity-subtitle">' + entry.subtitle + '</div></div>' +
+        '<div class="activity-time">' + time + '</div>';
+      
+      feed.insertBefore(item, feed.firstChild);
+      
+      // Keep max 25 entries
+      while (feed.children.length > 25) {
+        feed.removeChild(feed.lastChild);
+      }
+    }
+    
+    // =========================================================================
+    // FLEET HOLOBAY SYSTEM (Pro Ship Library with Universe Lore)
+    // =========================================================================
+    
+    // Ship lore database - HUD tags and descriptions
+    const SHIP_LORE = {
+      "#ship-flagship": {
+        hud: "COMMAND AUTHORITY ACTIVE",
+        lore: "Spearhead command carrier. Captains say it listens before it speaks."
+      },
+      "#ship-dreadnought": {
+        hud: "LEGACY COMBAT MEMORY ENABLED",
+        lore: "Heavy war machine. Refuses to die and logs its own kills without permission."
+      },
+      "#ship-archon": {
+        hud: "AUTHORITY PROTOCOL DETECTED",
+        lore: "Built to command fleets rather than win battles. Hull plating echoes cathedral geometry."
+      },
+      "#ship-tyrant": {
+        hud: "LEGACY COMBAT MEMORY ENABLED",
+        lore: "Technically illegal. Nobody remembers which war it survived."
+      },
+      "#ship-phantom": {
+        hud: "TOPOLOGY ANOMALY — TRACED BUT UNRESOLVED",
+        lore: "Appears on scans before it appears on the hull deck. Routes comms from ships that no longer exist."
+      },
+      "#ship-hauler": {
+        hud: "CARGO MANIFEST VERIFIED",
+        lore: "The Atlas doesn't have fans. It has people who quietly owe their lives to it."
+      },
+      "#ship-drone": {
+        hud: "PASSIVE CURIOSITY RISING...",
+        lore: "Buzzes. Watches. Reports. Occasionally expresses opinions in system logs."
+      },
+      "#ship-sojourn": {
+        hud: "DESCENT TRAJECTORY LOCKED",
+        lore: "Landers don't win wars. They bring people home."
+      },
+      "#ship-parallax": {
+        hud: "BLACK CHANNEL AUTHENTICATED",
+        lore: "Officially, this class does not exist. If you can see it — it chose to let you."
+      },
+      "#ship-gardener": {
+        hud: "LEGACY ECOLOGICAL ROUTINES ACTIVE",
+        lore: "Built for terraforming. Now escorts convoys because nobody funds ecosystems anymore."
+      },
+      "#ship-frigate": {
+        hud: "PATROL SYSTEMS NOMINAL",
+        lore: "Reliable, adaptable. The backbone of any fleet."
+      },
+      "#ship-lander": {
+        hud: "SURFACE APPROACH ENABLED",
+        lore: "Lunar descent specialist. Hope and precision in equal measure."
+      },
+      "#ship-evtol": {
+        hud: "VTOL SYSTEMS ONLINE",
+        lore: "Sky taxi of the future. Vertical freedom."
+      },
+      "#ship-cargo": {
+        hud: "CARGO SECURE",
+        lore: "The supply chain doesn't thank you. It just expects you to show up."
+      },
+      "#ship-meme": {
+        hud: "SIGNAL ANOMALY DETECTED",
+        lore: "Origin unknown. Trajectory chaotic. Somehow profitable."
+      },
+      "#ship-recon": {
+        hud: "SURVEILLANCE ACTIVE",
+        lore: "Eyes in the sky. Watching. Always watching."
+      },
+      "#ship-patrol": {
+        hud: "DEFENSE GRID LINKED",
+        lore: "First responder. Last line. No medals, just duty."
+      },
+      "#ship-relay": {
+        hud: "UPLINK ESTABLISHED",
+        lore: "Communication backbone. Every message passes through, trusted with all secrets."
+      }
+    };
+    
+    // Map tickers/sectors to SVG symbols - returns {symbol, label, isHero, lore}
+    function mapTickerToShip(ticker, sector) {
+      ticker = (ticker || "").toUpperCase();
+      sector = sector || "";
+
+      // HERO mappings - special detailed ships
+      if (ticker === "RKLB") return { symbol: "#ship-archon", label: "ORBITAL ARCHON", isHero: true };
+      if (ticker === "GME")  return { symbol: "#ship-tyrant", label: "IRON TYRANT", isHero: true };
+      if (ticker === "TSLA") return { symbol: "#ship-flagship", label: "FLAGSHIP SPEAR", isHero: true };
+      if (ticker === "NVDA") return { symbol: "#ship-dreadnought", label: "DREADNOUGHT MECH", isHero: true };
+
+      // Standard fleet mappings
+      if (ticker === "LUNR") return { symbol: "#ship-lander", label: "LUNAR LANDER", isHero: false };
+      if (/JOBY|ACHR|EVEX/.test(ticker)) return { symbol: "#ship-evtol", label: "EVTOL CARRIER", isHero: false };
+      if (/ASTS/.test(ticker)) return { symbol: "#ship-phantom", label: "PHANTOM NODE", isHero: false };
+      if (/IRDM/.test(ticker)) return { symbol: "#ship-relay", label: "COMM RELAY", isHero: false };
+      if (/BKSY|PL/.test(ticker)) return { symbol: "#ship-drone", label: "FIREFLY DRONE", isHero: false };
+      if (/KTOS|RDW/.test(ticker)) return { symbol: "#ship-patrol", label: "PATROL CORVETTE", isHero: false };
+      if (/ATI/.test(ticker)) return { symbol: "#ship-hauler", label: "ATLAS HAULER", isHero: false };
+      if (/CACI|HON/.test(ticker)) return { symbol: "#ship-gardener", label: "GARDENER FRAME", isHero: false };
+      if (/MP|LOAR/.test(ticker)) return { symbol: "#ship-cargo", label: "CARGO HAULER", isHero: false };
+
+      // Sector-based fallbacks
+      if (/EVTOL|VTOL|air mobility/i.test(sector)) return { symbol: "#ship-evtol", label: "EVTOL CARRIER", isHero: false };
+      if (/meme|retail|chaotic/i.test(sector)) return { symbol: "#ship-meme", label: "ANOMALOUS PROBE", isHero: false };
+      if (/defense|military/i.test(sector)) return { symbol: "#ship-patrol", label: "PATROL CORVETTE", isHero: false };
+      if (/industrial|materials|cargo|aerospace|components/i.test(sector)) return { symbol: "#ship-hauler", label: "ATLAS HAULER", isHero: false };
+      if (/earth|geo|observation/i.test(sector)) return { symbol: "#ship-drone", label: "FIREFLY DRONE", isHero: false };
+      if (/cellular|comms|relay|satellite/i.test(sector)) return { symbol: "#ship-relay", label: "COMM RELAY", isHero: false };
+      if (/lunar/i.test(sector)) return { symbol: "#ship-lander", label: "LUNAR LANDER", isHero: false };
+      if (/stealth|black|secret/i.test(sector)) return { symbol: "#ship-parallax", label: "NIGHT PARALLAX", isHero: false };
+      if (/experimental|biotech|pharma/i.test(sector)) return { symbol: "#ship-phantom", label: "PHANTOM NODE", isHero: false };
+
+      // Default
+      return { symbol: "#ship-frigate", label: "ORBITAL FRIGATE", isHero: false };
+    }
+    
+    // Get ship lore for display
+    function getShipLore(symbol) {
+      return SHIP_LORE[symbol] || { hud: "SYSTEMS NOMINAL", lore: "Standard issue vessel." };
+    }
+    
+    // =========================================================================
+    // PIXEL SHIP RENDERING SYSTEM (8-bit Space Invaders style)
+    // =========================================================================
+    
+    // 17 cols x 11 rows – enough detail to feel "sprite-like" / SNES mech HUD
+    // Each character: "0" = empty, "1" = outer hull, "2" = inner core, "3" = highlight accent
+
+    const PIXEL_SHIPS = {
+      // RKLB: long spear / command cruiser
+      flagship: [
+        "00000011100000000",
+        "00000122210000000",
+        "00001122221000000",
+        "00011222222100000",
+        "00112222222210000",
+        "01122222322221000",
+        "00112223222210000",
+        "00011222222100000",
+        "00001122221000000",
+        "00000123210000000",
+        "00000011100000000"
+      ],
+
+      // GME: chunky anime dreadnought / mech chest
+      dreadnought: [
+        "00000111111000000",
+        "00011222222110000",
+        "00122222222221000",
+        "01122222222221100",
+        "11222223222222110",
+        "11222222222222110",
+        "01122222222221100",
+        "00122222222221000",
+        "00011222222110000",
+        "00000111111000000",
+        "00000001000000000"
+      ],
+
+      // ASTS: twin-pod probe / sensor array
+      probe: [
+        "00001100110000000",
+        "00012221122200000",
+        "00122222222210000",
+        "01122222222211000",
+        "01222232232221000",
+        "01122222222211000",
+        "00122222222210000",
+        "00012221122200000",
+        "00001100110000000",
+        "00000100010000000",
+        "00000100010000000"
+      ],
+
+      // ACHR / EVEX / JOBY carriers – wide flight deck
+      carrier: [
+        "00000011111000000",
+        "00000122222100000",
+        "00001222222210000",
+        "00012222222221000",
+        "00122222222222100",
+        "01122223222322110",
+        "00122222222222100",
+        "00012222222221000",
+        "00001222222210000",
+        "00000122222100000",
+        "00000011111000000"
+      ],
+
+      // LUNR: lander / dropship
+      lander: [
+        "00000011100000000",
+        "00000122210000000",
+        "00001222221000000",
+        "00012222222100000",
+        "00122222222210000",
+        "01122223222211000",
+        "00122222222210000",
+        "00012222222100000",
+        "00001222221000000",
+        "00000123210000000",
+        "00000011100000000"
+      ],
+
+      // default drone frame – compact but still mech-y
+      drone: [
+        "00000011100000000",
+        "00000122210000000",
+        "00001222221000000",
+        "00001223221000000",
+        "00001222221000000",
+        "00000122210000000",
+        "00000122210000000",
+        "00000011100000000",
+        "00000001000000000",
+        "00000001000000000",
+        "00000000000000000"
+      ],
+      
+      // Cruiser - defense / patrol ship
+      cruiser: [
+        "00000111110000000",
+        "00001222221000000",
+        "00012222222100000",
+        "00122222222210000",
+        "01122223222211000",
+        "01222222222221000",
+        "00122222222210000",
+        "00012222222100000",
+        "00001222221000000",
+        "00000111110000000",
+        "00000010100000000"
+      ],
+      
+      // Station / relay - comms hub
+      station: [
+        "00001110111000000",
+        "00011221122110000",
+        "00012222222100000",
+        "00011222221100000",
+        "00122223222210000",
+        "00011222221100000",
+        "00012222222100000",
+        "00011221122110000",
+        "00001110111000000",
+        "00000100010000000",
+        "00000100010000000"
+      ],
+      
+      // Hauler - cargo / industrial transport
+      hauler: [
+        "00000111111000000",
+        "00001222222100000",
+        "00012222222210000",
+        "00122222222221000",
+        "00122222222221000",
+        "01122223222221100",
+        "00122222222221000",
+        "00122222222221000",
+        "00012222222210000",
+        "00001222222100000",
+        "00000111111000000"
+      ],
+      
+      // Mini-game specific sprites - smaller for arcade games
+      arcade_player: [
+        "00000011100000000",
+        "00001122211000000",
+        "00011222221100000",
+        "00112222222110000",
+        "01122223222211000",
+        "11222222222221100",
+        "11222222222221100",
+        "01122222222211000",
+        "00111111111110000",
+        "00010001000100000",
+        "00010001000100000"
+      ],
+      
+      arcade_enemy: [
+        "00100000000010000",
+        "00010000000100000",
+        "00111111111110000",
+        "01111222221111000",
+        "11112222222111100",
+        "11112232322111100",
+        "11112222222111100",
+        "01111111111111000",
+        "00011000001100000",
+        "00110000000110000",
+        "01100000000011000"
+      ],
+      
+      arcade_elite: [
+        "00100111110010000",
+        "00011222221100000",
+        "00111222222111000",
+        "01112222222211100",
+        "01112223222211100",
+        "11122222222221110",
+        "01112222222211100",
+        "00111222222111000",
+        "00011122211100000",
+        "00010100010100000",
+        "00100100010010000"
+      ]
+    };
+    
+    /**
+     * Draw a PIXEL_SHIPS pattern on a canvas context.
+     * @param {CanvasRenderingContext2D} ctx - Canvas context
+     * @param {string} patternKey - Key from PIXEL_SHIPS
+     * @param {number} x - Center X position
+     * @param {number} y - Center Y position  
+     * @param {number} scale - Pixel scale (1 = 1px per cell)
+     * @param {string} baseColor - Base color in hex (e.g., '#33ff99')
+     * @param {object} opts - Options: { glow: boolean, glowBlur: number }
+     */
+    function drawPixelShipOnCanvas(ctx, patternKey, x, y, scale, baseColor, opts = {}) {
+      const pattern = PIXEL_SHIPS[patternKey] || PIXEL_SHIPS.drone;
+      const rows = pattern.length;
+      const cols = pattern[0].length;
+      
+      // Calculate pixel dimensions
+      const cellSize = scale;
+      const totalWidth = cols * cellSize;
+      const totalHeight = rows * cellSize;
+      
+      // Calculate top-left corner (centered on x,y)
+      const startX = x - totalWidth / 2;
+      const startY = y - totalHeight / 2;
+      
+      // Parse base color to HSL for shading
+      const hex = baseColor.replace('#', '');
+      const r = parseInt(hex.substr(0, 2), 16) / 255;
+      const g = parseInt(hex.substr(2, 2), 16) / 255;
+      const b = parseInt(hex.substr(4, 2), 16) / 255;
+      
+      const max = Math.max(r, g, b);
+      const min = Math.min(r, g, b);
+      let h = 0, s = 0, l = (max + min) / 2;
+      
+      if (max !== min) {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        switch (max) {
+          case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+          case g: h = ((b - r) / d + 2) / 6; break;
+          case b: h = ((r - g) / d + 4) / 6; break;
+        }
+      }
+      const baseHue = Math.round(h * 360);
+      const baseSat = Math.round(s * 100);
+      
+      // Apply glow if requested
+      if (opts.glow) {
+        ctx.shadowColor = baseColor;
+        ctx.shadowBlur = opts.glowBlur || 6;
+      }
+      
+      // Draw each pixel
+      for (let row = 0; row < rows; row++) {
+        const rowData = pattern[row];
+        for (let col = 0; col < cols; col++) {
+          const digit = rowData[col];
+          if (digit === '0') continue;
+          
+          let fill;
+          if (digit === '1') {
+            fill = `hsl(${baseHue}, ${Math.max(20, baseSat - 20)}%, 20%)`; // Dark edge
+          } else if (digit === '2') {
+            fill = `hsl(${baseHue}, ${baseSat}%, 40%)`; // Mid tone
+          } else {
+            fill = `hsl(${baseHue}, ${Math.min(100, baseSat + 20)}%, 60%)`; // Cockpit highlight
+          }
+          
+          ctx.fillStyle = fill;
+          ctx.fillRect(
+            startX + col * cellSize,
+            startY + row * cellSize,
+            cellSize,
+            cellSize
+          );
+        }
+      }
+      
+      // Reset shadow
+      if (opts.glow) {
+        ctx.shadowBlur = 0;
+      }
+    }
+    
+    // Pixel ship lore for HUD display
+    const PIXEL_SHIP_LORE = {
+      flagship: { label: "FLAGSHIP", hud: "COMMAND AUTHORITY ACTIVE", lore: "Spearhead command ship. Victory follows in its wake." },
+      dreadnought: { label: "DREADNOUGHT", hud: "HEAVY ARMOR ENGAGED", lore: "Refuses to die. Logs its own kills without permission." },
+      lander: { label: "LANDER", hud: "DESCENT LOCKED", lore: "Landers don't win wars. They bring people home." },
+      carrier: { label: "CARRIER", hud: "FLIGHT OPS READY", lore: "Sky taxi of the future. Vertical freedom." },
+      drone: { label: "DRONE", hud: "PASSIVE SCAN ACTIVE", lore: "Buzzes. Watches. Reports. Occasionally has opinions." },
+      cruiser: { label: "CRUISER", hud: "PATROL SYSTEMS ONLINE", lore: "First responder. Last line. No medals, just duty." },
+      station: { label: "STATION", hud: "UPLINK ESTABLISHED", lore: "Every message passes through. Trusted with all secrets." },
+      probe: { label: "PROBE", hud: "ANOMALY DETECTED", lore: "Origin unknown. Trajectory chaotic. Somehow profitable." },
+      hauler: { label: "HAULER", hud: "CARGO MANIFEST VERIFIED", lore: "Doesn't have fans. Has people who owe their lives to it." }
+    };
+    
+    /**
+     * Render HD mech sprite into an SVG.
+     * patternKey in PIXEL_SHIPS.
+     * opts: { hero: bool, pnlPercent: number }
+     */
+    function renderPixelShip(svgEl, patternKey, opts = {}) {
+      if (!svgEl) return;
+
+      const pattern = PIXEL_SHIPS[patternKey] || PIXEL_SHIPS.flagship;
+      const hero    = !!opts.hero;
+      const pnl     = (typeof opts.pnlPercent === "number") ? opts.pnlPercent : null;
+
+      // wipe previous content
+      while (svgEl.firstChild) svgEl.removeChild(svgEl.firstChild);
+
+      const rows = pattern.length;
+      const cols = pattern[0].length;
+
+      const cell  = 2.9; // smaller cells = more "resolution"
+      const width = cols * cell;
+      const height = rows * cell;
+
+      const viewW = 120;
+      const viewH = 80;
+      const offsetX = (viewW - width) / 2;
+      const offsetY = (viewH - height) / 2;
+
+      const ns = "http://www.w3.org/2000/svg";
+      const g = document.createElementNS(ns, "g");
+      svgEl.appendChild(g);
+
+      for (let r = 0; r < rows; r++) {
+        const row = pattern[r];
+        for (let c = 0; c < cols; c++) {
+          const ch = row[c];
+          if (ch === "0") continue;
+
+          const x = offsetX + c * cell;
+          const y = offsetY + r * cell;
+
+          const rect = document.createElementNS(ns, "rect");
+          rect.setAttribute("x", x);
+          rect.setAttribute("y", y);
+          rect.setAttribute("width", cell);
+          rect.setAttribute("height", cell);
+          rect.setAttribute("rx", 0.6);
+          rect.setAttribute("ry", 0.6);
+
+          let cls;
+          if (ch === "1") cls = "pixel-ship-outer";
+          else if (ch === "2") cls = "pixel-ship-inner";
+          else if (ch === "3") cls = "pixel-ship-highlight";
+          else continue;
+
+          rect.setAttribute("class", cls);
+          g.appendChild(rect);
+        }
+      }
+
+      // Add pixel-mode class for animations
+      svgEl.classList.add("pixel-mode", "pixel-ship-glow");
+
+      // hero / damage states on the container
+      if (hero) svgEl.classList.add("hero-ship");
+      else      svgEl.classList.remove("hero-ship");
+      
+      // Damage overlay on big losers / winning state
+      svgEl.classList.remove("ship-damaged", "pixel-ship-winning", "pixel-ship-losing");
+      if (pnl !== null) {
+        if (pnl < -5) {
+          svgEl.classList.add("ship-damaged", "pixel-ship-losing");
+        } else if (pnl >= 5) {
+          svgEl.classList.add("pixel-ship-winning");
+        }
+      }
+    }
+    
+    // Maps ticker/sector into { pattern, hero, label }
+    function mapTickerToPixelShip(ticker, sector, pnlPercent) {
+      ticker = (ticker || "").toUpperCase();
+      sector = sector || "";
+
+      // Heroes
+      if (ticker === "RKLB") return { pattern: "flagship", hero: true };
+      if (ticker === "GME")  return { pattern: "dreadnought", hero: true };
+      if (ticker === "TSLA") return { pattern: "flagship", hero: true };
+      if (ticker === "NVDA") return { pattern: "dreadnought", hero: true };
+
+      // Specific tickers
+      if (ticker === "LUNR") return { pattern: "lander", hero: false };
+      if (/JOBY|ACHR|EVEX/.test(ticker)) return { pattern: "carrier", hero: false };
+      if (/ASTS/.test(ticker)) return { pattern: "probe", hero: false };
+      if (/IRDM/.test(ticker)) return { pattern: "station", hero: false };
+      if (/BKSY|PL/.test(ticker)) return { pattern: "drone", hero: false };
+      if (/KTOS|RDW/.test(ticker)) return { pattern: "cruiser", hero: false };
+      if (/ATI|MP|LOAR/.test(ticker)) return { pattern: "hauler", hero: false };
+      if (/CACI|HON/.test(ticker)) return { pattern: "cruiser", hero: false };
+
+      // By sector
+      if (/VTOL|EVTOL|AVIATION/i.test(sector))
+        return { pattern: "carrier", hero: false };
+
+      if (/SPACE|LAUNCH|SAT|ORBITAL/i.test(sector))
+        return { pattern: "flagship", hero: false };
+
+      if (/INDUSTRIAL|MATERIALS|CARGO/i.test(sector))
+        return { pattern: "hauler", hero: false };
+
+      if (/DEFENSE|MILITARY/i.test(sector))
+        return { pattern: "cruiser", hero: false };
+
+      if (/COMMS|RELAY|CELLULAR/i.test(sector))
+        return { pattern: "station", hero: false };
+
+      if (/MEME|RETAIL|CHAOTIC/i.test(sector))
+        return { pattern: "probe", hero: false };
+
+      if (/LUNAR|SURFACE/i.test(sector))
+        return { pattern: "lander", hero: false };
+
+      if (/SURVEILLANCE|RECON|EARTH/i.test(sector))
+        return { pattern: "drone", hero: false };
+
+      // Default
+      return { pattern: "lander", hero: false };
+    }
+    
+    // Get pixel ship lore
+    function getPixelShipLore(patternKey) {
+      return PIXEL_SHIP_LORE[patternKey] || PIXEL_SHIP_LORE.lander;
+    }
+    
+    // Apply ship to an SVG element with use element
+    function applyShipToSvg(svgEl, useEl, mapping, pnlNum) {
+      if (!svgEl || !useEl) return;
+      
+      useEl.setAttribute("href", mapping.symbol);
+      useEl.setAttribute("xlink:href", mapping.symbol); // Legacy browser support
+
+      // Toggle hero-ship class
+      if (mapping.isHero) {
+        svgEl.classList.add("hero-ship");
+      } else {
+        svgEl.classList.remove("hero-ship");
+      }
+      
+      // Toggle winning/losing state for engine pulse animation
+      svgEl.classList.remove("ship-winning", "ship-losing");
+      if (pnlNum !== undefined) {
+        if (pnlNum >= 0) {
+          svgEl.classList.add("ship-winning");
+        } else {
+          svgEl.classList.add("ship-losing");
+        }
+      }
+    }
+    
+    // Update sidebar ship profile - now using pixel ships!
+    function updateSidebarShip(ticker, sector, pnlNum) {
+      const svgEl = document.querySelector(".ship-profile .ship-svg");
+      const caption = document.getElementById("ship-caption");
+      const statusEl = document.getElementById("ship-status");
+      const signalEl = document.getElementById("ship-signal");
+      
+      if (!svgEl) return;
+
+      // Use pixel ship rendering
+      const meta = mapTickerToPixelShip(ticker, sector, pnlNum);
+      const lore = getPixelShipLore(meta.pattern);
+      
+      renderPixelShip(svgEl, meta.pattern, { 
+        hero: meta.hero, 
+        pnlPercent: pnlNum 
+      });
+      
+      if (caption) {
+        const label = meta.hero ? lore.label + " ★" : lore.label;
+        caption.textContent = `${ticker.toUpperCase()} · ${label}`;
+      }
+      
+      // Update status based on P&L
+      if (statusEl && signalEl) {
+        if (pnlNum >= 5) {
+          statusEl.textContent = "OPTIMAL";
+          statusEl.className = "vital-value positive";
+          signalEl.textContent = "STRONG";
+          signalEl.className = "vital-value positive";
+        } else if (pnlNum >= 0) {
+          statusEl.textContent = "NOMINAL";
+          statusEl.className = "vital-value";
+          signalEl.textContent = "STABLE";
+          signalEl.className = "vital-value positive";
+        } else if (pnlNum >= -5) {
+          statusEl.textContent = "STRESSED";
+          statusEl.className = "vital-value";
+          signalEl.textContent = "WEAK";
+          signalEl.className = "vital-value";
+        } else {
+          statusEl.textContent = "CRITICAL";
+          statusEl.className = "vital-value negative";
+          signalEl.textContent = "FADING";
+          signalEl.className = "vital-value negative";
+        }
+      }
+    }
+    
+    // Telemetry HUD ship – uses the same pixel mech system
+    function updateTelemetryShipSprite(ticker) {
+      const svgEl      = document.getElementById("telemetry-ship-svg");
+      const labelEl    = document.getElementById("telemetry-ship-label");
+      const captionEl  = document.getElementById("telemetry-ship-caption");
+      const headerName = document.getElementById("telemetry-ship-name"); // existing title text
+
+      if (!svgEl) return;
+
+      const upper = (ticker || "").toUpperCase();
+
+      // Pull sector + returns from existing data sources
+      const profile = (window.TICKER_PROFILES && TICKER_PROFILES[upper]) || {};
+      const sector  = profile.sector || profile.theme || "Unknown";
+
+      const stats = (window.statsData && statsData[upper]) || {};
+      // Prefer "total" return; fall back to 1Y / 3M if needed
+      const pnl =
+        (typeof stats.return_total === "number" ? stats.return_total :
+        typeof stats.return_1y    === "number" ? stats.return_1y    :
+        typeof stats.return_3m    === "number" ? stats.return_3m    :
+        0);
+
+      // Map into a sprite pattern
+      const meta = mapTickerToPixelShip(upper, sector, pnl);
+      renderPixelShip(svgEl, meta.pattern, {
+        hero: meta.hero,
+        pnlPercent: pnl
+      });
+
+      const lore = getPixelShipLore(meta.pattern);
+      const shipName = `${upper} · ${lore.label}`;
+
+      if (labelEl)   labelEl.textContent   = shipName;
+      if (captionEl) captionEl.textContent = lore.lore;
+      if (headerName) headerName.textContent = shipName; // keeps header in sync
+    }
+    
+    function initFleetHolobay() {
+      const strip = document.getElementById("fleet-holo-strip");
+      const svg = document.getElementById("fleet-ship-svg");
+      const nameEl = document.getElementById("fleet-ship-name");
+      const classEl = document.getElementById("fleet-ship-class");
+      const sectorEl = document.getElementById("fleet-ship-sector");
+      const hullBar = document.getElementById("fleet-hull-bar");
+      const hullText = document.getElementById("fleet-hull-text");
+      const cargoBar = document.getElementById("fleet-cargo-bar");
+      const cargoText = document.getElementById("fleet-cargo-text");
+      const velBar = document.getElementById("fleet-vel-bar");
+      const velText = document.getElementById("fleet-vel-text");
+
+      if (!strip || !svg) return;
+      
+      // No more <use> element needed - we render pixels directly!
+      
+      function pnlToHealth(pnl) {
+        const raw = Math.max(-50, Math.min(150, pnl));
+        return Math.round(((raw + 50) / 200) * 100);
+      }
+
+      function healthLabel(h) {
+        if (h >= 85) return "OPTIMAL";
+        if (h >= 65) return "NOMINAL";
+        if (h >= 45) return "STRESSED";
+        return "CRITICAL";
+      }
+      
+      // Render ship using pixel ship system
+      function renderFleetShipPixel(ticker, sector, pnlNum) {
+        const meta = mapTickerToPixelShip(ticker, sector, pnlNum);
+        renderPixelShip(svg, meta.pattern, { 
+          hero: meta.hero, 
+          pnlPercent: pnlNum 
+        });
+        return meta;
+      }
+
+      const fleet = [];
+
+      // Build fleet from DEMO_STOCK_POSITIONS with TICKER_PROFILES data
+      if (typeof DEMO_STOCK_POSITIONS !== 'undefined') {
+        DEMO_STOCK_POSITIONS.forEach(pos => {
+          const profile = TICKER_PROFILES[pos.ticker] || {};
+          const value = pos.shares * pos.current_price;
+          const pnlNum = ((pos.current_price - pos.entry_price) / pos.entry_price) * 100;
+          const pnlText = (pnlNum >= 0 ? '+' : '') + pnlNum.toFixed(1) + '%';
+          const sector = profile.sector || 'Unknown';
+          const meta = mapTickerToPixelShip(pos.ticker, sector, pnlNum);
+          const lore = getPixelShipLore(meta.pattern);
+
+          fleet.push({
+            ticker: pos.ticker,
+            sector: sector,
+            value: value,
+            pnlText: pnlText,
+            pnlNum: pnlNum,
+            shipClass: lore.label,
+            codename: profile.codename || pos.ticker,
+            isHero: meta.hero,
+            pattern: meta.pattern
+          });
+        });
+      }
+
+      if (!fleet.length) return;
+
+      // Create thumbnails
+      fleet.forEach(ship => {
+        const thumb = document.createElement("div");
+        thumb.className = "fleet-thumb " + (ship.pnlNum >= 0 ? "gain" : "loss");
+        if (ship.isHero) thumb.classList.add("hero");
+        thumb.dataset.ticker = ship.ticker;
+
+        thumb.innerHTML = `
+          <div class="ticker">${ship.ticker}</div>
+          <div class="tag">${ship.shipClass}</div>
+          <div class="pnl">${ship.pnlText}</div>
+        `;
+
+        thumb.addEventListener("click", () => {
+          selectShip(ship.ticker);
+        });
+
+        strip.appendChild(thumb);
+      });
+
+      function selectShip(ticker) {
+        const ship = fleet.find(s => s.ticker === ticker);
+        if (!ship) return;
+
+        // Render pixel ship in holobay
+        renderFleetShipPixel(ship.ticker, ship.sector, ship.pnlNum);
+        
+        // Update sidebar ship profile too
+        updateSidebarShip(ship.ticker, ship.sector, ship.pnlNum);
+        
+        // Get lore for display
+        const lore = getPixelShipLore(ship.pattern);
+
+        nameEl.textContent = `${ship.ticker} · ${ship.codename}`;
+        classEl.textContent = ship.shipClass + (ship.isHero ? ' ★' : '');
+        sectorEl.textContent = lore.hud; // Show HUD tag instead of sector
+
+        const health = pnlToHealth(ship.pnlNum);
+        hullBar.style.width = `${Math.max(5, health)}%`;
+        hullText.textContent = healthLabel(health);
+
+        const cargoRatio = ship.value / fleet.reduce((s,x)=>s+x.value,0);
+        const cargoPct = Math.round(cargoRatio * 100);
+        cargoBar.style.width = `${Math.max(5, cargoPct)}%`;
+        cargoText.textContent = `${cargoPct}% of fleet cargo`;
+
+        const vel = Math.min(100, Math.abs(ship.pnlNum) * 2.5);
+        velBar.style.width = `${Math.max(5, vel)}%`;
+        velText.textContent = `${vel.toFixed(0)} · risk velocity`;
+
+        if (health < 45) {
+          hullBar.classList.add("fleet-danger");
+        } else {
+          hullBar.classList.remove("fleet-danger");
+        }
+
+        strip.querySelectorAll(".fleet-thumb").forEach(t => {
+          t.classList.toggle("active", t.dataset.ticker === ticker);
+        });
+
+        // Also trigger main chart update if the function exists
+        if (typeof loadTicker === 'function') {
+          loadTicker(ticker);
+        }
+      }
+
+      // Initial selection = biggest position
+      const primary = fleet.slice().sort((a,b)=>b.value-a.value)[0];
+      if (primary) selectShip(primary.ticker);
+    }
+    
+    async function init() {
+      updateTime();
+      setInterval(updateTime, 1000);
+      try {
+        const res = await fetch('data/stats.json');
+        const data = await res.json();
+        statsData = data.stats;
+        buildWatchlist(data.tickers);
+      } catch (e) {
+        buildWatchlist(['RKLB', 'LUNR', 'ASTS', 'ACHR', 'JOBY', 'BKSY', 'RDW', 'PL', 'EVEX', 'GME']);
+      }
+      await loadTicker(currentTicker);
+      renderStockPositions();
+      renderOptionsPositions();
+      renderCatalysts();
+      renderActivity();
+      renderPositionCharts();
+      
+      // Initialize Fleet HoloBay
+      initFleetHolobay();
+      
+      // Initialize glossary tooltips
+      attachGlossaryTooltips();
+      
+      // Calculate and update portfolio mood based on demo data
+      const totalDailyPnl = DEMO_STOCK_POSITIONS.reduce((sum, pos) => {
+        const dailyChange = (pos.current_price - pos.entry_price) / pos.entry_price * 100;
+        return sum + dailyChange;
+      }, 0) / DEMO_STOCK_POSITIONS.length;
+      updatePortfolioMood(totalDailyPnl);
+      
+      // Initialize volatility display using data-driven score
+      const vol = getVolScoreForTicker(currentTicker);
+      if (vol > 0) {
+        updateVolatilityDisplay(vol);
+      }
+      
+      // Mission log startup message
+      setTimeout(() => {
+        pushMissionLog({ 
+          type: 'scenario', 
+          title: 'UPLINK ESTABLISHED', 
+          subtitle: 'Mission Control systems online · defensive grid active',
+          arcade: true
+        });
+      }, 500);
+    }
+    
+    function updateTime() {
+      const now = new Date();
+      const h = String(now.getHours()).padStart(2, '0');
+      const m = String(now.getMinutes()).padStart(2, '0');
+      document.getElementById('time-display').innerHTML = h + '<span class="blink">:</span>' + m;
+    }
+    
+    function buildWatchlist(tickers) {
+      const watchlistHTML = tickers.map(t => {
+        const stats = statsData[t] || {};
+        const change = stats.return_1d || 0;
+        const theme = tickerThemes[t] || '';
+        const color = tickerColors[t] || '#33ff99';
+        return '<div class="watchlist-item ' + (t === currentTicker ? 'active' : '') + '" onclick="selectTicker(\'' + t + '\'); if(window.innerWidth <= 768) toggleMobileDrawer();">' +
+          '<div class="watchlist-info"><div class="watchlist-ticker" style="color: ' + color + '">' + t + '</div>' +
+          '<div class="watchlist-meta">' + theme + '</div></div>' +
+          '<div class="watchlist-data"><div class="watchlist-price">$' + (stats.current || 0).toFixed(2) + '</div>' +
+          '<div class="watchlist-change ' + (change >= 0 ? 'positive' : 'negative') + '">' + (change >= 0 ? '+' : '') + change.toFixed(2) + '%</div></div></div>';
+      }).join('');
+      
+      document.getElementById('watchlist').innerHTML = watchlistHTML;
+      
+      // Also populate mobile watchlist
+      const mobileWatchlist = document.getElementById('mobile-watchlist');
+      if (mobileWatchlist) {
+        mobileWatchlist.innerHTML = watchlistHTML;
+      }
+      
+      // Also populate mobile ticker carousel
+      populateMobileTickerCarousel();
+    }
+    
+    // Mobile drawer toggle
+    let scrollPosition = 0;
+    function toggleMobileDrawer() {
+      const drawer = document.getElementById('mobile-drawer');
+      const backdrop = document.getElementById('mobile-drawer-backdrop');
+      if (drawer && backdrop) {
+        const isOpening = !drawer.classList.contains('open');
+        drawer.classList.toggle('open');
+        backdrop.classList.toggle('open');
+        
+        if (isOpening) {
+          // Save scroll position and lock body
+          scrollPosition = window.pageYOffset;
+          document.body.classList.add('modal-open');
+          document.body.style.top = `-${scrollPosition}px`;
+        } else {
+          // Restore scroll position
+          document.body.classList.remove('modal-open');
+          document.body.style.top = '';
+          window.scrollTo(0, scrollPosition);
+        }
+      }
+    }
+    
+    async function loadTicker(ticker) {
+      if (!tickerData[ticker]) {
+        try { tickerData[ticker] = await (await fetch('data/' + ticker.toLowerCase() + '.json')).json(); } catch (e) { return; }
+      }
+      currentTicker = ticker;
+      updateTickerDisplay();
+      updateCharts();
+      updateMACDDisplay();
+      
+      // Call new status functions
+      const data = tickerData[ticker];
+      if (data) {
+        updateTrendStatus(data);
+        updateVolumeStatus(data);
+        resetSimulation();
+        
+        // Update volatility display for new ticker
+        const vol = getVolScoreForTicker(ticker);
+        if (vol > 0) {
+          updateVolatilityDisplay(vol);
+        }
+      }
+      
+      // Update sidebar ship profile
+      const profile = TICKER_PROFILES[ticker] || {};
+      const sector = profile.sector || 'Unknown';
+      const pos = DEMO_STOCK_POSITIONS.find(p => p.ticker === ticker);
+      const pnlNum = pos ? ((pos.current_price - pos.entry_price) / pos.entry_price) * 100 : 0;
+      if (typeof updateSidebarShip === 'function') {
+        updateSidebarShip(ticker, sector, pnlNum);
+      }
+      
+      // Update telemetry HUD ship sprite
+      if (typeof updateTelemetryShipSprite === 'function') {
+        updateTelemetryShipSprite(ticker);
+      }
+      
+      document.querySelectorAll('.watchlist-item').forEach(el => {
+        const tickerEl = el.querySelector('.watchlist-ticker');
+        el.classList.toggle('active', tickerEl && tickerEl.textContent === ticker);
+      });
+    }
+    
+    function selectTicker(ticker) { loadTicker(ticker); }
+    
+    // P&L Simulation
+    function resetSimulation() {
+      const resultEl = document.getElementById('sim-result');
+      resultEl.className = 'sim-result';
+      resultEl.innerHTML = '<div class="sim-result-label">Select parameters above</div>';
+    }
+    
+    function runPnLSimulation() {
+      const data = tickerData[currentTicker];
+      if (!data || !data.daily || !data.daily.length) {
+        showSimError('No historical data available');
+        return;
+      }
+      
+      const dateInput = document.getElementById('sim-entry-date').value;
+      const capital = parseFloat(document.getElementById('sim-capital').value) || 0;
+      
+      if (!dateInput) {
+        showSimError('Please select an entry date');
+        return;
+      }
+      
+      if (capital < 100) {
+        showSimError('Minimum capital: $100');
+        return;
+      }
+      
+      const daily = data.daily;
+      const entryTs = new Date(dateInput).getTime();
+      const dataStartTs = daily[0].t;
+      const dataEndTs = daily[daily.length - 1].t;
+      
+      if (entryTs < dataStartTs) {
+        showSimError('Date before available data range');
+        return;
+      }
+      
+      // Find entry candle (first candle on or after entry date)
+      const entryCandle = daily.find(p => p.t >= entryTs);
+      if (!entryCandle) {
+        showSimError('No data for selected date');
+        return;
+      }
+      
+      const lastCandle = daily[daily.length - 1];
+      const entryPrice = entryCandle.c;
+      const lastPrice = lastCandle.c;
+      
+      const shares = Math.floor(capital / entryPrice);
+      const actualInvested = shares * entryPrice;
+      const currentValue = shares * lastPrice;
+      const pnl = currentValue - actualInvested;
+      const returnPct = ((lastPrice - entryPrice) / entryPrice) * 100;
+      
+      const entryDate = new Date(entryCandle.t).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      const holdDays = Math.floor((lastCandle.t - entryCandle.t) / 86400000);
+      
+      const resultEl = document.getElementById('sim-result');
+      const isPositive = pnl >= 0;
+      
+      resultEl.className = 'sim-result ' + (isPositive ? 'positive' : 'negative');
+      resultEl.innerHTML = 
+        '<div class="sim-result-label">Simulated P&L</div>' +
+        '<div class="sim-result-value ' + (isPositive ? 'positive' : 'negative') + '">' +
+          (isPositive ? '+' : '−') + '$' + Math.abs(pnl).toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0}) +
+        '</div>' +
+        '<div class="sim-result-pct">' + (isPositive ? '+' : '') + returnPct.toFixed(1) + '% return</div>' +
+        '<div class="sim-result-meta">' +
+          shares + ' shares @ $' + entryPrice.toFixed(2) + ' → $' + lastPrice.toFixed(2) + '<br>' +
+          'Entry: ' + entryDate + ' • ' + holdDays + ' days held' +
+        '</div>';
+    }
+    
+    function showSimError(msg) {
+      const resultEl = document.getElementById('sim-result');
+      resultEl.className = 'sim-result';
+      resultEl.innerHTML = '<div class="sim-result-label" style="color: var(--signal-down);">' + msg + '</div>';
+    }
+    
+    function updateTickerDisplay() {
+      const stats = statsData[currentTicker] || {};
+      const change = stats.return_1d || 0;
+      const color = tickerColors[currentTicker] || '#33ff99';
+      const tickerEl = document.getElementById('chart-ticker');
+      tickerEl.textContent = currentTicker;
+      tickerEl.style.color = color;
+      tickerEl.style.textShadow = '0 0 20px ' + color + '40';
+      document.getElementById('chart-price').textContent = '$' + (stats.current || 0).toFixed(2);
+      const el = document.getElementById('chart-change');
+      el.textContent = (change >= 0 ? '+' : '') + change.toFixed(2) + '%';
+      el.className = 'ticker-change ' + (change >= 0 ? 'positive' : 'negative');
+    }
+    
+    function updateMACDDisplay() {
+      const data = tickerData[currentTicker];
+      if (!data) return;
+      const source = currentTimeframe === '1D' ? data.daily : data.intraday;
+      if (!source || !source.length) return;
+      const latest = source[source.length - 1];
+      
+      const macdVal = latest.macd || 0;
+      const signalVal = latest.signal || 0;
+      const histVal = latest.hist || 0;
+      
+      if (latest.macd !== undefined) {
+        const el = document.getElementById('macd-val');
+        el.textContent = latest.macd.toFixed(4);
+        el.className = 'macd-value ' + (latest.macd >= 0 ? 'positive' : 'negative');
+      }
+      if (latest.signal !== undefined) document.getElementById('signal-val').textContent = latest.signal.toFixed(4);
+      if (latest.hist !== undefined) {
+        const el = document.getElementById('hist-val');
+        el.textContent = latest.hist.toFixed(4);
+        el.className = 'macd-value ' + (latest.hist >= 0 ? 'positive' : 'negative');
+      }
+      
+      // Update MACD status using glossary
+      const macdStatus = getMacdStatus(macdVal, signalVal, histVal);
+      const statusEl = document.getElementById('macd-status');
+      if (statusEl) {
+        const labelEl = statusEl.querySelector('.macd-status-label');
+        const copyEl = statusEl.querySelector('.macd-status-copy');
+        if (labelEl) labelEl.textContent = macdStatus.label;
+        if (copyEl) copyEl.textContent = macdStatus.copy;
+        
+        // Color based on state
+        statusEl.className = 'macd-status';
+        if (macdStatus === MACD_STATES.bullish_cross) statusEl.classList.add('bullish');
+        else if (macdStatus === MACD_STATES.bearish_cross) statusEl.classList.add('bearish');
+      }
+    }
+    
+    function updateTrendStatus(data) {
+      const source = currentTimeframe === '1D' ? data.daily : data.intraday;
+      if (!source || !source.length) return;
+      
+      // Find the last candle with MA data
+      let last = null;
+      for (let i = source.length - 1; i >= 0; i--) {
+        if (source[i].g100 !== undefined || source[i].g200 !== undefined) {
+          last = source[i];
+          break;
+        }
+      }
+      
+      if (!last) {
+        document.getElementById('trend-status-label').textContent = 'NO MA DATA';
+        document.getElementById('trend-status-detail').textContent = 'Moving average data unavailable for this range.';
+        document.getElementById('trend-status-badge').className = 'trend-status-badge';
+        return;
+      }
+      
+      const price = last.c;
+      const g100 = last.g100;
+      const g150 = last.g150;
+      const g200 = last.g200;
+      const macdVal = last.macd || 0;
+      
+      // Compute volatility score for current ticker
+      const volScore = getVolScoreForTicker(currentTicker);
+      
+      const badgeEl = document.getElementById('trend-status-badge');
+      const labelEl = document.getElementById('trend-status-label');
+      const detailEl = document.getElementById('trend-status-detail');
+      const iconEl = document.getElementById('trend-icon');
+      
+      // Update MA metric values
+      document.getElementById('ma100-val').textContent = g100 ? '$' + g100.toFixed(2) : '--';
+      document.getElementById('ma150-val').textContent = g150 ? '$' + g150.toFixed(2) : '--';
+      document.getElementById('ma200-val').textContent = g200 ? '$' + g200.toFixed(2) : '--';
+      
+      // Use glossary-based trend state calculation with volatility
+      const trendState = getTrendState(price, g100, g150, g200, macdVal, volScore);
+      
+      // Determine CSS mode class
+      let mode = 'neutral';
+      if (trendState === HASLUN_GLOSSARY.trend_full_thrust) mode = 'bull';
+      else if (trendState === HASLUN_GLOSSARY.trend_reentry_risk) mode = 'bear';
+      else if (trendState === HASLUN_GLOSSARY.trend_nebula) mode = 'volatile';
+      else if (trendState === HASLUN_GLOSSARY.trend_reversal_attempt) mode = 'neutral';
+      else if (trendState === HASLUN_GLOSSARY.trend_drifting) mode = 'neutral';
+      
+      // Update UI with glossary content
+      labelEl.textContent = trendState.label;
+      iconEl.textContent = trendState.icon || '◈';
+      
+      // Build detail text with price context
+      const priceContext = `Price $${price.toFixed(2)}`;
+      detailEl.innerHTML = `<span class="trend-subtitle">${trendState.subtitle}</span> ${priceContext}. ${trendState.body.split('.')[0]}.`;
+      
+      badgeEl.className = 'trend-status-badge trend-' + mode;
+      badgeEl.title = trendState.flavor; // Add flavor as hover tooltip
+      
+      // Apply dynamic border color from glossary
+      if (trendState.color) {
+        badgeEl.style.borderColor = trendState.color;
+      }
+    }
+    
+    function updateVolumeStatus(data) {
+      const source = currentTimeframe === '1D' ? data.daily : data.intraday;
+      if (!source || source.length < 10) {
+        document.getElementById('volume-status').textContent = '--';
+        document.getElementById('volume-status').className = 'volume-badge';
+        return;
+      }
+      
+      // Get last 50 candles for average calculation
+      const recent = source.slice(-50);
+      const vols = recent.map(p => p.v).filter(v => v && v > 0);
+      
+      if (vols.length < 5) {
+        document.getElementById('volume-status').textContent = 'N/A';
+        return;
+      }
+      
+      const avg = vols.reduce((a, b) => a + b, 0) / vols.length;
+      const current = vols[vols.length - 1];
+      const ratio = current / avg;
+      
+      const el = document.getElementById('volume-status');
+      let label, cls;
+      
+      if (ratio >= 2) {
+        label = 'VOL: HIGH (' + ratio.toFixed(1) + '×)';
+        cls = 'vol-high';
+      } else if (ratio >= 1.25) {
+        label = 'VOL: ELEVATED';
+        cls = 'vol-elevated';
+      } else if (ratio <= 0.5) {
+        label = 'VOL: QUIET';
+        cls = 'vol-quiet';
+      } else {
+        label = 'VOL: NORMAL';
+        cls = 'vol-normal';
+      }
+      
+      el.textContent = label;
+      el.className = 'volume-badge ' + cls;
+    }
+    
+    function setTimeframe(tf) {
+      currentTimeframe = tf;
+      document.querySelectorAll('.ctrl-btn[data-tf]').forEach(btn => btn.classList.toggle('active', btn.dataset.tf === tf));
+      updateCharts();
+      updateMACDDisplay();
+      // Also update trend and volume for new timeframe
+      const data = tickerData[currentTicker];
+      if (data) {
+        updateTrendStatus(data);
+        updateVolumeStatus(data);
+      }
+    }
+    
+    function setRange(range) {
+      currentRange = range;
+      document.querySelectorAll('.ctrl-btn[data-range]').forEach(btn => btn.classList.toggle('active', btn.dataset.range === range));
+      updateCharts();
+    }
+    
+    function toggleMA() {
+      showMA = !showMA;
+      document.getElementById('ma-toggle').classList.toggle('active', showMA);
+      updateCharts();
+    }
+    
+    function updateCharts() {
+      const data = tickerData[currentTicker];
+      if (!data) return;
+      let source = currentTimeframe === '1D' ? data.daily : data.intraday;
+      if (!source || !source.length) return;
+      const cutoff = Date.now() - (rangeDays[currentRange] * 86400000);
+      source = source.filter(d => d.t > cutoff);
+      
+      if (!source.length) return;
+      
+      const labels = source.map(d => new Date(d.t));
+      const closes = source.map(d => d.c);
+      const color = tickerColors[currentTicker] || '#33ff99';
+      
+      // Calculate proper Y-axis bounds with padding
+      const minPrice = Math.min(...closes);
+      const maxPrice = Math.max(...closes);
+      const priceRange = maxPrice - minPrice;
+      const padding = priceRange * 0.08 || maxPrice * 0.02; // 8% padding, or 2% if flat
+      
+      // For short timeframes, use tighter bounds to show movement
+      const isShortRange = ['1W', '1M'].includes(currentRange);
+      const yPadding = isShortRange ? padding * 0.5 : padding;
+      
+      if (priceChart) priceChart.destroy();
+      const datasets = [{ 
+        label: currentTicker, 
+        data: closes, 
+        borderColor: color, 
+        backgroundColor: color + '15', 
+        borderWidth: 2, 
+        fill: true, 
+        tension: 0.1, 
+        pointRadius: 0, 
+        pointHoverRadius: 4 
+      }];
+      
+      if (showMA) {
+        if (source.some(d => d.g100)) datasets.push({ label: 'MA 100', data: source.map(d => d.g100), borderColor: '#ffb347', borderWidth: 1, fill: false, tension: 0.1, pointRadius: 0 });
+        if (source.some(d => d.g150)) datasets.push({ label: 'MA 150', data: source.map(d => d.g150), borderColor: '#b388ff', borderWidth: 1, fill: false, tension: 0.1, pointRadius: 0 });
+        if (source.some(d => d.g200)) datasets.push({ label: 'MA 200', data: source.map(d => d.g200), borderColor: '#47d4ff', borderWidth: 1, fill: false, tension: 0.1, pointRadius: 0 });
+      }
+      
+      priceChart = new Chart(document.getElementById('price-chart'), {
+        type: 'line', 
+        data: { labels, datasets },
+        options: {
+          responsive: true, 
+          maintainAspectRatio: false, 
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: { display: showMA, position: 'top', labels: { boxWidth: 12, font: { size: 10, family: "'IBM Plex Mono', monospace" }, color: '#5a7068' } },
+            tooltip: { backgroundColor: 'rgba(10, 12, 15, 0.95)', titleColor: '#e8f4f0', bodyColor: '#a8c0b8', borderColor: '#1e2832', borderWidth: 1, titleFont: { family: "'IBM Plex Mono', monospace" }, bodyFont: { family: "'IBM Plex Mono', monospace" }, callbacks: { label: i => i.dataset.label + ': $' + i.parsed.y.toFixed(2) } }
+          },
+          scales: {
+            x: { 
+              type: 'time', 
+              grid: { color: 'rgba(51, 255, 153, 0.05)' }, 
+              ticks: { color: '#3a4a44', font: { family: "'IBM Plex Mono', monospace", size: 10 }, maxTicksLimit: 8 } 
+            },
+            y: { 
+              position: 'right', 
+              min: minPrice - yPadding,
+              max: maxPrice + yPadding,
+              grid: { color: 'rgba(51, 255, 153, 0.05)' }, 
+              ticks: { color: '#5a7068', font: { family: "'IBM Plex Mono', monospace", size: 10 }, callback: v => '$' + v.toFixed(2) } 
+            }
+          }
+        }
+      });
+      
+      if (macdChart) macdChart.destroy();
+      const macdData = source.map(d => d.macd), signalData = source.map(d => d.signal), histData = source.map(d => d.hist);
+      macdChart = new Chart(document.getElementById('macd-chart'), {
+        type: 'bar', data: { labels, datasets: [
+          { label: 'Histogram', data: histData, type: 'bar', order: 2, backgroundColor: histData.map(v => v >= 0 ? 'rgba(51, 255, 153, 0.5)' : 'rgba(255, 107, 107, 0.5)'), borderColor: histData.map(v => v >= 0 ? '#33ff99' : '#ff6b6b'), borderWidth: 1 },
+          { label: 'MACD', data: macdData, type: 'line', order: 1, borderColor: '#47d4ff', borderWidth: 1.5, fill: false, tension: 0.1, pointRadius: 0 },
+          { label: 'Signal', data: signalData, type: 'line', order: 0, borderColor: '#ffb347', borderWidth: 1.5, fill: false, tension: 0.1, pointRadius: 0 }
+        ]},
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { type: 'time', display: false }, y: { position: 'right', grid: { color: 'rgba(51, 255, 153, 0.05)' }, ticks: { color: '#5a7068', font: { family: "'IBM Plex Mono', monospace", size: 9 } } } } }
+      });
+      
+      // Update telemetry side console
+      updateTelemetryConsole(source, closes);
+    }
+    
+    // Update the telemetry side console with current data
+    function updateTelemetryConsole(source, closes) {
+      if (!source || !source.length) return;
+      
+      const latest = source[source.length - 1];
+      const first = source[0];
+      const color = tickerColors[currentTicker] || '#33ff99';
+      const profile = TICKER_PROFILES[currentTicker] || {};
+      const shipInfo = SHIP_NAMES[currentTicker] || { name: currentTicker, designation: 'UNK-XXX' };
+      
+      // Calculate metrics
+      const currentPrice = latest.c;
+      const priceChange = ((currentPrice - first.c) / first.c * 100);
+      const hullHealth = Math.max(10, Math.min(100, 50 + priceChange * 2));
+      const riskVelocity = Math.min(100, Math.abs(priceChange) * 2.5).toFixed(0);
+      
+      // Update header callout
+      const callout = document.getElementById('telemetry-ship-name');
+      if (callout) callout.textContent = `${currentTicker} · ${shipInfo.name}`;
+      
+      // Update hull bar
+      const hullFill = document.getElementById('tm-hull-fill');
+      if (hullFill) {
+        hullFill.style.width = `${hullHealth}%`;
+        hullFill.className = 'fill' + (hullHealth < 40 ? ' danger' : '');
+      }
+      
+      // Update risk velocity
+      const riskEl = document.getElementById('tm-risk-vel');
+      if (riskEl) {
+        riskEl.textContent = riskVelocity;
+        riskEl.className = 'value' + (parseInt(riskVelocity) > 50 ? ' warn' : '');
+      }
+      
+      // Update signal status based on MACD
+      const signalEl = document.getElementById('tm-signal');
+      if (signalEl && latest.macd !== undefined) {
+        const macd = latest.macd || 0;
+        const sig = latest.signal || 0;
+        const hist = latest.hist || 0;
+        
+        if (macd > sig && hist > 0) {
+          signalEl.textContent = 'BULLISH';
+          signalEl.className = 'value positive';
+        } else if (macd < sig && hist < 0) {
+          signalEl.textContent = 'BEARISH';
+          signalEl.className = 'value negative';
+        } else if (Math.abs(hist) < 0.05) {
+          signalEl.textContent = 'DRIFTING';
+          signalEl.className = 'value';
+        } else {
+          signalEl.textContent = 'MIXED';
+          signalEl.className = 'value warn';
+        }
+      }
+      
+      // Update sensor bank (MAs)
+      const ma100El = document.getElementById('tm-ma100');
+      const ma150El = document.getElementById('tm-ma150');
+      const ma200El = document.getElementById('tm-ma200');
+      const priceEl = document.getElementById('tm-price');
+      
+      if (ma100El) ma100El.textContent = latest.g100 ? '$' + latest.g100.toFixed(2) : '--';
+      if (ma150El) ma150El.textContent = latest.g150 ? '$' + latest.g150.toFixed(2) : '--';
+      if (ma200El) ma200El.textContent = latest.g200 ? '$' + latest.g200.toFixed(2) : '--';
+      if (priceEl) priceEl.textContent = '$' + currentPrice.toFixed(2);
+      
+      // Update thrust vector (MACD)
+      const macdEl = document.getElementById('tm-macd');
+      const sigEl = document.getElementById('tm-sig');
+      const histoEl = document.getElementById('tm-histo');
+      const macdRow = document.getElementById('tm-macd-row');
+      const sigRow = document.getElementById('tm-signal-row');
+      const histoRow = document.getElementById('tm-histo-row');
+      
+      if (latest.macd !== undefined) {
+        if (macdEl) macdEl.textContent = latest.macd.toFixed(4);
+        if (sigEl) sigEl.textContent = latest.signal.toFixed(4);
+        if (histoEl) histoEl.textContent = latest.hist.toFixed(4);
+        
+        if (macdRow) macdRow.className = 'console-row ' + (latest.macd >= 0 ? 'positive' : 'negative');
+        if (histoRow) histoRow.className = 'console-row ' + (latest.hist >= 0 ? 'positive' : 'negative');
+      }
+      
+      // Update range chip
+      const rangeChip = document.getElementById('tm-range-chip');
+      if (rangeChip) rangeChip.innerHTML = `<span class="dot"></span>RANGE · ${currentRange}`;
+      
+      // Render ship in console
+      renderConsoleShip(currentTicker, priceChange);
+      
+      // Add bridge feed entry
+      addBridgeFeedEntry(currentTicker, latest, priceChange);
+    }
+    
+    // Render the pixel ship in the side console
+    function renderConsoleShip(ticker, pnlPercent) {
+      const container = document.getElementById('console-ship-display');
+      const labelEl = document.getElementById('console-ship-class');
+      if (!container) return;
+      
+      ticker = ticker || 'RKLB';
+      pnlPercent = pnlPercent || 0;
+      
+      const sector = tickerThemes[ticker] || 'UNKNOWN';
+      const meta = mapTickerToPixelShip(ticker, sector, pnlPercent);
+      const lore = PIXEL_SHIP_LORE[meta.pattern] || PIXEL_SHIP_LORE.drone;
+      const color = tickerColors[ticker] || '#33ff99';
+      
+      // Use PNG sprite (custom or fallback)
+      const spritePath = SHIP_SPRITES[ticker] || DEFAULT_SHIP_SPRITE;
+      
+      // Get or create image element
+      let img = container.querySelector('img.console-ship-img');
+      let svg = container.querySelector('svg#console-ship-svg');
+      
+      if (!img) {
+        img = document.createElement('img');
+        img.className = 'console-ship-img';
+        img.style.cssText = 'width: 80px; height: 60px; object-fit: contain; image-rendering: pixelated;';
+        container.insertBefore(img, container.firstChild);
+      }
+      
+      // Apply ticker color glow
+      img.style.filter = `drop-shadow(0 0 8px ${color})`;
+      img.src = spritePath;
+      img.alt = `${ticker} vessel`;
+      img.style.display = 'block';
+      
+      if (svg) svg.style.display = 'none';
+      
+      if (labelEl) labelEl.textContent = lore.label;
+    }
+    
+    // Initialize console ship on load
+    function initConsoleShip() {
+      const ticker = currentTicker || 'RKLB';
+      renderConsoleShip(ticker, 0);
+    }
+    
+    // Add entry to bridge feed
+    function addBridgeFeedEntry(ticker, latest, priceChange) {
+      const logEl = document.getElementById('telemetry-log');
+      if (!logEl) return;
+      
+      const timestamp = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
+      
+      // Generate status text based on data
+      let statusText = '';
+      let entryClass = '';
+      
+      const macd = latest.macd || 0;
+      const sig = latest.signal || 0;
+      const hist = latest.hist || 0;
+      
+      if (macd > sig && hist > 0.05) {
+        statusText = `${ticker} thrust vector aligned · bullish crossover`;
+        entryClass = 'positive';
+      } else if (macd < sig && hist < -0.05) {
+        statusText = `${ticker} warning · bearish divergence detected`;
+        entryClass = 'negative';
+      } else if (Math.abs(priceChange) > 5) {
+        statusText = `${ticker} high velocity movement · ${priceChange > 0 ? 'climbing' : 'descending'}`;
+        entryClass = priceChange > 0 ? 'positive' : 'negative';
+      } else if (Math.abs(hist) < 0.02) {
+        statusText = `${ticker} signal drifting · no clear vector`;
+        entryClass = '';
+      } else {
+        statusText = `${ticker} telemetry nominal · monitoring`;
+        entryClass = '';
+      }
+      
+      // Create new entry
+      const entry = document.createElement('div');
+      entry.className = 'log-entry ' + entryClass;
+      entry.innerHTML = `<span class="timestamp">[${timestamp}]</span>${statusText}`;
+      
+      // Add to top of log
+      logEl.insertBefore(entry, logEl.firstChild);
+      
+      // Keep only last 8 entries
+      while (logEl.children.length > 8) {
+        logEl.removeChild(logEl.lastChild);
+      }
+    }
+    
+    function switchTab(tabName) {
+      document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tabName));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === tabName + '-panel'));
+      
+      // Refresh arcade previews when switching to arcade tab
+      if (tabName === 'arcade' && window.SpriteCache && SpriteCache.loaded) {
+        setTimeout(() => SpriteCache.renderGamePreviews(), 100);
+      }
+    }
+    
+    // =========================================================================
+    // MOBILE UI FUNCTIONS
+    // =========================================================================
+    
+    function switchTabMobile(tabName) {
+      // Update mobile bottom nav
+      document.querySelectorAll('.mobile-nav-item').forEach(t => {
+        t.classList.toggle('active', t.dataset.tab === tabName);
+      });
+      // Update desktop nav tabs (keep in sync)
+      document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tabName));
+      // Update panels
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === tabName + '-panel'));
+      // Play sound
+      if (window.SoundFX) SoundFX.play('click');
+    }
+    
+    function toggleFabMenu() {
+      const fabMain = document.getElementById('fab-main');
+      const fabMenu = document.getElementById('fab-menu');
+      if (fabMain && fabMenu) {
+        fabMain.classList.toggle('open');
+        fabMenu.classList.toggle('open');
+        if (window.SoundFX) SoundFX.play('click');
+      }
+    }
+    
+    function toggleFabSFX() {
+      const sfxToggle = document.getElementById('sfx-toggle');
+      const fabSfx = document.getElementById('fab-sfx');
+      if (sfxToggle) {
+        sfxToggle.checked = !sfxToggle.checked;
+        sfxToggle.dispatchEvent(new Event('change'));
+        if (fabSfx) {
+          fabSfx.innerHTML = '<span class="fab-icon">🔊</span><span>SFX ' + (sfxToggle.checked ? 'ON' : 'OFF') + '</span>';
+          fabSfx.classList.toggle('active', sfxToggle.checked);
+        }
+      }
+    }
+    
+    function toggleFabBGM() {
+      const bgmToggle = document.getElementById('bgm-toggle');
+      const fabBgm = document.getElementById('fab-bgm');
+      if (bgmToggle) {
+        bgmToggle.checked = !bgmToggle.checked;
+        bgmToggle.dispatchEvent(new Event('change'));
+        if (fabBgm) {
+          fabBgm.innerHTML = '<span class="fab-icon">🎵</span><span>BGM ' + (bgmToggle.checked ? 'ON' : 'OFF') + '</span>';
+          fabBgm.classList.toggle('active', bgmToggle.checked);
+        }
+      }
+    }
+    
+    function showAboutOverlay() {
+      const aboutTrigger = document.getElementById('about-trigger-btn');
+      if (aboutTrigger) {
+        aboutTrigger.click();
+      }
+      toggleFabMenu();
+    }
+    
+    function populateMobileTickerCarousel() {
+      const carouselInner = document.getElementById('ticker-carousel-inner');
+      if (!carouselInner) return;
+      
+      const tickers = Object.keys(statsData).filter(t => t && statsData[t]);
+      if (tickers.length === 0) return;
+      
+      carouselInner.innerHTML = tickers.map(ticker => {
+        const stats = statsData[ticker] || {};
+        const price = stats.current || 0;
+        const change = stats.return_1d || 0;
+        const changeClass = change >= 0 ? 'positive' : 'negative';
+        const isActive = ticker === currentTicker;
+        const color = tickerColors[ticker] || '#33ff99';
+        
+        return '<div class="carousel-ticker ' + (isActive ? 'active' : '') + '" data-ticker="' + ticker + '" onclick="selectTickerFromCarousel(\'' + ticker + '\')" style="--ticker-color: ' + color + '">' +
+          '<div class="carousel-ticker-symbol" style="color: ' + color + '">' + ticker + '</div>' +
+          '<div class="carousel-ticker-price">$' + price.toFixed(2) + '</div>' +
+          '<div class="carousel-ticker-change ' + changeClass + '">' + (change >= 0 ? '+' : '') + change.toFixed(1) + '%</div>' +
+        '</div>';
+      }).join('');
+    }
+    
+    function selectTickerFromCarousel(ticker) {
+      selectTicker(ticker);
+      // Update carousel active state
+      document.querySelectorAll('.carousel-ticker').forEach(t => {
+        t.classList.toggle('active', t.dataset.ticker === ticker);
+      });
+      if (window.SoundFX) SoundFX.play('click');
+    }
+    
+    function updateMobileUptime() {
+      const uptimeEl = document.getElementById('mobile-uptime');
+      const desktopUptimeEl = document.getElementById('uptime');
+      if (uptimeEl && desktopUptimeEl) {
+        const uptimeText = desktopUptimeEl.textContent.replace('UPTIME: ', '');
+        // Shorten for mobile: "00:12:34" -> "12:34"
+        const parts = uptimeText.split(':');
+        if (parts.length === 3 && parts[0] === '00') {
+          uptimeEl.textContent = parts[1] + ':' + parts[2];
+        } else {
+          uptimeEl.textContent = uptimeText;
+        }
+      }
+    }
+    
+    // Initialize mobile-specific features
+    function initMobileUI() {
+      // Populate ticker carousel after data loads
+      setTimeout(populateMobileTickerCarousel, 1500);
+      
+      // Update mobile uptime periodically
+      setInterval(updateMobileUptime, 1000);
+      
+      // Close FAB menu when clicking outside
+      document.addEventListener('click', (e) => {
+        const fab = document.getElementById('mobile-fab');
+        const fabMain = document.getElementById('fab-main');
+        const fabMenu = document.getElementById('fab-menu');
+        if (fab && fabMain && fabMenu && fabMenu.classList.contains('open')) {
+          if (!fab.contains(e.target)) {
+            fabMain.classList.remove('open');
+            fabMenu.classList.remove('open');
+          }
+        }
+      });
+      
+      // Swipe gesture for mobile drawer
+      let touchStartX = 0;
+      let touchEndX = 0;
+      
+      document.addEventListener('touchstart', (e) => {
+        touchStartX = e.changedTouches[0].screenX;
+      }, { passive: true });
+      
+      document.addEventListener('touchend', (e) => {
+        touchEndX = e.changedTouches[0].screenX;
+        handleSwipeGesture();
+      }, { passive: true });
+      
+      function handleSwipeGesture() {
+        const swipeDistance = touchEndX - touchStartX;
+        const minSwipeDistance = 80;
+        const drawer = document.getElementById('mobile-drawer');
+        const isDrawerOpen = drawer && drawer.classList.contains('open');
+        
+        // Swipe right from left edge to open drawer
+        if (touchStartX < 30 && swipeDistance > minSwipeDistance && !isDrawerOpen) {
+          toggleMobileDrawer();
+        }
+        // Swipe left to close drawer
+        if (isDrawerOpen && swipeDistance < -minSwipeDistance) {
+          toggleMobileDrawer();
+        }
+      }
+      
+      // Pull to refresh visual (doesn't actually refresh, just visual feedback)
+      let pullStartY = 0;
+      const pullIndicator = document.getElementById('pull-indicator');
+      
+      document.addEventListener('touchstart', (e) => {
+        if (window.scrollY === 0) {
+          pullStartY = e.changedTouches[0].screenY;
+        }
+      }, { passive: true });
+      
+      document.addEventListener('touchmove', (e) => {
+        if (pullStartY > 0 && window.scrollY === 0) {
+          const pullDistance = e.changedTouches[0].screenY - pullStartY;
+          if (pullDistance > 60 && pullIndicator) {
+            pullIndicator.classList.add('visible');
+          }
+        }
+      }, { passive: true });
+      
+      document.addEventListener('touchend', () => {
+        pullStartY = 0;
+        if (pullIndicator) {
+          pullIndicator.classList.remove('visible');
+        }
+      }, { passive: true });
+      
+      // Sync FAB toggle states on load
+      const sfxToggle = document.getElementById('sfx-toggle');
+      const fabSfx = document.getElementById('fab-sfx');
+      if (sfxToggle && fabSfx) {
+        fabSfx.innerHTML = '<span class="fab-icon">🔊</span><span>SFX ' + (sfxToggle.checked ? 'ON' : 'OFF') + '</span>';
+        fabSfx.classList.toggle('active', sfxToggle.checked);
+      }
+    }
+    
+    // Call initMobileUI when DOM is ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initMobileUI);
+    } else {
+      initMobileUI();
+    }
+    
+    function switchChartTab(chartName) {
+      document.querySelectorAll('.chart-tab').forEach(t => t.classList.toggle('active', t.dataset.chart === chartName));
+      document.querySelectorAll('.chart-panel').forEach(p => p.classList.toggle('active', p.id === 'chart-' + chartName));
+    }
+    
+    function renderStockPositions() {
+      // Keep the legacy table rendering for table view
+      const tbody = document.getElementById('stock-tbody');
+      if (tbody) {
+        tbody.innerHTML = DEMO_STOCK_POSITIONS.map(pos => {
+          const value = pos.shares * pos.current_price;
+          const pnl = (pos.current_price - pos.entry_price) * pos.shares;
+          const pnlPct = ((pos.current_price - pos.entry_price) / pos.entry_price * 100);
+          const color = tickerColors[pos.ticker] || '#33ff99';
+          const hasDossier = TICKER_PROFILES[pos.ticker] ? true : false;
+          const dossierBtn = hasDossier ? '<button class="dossier-btn" onclick="openTickerDossier(\'' + pos.ticker + '\')">◉</button>' : '';
+          return '<tr class="position-row" data-ticker="' + pos.ticker + '">' +
+            '<td><span class="ticker-tag">' + dossierBtn + '<span class="ticker-dot" style="background: ' + color + '"></span>' + pos.ticker + '</span></td>' +
+            '<td style="color: var(--text-dim); font-size: 0.65rem; letter-spacing: 0.05em;">' + (tickerThemes[pos.ticker] || '') + '</td>' +
+            '<td>' + pos.shares + '</td><td>$' + pos.entry_price.toFixed(2) + '</td><td>$' + pos.current_price.toFixed(2) + '</td>' +
+            '<td>$' + value.toLocaleString() + '</td>' +
+            '<td class="' + (pnl >= 0 ? 'pnl-positive' : 'pnl-negative') + '">' + (pnl >= 0 ? '+' : '') + '$' + pnl.toFixed(0) + ' (' + (pnlPct >= 0 ? '+' : '') + pnlPct.toFixed(1) + '%)</td></tr>';
+        }).join('');
+      }
+      
+      // Render the fleet grid
+      renderFleetGrid();
+    }
+    
+    // Ship name generation based on ticker
+    const SHIP_NAMES = {
+      RKLB: { name: "ELECTRON", designation: "FSC-001" },
+      LUNR: { name: "ODYSSEY", designation: "LNR-002" },
+      ASTS: { name: "BLUEBIRD", designation: "COM-003" },
+      ACHR: { name: "MIDNIGHT", designation: "AAM-004" },
+      JOBY: { name: "SKYWARD", designation: "EVT-005" },
+      BKSY: { name: "BLACKSKY", designation: "RCN-006" },
+      RDW: { name: "REDWIRE", designation: "INF-007" },
+      PL: { name: "PLANET", designation: "SAT-008" },
+      EVEX: { name: "HORIZON", designation: "AAM-009" },
+      GME: { name: "DIAMOND", designation: "MEM-010" },
+      MP: { name: "MAGNETO", designation: "MAT-011" },
+      KTOS: { name: "KRATOS", designation: "DEF-012" },
+      IRDM: { name: "IRIDIUM", designation: "COM-013" },
+      HON: { name: "HONEYBEE", designation: "IND-014" },
+      ATI: { name: "TITANIUM", designation: "MAT-015" },
+      CACI: { name: "SENTINEL", designation: "DEF-016" },
+      LOAR: { name: "PHOENIX", designation: "AER-017" },
+      COHR: { name: "PRISM", designation: "OPT-018" },
+      GE: { name: "SPECTRE", designation: "IND-019" },
+      LHX: { name: "HELIX", designation: "AAM-020" },
+      RTX: { name: "RAYTHEON", designation: "DEF-021" }
+    };
+
+    // Per-ticker ship sprites (PNG). If a ticker isn't listed here, we fall back to the procedural SVG.
+    const SHIP_SPRITES = {
+      ACHR: 'assets/ships/ACHR-eVTOL-ship.png',
+      ASTS: 'assets/ships/ASTS-Communications-Relay-Ship.png',
+      BKSY: 'assets/ships/BKSY-recon-ship.png',
+      COHR: 'assets/ships/COHR-Glass-Reflector-ship.png',
+      EVEX: 'assets/ships/EVEX-Transport-Ship.png',
+      GE: 'assets/ships/GE-Stealth-Bomber-ship.png',
+      GME: 'assets/ships/GME-moonshot-ship.png',
+      JOBY: 'assets/ships/JOBY-eVTOL-light-class-ship.png',
+      KTOS: 'assets/ships/KTOS-Fighter-Ship.png',
+      LHX: 'assets/ships/LHX-Drone-ship.png',
+      LUNR: 'assets/ships/LUNR-lander-ship.png',
+      PL: 'assets/ships/PL-scout-ship.png',
+      RDW: 'assets/ships/RDW-Hauler-ship.png',
+      RKLB: 'assets/ships/RKLB-flagship-ship.png',
+      RTX: 'assets/ships/RTX-Officer-Class-Ship.png'
+    };
+    
+    // Default fallback sprite for tickers without custom ships
+    const DEFAULT_SHIP_SPRITE = 'assets/ships/Unclaimed-Drone-ship.png';
+    
+    // =========================================================================
+    // SPRITE CACHE SYSTEM - Preload PNG sprites for canvas games
+    // =========================================================================
+    const SpriteCache = {
+      images: {},
+      loaded: false,
+      selectedPlayerShip: 'RKLB',
+      
+      // Preload all ship sprites
+      preload() {
+        const allSprites = { ...SHIP_SPRITES, DEFAULT: DEFAULT_SHIP_SPRITE };
+        const promises = Object.entries(allSprites).map(([key, src]) => {
+          return new Promise((resolve) => {
+            const img = new Image();
+            img.onload = () => {
+              this.images[key] = img;
+              resolve();
+            };
+            img.onerror = () => resolve(); // Continue even if one fails
+            img.src = src;
+          });
+        });
+        
+        Promise.all(promises).then(() => {
+          this.loaded = true;
+          console.log('[SpriteCache] All ship sprites loaded');
+          this.renderArcadeShipGrid();
+          this.renderGamePreviews();
+        });
+      },
+      
+      // Get a sprite image (returns Image object or null)
+      get(ticker) {
+        return this.images[ticker] || this.images['DEFAULT'] || null;
+      },
+      
+      // Get random fleet ship (for enemies)
+      getRandomFleetShip() {
+        const tickers = Object.keys(SHIP_SPRITES);
+        const randomTicker = tickers[Math.floor(Math.random() * tickers.length)];
+        return { ticker: randomTicker, image: this.get(randomTicker) };
+      },
+      
+      // Draw sprite on canvas with options
+      drawOnCanvas(ctx, ticker, x, y, scale = 1, options = {}) {
+        const img = this.get(ticker);
+        if (!img) return false;
+        
+        const width = (options.width || 60) * scale;
+        const height = (options.height || 45) * scale;
+        
+        ctx.save();
+        
+        // Glow effect
+        if (options.glow) {
+          ctx.shadowColor = options.glowColor || tickerColors[ticker] || '#33ff99';
+          ctx.shadowBlur = options.glowBlur || 10;
+        }
+        
+        // Flip if specified (for enemies facing down)
+        if (options.flipY) {
+          ctx.translate(x, y);
+          ctx.scale(1, -1);
+          ctx.drawImage(img, -width / 2, -height / 2, width, height);
+        } else {
+          ctx.drawImage(img, x - width / 2, y - height / 2, width, height);
+        }
+        
+        ctx.restore();
+        return true;
+      },
+      
+      // Render the arcade ship selection grid
+      renderArcadeShipGrid() {
+        const grid = document.getElementById('arcade-ship-grid');
+        if (!grid) return;
+        
+        const tickers = Object.keys(SHIP_SPRITES);
+        grid.innerHTML = tickers.map(ticker => {
+          const color = tickerColors[ticker] || '#33ff99';
+          const isSelected = ticker === this.selectedPlayerShip;
+          return `
+            <div class="ship-select-item ${isSelected ? 'selected' : ''}" 
+                 style="--ship-color: ${color}"
+                 onclick="SpriteCache.selectShip('${ticker}')"
+                 data-ticker="${ticker}">
+              <img src="${SHIP_SPRITES[ticker]}" alt="${ticker}">
+              <span class="ship-ticker">${ticker}</span>
+            </div>
+          `;
+        }).join('');
+      },
+      
+      // Select a ship for the player
+      selectShip(ticker) {
+        this.selectedPlayerShip = ticker;
+        // Update UI
+        document.querySelectorAll('.ship-select-item').forEach(el => {
+          el.classList.toggle('selected', el.dataset.ticker === ticker);
+        });
+        // Play sound
+        if (window.MechSFX) MechSFX.click();
+        // Toast
+        if (typeof showToast === 'function') {
+          const shipName = SHIP_NAMES[ticker]?.name || ticker;
+          showToast(`${shipName} selected as your ship`, 'info');
+        }
+      },
+      
+      // Render game preview canvases
+      renderGamePreviews() {
+        this.renderInvadersPreview();
+        this.renderLanderPreview();
+      },
+      
+      renderInvadersPreview() {
+        const canvas = document.getElementById('invaders-preview-canvas');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        
+        // Dark background
+        ctx.fillStyle = '#050608';
+        ctx.fillRect(0, 0, 280, 160);
+        
+        // Stars
+        ctx.fillStyle = 'rgba(51, 255, 153, 0.3)';
+        for (let i = 0; i < 30; i++) {
+          ctx.fillRect(Math.random() * 280, Math.random() * 160, 1, 1);
+        }
+        
+        // Draw some enemy ships
+        const enemyTickers = ['GE', 'KTOS', 'RTX', 'COHR'];
+        enemyTickers.forEach((ticker, i) => {
+          const x = 50 + (i % 4) * 55;
+          const y = 30 + Math.floor(i / 4) * 40;
+          this.drawOnCanvas(ctx, ticker, x, y, 0.6, { flipY: true, glow: true, glowBlur: 4 });
+        });
+        
+        // Draw player ship at bottom
+        this.drawOnCanvas(ctx, this.selectedPlayerShip, 140, 130, 0.7, { glow: true, glowBlur: 6 });
+        
+        // Draw some bullets
+        ctx.fillStyle = '#33ff99';
+        ctx.shadowColor = '#33ff99';
+        ctx.shadowBlur = 4;
+        ctx.fillRect(138, 100, 4, 10);
+        ctx.fillRect(138, 70, 4, 10);
+        ctx.shadowBlur = 0;
+      },
+      
+      renderLanderPreview() {
+        const canvas = document.getElementById('lander-preview-canvas');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        
+        // Dark background
+        ctx.fillStyle = '#050608';
+        ctx.fillRect(0, 0, 280, 160);
+        
+        // Stars
+        ctx.fillStyle = 'rgba(51, 255, 153, 0.2)';
+        for (let i = 0; i < 20; i++) {
+          ctx.fillRect(Math.random() * 280, Math.random() * 100, 1, 1);
+        }
+        
+        // Draw terrain
+        ctx.strokeStyle = '#33ff99';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(0, 140);
+        ctx.lineTo(40, 130);
+        ctx.lineTo(80, 145);
+        ctx.lineTo(120, 120);
+        ctx.lineTo(140, 120); // Landing zone
+        ctx.lineTo(160, 120);
+        ctx.lineTo(200, 140);
+        ctx.lineTo(240, 125);
+        ctx.lineTo(280, 135);
+        ctx.stroke();
+        
+        // Landing zone highlight
+        ctx.strokeStyle = '#ffb347';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(120, 120);
+        ctx.lineTo(160, 120);
+        ctx.stroke();
+        
+        // Draw lander ship
+        this.drawOnCanvas(ctx, 'LUNR', 140, 60, 0.7, { glow: true, glowBlur: 8 });
+        
+        // Thrust flame
+        ctx.fillStyle = '#ffb347';
+        ctx.shadowColor = '#ffb347';
+        ctx.shadowBlur = 8;
+        ctx.fillRect(136, 80, 8, 12);
+        ctx.shadowBlur = 0;
+      }
+    };
+    
+    // Initialize sprite cache on load
+    SpriteCache.preload();
+    
+    function renderFleetGrid() {
+      const fleetGrid = document.getElementById('fleet-grid');
+      if (!fleetGrid) return;
+      
+      // Calculate totals
+      let totalValue = 0;
+      let totalPnl = 0;
+      let operational = 0;
+      let damaged = 0;
+      const maxShares = Math.max(...DEMO_STOCK_POSITIONS.map(p => p.shares));
+      const totalShares = DEMO_STOCK_POSITIONS.reduce((s, p) => s + p.shares, 0);
+      
+      // Build ship cards
+      const shipCards = DEMO_STOCK_POSITIONS.map(pos => {
+        const value = pos.shares * pos.current_price;
+        const pnl = (pos.current_price - pos.entry_price) * pos.shares;
+        const pnlPct = ((pos.current_price - pos.entry_price) / pos.entry_price * 100);
+        const color = tickerColors[pos.ticker] || '#33ff99';
+        const profile = TICKER_PROFILES[pos.ticker] || {};
+        const shipInfo = SHIP_NAMES[pos.ticker] || { name: pos.ticker, designation: 'UNK-XXX' };
+        const sector = tickerThemes[pos.ticker] || 'UNKNOWN';
+        
+        totalValue += value;
+        totalPnl += pnl;
+        
+        // Map to ship type
+        const shipMeta = mapTickerToPixelShip(pos.ticker, sector, pnlPct);
+        const shipLore = PIXEL_SHIP_LORE[shipMeta.pattern] || PIXEL_SHIP_LORE.drone;
+        
+        // Calculate stats for bars
+        const hullHealth = Math.max(10, Math.min(100, 50 + pnlPct * 2)); // P&L affects hull
+        const cargoPercent = Math.round((pos.shares / totalShares) * 100);
+        const fuelPercent = Math.max(10, Math.min(100, Math.random() * 40 + 60)); // Random fuel level
+        
+        const isOperational = pnlPct >= 0;
+        if (isOperational) operational++;
+        else damaged++;
+        
+        // Sprite if available; otherwise use fallback sprite (all ships now have sprites)
+        const spritePath = SHIP_SPRITES[pos.ticker] || DEFAULT_SHIP_SPRITE;
+        const shipVisualMarkup = `<img src="${spritePath}" alt="${pos.ticker} ship" loading="lazy" decoding="async">`;
+        
+        return `
+          <div class="ship-card ${isOperational ? '' : 'negative'}" style="--ship-color: ${color}" onclick="selectTicker('${pos.ticker}'); switchTab('chart');">
+            <div class="ship-card-inner">
+              <div class="ship-visual">
+                ${shipVisualMarkup}
+                <span class="ship-class-badge">${shipLore.label}</span>
+              </div>
+              <div class="ship-info">
+                <div class="ship-header">
+                  <div>
+                    <div class="ship-name">${pos.ticker}</div>
+                    <div class="ship-designation">${shipInfo.name} · ${shipInfo.designation}</div>
+                  </div>
+                  <div class="ship-status-indicator ${isOperational ? 'operational' : 'damaged'}">
+                    <span class="dot"></span>
+                    ${isOperational ? 'OPERATIONAL' : 'DAMAGED'}
+                  </div>
+                </div>
+                <div class="ship-stats">
+                  <div class="ship-stat-row">
+                    <span class="ship-stat-label">HULL</span>
+                    <div class="ship-stat-bar">
+                      <div class="ship-stat-fill hull ${isOperational ? '' : 'damaged'}" style="width: ${hullHealth}%"></div>
+                    </div>
+                    <span class="ship-stat-value">${hullHealth.toFixed(0)}%</span>
+                  </div>
+                  <div class="ship-stat-row">
+                    <span class="ship-stat-label">CARGO</span>
+                    <div class="ship-stat-bar">
+                      <div class="ship-stat-fill cargo" style="width: ${cargoPercent}%"></div>
+                    </div>
+                    <span class="ship-stat-value">${pos.shares} units</span>
+                  </div>
+                  <div class="ship-stat-row">
+                    <span class="ship-stat-label">FUEL</span>
+                    <div class="ship-stat-bar">
+                      <div class="ship-stat-fill fuel" style="width: ${fuelPercent}%"></div>
+                    </div>
+                    <span class="ship-stat-value">${fuelPercent.toFixed(0)}%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="ship-footer">
+              <div class="ship-value">$${value.toLocaleString()}</div>
+              <div class="ship-pnl">
+                <span class="ship-pnl-amount ${pnl >= 0 ? 'positive' : 'negative'}">${pnl >= 0 ? '+' : ''}$${Math.abs(pnl).toFixed(0)}</span>
+                <span class="ship-pnl-percent ${pnlPct >= 0 ? 'positive' : 'negative'}">${pnlPct >= 0 ? '+' : ''}${pnlPct.toFixed(1)}%</span>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+      
+      fleetGrid.innerHTML = shipCards;
+      
+      // Update summary stats
+      const todayPnl = document.getElementById('fleet-total-pnl');
+      const fleetValue = document.getElementById('fleet-total-value');
+      const shipCount = document.getElementById('fleet-ship-count');
+      const opCount = document.getElementById('fleet-operational-count');
+      const dmgCount = document.getElementById('fleet-damaged-count');
+      const winRate = document.getElementById('fleet-win-rate');
+      
+      if (todayPnl) {
+        todayPnl.textContent = (totalPnl >= 0 ? '+' : '') + '$' + Math.abs(totalPnl).toLocaleString(undefined, {maximumFractionDigits: 0});
+        todayPnl.className = 'value ' + (totalPnl >= 0 ? 'positive' : 'negative');
+      }
+      if (fleetValue) fleetValue.textContent = '$' + totalValue.toLocaleString(undefined, {maximumFractionDigits: 0});
+      if (shipCount) shipCount.textContent = DEMO_STOCK_POSITIONS.length;
+      if (opCount) opCount.textContent = operational;
+      if (dmgCount) dmgCount.textContent = damaged;
+      if (winRate) winRate.textContent = Math.round((operational / DEMO_STOCK_POSITIONS.length) * 100) + '%';
+    }
+    
+    // Generate SVG string for a pixel ship
+    function generateShipSvgString(patternKey, color, pnlPercent) {
+      const pattern = PIXEL_SHIPS[patternKey] || PIXEL_SHIPS.drone;
+      const rows = pattern.length;
+      const cols = pattern[0].length;
+      
+      const cell = 2.9;
+      const width = cols * cell;
+      const height = rows * cell;
+      
+      const viewW = 120;
+      const viewH = 80;
+      const offsetX = (viewW - width) / 2;
+      const offsetY = (viewH - height) / 2;
+      
+      // Parse color to get HSL values
+      const baseHue = getHueFromColor(color);
+      
+      let svgContent = '';
+      
+      for (let r = 0; r < rows; r++) {
+        const row = pattern[r];
+        for (let c = 0; c < cols; c++) {
+          const digit = row[c];
+          if (digit === '0') continue;
+          
+          let fill;
+          if (digit === '1') {
+            fill = `hsl(${baseHue}, 40%, 25%)`; // Dark edge
+          } else if (digit === '2') {
+            fill = `hsl(${baseHue}, 60%, 45%)`; // Mid tone
+          } else {
+            fill = `hsl(${baseHue}, 80%, 65%)`; // Cockpit highlight
+          }
+          
+          const x = offsetX + c * cell;
+          const y = offsetY + r * cell;
+          
+          svgContent += `<rect x="${x}" y="${y}" width="${cell}" height="${cell}" fill="${fill}" />`;
+        }
+      }
+      
+      return svgContent;
+    }
+    
+    // Extract hue from hex color
+    function getHueFromColor(hexColor) {
+      const hex = hexColor.replace('#', '');
+      const r = parseInt(hex.substr(0, 2), 16) / 255;
+      const g = parseInt(hex.substr(2, 2), 16) / 255;
+      const b = parseInt(hex.substr(4, 2), 16) / 255;
+      
+      const max = Math.max(r, g, b);
+      const min = Math.min(r, g, b);
+      let h = 0;
+      
+      if (max !== min) {
+        const d = max - min;
+        switch (max) {
+          case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+          case g: h = ((b - r) / d + 2) / 6; break;
+          case b: h = ((r - g) / d + 4) / 6; break;
+        }
+      }
+      
+      return Math.round(h * 360);
+    }
+    
+    // Toggle between fleet grid view and table view
+    function setFleetView(view) {
+      const gridView = document.getElementById('fleet-grid-view');
+      const tableView = document.getElementById('fleet-table-view');
+      const btns = document.querySelectorAll('.fleet-view-btn');
+      
+      if (view === 'grid') {
+        if (gridView) gridView.classList.remove('hidden');
+        if (tableView) tableView.classList.remove('active');
+      } else {
+        if (gridView) gridView.classList.add('hidden');
+        if (tableView) tableView.classList.add('active');
+      }
+      
+      btns.forEach(btn => {
+        btn.classList.toggle('active', btn.textContent.toLowerCase().includes(view));
+      });
+      
+      if (window.SoundFX) SoundFX.play('click');
+    }
+    
+    function renderOptionsPositions() {
+      document.getElementById('options-tbody').innerHTML = DEMO_OPTIONS.map(pos => {
+        const pnl = (pos.current - pos.entry) * pos.contracts * 100;
+        const pnlPct = ((pos.current - pos.entry) / pos.entry * 100);
+        const color = tickerColors[pos.ticker] || '#33ff99';
+        const hasDossier = TICKER_PROFILES[pos.ticker] ? true : false;
+        const dossierBtn = hasDossier ? '<button class="dossier-btn" onclick="openTickerDossier(\'' + pos.ticker + '\')">◉</button>' : '';
+        const shipSrc = SHIP_SPRITES[pos.ticker] || DEFAULT_SHIP_SPRITE;
+        return '<tr class="position-row" data-ticker="' + pos.ticker + '">' +
+          '<td><span class="ticker-tag">' + dossierBtn + 
+          '<img src="' + shipSrc + '" class="option-ship-icon" style="width: 24px; height: 18px; object-fit: contain; image-rendering: pixelated; vertical-align: middle; margin-right: 6px; filter: drop-shadow(0 0 3px ' + color + ');">' +
+          '<span class="ticker-dot" style="background: ' + color + '"></span>' + pos.ticker + '</span></td>' +
+          '<td><span class="structure-tag">' + pos.structure + '</span></td><td>' + pos.strikes + '</td>' +
+          '<td>$' + pos.entry.toFixed(2) + '</td><td>$' + pos.current.toFixed(2) + '</td>' +
+          '<td class="' + (pnl >= 0 ? 'pnl-positive' : 'pnl-negative') + '">' + (pnl >= 0 ? '+' : '') + '$' + pnl.toFixed(0) + ' (' + (pnlPct >= 0 ? '+' : '') + pnlPct.toFixed(0) + '%)</td>' +
+          '<td>' + pos.delta.toFixed(2) + '</td></tr>';
+      }).join('');
+    }
+    
+    function renderPositionCharts() {
+      const positions = DEMO_OPTIONS.map(pos => ({ ticker: pos.ticker, value: pos.current * pos.contracts * 100, color: tickerColors[pos.ticker] || '#33ff99' })).sort((a, b) => b.value - a.value);
+      const maxValue = Math.max(...positions.map(p => p.value));
+      const totalValue = positions.reduce((s, x) => s + x.value, 0);
+      document.getElementById('chart-sizes').innerHTML = '<div class="bar-chart">' + positions.map(p =>
+        '<div class="bar-row"><span class="bar-ticker" style="color: ' + p.color + '">' + p.ticker + '</span>' +
+        '<div class="bar-container"><div class="bar-fill" style="width: ' + (p.value/maxValue*100) + '%; background: ' + p.color + '">' + Math.round(p.value/totalValue*100) + '%</div></div>' +
+        '<span class="bar-value">$' + p.value.toLocaleString() + '</span></div>'
+      ).join('') + '</div>';
+      
+      const pnlData = DEMO_OPTIONS.map(pos => ({ ticker: pos.ticker, pnl: (pos.current - pos.entry) * pos.contracts * 100, pct: ((pos.current - pos.entry) / pos.entry * 100), color: tickerColors[pos.ticker] || '#33ff99' })).sort((a, b) => b.pnl - a.pnl);
+      const maxPnl = Math.max(...pnlData.map(p => Math.abs(p.pnl)));
+      let winners = 0, losers = 0, totalPnl = 0;
+      pnlData.forEach(p => { if (p.pnl >= 0) winners++; else losers++; totalPnl += p.pnl; });
+      document.getElementById('chart-pnl').innerHTML = '<div class="bar-chart">' + pnlData.map(p =>
+        '<div class="pnl-row"><span class="bar-ticker" style="color: ' + p.color + '">' + p.ticker + '</span>' +
+        '<div class="pnl-bar-container"><div class="pnl-center-line"></div>' +
+        '<div class="pnl-bar ' + (p.pnl >= 0 ? 'positive' : 'negative') + '" style="width: ' + (Math.abs(p.pnl)/maxPnl*50) + '%">' + (p.pnl >= 0 ? '+' : '') + p.pct.toFixed(0) + '%</div></div>' +
+        '<span class="pnl-amount ' + (p.pnl >= 0 ? 'positive' : 'negative') + '">' + (p.pnl >= 0 ? '+' : '') + '$' + Math.abs(p.pnl).toLocaleString() + '</span></div>'
+      ).join('') + '</div>' +
+      '<div class="summary-row"><div class="summary-item"><div class="summary-value positive">' + winners + '</div><div class="summary-label">Winners</div></div>' +
+      '<div class="summary-item"><div class="summary-value positive">+$' + totalPnl.toLocaleString() + '</div><div class="summary-label">Total P&L</div></div>' +
+      '<div class="summary-item"><div class="summary-value negative">' + losers + '</div><div class="summary-label">Losers</div></div></div>';
+    }
+    
+    function renderCatalysts() {
+      document.getElementById('catalyst-list').innerHTML = DEMO_CATALYSTS.map(cat => {
+        const color = tickerColors[cat.ticker] || '#5a7068';
+        return '<div class="catalyst-item"><span class="catalyst-date">' + cat.date + '</span>' +
+          '<span class="catalyst-ticker" style="color: ' + color + '">' + cat.ticker + '</span>' +
+          '<span class="catalyst-event">' + cat.event + '</span>' +
+          '<span class="catalyst-impact ' + cat.impact.toLowerCase() + '">' + cat.impact + '</span></div>';
+      }).join('');
+    }
+    
+    function renderActivity() {
+      const tradeSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>';
+      const alertSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+      document.getElementById('activity-feed').innerHTML = DEMO_ACTIVITY.map(act =>
+        '<div class="activity-item"><div class="activity-icon ' + act.type + '">' + (act.type === 'trade' ? tradeSvg : alertSvg) + '</div>' +
+        '<div class="activity-content"><div class="activity-title">' + act.title + '</div><div class="activity-subtitle">' + act.subtitle + '</div></div>' +
+        '<div class="activity-time">' + act.time + '</div></div>'
+      ).join('');
+    }
+    
+    function toggleKillSwitch() {
+      const btn = document.querySelector('.kill-switch-btn');
+      const status = document.querySelector('.kill-switch-status');
+      if (btn.classList.contains('stop')) {
+        btn.classList.replace('stop', 'resume');
+        btn.textContent = 'RESUME OPERATIONS';
+        status.textContent = 'Trading halted';
+      } else {
+        btn.classList.replace('resume', 'stop');
+        btn.textContent = 'ABORT ALL TRADES';
+        status.textContent = 'System operational';
+      }
+    }
+    
+    function toggleDevConsole() {
+      const console = document.getElementById('dev-console');
+      console.classList.toggle('visible');
+    }
+    
+    // ============================================
+    // CONTROL PANEL INTERACTIVITY
+    // ============================================
+    
+    const controlState = {
+      smoothing: 50,
+      forecast: 30,
+      sensitivity: 65,
+      momentum: true,
+      heatmap: false,
+      alerts: true,
+      risk: 60
+    };
+    
+    // Knob rotation values
+    const knobSettings = {
+      smoothing: { values: [0, 25, 50, 75, 100], labels: ['0%', '25%', '50%', '75%', '100%'], current: 2 },
+      forecast: { values: [7, 14, 30, 60, 90], labels: ['7 DAYS', '14 DAYS', '30 DAYS', '60 DAYS', '90 DAYS'], current: 2 }
+    };
+    
+    function cycleKnob(knobId) {
+      const settings = knobSettings[knobId];
+      settings.current = (settings.current + 1) % settings.values.length;
+      
+      const knob = document.getElementById('knob-' + knobId);
+      const valueEl = document.getElementById(knobId + '-value');
+      
+      // Rotate knob (each step is ~60 degrees)
+      const rotation = (settings.current - 2) * 60;
+      knob.style.transform = 'rotate(' + rotation + 'deg)';
+      
+      // Update value display
+      valueEl.textContent = settings.labels[settings.current];
+      controlState[knobId] = settings.values[settings.current];
+      
+      // Visual feedback
+      knob.style.boxShadow = '0 4px 8px rgba(0,0,0,0.5), 0 0 20px var(--phosphor-glow), inset 0 2px 4px rgba(255,255,255,0.1)';
+      setTimeout(() => {
+        knob.style.boxShadow = '';
+      }, 200);
+      
+      // Update band label for smoothing knob
+      if (knobId === 'smoothing') {
+        updateSmoothingBandLabel(settings.values[settings.current]);
+      }
+      
+      // Update forecast display for forecast knob
+      if (knobId === 'forecast') {
+        updateForecastDisplay(settings.values[settings.current]);
+      }
+      
+      // Trigger chart update effect
+      flashUpdate();
+      logControlChange(knobId.toUpperCase() + ' set to ' + settings.labels[settings.current]);
+    }
+    
+    function toggleSwitch(switchId) {
+      const toggle = document.getElementById('toggle-' + switchId);
+      const isActive = toggle.classList.toggle('active');
+      controlState[switchId] = isActive;
+      
+      // Visual feedback in log
+      logControlChange(switchId.toUpperCase() + ' ' + (isActive ? 'ENABLED' : 'DISABLED'));
+      
+      // Apply effects based on switch
+      if (switchId === 'momentum' && priceChart) {
+        // Toggle MA visibility
+        showMA = isActive;
+        document.getElementById('ma-toggle').classList.toggle('active', isActive);
+        updateCharts();
+      }
+      
+      flashUpdate();
+    }
+    
+    function handleSliderClick(event, sliderId) {
+      const track = document.getElementById(sliderId + '-track');
+      const fill = document.getElementById(sliderId + '-fill');
+      const thumb = document.getElementById(sliderId + '-thumb');
+      
+      const rect = track.getBoundingClientRect();
+      const percent = Math.max(0, Math.min(100, ((event.clientX - rect.left) / rect.width) * 100));
+      
+      fill.style.width = percent + '%';
+      thumb.style.left = percent + '%';
+      controlState[sliderId] = Math.round(percent);
+      
+      // Update risk gauge based on sensitivity
+      updateRiskGauge(percent);
+      logControlChange('SENSITIVITY adjusted to ' + Math.round(percent) + '%');
+      flashUpdate();
+    }
+    
+    function updateRiskGauge(sensitivity) {
+      // Risk inversely correlates with sensitivity (more sensitive = catches more risk)
+      const riskLevel = 100 - (sensitivity * 0.4);
+      const needle = document.getElementById('risk-needle');
+      const fill = document.getElementById('risk-fill');
+      const value = document.getElementById('risk-value');
+      
+      // Needle rotation: -45deg (low) to 225deg (high)
+      const rotation = -45 + (riskLevel / 100 * 180);
+      needle.style.transform = 'rotate(' + rotation + 'deg)';
+      fill.style.height = riskLevel + '%';
+      
+      if (riskLevel < 33) {
+        value.textContent = 'LOW';
+        fill.style.background = 'var(--phosphor)';
+      } else if (riskLevel < 66) {
+        value.textContent = 'MODERATE';
+        fill.style.background = 'linear-gradient(0deg, var(--amber) 0%, var(--phosphor) 100%)';
+      } else {
+        value.textContent = 'HIGH';
+        fill.style.background = 'linear-gradient(0deg, #ff4444 0%, var(--amber) 100%)';
+      }
+      
+      controlState.risk = riskLevel;
+    }
+    
+    function runAnalysis(e) {
+      const btn = e && e.currentTarget ? e.currentTarget : document.getElementById('run-analysis-btn');
+      btn.textContent = '◌ ANALYZING...';
+      btn.disabled = true;
+      
+      // Animate LED array
+      const leds = document.querySelectorAll('.led-array .array-led');
+      let ledIndex = 0;
+      const ledInterval = setInterval(() => {
+        leds.forEach((led, i) => {
+          led.classList.remove('on', 'amber');
+          if (i <= ledIndex) led.classList.add('on');
+        });
+        ledIndex++;
+        if (ledIndex > leds.length) {
+          clearInterval(ledInterval);
+          
+          // Compute data-driven volatility score
+          const volScore = getVolScoreForTicker(currentTicker) || (15 + Math.random() * 20);
+          const newVol = volScore.toFixed(1);
+          document.getElementById('vol-display').textContent = newVol;
+          
+          // Update LED array based on volatility (0-40 mapped to 0-8 LEDs)
+          const volLevel = Math.ceil((volScore / 40) * leds.length);
+          leds.forEach((led, i) => {
+            led.classList.remove('on', 'amber', 'red');
+            if (i < volLevel) {
+              if (i < 4) led.classList.add('on');
+              else if (i < 6) led.classList.add('amber');
+              else led.classList.add('red');
+            }
+          });
+          
+          btn.textContent = '▸ RUN ANALYSIS';
+          btn.disabled = false;
+          
+          logControlChange('ANALYSIS COMPLETE — Vol: ' + newVol + 'σ');
+        }
+      }, 100);
+      
+      flashUpdate();
+    }
+    
+    function resetControls() {
+      // Reset knobs
+      knobSettings.smoothing.current = 2;
+      knobSettings.forecast.current = 2;
+      document.getElementById('knob-smoothing').style.transform = 'rotate(0deg)';
+      document.getElementById('knob-forecast').style.transform = 'rotate(0deg)';
+      document.getElementById('smoothing-value').textContent = '50%';
+      document.getElementById('forecast-value').textContent = '30 DAYS';
+      
+      // Reset toggles
+      document.getElementById('toggle-momentum').classList.add('active');
+      document.getElementById('toggle-heatmap').classList.remove('active');
+      document.getElementById('toggle-alerts').classList.add('active');
+      
+      // Reset slider
+      document.getElementById('sensitivity-fill').style.width = '65%';
+      document.getElementById('sensitivity-thumb').style.left = '65%';
+      
+      // Reset gauge
+      updateRiskGauge(65);
+      
+      // Reset state
+      Object.assign(controlState, {
+        smoothing: 50,
+        forecast: 30,
+        sensitivity: 65,
+        momentum: true,
+        heatmap: false,
+        alerts: true
+      });
+      
+      logControlChange('ALL CONTROLS RESET TO DEFAULTS');
+      flashUpdate();
+    }
+    
+    function flashUpdate() {
+      // Flash the panel header to show update
+      const header = document.querySelector('.panel-header');
+      if (header) {
+        header.style.background = 'rgba(51, 255, 153, 0.1)';
+        setTimeout(() => {
+          header.style.background = '';
+        }, 150);
+      }
+    }
+    
+    function logControlChange(message) {
+      // Add to activity feed
+      const feed = document.getElementById('activity-feed');
+      if (!feed) return;
+      
+      const now = new Date();
+      const time = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+      
+      const alertSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
+      
+      const item = document.createElement('div');
+      item.className = 'activity-item';
+      item.innerHTML = '<div class="activity-icon alert">' + alertSvg + '</div>' +
+        '<div class="activity-content"><div class="activity-title">Control Update</div><div class="activity-subtitle">' + message + '</div></div>' +
+        '<div class="activity-time">' + time + '</div>';
+      
+      feed.insertBefore(item, feed.firstChild);
+      
+      // Keep only last 10 items
+      while (feed.children.length > 10) {
+        feed.removeChild(feed.lastChild);
+      }
+    }
+    
+    // Animate scanner blips periodically
+    setInterval(() => {
+      const blips = document.querySelectorAll('.scanner-blips .blip');
+      blips.forEach(blip => {
+        blip.style.top = (10 + Math.random() * 70) + '%';
+        blip.style.left = (10 + Math.random() * 70) + '%';
+      });
+    }, 3000);
+    
+    let startTime = null;
+    function updateUptime() {
+      if (!startTime) startTime = Date.now();
+      const elapsed = Math.floor((Date.now() - startTime) / 1000);
+      const h = String(Math.floor(elapsed / 3600)).padStart(2, '0');
+      const m = String(Math.floor((elapsed % 3600) / 60)).padStart(2, '0');
+      const s = String(elapsed % 60).padStart(2, '0');
+      const el = document.getElementById('uptime');
+      if (el) el.textContent = 'UPTIME: ' + h + ':' + m + ':' + s;
+    }
+    setInterval(updateUptime, 1000);
+    
+    // =========================================================================
+    // ARCADE EXTRAS MODULE – HUD, SFX, themes, terminal, toasts, Konami code
+    // =========================================================================
+    (function() {
+      // Config
+      const ARCADE_MISSIONS = [
+        { id:'tabs',      text:'Explore 3 panels', done:false },
+        { id:'analysis',  text:'Run analysis once', done:false },
+        { id:'simulation', text:'Run P&L simulation', done:false },
+        { id:'find_invader', text:'Find the hidden invader', done:false },
+        { id:'arcade_score', text:'Score 500+ in Signal Invaders', done:false },
+        { id:'terrain_lander', text:'Soft land on the terrain', done:false },
+        { id:'snoop_master', text:'Trigger 5 access denials', done:false }
+      ];
+      
+      const THEMES = {
+        Terminal: { '--phosphor': '#33ff99', '--amber': '#ffb347' },
+        Arcade:   { '--phosphor': '#7cff00', '--amber': '#ffd93d' },
+        NeonNoir: { '--phosphor': '#7afcff', '--amber': '#ff6fd8' }
+      };
+      
+      // State
+      let sfxEnabled = true;
+      let tabsVisited = new Set();
+      const root = document.documentElement;
+      
+      // Audio context (lazy init)
+      let audioCtx = null;
+      function getAudioContext() {
+        if (!audioCtx) {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          audioCtx = AudioCtx ? new AudioCtx() : null;
+        }
+        return audioCtx;
+      }
+      
+      // 90s Anime Mech Beat Sound System
+      // Inspired by Gundam, Evangelion, Macross soundtracks
+      const MechSFX = {
+        // Bass-heavy synth hit (like mech footsteps)
+        bassHit(freq = 60, duration = 0.15) {
+          const ctx = getAudioContext();
+          if (!ctx) return;
+          if (ctx.state === 'suspended') ctx.resume();
+          
+          const osc = ctx.createOscillator();
+          const osc2 = ctx.createOscillator();
+          const gain = ctx.createGain();
+          const filter = ctx.createBiquadFilter();
+          
+          // Two detuned oscillators for thickness
+          osc.type = 'sawtooth';
+          osc.frequency.value = freq;
+          osc2.type = 'square';
+          osc2.frequency.value = freq * 0.5;
+          osc2.detune.value = -10;
+          
+          // Low pass filter for that analog warmth
+          filter.type = 'lowpass';
+          filter.frequency.value = 800;
+          filter.Q.value = 2;
+          // Filter sweep
+          filter.frequency.setValueAtTime(800, ctx.currentTime);
+          filter.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + duration);
+          
+          // Punchy envelope
+          gain.gain.setValueAtTime(0.18, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+          
+          osc.connect(filter);
+          osc2.connect(filter);
+          filter.connect(gain);
+          gain.connect(ctx.destination);
+          
+          osc.start();
+          osc2.start();
+          osc.stop(ctx.currentTime + duration);
+          osc2.stop(ctx.currentTime + duration);
+        },
+        
+        // Synth stab (like UI confirmations in mech cockpits)
+        synthStab(freq = 440, duration = 0.08) {
+          const ctx = getAudioContext();
+          if (!ctx) return;
+          if (ctx.state === 'suspended') ctx.resume();
+          
+          const osc = ctx.createOscillator();
+          const osc2 = ctx.createOscillator();
+          const gain = ctx.createGain();
+          const filter = ctx.createBiquadFilter();
+          
+          osc.type = 'square';
+          osc.frequency.value = freq;
+          osc2.type = 'sawtooth';
+          osc2.frequency.value = freq * 1.01; // Slight detune
+          
+          filter.type = 'bandpass';
+          filter.frequency.value = freq * 2;
+          filter.Q.value = 1;
+          
+          gain.gain.setValueAtTime(0.12, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+          
+          osc.connect(filter);
+          osc2.connect(filter);
+          filter.connect(gain);
+          gain.connect(ctx.destination);
+          
+          osc.start();
+          osc2.start();
+          osc.stop(ctx.currentTime + duration);
+          osc2.stop(ctx.currentTime + duration);
+        },
+        
+        // Alarm/alert sound (descending synth sweep)
+        alert(startFreq = 800, endFreq = 200, duration = 0.25) {
+          const ctx = getAudioContext();
+          if (!ctx) return;
+          if (ctx.state === 'suspended') ctx.resume();
+          
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          const distortion = ctx.createWaveShaper();
+          
+          // Create distortion curve for grit
+          const curve = new Float32Array(256);
+          for (let i = 0; i < 256; i++) {
+            const x = (i / 128) - 1;
+            curve[i] = Math.tanh(x * 2);
+          }
+          distortion.curve = curve;
+          
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(startFreq, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(endFreq, ctx.currentTime + duration);
+          
+          gain.gain.setValueAtTime(0.1, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+          
+          osc.connect(distortion);
+          distortion.connect(gain);
+          gain.connect(ctx.destination);
+          
+          osc.start();
+          osc.stop(ctx.currentTime + duration);
+        },
+        
+        // Power up sound (rising sweep with harmonics)
+        powerUp(duration = 0.3) {
+          const ctx = getAudioContext();
+          if (!ctx) return;
+          if (ctx.state === 'suspended') ctx.resume();
+          
+          const osc = ctx.createOscillator();
+          const osc2 = ctx.createOscillator();
+          const gain = ctx.createGain();
+          const filter = ctx.createBiquadFilter();
+          
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(80, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + duration);
+          
+          osc2.type = 'square';
+          osc2.frequency.setValueAtTime(160, ctx.currentTime);
+          osc2.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + duration);
+          
+          filter.type = 'lowpass';
+          filter.frequency.setValueAtTime(200, ctx.currentTime);
+          filter.frequency.exponentialRampToValueAtTime(3000, ctx.currentTime + duration);
+          filter.Q.value = 4;
+          
+          gain.gain.setValueAtTime(0.15, ctx.currentTime);
+          gain.gain.setValueAtTime(0.15, ctx.currentTime + duration * 0.7);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+          
+          osc.connect(filter);
+          osc2.connect(filter);
+          filter.connect(gain);
+          gain.connect(ctx.destination);
+          
+          osc.start();
+          osc2.start();
+          osc.stop(ctx.currentTime + duration);
+          osc2.stop(ctx.currentTime + duration);
+        },
+        
+        // Weapon fire sound
+        weaponFire(duration = 0.12) {
+          const ctx = getAudioContext();
+          if (!ctx) return;
+          if (ctx.state === 'suspended') ctx.resume();
+          
+          // Noise generator for "pew" texture
+          const bufferSize = ctx.sampleRate * duration;
+          const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+          const data = buffer.getChannelData(0);
+          for (let i = 0; i < bufferSize; i++) {
+            data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.1));
+          }
+          
+          const noise = ctx.createBufferSource();
+          noise.buffer = buffer;
+          
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          const filter = ctx.createBiquadFilter();
+          
+          osc.type = 'square';
+          osc.frequency.setValueAtTime(1200, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + duration);
+          
+          filter.type = 'bandpass';
+          filter.frequency.value = 800;
+          filter.Q.value = 2;
+          
+          gain.gain.setValueAtTime(0.15, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+          
+          noise.connect(filter);
+          osc.connect(filter);
+          filter.connect(gain);
+          gain.connect(ctx.destination);
+          
+          noise.start();
+          osc.start();
+          osc.stop(ctx.currentTime + duration);
+        },
+        
+        // Explosion/impact sound
+        impact(duration = 0.35) {
+          const ctx = getAudioContext();
+          if (!ctx) return;
+          if (ctx.state === 'suspended') ctx.resume();
+          
+          // Deep bass thump
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(150, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(30, ctx.currentTime + duration);
+          
+          gain.gain.setValueAtTime(0.25, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+          
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          
+          osc.start();
+          osc.stop(ctx.currentTime + duration);
+          
+          // Noise burst on top
+          const bufferSize = ctx.sampleRate * 0.1;
+          const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+          const data = buffer.getChannelData(0);
+          for (let i = 0; i < bufferSize; i++) {
+            data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.15));
+          }
+          
+          const noise = ctx.createBufferSource();
+          noise.buffer = buffer;
+          const noiseGain = ctx.createGain();
+          const noiseFilter = ctx.createBiquadFilter();
+          
+          noiseFilter.type = 'lowpass';
+          noiseFilter.frequency.value = 500;
+          
+          noiseGain.gain.setValueAtTime(0.12, ctx.currentTime);
+          noiseGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+          
+          noise.connect(noiseFilter);
+          noiseFilter.connect(noiseGain);
+          noiseGain.connect(ctx.destination);
+          
+          noise.start();
+        },
+        
+        // Selection/tick sound
+        tick(freq = 880, duration = 0.04) {
+          const ctx = getAudioContext();
+          if (!ctx) return;
+          if (ctx.state === 'suspended') ctx.resume();
+          
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          
+          osc.type = 'triangle';
+          osc.frequency.value = freq;
+          
+          gain.gain.setValueAtTime(0.08, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+          
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          
+          osc.start();
+          osc.stop(ctx.currentTime + duration);
+        },
+        
+        // Success fanfare (two-tone up)
+        success() {
+          this.synthStab(523, 0.08);
+          setTimeout(() => this.synthStab(659, 0.12), 80);
+        },
+        
+        // Error/warning tone
+        error() {
+          this.alert(400, 200, 0.15);
+        }
+      };
+      
+      // =========================================================================
+      // EPIC ANIME MECHA BACKGROUND MUSIC SYSTEM
+      // Procedurally generated synth music inspired by Gundam, Evangelion, Macross
+      // =========================================================================
+      const MechaBGM = {
+        ctx: null,
+        masterGain: null,
+        isPlaying: false,
+        currentTrack: null,
+        volume: 0.12, // Default volume (subtle background)
+        
+        init() {
+          if (this.ctx) return;
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (!AudioCtx) return;
+          this.ctx = new AudioCtx();
+          this.masterGain = this.ctx.createGain();
+          this.masterGain.gain.value = this.volume;
+          this.masterGain.connect(this.ctx.destination);
+        },
+        
+        setVolume(v) {
+          this.volume = Math.max(0, Math.min(1, v));
+          if (this.masterGain) {
+            this.masterGain.gain.setTargetAtTime(this.volume, this.ctx.currentTime, 0.1);
+          }
+        },
+        
+        // Epic synth pad drone
+        createPad(freq, duration) {
+          const osc1 = this.ctx.createOscillator();
+          const osc2 = this.ctx.createOscillator();
+          const osc3 = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          const filter = this.ctx.createBiquadFilter();
+          
+          osc1.type = 'sawtooth';
+          osc1.frequency.value = freq;
+          osc2.type = 'sawtooth';
+          osc2.frequency.value = freq * 1.005;
+          osc3.type = 'square';
+          osc3.frequency.value = freq * 0.5;
+          
+          filter.type = 'lowpass';
+          filter.frequency.value = freq * 2;
+          filter.Q.value = 1;
+          
+          const now = this.ctx.currentTime;
+          gain.gain.setValueAtTime(0, now);
+          gain.gain.linearRampToValueAtTime(0.06, now + 0.5);
+          gain.gain.setValueAtTime(0.06, now + duration - 0.5);
+          gain.gain.linearRampToValueAtTime(0, now + duration);
+          
+          osc1.connect(filter);
+          osc2.connect(filter);
+          osc3.connect(filter);
+          filter.connect(gain);
+          gain.connect(this.masterGain);
+          
+          osc1.start(now);
+          osc2.start(now);
+          osc3.start(now);
+          osc1.stop(now + duration);
+          osc2.stop(now + duration);
+          osc3.stop(now + duration);
+        },
+        
+        // Rhythmic bass pulse
+        createBass(freq, pattern, loopDuration) {
+          const now = this.ctx.currentTime;
+          const eighthNote = loopDuration / 8;
+          
+          pattern.forEach((hit, i) => {
+            if (!hit) return;
+            const startTime = now + (i * eighthNote);
+            
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(freq, startTime);
+            osc.frequency.exponentialRampToValueAtTime(freq * 0.8, startTime + 0.15);
+            
+            gain.gain.setValueAtTime(0.1, startTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.2);
+            
+            osc.connect(gain);
+            gain.connect(this.masterGain);
+            
+            osc.start(startTime);
+            osc.stop(startTime + 0.25);
+          });
+        },
+        
+        // Epic arpeggio sequence
+        createArp(baseFreq, loopDuration) {
+          const now = this.ctx.currentTime;
+          const sixteenthNote = loopDuration / 16;
+          const intervals = [1, 1.2, 1.5, 2, 2.4, 3, 4, 3, 2.4, 2, 1.5, 1.2, 1, 1.5, 2, 1.5];
+          
+          for (let i = 0; i < 16; i++) {
+            if (Math.random() > 0.65) continue;
+            
+            const startTime = now + (i * sixteenthNote);
+            const freq = baseFreq * intervals[i % intervals.length];
+            
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            const filter = this.ctx.createBiquadFilter();
+            
+            osc.type = 'square';
+            osc.frequency.value = freq;
+            
+            filter.type = 'bandpass';
+            filter.frequency.value = freq * 2;
+            filter.Q.value = 2;
+            
+            gain.gain.setValueAtTime(0.03, startTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, startTime + sixteenthNote * 0.8);
+            
+            osc.connect(filter);
+            filter.connect(gain);
+            gain.connect(this.masterGain);
+            
+            osc.start(startTime);
+            osc.stop(startTime + sixteenthNote);
+          }
+        },
+        
+        // Main loop
+        playLoop() {
+          if (!this.ctx) this.init();
+          if (!this.ctx) return;
+          
+          if (this.ctx.state === 'suspended') {
+            this.ctx.resume();
+          }
+          
+          const bpm = 110;
+          const barDuration = (60 / bpm) * 4;
+          const loopDuration = barDuration * 2;
+          
+          const chords = [
+            { root: 110 },   // A minor
+            { root: 146.83 }, // D
+            { root: 130.81 }, // C
+            { root: 98 },     // G
+          ];
+          
+          const playSegment = (segmentIndex) => {
+            if (!this.isPlaying) return;
+            
+            const chord = chords[segmentIndex % chords.length];
+            
+            this.createPad(chord.root, loopDuration);
+            this.createPad(chord.root * 1.5, loopDuration);
+            this.createBass(chord.root * 0.5, [1,0,1,0,0,1,0,0], loopDuration);
+            this.createArp(chord.root * 2, loopDuration);
+            
+            setTimeout(() => playSegment(segmentIndex + 1), loopDuration * 1000);
+          };
+          
+          this.isPlaying = true;
+          playSegment(0);
+          
+          if (typeof logTerminal === 'function') {
+            logTerminal('BGM SYSTEM · MECHA SORTIE · playing');
+          }
+        },
+        
+        stop() {
+          this.isPlaying = false;
+          if (this.masterGain) {
+            this.masterGain.gain.setTargetAtTime(0, this.ctx.currentTime, 0.3);
+          }
+          if (typeof logTerminal === 'function') {
+            logTerminal('BGM SYSTEM · standby');
+          }
+        },
+        
+        toggle() {
+          if (this.isPlaying) {
+            this.stop();
+          } else {
+            if (this.masterGain) {
+              this.masterGain.gain.setTargetAtTime(this.volume, this.ctx.currentTime, 0.1);
+            }
+            this.playLoop();
+          }
+          return this.isPlaying;
+        }
+      };
+      
+      window.MechaBGM = MechaBGM;
+      
+      // Silent beep by default - no more annoying sounds!
+      window.beep = function(freq = 520, duration = 0.08) {
+        // Silent - beeping disabled per user request
+        // Epic mecha music only!
+      };
+      
+      // Expose MechSFX globally for direct use
+      window.MechSFX = MechSFX;
+      
+      // Toast notifications
+      window.showToast = function(message, level = 'info') {
+        const container = document.getElementById('toast-container');
+        if (!container) return;
+        const div = document.createElement('div');
+        div.className = 'toast' + (level !== 'info' ? ' ' + level : '');
+        div.textContent = message;
+        container.appendChild(div);
+        requestAnimationFrame(() => div.classList.add('show'));
+        setTimeout(() => {
+          div.classList.remove('show');
+          setTimeout(() => div.remove(), 300);
+        }, 2300);
+      };
+      
+      // Terminal log
+      window.logTerminal = function(msg) {
+        const el = document.getElementById('terminal-log');
+        if (!el) return;
+        const line = document.createElement('div');
+        line.className = 'terminal-log-line';
+        const now = new Date();
+        const hh = String(now.getHours()).padStart(2,'0');
+        const mm = String(now.getMinutes()).padStart(2,'0');
+        const ss = String(now.getSeconds()).padStart(2,'0');
+        line.innerHTML = '<span class="time">['+hh+':'+mm+':'+ss+']</span> ' + msg;
+        el.appendChild(line);
+        el.scrollTop = el.scrollHeight;
+        // Keep max 50 lines
+        while (el.children.length > 50) el.removeChild(el.firstChild);
+      };
+      
+      // Periodic uplink messages
+      const uplinkMessages = [
+        'uplink stable · packet OK',
+        'telemetry sync · nominal',
+        'signal lock · holding',
+        'data stream · active',
+        'quantum link · stable'
+      ];
+      setInterval(() => {
+        const msg = uplinkMessages[Math.floor(Math.random() * uplinkMessages.length)];
+        logTerminal(msg);
+      }, 7000);
+      
+      // Missions HUD
+      function renderMissions() {
+        const hud = document.getElementById('arcade-hud');
+        const list = document.getElementById('mission-list');
+        if (!hud || !list) return;
+        hud.classList.remove('hidden');
+        list.innerHTML = ARCADE_MISSIONS.map(m =>
+          '<li class="arcade-mission'+(m.done?' completed':'')+'">'+m.text+'</li>'
+        ).join('');
+      }
+      
+      window.completeMission = function(id) {
+        const mission = ARCADE_MISSIONS.find(m => m.id === id);
+        if (!mission || mission.done) return;
+        mission.done = true;
+        renderMissions();
+        showToast('Mission complete: ' + mission.text);
+        logTerminal('mission complete · ' + mission.id);
+        beep(800, 0.12);
+        
+        // Check if all missions complete
+        if (ARCADE_MISSIONS.every(m => m.done)) {
+          setTimeout(() => {
+            showToast('🏆 ALL MISSIONS COMPLETE!', 'alert');
+            beep(1000, 0.15);
+          }, 500);
+        }
+      };
+      
+      // Theme switching
+      function initThemeSelect() {
+        const select = document.getElementById('theme-select');
+        if (!select) return;
+        select.addEventListener('change', () => {
+          const theme = THEMES[select.value];
+          if (!theme) return;
+          Object.entries(theme).forEach(([k,v]) => root.style.setProperty(k, v));
+          logTerminal('theme applied · ' + select.value);
+          beep(600, 0.07);
+        });
+      }
+      
+      // SFX toggle
+      function initSfxToggle() {
+        const toggle = document.getElementById('sfx-toggle');
+        if (!toggle) return;
+        sfxEnabled = toggle.checked;
+        toggle.addEventListener('change', () => {
+          sfxEnabled = toggle.checked;
+          logTerminal('sfx ' + (sfxEnabled ? 'enabled' : 'muted'));
+        });
+      }
+      
+      // BGM toggle (Epic Anime Mecha Music)
+      function initBgmToggle() {
+        const toggle = document.getElementById('bgm-toggle');
+        if (!toggle) return;
+        toggle.addEventListener('change', () => {
+          if (toggle.checked) {
+            MechaBGM.playLoop();
+            showToast('♫ MECHA SORTIE - BGM Active', 'info');
+          } else {
+            MechaBGM.stop();
+            showToast('BGM Stopped', 'info');
+          }
+        });
+      }
+      
+      // Tab visit tracking
+      function initTabTracking() {
+        const tabs = document.querySelectorAll('.nav-tab');
+        tabs.forEach(btn => {
+          btn.addEventListener('click', () => {
+            const id = btn.getAttribute('data-tab') || btn.textContent.trim();
+            tabsVisited.add(id);
+            if (tabsVisited.size >= 3) completeMission('tabs');
+            beep(500, 0.05);
+          });
+        });
+      }
+      
+      // Wrap runPnLSimulation for mission tracking
+      const originalSimulation = window.runPnLSimulation;
+      if (typeof originalSimulation === 'function') {
+        window.runPnLSimulation = function() {
+          completeMission('simulation');
+          logTerminal('P&L simulation executed');
+          beep(520, 0.08);
+          return originalSimulation.apply(this, arguments);
+        };
+      }
+      
+      // Wrap runAnalysis if it exists
+      const originalRunAnalysis = window.runAnalysis;
+      if (typeof originalRunAnalysis === 'function') {
+        window.runAnalysis = function() {
+          completeMission('analysis');
+          logTerminal('scenario analysis · control panel executed');
+          showToast('Analysis fired');
+          beep(520, 0.08);
+          return originalRunAnalysis.apply(this, arguments);
+        };
+      }
+      
+      // Konami code -> activate pixel beam easter egg
+      const KONAMI = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
+      let konamiIndex = 0;
+      
+      window.addEventListener('keydown', (e) => {
+        const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+        const target = KONAMI[konamiIndex].toLowerCase();
+        if (key === target) {
+          konamiIndex++;
+          if (konamiIndex === KONAMI.length) {
+            konamiIndex = 0;
+            // Activate the pixel beam
+            const beam = document.getElementById('pixel-beam');
+            const ground = document.getElementById('pixel-ground');
+            if (beam) beam.classList.add('active');
+            if (ground) ground.classList.add('active');
+            completeMission('secret');
+            showToast('👾 INVADER DEFENSE GRID UNLOCKED', 'alert');
+            logTerminal('konami code accepted · easter egg revealed');
+            beep(900, 0.15);
+          }
+        } else {
+          konamiIndex = 0;
+        }
+      });
+      
+      // Initialize on DOM ready
+      function initArcade() {
+        initThemeSelect();
+        initSfxToggle();
+        initBgmToggle();
+        initTabTracking();
+        renderMissions();
+        initAboutOverlay();
+        initPipboyDossier();
+        logTerminal('arcade module initialized');
+        logTerminal('system ready · awaiting input');
+      }
+      
+      // =========================================================================
+      // PIP-BOY TICKER DOSSIER CONTROLLER
+      // =========================================================================
+      function initPipboyDossier() {
+        const overlay = document.getElementById('pipboy-overlay');
+        const closeBtn = document.getElementById('pipboy-close-btn');
+        const dials = document.querySelectorAll('.pipboy-dial');
+        
+        if (!overlay || !closeBtn) return;
+        
+        let currentDossierTicker = null;
+        
+        // Open dossier for a specific ticker
+        window.openTickerDossier = function(ticker) {
+          const profile = TICKER_PROFILES[ticker];
+          if (!profile) {
+            logTerminal('ERROR: No dossier found for ' + ticker);
+            return;
+          }
+          
+          currentDossierTicker = ticker;
+          const color = tickerColors[ticker] || 'var(--phosphor)';
+          
+          // Update header
+          document.getElementById('pipboy-codename').textContent = 'CODENAME: ' + profile.codename;
+          const tickerNameEl = document.getElementById('pipboy-ticker-name');
+          tickerNameEl.textContent = ticker + ' — ' + profile.name;
+          tickerNameEl.style.color = color;
+          document.getElementById('pipboy-sector').textContent = profile.sector;
+          
+          // Update threat level
+          const threatEl = document.getElementById('pipboy-threat');
+          const threatClass = profile.threat_level.toLowerCase().replace(' ', '');
+          threatEl.textContent = profile.threat_level;
+          threatEl.className = 'pipboy-threat-level ' + threatClass;
+          
+          // Update overview panel
+          document.getElementById('pipboy-summary').textContent = profile.summary;
+          document.getElementById('pipboy-lore').textContent = '"' + profile.lore + '"';
+          
+          // Update thesis panel
+          document.getElementById('pipboy-thesis').textContent = profile.thesis;
+          
+          // Update catalysts panel
+          const catalystsEl = document.getElementById('pipboy-catalysts-list');
+          catalystsEl.innerHTML = profile.catalysts.map(cat => `
+            <div class="pipboy-catalyst">
+              <div class="pipboy-catalyst-date">${cat.date}</div>
+              <div class="pipboy-catalyst-event">${cat.event}</div>
+              <div class="pipboy-catalyst-impact ${cat.impact.toLowerCase()}">${cat.impact}</div>
+            </div>
+          `).join('');
+          
+          // Update risks panel
+          const risksEl = document.getElementById('pipboy-risks-list');
+          risksEl.innerHTML = profile.risks.map(risk => `
+            <div class="pipboy-risk">${risk}</div>
+          `).join('');
+          
+          // Update vitals panel
+          const vitalsEl = document.getElementById('pipboy-vitals-grid');
+          vitalsEl.innerHTML = Object.entries(profile.vitals).map(([key, val]) => `
+            <div class="pipboy-vital">
+              <div class="pipboy-vital-value">${val}</div>
+              <div class="pipboy-vital-label">${key.replace(/_/g, ' ')}</div>
+            </div>
+          `).join('');
+          
+          // Update stats bar with live data if available
+          updatePipboyStats(ticker);
+          
+          // Reset to overview panel
+          dials.forEach(d => d.classList.remove('active'));
+          dials[0].classList.add('active');
+          document.querySelectorAll('.pipboy-panel').forEach(p => p.classList.remove('active'));
+          document.getElementById('panel-overview').classList.add('active');
+          
+          // Show overlay
+          overlay.classList.remove('hidden');
+          requestAnimationFrame(() => {
+            overlay.classList.add('visible');
+          });
+          
+          logTerminal('DOSSIER ACCESSED: ' + ticker + ' [' + profile.codename + ']');
+          beep(523, 0.06);
+          setTimeout(() => beep(659, 0.06), 80);
+        };
+        
+        // Update live stats in the stats bar
+        function updatePipboyStats(ticker) {
+          const statsBar = document.getElementById('pipboy-stats-bar');
+          const data = tickerData[ticker];
+          
+          if (!data) {
+            statsBar.innerHTML = `
+              <div class="pipboy-stat">
+                <div class="pipboy-stat-value">--</div>
+                <div class="pipboy-stat-label">Price</div>
+              </div>
+              <div class="pipboy-stat">
+                <div class="pipboy-stat-value">--</div>
+                <div class="pipboy-stat-label">Change</div>
+              </div>
+              <div class="pipboy-stat">
+                <div class="pipboy-stat-value">--</div>
+                <div class="pipboy-stat-label">Volume</div>
+              </div>
+              <div class="pipboy-stat">
+                <div class="pipboy-stat-value">--</div>
+                <div class="pipboy-stat-label">Volatility</div>
+              </div>
+            `;
+            return;
+          }
+          
+          const series = data.daily || data.intraday || [];
+          const last = series[series.length - 1] || {};
+          const prev = series[series.length - 2] || {};
+          
+          const price = last.c || 0;
+          const change = prev.c ? ((last.c - prev.c) / prev.c * 100) : 0;
+          const volume = last.v || 0;
+          const vol = getVolScoreForTicker(ticker) || 0;
+          
+          const changeClass = change >= 0 ? 'positive' : 'negative';
+          const changeSign = change >= 0 ? '+' : '';
+          
+          statsBar.innerHTML = `
+            <div class="pipboy-stat">
+              <div class="pipboy-stat-value">$${price.toFixed(2)}</div>
+              <div class="pipboy-stat-label">Price</div>
+            </div>
+            <div class="pipboy-stat">
+              <div class="pipboy-stat-value ${changeClass}">${changeSign}${change.toFixed(2)}%</div>
+              <div class="pipboy-stat-label">Change</div>
+            </div>
+            <div class="pipboy-stat">
+              <div class="pipboy-stat-value">${formatVolume(volume)}</div>
+              <div class="pipboy-stat-label">Volume</div>
+            </div>
+            <div class="pipboy-stat">
+              <div class="pipboy-stat-value">${vol.toFixed(1)}σ</div>
+              <div class="pipboy-stat-label">Volatility</div>
+            </div>
+          `;
+        }
+        
+        function formatVolume(v) {
+          if (v >= 1e9) return (v / 1e9).toFixed(1) + 'B';
+          if (v >= 1e6) return (v / 1e6).toFixed(1) + 'M';
+          if (v >= 1e3) return (v / 1e3).toFixed(1) + 'K';
+          return v.toString();
+        }
+        
+        // Close dossier
+        function closeDossier() {
+          overlay.classList.remove('visible');
+          setTimeout(() => overlay.classList.add('hidden'), 200);
+          beep(330, 0.05);
+          logTerminal('dossier closed');
+        }
+        
+        closeBtn.addEventListener('click', closeDossier);
+        
+        overlay.addEventListener('click', (e) => {
+          if (e.target === overlay || e.target.classList.contains('pipboy-backdrop')) {
+            closeDossier();
+          }
+        });
+        
+        window.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' && overlay.classList.contains('visible')) {
+            closeDossier();
+          }
+        });
+        
+        // Dial navigation
+        dials.forEach(dial => {
+          dial.addEventListener('click', () => {
+            const panel = dial.dataset.panel;
+            
+            dials.forEach(d => d.classList.remove('active'));
+            dial.classList.add('active');
+            
+            document.querySelectorAll('.pipboy-panel').forEach(p => p.classList.remove('active'));
+            document.getElementById('panel-' + panel).classList.add('active');
+            
+            beep(440, 0.04);
+          });
+        });
+        
+        // Keyboard navigation with left/right arrows
+        window.addEventListener('keydown', (e) => {
+          if (!overlay.classList.contains('visible')) return;
+          
+          const dialArr = Array.from(dials);
+          const activeIdx = dialArr.findIndex(d => d.classList.contains('active'));
+          
+          if (e.key === 'ArrowRight' && activeIdx < dialArr.length - 1) {
+            dialArr[activeIdx + 1].click();
+          } else if (e.key === 'ArrowLeft' && activeIdx > 0) {
+            dialArr[activeIdx - 1].click();
+          }
+        });
+        
+        // Wire up watchlist items to open dossier on double-click or info button
+        document.querySelectorAll('.watchlist-item').forEach(item => {
+          const tickerEl = item.querySelector('.watchlist-ticker');
+          if (!tickerEl) return;
+          
+          const ticker = tickerEl.textContent.trim();
+          
+          // Add info button
+          const infoBtn = document.createElement('button');
+          infoBtn.className = 'watchlist-info-btn';
+          infoBtn.innerHTML = '◉';
+          infoBtn.title = 'Open Dossier';
+          infoBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openTickerDossier(ticker);
+          });
+          
+          // Insert before the ticker name or at the start
+          const wrapper = item.querySelector('.watchlist-info') || item;
+          wrapper.style.position = 'relative';
+          item.insertBefore(infoBtn, item.firstChild);
+        });
+        
+        logTerminal('pip-boy dossier system initialized');
+      }
+      
+      // About Overlay Controller
+      function initAboutOverlay() {
+        const overlay = document.getElementById('about-overlay');
+        const trigger = document.getElementById('about-trigger-btn');
+        const closeBtn = document.getElementById('about-close-btn');
+
+        if (!overlay || !trigger || !closeBtn) return;
+
+        function openAbout() {
+          overlay.classList.remove('hidden');
+          requestAnimationFrame(() => {
+            overlay.classList.add('visible');
+          });
+          logTerminal('about overlay opened · simulation dossier viewed');
+          beep(440, 0.08);
+        }
+
+        function closeAbout() {
+          overlay.classList.remove('visible');
+          setTimeout(() => overlay.classList.add('hidden'), 260);
+          beep(330, 0.06);
+        }
+
+        trigger.addEventListener('click', openAbout);
+        closeBtn.addEventListener('click', closeAbout);
+
+        overlay.addEventListener('click', (e) => {
+          if (e.target === overlay || e.target.classList.contains('about-backdrop')) {
+            closeAbout();
+          }
+        });
+
+        window.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' && overlay.classList.contains('visible')) {
+            closeAbout();
+          }
+        });
+      }
+      
+      // =========================================================================
+      // INVADER ARMY INITIALIZATION
+      // =========================================================================
+      function initInvaderArmy() {
+        const army = document.getElementById('invader-army');
+        if (!army) return;
+
+        const spriteSvg = `
+          <svg class="invader-sprite-small" viewBox="0 0 11 8">
+            <rect x="3" y="0" width="1" height="1" />
+            <rect x="7" y="0" width="1" height="1" />
+            <rect x="2" y="1" width="1" height="1" />
+            <rect x="3" y="1" width="1" height="1" />
+            <rect x="4" y="1" width="1" height="1" />
+            <rect x="6" y="1" width="1" height="1" />
+            <rect x="7" y="1" width="1" height="1" />
+            <rect x="8" y="1" width="1" height="1" />
+            <rect x="1" y="2" width="1" height="1" />
+            <rect x="2" y="2" width="1" height="1" />
+            <rect x="3" y="2" width="1" height="1" />
+            <rect x="4" y="2" width="1" height="1" />
+            <rect x="5" y="2" width="1" height="1" />
+            <rect x="6" y="2" width="1" height="1" />
+            <rect x="7" y="2" width="1" height="1" />
+            <rect x="8" y="2" width="1" height="1" />
+            <rect x="9" y="2" width="1" height="1" />
+            <rect x="0" y="3" width="1" height="1" />
+            <rect x="2" y="3" width="1" height="1" />
+            <rect x="3" y="3" width="1" height="1" />
+            <rect x="4" y="3" width="1" height="1" />
+            <rect x="5" y="3" width="1" height="1" />
+            <rect x="6" y="3" width="1" height="1" />
+            <rect x="7" y="3" width="1" height="1" />
+            <rect x="8" y="3" width="1" height="1" />
+            <rect x="10" y="3" width="1" height="1" />
+            <rect x="0" y="4" width="1" height="1" />
+            <rect x="3" y="4" width="1" height="1" />
+            <rect x="7" y="4" width="1" height="1" />
+            <rect x="10" y="4" width="1" height="1" />
+            <rect x="1" y="5" width="1" height="1" />
+            <rect x="2" y="5" width="1" height="1" />
+            <rect x="3" y="5" width="1" height="1" />
+            <rect x="7" y="5" width="1" height="1" />
+            <rect x="8" y="5" width="1" height="1" />
+            <rect x="9" y="5" width="1" height="1" />
+            <rect x="4" y="6" width="1" height="1" />
+            <rect x="5" y="6" width="1" height="1" />
+            <rect x="6" y="6" width="1" height="1" />
+            <rect x="2" y="7" width="1" height="1" />
+            <rect x="3" y="7" width="1" height="1" />
+            <rect x="7" y="7" width="1" height="1" />
+            <rect x="8" y="7" width="1" height="1" />
+          </svg>
+        `;
+
+        const rows = 5;
+        const invadersPerRow = 10;
+        const topOffset = 80;
+        const rowSpacing = 45;
+
+        for (let r = 0; r < rows; r++) {
+          const row = document.createElement('div');
+          row.className = 'invader-row';
+          row.style.top = (topOffset + r * rowSpacing) + 'px';
+
+          const marchDuration = 8 + r * 1.2;
+          const marchDelay = r * 0.4;
+          row.style.animation = `invader-army-march ${marchDuration}s linear ${marchDelay}s infinite alternate`;
+
+          row.innerHTML = new Array(invadersPerRow).fill(spriteSvg).join('');
+          army.appendChild(row);
+        }
+      }
+
+      // =========================================================================
+      // COLOR PROFILE CONTROL (Pip-Boy Style)
+      // =========================================================================
+      function initColorProfileControl() {
+        const slider = document.getElementById('color-hue-slider');
+        const preview = document.getElementById('color-hue-preview');
+        if (!slider || !preview) return;
+
+        const root = document.documentElement;
+
+        function setHue(h) {
+          root.style.setProperty('--accent-hue', h);
+          preview.style.background = `hsl(${h},100%,60%)`;
+          if (typeof logTerminal === 'function') {
+            logTerminal(`color profile set · hue ${h}`);
+          }
+        }
+
+        slider.addEventListener('input', (e) => {
+          setHue(e.target.value);
+        });
+
+        // Initialize
+        setHue(slider.value);
+      }
+
+      // =========================================================================
+      // HOLOGRAPHIC SHIP PANEL
+      // =========================================================================
+      const HOLO_SHIPS = {
+        RKLB: {
+          label: "RKLB · ORBITAL BUS",
+          path: `
+            <polyline points="10,30 30,10 70,10 90,30 70,50 30,50 10,30" class="holo-line"/>
+            <polyline points="30,10 40,5 60,5 70,10" class="holo-line"/>
+            <line x1="25" y1="30" x2="75" y2="30" class="holo-line"/>
+            <line x1="40" y1="50" x2="40" y2="55" class="holo-line"/>
+            <line x1="60" y1="50" x2="60" y2="55" class="holo-line"/>
+          `
+        },
+        LUNR: {
+          label: "LUNR · LUNAR SCOUT",
+          path: `
+            <polyline points="10,35 25,20 40,25 60,25 75,20 90,35 60,45 40,45 10,35" class="holo-line"/>
+            <circle cx="50" cy="23" r="6" class="holo-line"/>
+            <line x1="40" y1="45" x2="35" y2="55" class="holo-line"/>
+            <line x1="60" y1="45" x2="65" y2="55" class="holo-line"/>
+          `
+        },
+        JOBY: {
+          label: "JOBY · EVTOL FRAME",
+          path: `
+            <polyline points="15,35 30,25 70,25 85,35 70,45 30,45 15,35" class="holo-line"/>
+            <circle cx="30" cy="20" r="7" class="holo-line"/>
+            <circle cx="70" cy="20" r="7" class="holo-line"/>
+            <line x1="30" y1="27" x2="30" y2="35" class="holo-line"/>
+            <line x1="70" y1="27" x2="70" y2="35" class="holo-line"/>
+          `
+        },
+        ACHR: {
+          label: "ACHR · ARCHER VTOL",
+          path: `
+            <polyline points="20,30 35,15 65,15 80,30 65,45 35,45 20,30" class="holo-line"/>
+            <circle cx="35" cy="18" r="5" class="holo-line"/>
+            <circle cx="65" cy="18" r="5" class="holo-line"/>
+            <line x1="50" y1="15" x2="50" y2="45" class="holo-line"/>
+          `
+        },
+        ASTS: {
+          label: "ASTS · BLUEBIRD SAT",
+          path: `
+            <rect x="35" y="20" width="30" height="20" rx="2" class="holo-line"/>
+            <line x1="20" y1="30" x2="35" y2="30" class="holo-line"/>
+            <line x1="65" y1="30" x2="80" y2="30" class="holo-line"/>
+            <rect x="10" y="22" width="12" height="16" rx="1" class="holo-line"/>
+            <rect x="78" y="22" width="12" height="16" rx="1" class="holo-line"/>
+          `
+        },
+        BKSY: {
+          label: "BKSY · BLACKSKY SAT",
+          path: `
+            <circle cx="50" cy="30" r="12" class="holo-line"/>
+            <line x1="15" y1="30" x2="38" y2="30" class="holo-line"/>
+            <line x1="62" y1="30" x2="85" y2="30" class="holo-line"/>
+            <rect x="8" y="24" width="10" height="12" rx="1" class="holo-line"/>
+            <rect x="82" y="24" width="10" height="12" rx="1" class="holo-line"/>
+          `
+        },
+        GME: {
+          label: "GME · POWER CORE",
+          path: `
+            <polygon points="50,10 70,25 70,40 50,55 30,40 30,25" class="holo-line"/>
+            <line x1="50" y1="10" x2="50" y2="55" class="holo-line"/>
+            <line x1="30" y1="25" x2="70" y2="25" class="holo-line"/>
+            <line x1="30" y1="40" x2="70" y2="40" class="holo-line"/>
+          `
+        },
+        ATI: {
+          label: "ATI · FORGE MATRIX",
+          path: `
+            <rect x="20" y="15" width="60" height="30" rx="3" class="holo-line"/>
+            <line x1="20" y1="25" x2="80" y2="25" class="holo-line"/>
+            <line x1="20" y1="35" x2="80" y2="35" class="holo-line"/>
+            <circle cx="35" cy="30" r="4" class="holo-line"/>
+            <circle cx="65" cy="30" r="4" class="holo-line"/>
+            <line x1="50" y1="45" x2="50" y2="55" class="holo-line"/>
+          `
+        },
+        CACI: {
+          label: "CACI · INTEL NODE",
+          path: `
+            <polygon points="50,8 80,20 80,40 50,52 20,40 20,20" class="holo-line"/>
+            <circle cx="50" cy="30" r="8" class="holo-line"/>
+            <line x1="50" y1="22" x2="50" y2="8" class="holo-line"/>
+            <line x1="58" y1="30" x2="80" y2="30" class="holo-line"/>
+            <line x1="42" y1="30" x2="20" y2="30" class="holo-line"/>
+          `
+        },
+        EVEX: {
+          label: "EVEX · DRONE SWARM",
+          path: `
+            <circle cx="50" cy="30" r="6" class="holo-line"/>
+            <circle cx="30" cy="20" r="4" class="holo-line"/>
+            <circle cx="70" cy="20" r="4" class="holo-line"/>
+            <circle cx="30" cy="40" r="4" class="holo-line"/>
+            <circle cx="70" cy="40" r="4" class="holo-line"/>
+            <line x1="36" y1="24" x2="44" y2="28" class="holo-line"/>
+            <line x1="64" y1="24" x2="56" y2="28" class="holo-line"/>
+            <line x1="36" y1="36" x2="44" y2="32" class="holo-line"/>
+            <line x1="64" y1="36" x2="56" y2="32" class="holo-line"/>
+          `
+        },
+        HON: {
+          label: "HON · AEGIS CRUISER",
+          path: `
+            <polyline points="15,30 25,15 75,15 85,30 75,45 25,45 15,30" class="holo-line"/>
+            <rect x="35" y="20" width="30" height="20" rx="2" class="holo-line"/>
+            <line x1="15" y1="30" x2="35" y2="30" class="holo-line"/>
+            <line x1="65" y1="30" x2="85" y2="30" class="holo-line"/>
+            <circle cx="50" cy="30" r="5" class="holo-line"/>
+          `
+        },
+        IRDM: {
+          label: "IRDM · COMM ARRAY",
+          path: `
+            <circle cx="50" cy="30" r="15" class="holo-line"/>
+            <circle cx="50" cy="30" r="8" class="holo-line"/>
+            <circle cx="50" cy="30" r="2" class="holo-line"/>
+            <line x1="50" y1="10" x2="50" y2="5" class="holo-line"/>
+            <line x1="35" y1="20" x2="28" y2="13" class="holo-line"/>
+            <line x1="65" y1="20" x2="72" y2="13" class="holo-line"/>
+          `
+        },
+        KTOS: {
+          label: "KTOS · STRIKE DRONE",
+          path: `
+            <polyline points="10,30 40,15 50,20 60,15 90,30 60,45 50,40 40,45 10,30" class="holo-line"/>
+            <circle cx="50" cy="30" r="5" class="holo-line"/>
+            <line x1="50" y1="25" x2="50" y2="15" class="holo-line"/>
+            <line x1="10" y1="30" x2="25" y2="30" class="holo-line"/>
+            <line x1="75" y1="30" x2="90" y2="30" class="holo-line"/>
+          `
+        },
+        LOAR: {
+          label: "LOAR · CARGO HAULER",
+          path: `
+            <rect x="20" y="18" width="60" height="24" rx="4" class="holo-line"/>
+            <line x1="35" y1="18" x2="35" y2="42" class="holo-line"/>
+            <line x1="50" y1="18" x2="50" y2="42" class="holo-line"/>
+            <line x1="65" y1="18" x2="65" y2="42" class="holo-line"/>
+            <circle cx="30" cy="50" r="4" class="holo-line"/>
+            <circle cx="70" cy="50" r="4" class="holo-line"/>
+          `
+        },
+        MP: {
+          label: "MP · RARE ELEMENT",
+          path: `
+            <polygon points="50,5 65,15 65,35 50,45 35,35 35,15" class="holo-line"/>
+            <polygon points="50,15 58,20 58,30 50,35 42,30 42,20" class="holo-line"/>
+            <line x1="35" y1="25" x2="20" y2="25" class="holo-line"/>
+            <line x1="65" y1="25" x2="80" y2="25" class="holo-line"/>
+            <line x1="50" y1="45" x2="50" y2="55" class="holo-line"/>
+          `
+        },
+        RDW: {
+          label: "RDW · RECON SAT",
+          path: `
+            <ellipse cx="50" cy="30" rx="20" ry="12" class="holo-line"/>
+            <line x1="30" y1="30" x2="15" y2="20" class="holo-line"/>
+            <line x1="70" y1="30" x2="85" y2="20" class="holo-line"/>
+            <rect x="12" y="15" width="8" height="12" rx="1" class="holo-line"/>
+            <rect x="80" y="15" width="8" height="12" rx="1" class="holo-line"/>
+            <circle cx="50" cy="30" r="4" class="holo-line"/>
+          `
+        },
+        PL: {
+          label: "PL · PLANET LABS",
+          path: `
+            <rect x="30" y="20" width="40" height="20" rx="3" class="holo-line"/>
+            <line x1="25" y1="25" x2="10" y2="18" class="holo-line"/>
+            <line x1="25" y1="35" x2="10" y2="42" class="holo-line"/>
+            <line x1="75" y1="25" x2="90" y2="18" class="holo-line"/>
+            <line x1="75" y1="35" x2="90" y2="42" class="holo-line"/>
+            <circle cx="50" cy="30" r="6" class="holo-line"/>
+          `
+        }
+      };
+
+      function updateHoloForTicker(ticker) {
+        const svg = document.getElementById('holo-ship-svg');
+        const labelEl = document.getElementById('holo-ticker-label');
+        if (!svg || !labelEl) return;
+
+        const ship = HOLO_SHIPS[ticker] || HOLO_SHIPS['RKLB'];
+        labelEl.textContent = ship.label;
+        svg.innerHTML = ship.path;
+
+        svg.style.opacity = '0.6';
+        requestAnimationFrame(() => {
+          svg.style.transition = 'opacity 0.3s ease';
+          svg.style.opacity = '1';
+        });
+      }
+
+      // Hook into ticker selection to update holo ship
+      const originalSelectTicker = window.selectTicker;
+      if (typeof originalSelectTicker === 'function') {
+        window.selectTicker = function(ticker) {
+          updateHoloForTicker(ticker);
+          return originalSelectTicker.apply(this, arguments);
+        };
+      }
+
+      // =========================================================================
+      // TUBE OVERLOAD ON RUN ANALYSIS
+      // =========================================================================
+      function initTubeOverload() {
+        const originalRunAnalysis = window.runAnalysis;
+        if (typeof originalRunAnalysis === 'function') {
+          window.runAnalysis = function(e) {
+            const tubes = document.getElementById('tube-cluster');
+            if (tubes) {
+              tubes.classList.add('overload');
+              setTimeout(() => tubes.classList.remove('overload'), 900);
+            }
+            return originalRunAnalysis.apply(this, arguments);
+          };
+        }
+      }
+
+      // =========================================================================
+      // CLOSE ENCOUNTERS SIGNAL BOARD
+      // =========================================================================
+      function initEncountersBoard() {
+        const lights = [...document.querySelectorAll('.encounters-board .enc-light')];
+        const status = document.getElementById('signal-status');
+        if (!lights.length || !status) return;
+
+        let userInteracting = false;
+        let interactionTimeout;
+
+        function setStatus(text, mode) {
+          status.textContent = text;
+          status.className = 'signal-status ' + mode;
+        }
+
+        function updateSignalLevel(value) {
+          value = Number(value);
+          const activeCount = Math.round((value / 100) * lights.length);
+
+          lights.forEach((l, i) => l.classList.toggle('active', i < activeCount));
+
+          if (value < 20) {
+            setStatus("STATIC / NOISE", "noise");
+          } else if (value < 80) {
+            setStatus("LISTENING…", "");
+          } else {
+            setStatus("⚡ COMMS LOCKED ⚡", "locked");
+            if (typeof beep === 'function') beep(660, 0.08);
+          }
+        }
+
+        // Hook into sliders, knobs, etc.
+        document.querySelectorAll('input[type="range"]').forEach(slider => {
+          slider.addEventListener('input', () => {
+            userInteracting = true;
+            clearTimeout(interactionTimeout);
+            updateSignalLevel(slider.value);
+            interactionTimeout = setTimeout(() => { userInteracting = false; }, 3000);
+          });
+        });
+
+        // Knob clicks also affect signal
+        document.querySelectorAll('.knob').forEach(knob => {
+          knob.addEventListener('click', () => {
+            userInteracting = true;
+            clearTimeout(interactionTimeout);
+            const val = parseInt(knob.dataset.value) || 50;
+            updateSignalLevel(val);
+            interactionTimeout = setTimeout(() => { userInteracting = false; }, 3000);
+          });
+        });
+
+        // Atmospheric idle animation - alien pulse when not interacting
+        setInterval(() => {
+          if (userInteracting) return;
+          const random = Math.floor(Math.random() * 100);
+          updateSignalLevel(random);
+        }, 1200);
+
+        logTerminal('encounters signal array online');
+      }
+
+      // =========================================================================
+      // CARGO BAY HEALTH SYSTEM
+      // =========================================================================
+      const CARGO_SYSTEMS = {
+        'RKLB': { name: 'NAV THRUSTERS', critical: true },
+        'LUNR': { name: 'SOLAR ARRAY', critical: true },
+        'JOBY': { name: 'EVTOL DECK', critical: false },
+        'ASTS': { name: 'COMMS RELAY', critical: true },
+        'ACHR': { name: 'LIFT JETS', critical: false },
+        'EVEX': { name: 'SUPPORT DRONE', critical: false },
+        'BKSY': { name: 'OPTICS BAY', critical: false },
+        'GME': { name: 'POWER CORE', critical: true }
+      };
+
+      function updateCargoHealth(ticker, pnl) {
+        const item = document.querySelector(`.cargo-item[data-ticker="${ticker}"]`);
+        if (!item) return;
+
+        const health = item.querySelector('.cargo-health');
+        item.classList.remove('damaged', 'optimal');
+
+        if (pnl < -5) {
+          item.classList.add('damaged');
+          health.textContent = "CRITICAL";
+        } else if (pnl < 0) {
+          item.classList.add('damaged');
+          health.textContent = "FAULT";
+        } else if (pnl > 10) {
+          item.classList.add('optimal');
+          health.textContent = "OPTIMAL+";
+        } else if (pnl > 0) {
+          item.classList.add('optimal');
+          health.textContent = "OPTIMAL";
+        } else {
+          health.textContent = "NOMINAL";
+        }
+      }
+
+      function initCargoBay() {
+        // Update cargo bay based on demo positions
+        if (typeof DEMO_STOCK_POSITIONS !== 'undefined') {
+          DEMO_STOCK_POSITIONS.forEach(pos => {
+            const pnlPct = ((pos.current_price - pos.entry_price) / pos.entry_price) * 100;
+            updateCargoHealth(pos.ticker, pnlPct);
+          });
+        }
+        logTerminal('cargo bay manifest synchronized');
+      }
+
+      // =========================================================================
+      // TRAJECTORY NAVIGATOR (Derivatives Path Simulator)
+      // =========================================================================
+      function initTrajectoryCanvas() {
+        const canvas = document.getElementById('trajectory-canvas');
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        
+        // Set actual canvas size
+        function resizeCanvas() {
+          const rect = canvas.getBoundingClientRect();
+          canvas.width = rect.width * window.devicePixelRatio;
+          canvas.height = rect.height * window.devicePixelRatio;
+          ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+        }
+        
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // Star field with more variety
+        const stars = [];
+        for (let i = 0; i < 60; i++) {
+          stars.push({
+            x: Math.random() * 100,
+            y: Math.random() * 100,
+            size: Math.random() * 1.5 + 0.5,
+            alpha: Math.random() * 0.5 + 0.2,
+            twinkle: Math.random() * Math.PI * 2,
+            twinkleSpeed: Math.random() * 0.02 + 0.01
+          });
+        }
+
+        let risk = 0.5;
+        let horizon = 0.5;
+        let phase = 0;
+
+        const hue = () => getComputedStyle(document.documentElement).getPropertyValue('--accent-hue') || 150;
+
+        function drawTrajectory() {
+          const w = canvas.getBoundingClientRect().width;
+          const h = canvas.getBoundingClientRect().height;
+          
+          ctx.clearRect(0, 0, w, h);
+          
+          // Background gradient
+          const bg = ctx.createLinearGradient(0, 0, 0, h);
+          bg.addColorStop(0, "#020813");
+          bg.addColorStop(1, "#000408");
+          ctx.fillStyle = bg;
+          ctx.fillRect(0, 0, w, h);
+
+          // Draw twinkling stars
+          stars.forEach(star => {
+            star.twinkle += star.twinkleSpeed;
+            const flicker = 0.5 + Math.sin(star.twinkle) * 0.3;
+            ctx.beginPath();
+            ctx.arc(star.x / 100 * w, star.y / 100 * h, star.size, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(140, 255, 210, ${star.alpha * flicker})`;
+            ctx.fill();
+          });
+
+          // Grid lines
+          ctx.strokeStyle = `hsla(${hue()}, 100%, 60%, 0.12)`;
+          ctx.lineWidth = 0.4;
+          for (let x = 0; x < w; x += 40) {
+            ctx.beginPath();
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, h);
+            ctx.stroke();
+          }
+          for (let y = 0; y < h; y += 30) {
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(w, y);
+            ctx.stroke();
+          }
+
+          // Key positions
+          const baseY = h * 0.75;
+          const apexX = w * 0.08;
+          const apexY = h * 0.25;
+          const spread = 30 + risk * 60;
+          const horizonStretch = 40 + horizon * 90;
+          const riskBend = risk * 70;
+
+          // "Safe corridor" cone
+          ctx.beginPath();
+          ctx.moveTo(apexX, baseY);
+          ctx.lineTo(w - spread, apexY - 12);
+          ctx.lineTo(w - spread, apexY + 24);
+          ctx.closePath();
+
+          const coneGrad = ctx.createLinearGradient(apexX, baseY, w, apexY);
+          coneGrad.addColorStop(0, `hsla(${hue()}, 100%, 60%, 0.15)`);
+          coneGrad.addColorStop(1, `hsla(${hue()}, 100%, 60%, 0)`);
+          ctx.fillStyle = coneGrad;
+          ctx.fill();
+
+          // Ghost "alternative" path (dashed)
+          ctx.beginPath();
+          ctx.lineWidth = 1;
+          ctx.moveTo(apexX, baseY);
+          ctx.bezierCurveTo(
+            w * 0.35, baseY - riskBend * 0.3,
+            w * 0.65, baseY - riskBend * 0.1,
+            w - horizonStretch * 0.7, apexY + 20
+          );
+          ctx.setLineDash([6, 6]);
+          ctx.strokeStyle = `hsla(${hue()}, 100%, 65%, 0.35)`;
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          // Main trajectory line
+          ctx.beginPath();
+          ctx.lineWidth = 2.5;
+          ctx.moveTo(apexX, baseY);
+          
+          // Bezier curve with animated wobble
+          const wobble = Math.sin(phase * 0.03) * 8;
+          ctx.bezierCurveTo(
+            w * 0.35, baseY - riskBend + wobble,
+            w * 0.65, baseY - riskBend * 0.6 - wobble * 0.5,
+            w - horizonStretch, apexY + 10
+          );
+
+          // Color by risk
+          let pathColor;
+          if (risk > 0.7) {
+            pathColor = "#ff6b6b";
+          } else if (risk < 0.35) {
+            pathColor = `hsl(${hue()}, 100%, 60%)`;
+          } else {
+            pathColor = "#ffb347";
+          }
+          
+          ctx.strokeStyle = pathColor;
+          ctx.shadowColor = pathColor;
+          ctx.shadowBlur = 10;
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+
+          // Waypoints
+          function drawWaypoint(x, y, label, isActive) {
+            // Outer ring
+            ctx.beginPath();
+            ctx.arc(x, y, isActive ? 8 : 5, 0, Math.PI * 2);
+            ctx.strokeStyle = `hsla(${hue()}, 100%, 60%, 0.6)`;
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            
+            // Inner dot
+            ctx.beginPath();
+            ctx.arc(x, y, isActive ? 4 : 3, 0, Math.PI * 2);
+            ctx.fillStyle = `hsl(${hue()}, 100%, 60%)`;
+            ctx.shadowColor = `hsl(${hue()}, 100%, 60%)`;
+            ctx.shadowBlur = isActive ? 12 : 6;
+            ctx.fill();
+            ctx.shadowBlur = 0;
+
+            // Label
+            ctx.font = "10px 'IBM Plex Mono', monospace";
+            ctx.fillStyle = `hsla(${hue()}, 100%, 75%, 0.9)`;
+            ctx.fillText(label, x + 10, y - 6);
+          }
+
+          drawWaypoint(apexX, baseY, "NOW", true);
+          drawWaypoint(w - horizonStretch, apexY + 10, "EXPIRY", false);
+
+          // Ship marker moving along path
+          const t = Math.min(1, Math.max(0, horizon * 0.8 + 0.1));
+          const shipX = apexX + (w - horizonStretch - apexX) * t;
+          const shipY = baseY - riskBend * t + Math.sin(phase * 0.05) * 3;
+
+          ctx.save();
+          ctx.translate(shipX, shipY);
+          ctx.rotate(-0.3); // Slight angle
+          
+          // Ship triangle
+          ctx.beginPath();
+          ctx.moveTo(0, -6);
+          ctx.lineTo(-5, 6);
+          ctx.lineTo(5, 6);
+          ctx.closePath();
+          ctx.fillStyle = `hsl(${hue()}, 100%, 75%)`;
+          ctx.shadowColor = `hsl(${hue()}, 100%, 60%)`;
+          ctx.shadowBlur = 8;
+          ctx.fill();
+          ctx.shadowBlur = 0;
+          
+          // Engine glow
+          ctx.beginPath();
+          ctx.moveTo(-3, 6);
+          ctx.lineTo(0, 10 + Math.random() * 4);
+          ctx.lineTo(3, 6);
+          ctx.closePath();
+          ctx.fillStyle = risk > 0.5 ? "#ffb347" : `hsl(${hue()}, 100%, 60%)`;
+          ctx.fill();
+          
+          ctx.restore();
+
+          // Status text
+          const statusEl = document.getElementById("traj-risk");
+          if (statusEl) {
+            if (risk > 0.7) {
+              statusEl.textContent = "HIGH";
+              statusEl.style.color = "#ff6b6b";
+            } else if (risk < 0.35) {
+              statusEl.textContent = "LOW";
+              statusEl.style.color = `hsl(${hue()}, 100%, 60%)`;
+            } else {
+              statusEl.textContent = "MODERATE";
+              statusEl.style.color = "#ffb347";
+            }
+          }
+
+          phase += 1;
+        }
+
+        // Animate
+        function animate() {
+          drawTrajectory();
+          requestAnimationFrame(animate);
+        }
+        animate();
+
+        // Hook into controls
+        document.querySelectorAll('input[type="range"]').forEach(slider => {
+          slider.addEventListener('input', () => {
+            risk = slider.value / 100;
+          });
+        });
+
+        document.querySelectorAll('.knob').forEach(knob => {
+          knob.addEventListener('click', () => {
+            const val = parseInt(knob.dataset.value) || 45;
+            horizon = val / 100;
+          });
+        });
+
+        logTerminal('trajectory navigator online — cinematic mode enabled');
+      }
+
+      // =========================================================================
+      // LORE ENGINE - Random In-World Events
+      // =========================================================================
+      const LORE_EVENTS = [
+        "Unknown beacon pinged portside array.",
+        "Telemetry drift corrected automatically.",
+        "Cargo handlers report minor anomalies.",
+        "Charts updated to reflect stellar winds.",
+        "Crew reports strange vibrations in deck 3.",
+        "AI suggests caution in derivatives bay.",
+        "Solar flare activity detected — shields nominal.",
+        "Quantum entanglement stable at 99.7%.",
+        "Navigation computer recalibrating...",
+        "Distant signal classified as potential artificial.",
+        "Life support cycling — all systems green.",
+        "Hull integrity scan complete. No breaches.",
+        "Spectral analysis of nearby object complete.",
+        "FTL drive cooling cycle initiated.",
+        "Crew morale index: NOMINAL.",
+        "Market anomaly detected in sector 7-G.",
+        "Thermal signature identified — classifying...",
+        "Backup power reserves at 94%.",
+        "Long-range sensors detect movement.",
+        "Docking bay pressure equalized.",
+        "Encrypted transmission received. Decoding...",
+        "Asteroid field mapped. Course adjusted.",
+        "Bio-scanner reports all crew accounted for.",
+        "Reactor output stable at 87%.",
+        "External cameras detect debris field ahead."
+      ];
+
+      function initLoreEngine() {
+        setInterval(() => {
+          const event = LORE_EVENTS[Math.floor(Math.random() * LORE_EVENTS.length)];
+          if (typeof logTerminal === 'function') {
+            logTerminal(event);
+          }
+        }, 18000); // Every 18 seconds
+
+        // Initial lore message
+        setTimeout(() => {
+          logTerminal('Lore engine initialized. Monitoring all frequencies.');
+        }, 2000);
+      }
+
+      // =========================================================================
+      // AMBIENT PARTICLES
+      // =========================================================================
+      function initAmbientParticles() {
+        const container = document.getElementById('ambient-particles');
+        if (!container) return;
+
+        const particleCount = 15;
+        
+        for (let i = 0; i < particleCount; i++) {
+          const particle = document.createElement('div');
+          particle.className = 'particle';
+          particle.style.left = Math.random() * 100 + '%';
+          particle.style.animationDelay = Math.random() * 15 + 's';
+          particle.style.animationDuration = (12 + Math.random() * 8) + 's';
+          container.appendChild(particle);
+        }
+      }
+
+      // =========================================================================
+      // KONAMI CODE EASTER EGG - INVADER ATTACK
+      // =========================================================================
+      function initKonamiCode() {
+        const KONAMI = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+        let konamiIndex = 0;
+        let konamiUnlocked = false;
+
+        document.addEventListener('keydown', (e) => {
+          const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+          
+          if (key === KONAMI[konamiIndex]) {
+            konamiIndex++;
+            
+            if (konamiIndex === KONAMI.length) {
+              konamiIndex = 0;
+              if (!konamiUnlocked) {
+                triggerInvaderAttack();
+                konamiUnlocked = true;
+                setTimeout(() => { konamiUnlocked = false; }, 10000);
+              }
+            }
+          } else {
+            konamiIndex = 0;
+          }
+        });
+      }
+
+      function triggerInvaderAttack() {
+        const overlay = document.getElementById('invader-attack-overlay');
+        const flash = document.getElementById('attack-flash');
+        if (!overlay) return;
+
+        // Play mech impact sounds
+        if (window.MechSFX) {
+          MechSFX.impact(0.4);
+          setTimeout(() => MechSFX.alert(400, 150, 0.3), 150);
+        }
+
+        // Screen flash
+        flash.classList.add('flash');
+        setTimeout(() => flash.classList.remove('flash'), 150);
+
+        // Toast notification
+        if (typeof showToast === 'function') {
+          showToast('🛸 INVADER ATTACK DETECTED!', 'alert');
+        }
+
+        // Log to terminal
+        if (typeof logTerminal === 'function') {
+          logTerminal('⚠ ALERT: Hostile formation detected! Shields up!');
+        }
+
+        // Create invader wave
+        overlay.classList.add('active');
+        overlay.innerHTML = '';
+
+        const invaderCount = 15;
+        const invaderSVG = `<svg viewBox="0 0 11 8" class="attack-invader">
+          <rect x="2" y="0" width="1" height="1"/><rect x="8" y="0" width="1" height="1"/>
+          <rect x="3" y="1" width="1" height="1"/><rect x="7" y="1" width="1" height="1"/>
+          <rect x="2" y="2" width="7" height="1"/>
+          <rect x="1" y="3" width="2" height="1"/><rect x="4" y="3" width="3" height="1"/><rect x="8" y="3" width="2" height="1"/>
+          <rect x="0" y="4" width="11" height="1"/>
+          <rect x="0" y="5" width="1" height="1"/><rect x="2" y="5" width="7" height="1"/><rect x="10" y="5" width="1" height="1"/>
+          <rect x="0" y="6" width="1" height="1"/><rect x="2" y="6" width="1" height="1"/><rect x="8" y="6" width="1" height="1"/><rect x="10" y="6" width="1" height="1"/>
+          <rect x="3" y="7" width="2" height="1"/><rect x="6" y="7" width="2" height="1"/>
+        </svg>`;
+
+        for (let i = 0; i < invaderCount; i++) {
+          const wrapper = document.createElement('div');
+          wrapper.innerHTML = invaderSVG;
+          const invader = wrapper.firstChild;
+          invader.style.left = (5 + Math.random() * 90) + '%';
+          invader.style.animationDelay = (Math.random() * 2) + 's';
+          invader.style.animationDuration = (2 + Math.random() * 2) + 's';
+          overlay.appendChild(invader);
+        }
+
+        // Clear after animation
+        setTimeout(() => {
+          overlay.classList.remove('active');
+          overlay.innerHTML = '';
+          if (typeof logTerminal === 'function') {
+            logTerminal('Invader threat neutralized. Shields nominal.');
+          }
+        }, 5000);
+
+        // Complete arcade mission if available
+        if (typeof completeMission === 'function') {
+          completeMission('find_invader');
+        }
+      }
+
+      // =========================================================================
+      // SIGNAL INVADERS - PLAYABLE ARCADE GAME
+      // =========================================================================
+      const SignalInvaders = {
+        canvas: null,
+        ctx: null,
+        active: false,
+        animationId: null,
+        
+        // Game state
+        score: 0,
+        lives: 3,
+        wave: 1,
+        gameOver: false,
+        paused: false,
+        
+        // Player
+        player: { x: 270, y: 360, width: 26, height: 16, speed: 5 },
+        
+        // Game objects
+        bullets: [],
+        enemies: [],
+        enemyBullets: [],
+        particles: [],
+        stars: [],
+        
+        // Timing
+        lastEnemyShot: 0,
+        enemyDirection: 1,
+        enemyDropAmount: 0,
+        
+        // Keys
+        keys: {},
+        
+        init() {
+          this.canvas = document.getElementById('invaders-canvas');
+          if (!this.canvas) return;
+          this.ctx = this.canvas.getContext('2d');
+          
+          // Generate starfield
+          this.stars = [];
+          for (let i = 0; i < 50; i++) {
+            this.stars.push({
+              x: Math.random() * 600,
+              y: Math.random() * 400,
+              size: Math.random() * 1.5 + 0.5,
+              alpha: Math.random() * 0.5 + 0.2
+            });
+          }
+          
+          // Event listeners
+          this.handleKeyDown = (e) => {
+            if (!this.active) return;
+            this.keys[e.key] = true;
+            if (e.key === ' ' && !this.gameOver) {
+              e.preventDefault();
+              this.shoot();
+            }
+            if (e.key === 'Escape') {
+              this.close();
+            }
+          };
+          
+          this.handleKeyUp = (e) => {
+            this.keys[e.key] = false;
+          };
+          
+          document.addEventListener('keydown', this.handleKeyDown);
+          document.addEventListener('keyup', this.handleKeyUp);
+          
+          // Close button
+          const closeBtn = document.getElementById('invaders-close-btn');
+          if (closeBtn) {
+            closeBtn.onclick = () => this.close();
+          }
+          
+          // Mobile touch controls
+          const touchLeft = document.getElementById('touch-left');
+          const touchRight = document.getElementById('touch-right');
+          const touchFire = document.getElementById('touch-fire');
+          
+          if (touchLeft) {
+            touchLeft.addEventListener('touchstart', (e) => {
+              e.preventDefault();
+              this.keys['ArrowLeft'] = true;
+            });
+            touchLeft.addEventListener('touchend', () => {
+              this.keys['ArrowLeft'] = false;
+            });
+            touchLeft.addEventListener('touchcancel', () => {
+              this.keys['ArrowLeft'] = false;
+            });
+          }
+          
+          if (touchRight) {
+            touchRight.addEventListener('touchstart', (e) => {
+              e.preventDefault();
+              this.keys['ArrowRight'] = true;
+            });
+            touchRight.addEventListener('touchend', () => {
+              this.keys['ArrowRight'] = false;
+            });
+            touchRight.addEventListener('touchcancel', () => {
+              this.keys['ArrowRight'] = false;
+            });
+          }
+          
+          if (touchFire) {
+            touchFire.addEventListener('touchstart', (e) => {
+              e.preventDefault();
+              if (!this.gameOver && this.active) {
+                this.shoot();
+              }
+            });
+          }
+          
+          // Prevent scrolling while playing on mobile
+          this.canvas.addEventListener('touchmove', (e) => {
+            if (this.active) e.preventDefault();
+          }, { passive: false });
+        },
+        
+        start() {
+          if (!this.canvas) this.init();
+          
+          // Reset game state
+          this.score = 0;
+          this.lives = 3;
+          this.wave = 1;
+          this.gameOver = false;
+          this.player.x = 270;
+          this.bullets = [];
+          this.enemies = [];
+          this.enemyBullets = [];
+          this.particles = [];
+          this.enemyDirection = 1;
+          
+          this.spawnWave();
+          this.updateUI();
+          
+          // Show overlay
+          const overlay = document.getElementById('signal-invaders-overlay');
+          if (overlay) {
+            overlay.classList.remove('hidden');
+            overlay.classList.add('active');
+          }
+          
+          this.active = true;
+          this.gameLoop();
+          
+          if (typeof logTerminal === 'function') {
+            logTerminal('SIGNAL INVADERS initialized. Defend the array!');
+          }
+          if (window.MechSFX) {
+            MechSFX.powerUp(0.3);
+          }
+        },
+        
+        close() {
+          this.active = false;
+          if (this.animationId) {
+            cancelAnimationFrame(this.animationId);
+          }
+          
+          const overlay = document.getElementById('signal-invaders-overlay');
+          if (overlay) {
+            overlay.classList.remove('active');
+            setTimeout(() => overlay.classList.add('hidden'), 300);
+          }
+          
+          // Log final score
+          if (typeof logTerminal === 'function') {
+            logTerminal(`SIGNAL INVADERS ended. Final score: ${this.score}`);
+          }
+        },
+        
+        spawnWave() {
+          this.enemies = [];
+          const rows = Math.min(4 + Math.floor(this.wave / 2), 6);
+          const cols = Math.min(8 + this.wave, 10);
+          
+          // Get available fleet tickers for enemies
+          const fleetTickers = Object.keys(SHIP_SPRITES);
+          
+          for (let row = 0; row < rows; row++) {
+            for (let col = 0; col < cols; col++) {
+              // Assign a random fleet ship to each enemy
+              const ticker = fleetTickers[Math.floor(Math.random() * fleetTickers.length)];
+              const isElite = row < 2;
+              
+              this.enemies.push({
+                x: 60 + col * 52,
+                y: 40 + row * 36,
+                width: 32,
+                height: 24,
+                type: isElite ? 'elite' : 'normal',
+                ticker: ticker,
+                color: tickerColors[ticker] || '#33ff99',
+                points: isElite ? 30 : 10
+              });
+            }
+          }
+          
+          document.getElementById('invaders-message').textContent = `WAVE ${this.wave} - HOSTILE FLEET INCOMING!`;
+          setTimeout(() => {
+            document.getElementById('invaders-message').textContent = '';
+          }, 2000);
+        },
+        
+        shoot() {
+          if (this.bullets.length < 3) { // Max 3 bullets at once
+            this.bullets.push({
+              x: this.player.x + this.player.width / 2 - 2,
+              y: this.player.y - 8,
+              width: 4,
+              height: 8
+            });
+            if (window.MechSFX) {
+              MechSFX.weaponFire(0.1);
+            }
+          }
+        },
+        
+        updateUI() {
+          document.getElementById('invaders-score').textContent = this.score;
+          document.getElementById('invaders-lives').textContent = '♥'.repeat(Math.max(0, this.lives));
+          document.getElementById('invaders-wave').textContent = this.wave;
+        },
+        
+        gameLoop() {
+          if (!this.active) return;
+          
+          this.update();
+          this.render();
+          
+          this.animationId = requestAnimationFrame(() => this.gameLoop());
+        },
+        
+        update() {
+          if (this.gameOver) return;
+          
+          // Player movement
+          if (this.keys['ArrowLeft'] || this.keys['a']) {
+            this.player.x = Math.max(10, this.player.x - this.player.speed);
+          }
+          if (this.keys['ArrowRight'] || this.keys['d']) {
+            this.player.x = Math.min(600 - this.player.width - 10, this.player.x + this.player.speed);
+          }
+          
+          // Update bullets
+          this.bullets = this.bullets.filter(b => {
+            b.y -= 7;
+            return b.y > -10;
+          });
+          
+          // Update enemy bullets
+          this.enemyBullets = this.enemyBullets.filter(b => {
+            b.y += 4;
+            return b.y < 420;
+          });
+          
+          // Move enemies
+          let hitEdge = false;
+          this.enemies.forEach(e => {
+            e.x += this.enemyDirection * (1 + this.wave * 0.3);
+            if (e.x < 10 || e.x > 600 - e.width - 10) hitEdge = true;
+          });
+          
+          if (hitEdge) {
+            this.enemyDirection *= -1;
+            this.enemies.forEach(e => e.y += 12);
+          }
+          
+          // Enemy shooting
+          if (Date.now() - this.lastEnemyShot > Math.max(500, 2000 - this.wave * 200)) {
+            const shooters = this.enemies.filter(e => 
+              !this.enemies.some(other => other.x === e.x && other.y > e.y)
+            );
+            if (shooters.length > 0) {
+              const shooter = shooters[Math.floor(Math.random() * shooters.length)];
+              this.enemyBullets.push({
+                x: shooter.x + shooter.width / 2 - 2,
+                y: shooter.y + shooter.height,
+                width: 4,
+                height: 6
+              });
+              this.lastEnemyShot = Date.now();
+            }
+          }
+          
+          // Collision: bullets vs enemies
+          this.bullets.forEach((bullet, bi) => {
+            this.enemies.forEach((enemy, ei) => {
+              if (this.collides(bullet, enemy)) {
+                // Create particles using enemy's fleet color
+                for (let i = 0; i < 10; i++) {
+                  this.particles.push({
+                    x: enemy.x + enemy.width / 2,
+                    y: enemy.y + enemy.height / 2,
+                    vx: (Math.random() - 0.5) * 8,
+                    vy: (Math.random() - 0.5) * 8,
+                    life: 35,
+                    color: enemy.color || '#33ff99'
+                  });
+                }
+                
+                this.bullets.splice(bi, 1);
+                this.enemies.splice(ei, 1);
+                this.score += enemy.points || (enemy.type === 'elite' ? 30 : 10);
+                this.updateUI();
+                
+                // Show ticker when destroyed
+                if (typeof showToast === 'function' && Math.random() > 0.7) {
+                  showToast(`${enemy.ticker} neutralized!`, 'info');
+                }
+                
+                if (window.MechSFX) {
+                  MechSFX.bassHit(80, 0.15);
+                }
+              }
+            });
+          });
+          
+          // Collision: enemy bullets vs player
+          this.enemyBullets.forEach((bullet, bi) => {
+            if (this.collides(bullet, this.player)) {
+              this.enemyBullets.splice(bi, 1);
+              this.lives--;
+              this.updateUI();
+              
+              // Player hit particles
+              for (let i = 0; i < 12; i++) {
+                this.particles.push({
+                  x: this.player.x + this.player.width / 2,
+                  y: this.player.y + this.player.height / 2,
+                  vx: (Math.random() - 0.5) * 8,
+                  vy: (Math.random() - 0.5) * 8,
+                  life: 40,
+                  color: '#ff6b6b'
+                });
+              }
+              
+              if (window.MechSFX) {
+                MechSFX.impact(0.25);
+              }
+              
+              if (this.lives <= 0) {
+                this.endGame();
+              }
+            }
+          });
+          
+          // Enemy reaches bottom
+          if (this.enemies.some(e => e.y > 340)) {
+            this.endGame();
+          }
+          
+          // Wave cleared
+          if (this.enemies.length === 0) {
+            this.wave++;
+            this.spawnWave();
+            this.updateUI();
+            if (window.MechSFX) {
+              MechSFX.success();
+            }
+          }
+          
+          // Update particles
+          this.particles = this.particles.filter(p => {
+            p.x += p.vx;
+            p.y += p.vy;
+            p.life--;
+            return p.life > 0;
+          });
+        },
+        
+        collides(a, b) {
+          return a.x < b.x + b.width &&
+                 a.x + a.width > b.x &&
+                 a.y < b.y + b.height &&
+                 a.y + a.height > b.y;
+        },
+        
+        endGame() {
+          this.gameOver = true;
+          document.getElementById('invaders-message').textContent = `GAME OVER - SCORE: ${this.score}`;
+          
+          if (typeof showToast === 'function') {
+            showToast(`Signal Invaders: ${this.score} points!`, 'info');
+          }
+          
+          // Complete arcade mission for high score
+          if (this.score >= 500 && typeof completeMission === 'function') {
+            completeMission('arcade_score');
+          }
+          
+          // Restart after delay
+          setTimeout(() => {
+            if (this.active) {
+              this.start();
+            }
+          }, 3000);
+        },
+        
+        render() {
+          const ctx = this.ctx;
+          ctx.clearRect(0, 0, 600, 400);
+          
+          // Draw starfield
+          this.stars.forEach(star => {
+            ctx.fillStyle = `rgba(51, 255, 153, ${star.alpha})`;
+            ctx.fillRect(star.x, star.y, star.size, star.size);
+          });
+          
+          // Draw player ship using selected sprite (with fallback)
+          const playerTicker = (window.SpriteCache && SpriteCache.selectedPlayerShip) || 'RKLB';
+          const playerColor = tickerColors[playerTicker] || '#33ff99';
+          
+          let playerDrawn = false;
+          if (window.SpriteCache && SpriteCache.loaded) {
+            playerDrawn = SpriteCache.drawOnCanvas(
+              ctx,
+              playerTicker,
+              this.player.x + this.player.width / 2,
+              this.player.y + this.player.height / 2,
+              1.0,
+              { glow: true, glowBlur: 10, glowColor: playerColor, width: 50, height: 38 }
+            );
+          }
+          
+          // Fallback to procedural ship
+          if (!playerDrawn) {
+            drawPixelShipOnCanvas(
+              ctx, 
+              'arcade_player', 
+              this.player.x + this.player.width / 2, 
+              this.player.y + this.player.height / 2, 
+              1.8, 
+              playerColor,
+              { glow: true, glowBlur: 8 }
+            );
+          }
+          
+          // Draw bullets with player color
+          ctx.fillStyle = playerColor;
+          ctx.shadowColor = playerColor;
+          ctx.shadowBlur = 6;
+          this.bullets.forEach(b => {
+            ctx.fillRect(b.x, b.y, b.width, b.height);
+          });
+          ctx.shadowBlur = 0;
+          
+          // Draw enemies using their assigned fleet sprites (with fallback)
+          this.enemies.forEach(e => {
+            let enemyDrawn = false;
+            const glowIntensity = e.type === 'elite' ? 8 : 4;
+            
+            if (window.SpriteCache && SpriteCache.loaded && e.ticker) {
+              enemyDrawn = SpriteCache.drawOnCanvas(
+                ctx,
+                e.ticker,
+                e.x + e.width / 2,
+                e.y + e.height / 2,
+                0.65,
+                { 
+                  glow: true, 
+                  glowBlur: glowIntensity, 
+                  glowColor: e.color,
+                  flipY: true,
+                  width: 50,
+                  height: 38
+                }
+              );
+            }
+            
+            // Fallback to procedural
+            if (!enemyDrawn) {
+              const enemyPattern = e.type === 'elite' ? 'arcade_elite' : 'arcade_enemy';
+              drawPixelShipOnCanvas(
+                ctx,
+                enemyPattern,
+                e.x + e.width / 2,
+                e.y + e.height / 2,
+                1.4,
+                e.color || '#33ff99',
+                { glow: true, glowBlur: glowIntensity }
+              );
+            }
+            
+            // Elite indicator ring
+            if (e.type === 'elite') {
+              ctx.strokeStyle = '#ffb347';
+              ctx.lineWidth = 1;
+              ctx.globalAlpha = 0.5;
+              ctx.beginPath();
+              ctx.arc(e.x + e.width / 2, e.y + e.height / 2, 18, 0, Math.PI * 2);
+              ctx.stroke();
+              ctx.globalAlpha = 1;
+            }
+          });
+          
+          // Draw enemy bullets
+          ctx.fillStyle = '#ff6b6b';
+          ctx.shadowColor = '#ff6b6b';
+          ctx.shadowBlur = 4;
+          this.enemyBullets.forEach(b => {
+            ctx.fillRect(b.x, b.y, b.width, b.height);
+          });
+          ctx.shadowBlur = 0;
+          
+          // Draw particles
+          this.particles.forEach(p => {
+            ctx.fillStyle = p.color;
+            ctx.globalAlpha = p.life / 40;
+            ctx.fillRect(p.x, p.y, 3, 3);
+          });
+          ctx.globalAlpha = 1;
+          
+          // Game over overlay
+          if (this.gameOver) {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+            ctx.fillRect(0, 0, 600, 400);
+            ctx.fillStyle = '#ff6b6b';
+            ctx.font = '24px Orbitron';
+            ctx.textAlign = 'center';
+            ctx.fillText('SIGNAL LOST', 300, 180);
+            ctx.fillStyle = '#33ff99';
+            ctx.font = '16px "IBM Plex Mono"';
+            ctx.fillText(`Final Score: ${this.score}`, 300, 220);
+            ctx.fillStyle = '#888';
+            ctx.font = '12px "IBM Plex Mono"';
+            ctx.fillText('Restarting...', 300, 260);
+          }
+        }
+      };
+
+      // Cheat code listener for multiple codes
+      let cheatBuffer = '';
+      document.addEventListener('keydown', (e) => {
+        if (e.key.length === 1) {
+          cheatBuffer += e.key.toUpperCase();
+          cheatBuffer = cheatBuffer.slice(-12);
+          
+          if (cheatBuffer.includes('INVADER')) {
+            cheatBuffer = '';
+            SignalInvaders.start();
+          }
+          
+          if (cheatBuffer.includes('LAND')) {
+            cheatBuffer = '';
+            LandingGame.start();
+          }
+          
+          if (cheatBuffer.includes('ADMIN')) {
+            cheatBuffer = '';
+            AdminConsole.open();
+          }
+        }
+      });
+
+      // =========================================================================
+      // ADMIN CONSOLE - Snoop Trap System
+      // =========================================================================
+      const AdminConsole = {
+        overlay: null,
+        attempts: 0,
+        snoopCounts: {},
+        
+        RESPONSES: [
+          "ACCESS DENIED: This cockpit runs on story mode only.",
+          "AUTH CORE: Incorrect. Impressively committed, but still incorrect.",
+          "SYSTEM: We cross-checked that password against seven parallel universes. No luck.",
+          "NOTE: If this actually logged in, several lawyers would materialize instantly.",
+          "SECURITY: At this point we're evaluating *you*, not the password.",
+          "FOURTH WALL: There is no version of reality where guessing this works.",
+          "CONCLUSION: The only winning move is to appreciate the UI and move on.",
+          "SYSTEM: We admire your persistence. It changes nothing.",
+          "AUTH: Even the raccoons running this server are impressed. Still no.",
+          "FINAL: This field has rejected credentials from 47 dimensions. Yours included."
+        ],
+        
+        SNOOP_MESSAGES: {
+          buy: [
+            "TRADE BLOCKED: This cockpit runs on vibes, not orders.",
+            "SYSTEM: You don't actually think this connects to a broker, right?",
+            "RISK ENGINE: Nice enthusiasm. Still can't buy anything here.",
+            "ALERT: Excessive button pressing detected. Consider a demo account."
+          ],
+          sell: [
+            "LIQUIDATION ERROR: Emotional damage cannot be realized as gains.",
+            "SYSTEM: Nothing to sell. This is a diorama, not a brokerage.",
+            "RISK ENGINE: Imagine if this worked. SEC shows up, everyone cries.",
+            "NOTE: The 'SELL' button is legally ornamental."
+          ],
+          withdraw: [
+            "WITHDRAWAL FAILED: Funds are imaginary. The attachment is real.",
+            "BANK: We regret to inform you this ATM dispenses only vibes.",
+            "SYSTEM: Request forwarded to the Department of Wishful Thinking."
+          ],
+          leverage: [
+            "MARGIN CALL: You can't lever up on pretend positions.",
+            "RISK CORE: The only thing getting leveraged here is your curiosity.",
+            "SYSTEM: 10x leverage on zero is still zero. Math is brutal."
+          ],
+          override: [
+            "OVERRIDE REJECTED: You are Mission Guest, not Mission Control.",
+            "SYSTEM: Override codes are stored in a vault made of pure fiction.",
+            "AUTH: The override button is connected to a very convincing LED."
+          ],
+          default: [
+            "INPUT IGNORED: This section is for narrative purposes only.",
+            "SYSTEM: You've discovered a prop. Congratulations, stagehand.",
+            "FOURTH WALL: Hi, yes, I can see you clicking that."
+          ]
+        },
+        
+        init() {
+          this.overlay = document.getElementById('admin-overlay');
+          if (!this.overlay) return;
+          
+          const closeBtn = document.getElementById('admin-close');
+          const submitBtn = document.getElementById('admin-submit');
+          const passInput = document.getElementById('admin-pass');
+          const userInput = document.getElementById('admin-user');
+          
+          if (closeBtn) closeBtn.onclick = () => this.close();
+          if (submitBtn) submitBtn.onclick = () => this.attemptLogin();
+          if (passInput) passInput.onkeydown = (e) => { if (e.key === 'Enter') this.attemptLogin(); };
+          if (userInput) userInput.onkeydown = (e) => { if (e.key === 'Enter') passInput.focus(); };
+          
+          this.overlay.onclick = (e) => {
+            if (e.target === this.overlay || e.target.classList.contains('admin-backdrop')) {
+              this.close();
+            }
+          };
+          
+          document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && this.overlay.classList.contains('visible')) {
+              this.close();
+            }
+          });
+          
+          // Hook dummy controls
+          this.initSnoopTraps();
+        },
+        
+        initSnoopTraps() {
+          document.querySelectorAll('.dummy-control').forEach(el => {
+            el.addEventListener('click', (e) => {
+              e.preventDefault();
+              const action = el.dataset.dummyAction || 'default';
+              
+              if (action === 'admin' || action === 'override') {
+                this.open();
+              } else {
+                this.showSnoopMessage(action);
+              }
+            });
+          });
+        },
+        
+        showSnoopMessage(action) {
+          const messages = this.SNOOP_MESSAGES[action] || this.SNOOP_MESSAGES.default;
+          const count = this.snoopCounts[action] || 0;
+          this.snoopCounts[action] = count + 1;
+          
+          const msg = count < messages.length ? messages[count] : messages[Math.floor(Math.random() * messages.length)];
+          
+          if (typeof showToast === 'function') {
+            showToast(msg, 'warn');
+          }
+          if (typeof logTerminal === 'function') {
+            logTerminal('snoop trap • ' + action.toUpperCase());
+          }
+          if (window.MechSFX) {
+            MechSFX.alert(300, 150, 0.15);
+          }
+          
+          // Glitch effect on repeated attempts
+          if (count >= 3) {
+            document.body.classList.add('screen-glitch');
+            setTimeout(() => document.body.classList.remove('screen-glitch'), 200);
+          }
+        },
+        
+        open() {
+          if (!this.overlay) return;
+          this.attempts = 0;
+          
+          this.overlay.classList.remove('hidden');
+          setTimeout(() => this.overlay.classList.add('visible'), 10);
+          
+          const textEl = document.getElementById('admin-text');
+          if (textEl) {
+            textEl.innerHTML = 'Unauthorized console access attempt detected.<br>Please authenticate to continue ruining the narrative.';
+          }
+          
+          const userInput = document.getElementById('admin-user');
+          const passInput = document.getElementById('admin-pass');
+          if (userInput) userInput.value = '';
+          if (passInput) passInput.value = '';
+          
+          setTimeout(() => userInput?.focus(), 100);
+          
+          if (typeof logTerminal === 'function') {
+            logTerminal('security: admin console probe detected');
+          }
+        },
+        
+        close() {
+          if (!this.overlay) return;
+          this.overlay.classList.remove('visible');
+          setTimeout(() => this.overlay.classList.add('hidden'), 250);
+        },
+        
+        attemptLogin() {
+          const userInput = document.getElementById('admin-user');
+          const passInput = document.getElementById('admin-pass');
+          const textEl = document.getElementById('admin-text');
+          const windowEl = this.overlay.querySelector('.admin-window');
+          
+          const user = userInput?.value.trim() || 'GUEST';
+          const pass = passInput?.value.trim() || '••••••';
+          
+          const response = this.attempts < this.RESPONSES.length 
+            ? this.RESPONSES[this.attempts] 
+            : this.RESPONSES[Math.floor(Math.random() * this.RESPONSES.length)];
+          
+          this.attempts++;
+          
+          if (textEl) {
+            textEl.innerHTML = `
+              <span class="warning">USER:</span> ${user}<br>
+              <span class="warning">INPUT:</span> "${pass}"<br><br>
+              <span class="error">${response}</span>
+            `;
+          }
+          
+          // Shake effect
+          if (windowEl) {
+            windowEl.classList.add('shake');
+            setTimeout(() => windowEl.classList.remove('shake'), 300);
+          }
+          
+          if (typeof showToast === 'function') {
+            showToast(response, 'alert');
+          }
+          if (typeof logTerminal === 'function') {
+            logTerminal(`auth attempt #${this.attempts} • user=${user}`);
+          }
+          if (window.MechSFX) {
+            MechSFX.error();
+          }
+          
+          // Easter egg at attempt 5
+          if (this.attempts === 5 && typeof completeMission === 'function') {
+            completeMission('snoop_master');
+          }
+        }
+      };
+      
+      window.AdminConsole = AdminConsole;
+
+      // =========================================================================
+      // TERRAIN LANDER - Chart Landing Mini-Game
+      // =========================================================================
+      const LandingGame = {
+        canvas: null,
+        ctx: null,
+        active: false,
+        animationId: null,
+        
+        // Ship state
+        ship: { x: 100, y: 50, vx: 0, vy: 0, fuel: 100, landed: false, crashed: false },
+        
+        // Physics
+        gravity: 0.02,
+        thrust: 0.08,
+        maxLandingSpeed: 1.5,
+        
+        // Terrain (generated from "price data")
+        terrain: [],
+        stars: [],
+        
+        // Controls
+        keys: {},
+        
+        init() {
+          this.canvas = document.getElementById('landing-canvas');
+          if (!this.canvas) return;
+          
+          this.ctx = this.canvas.getContext('2d');
+          this.resizeCanvas();
+          
+          window.addEventListener('resize', () => this.resizeCanvas());
+          
+          // Keyboard controls
+          document.addEventListener('keydown', (e) => {
+            if (!this.active) return;
+            this.keys[e.key] = true;
+            if (e.key === 'Escape') this.close();
+          });
+          
+          document.addEventListener('keyup', (e) => {
+            this.keys[e.key] = false;
+          });
+          
+          // Close button
+          const closeBtn = document.getElementById('landing-close');
+          if (closeBtn) closeBtn.onclick = () => this.close();
+          
+          // Touch controls
+          this.initTouchControls();
+          
+          // Generate starfield
+          this.generateStars();
+        },
+        
+        initTouchControls() {
+          const leftBtn = document.getElementById('land-touch-left');
+          const rightBtn = document.getElementById('land-touch-right');
+          const thrustBtn = document.getElementById('land-touch-thrust');
+          
+          if (leftBtn) {
+            leftBtn.ontouchstart = (e) => { e.preventDefault(); this.keys['ArrowLeft'] = true; };
+            leftBtn.ontouchend = () => { this.keys['ArrowLeft'] = false; };
+          }
+          if (rightBtn) {
+            rightBtn.ontouchstart = (e) => { e.preventDefault(); this.keys['ArrowRight'] = true; };
+            rightBtn.ontouchend = () => { this.keys['ArrowRight'] = false; };
+          }
+          if (thrustBtn) {
+            thrustBtn.ontouchstart = (e) => { e.preventDefault(); this.keys['ArrowUp'] = true; };
+            thrustBtn.ontouchend = () => { this.keys['ArrowUp'] = false; };
+          }
+        },
+        
+        resizeCanvas() {
+          if (!this.canvas) return;
+          const container = this.canvas.parentElement;
+          // Get actual container width, fallback to reasonable default
+          const containerWidth = container?.clientWidth || 800;
+          // Set canvas intrinsic dimensions to match CSS
+          this.canvas.width = Math.max(containerWidth, 400);
+          this.canvas.height = 400;
+          // Regenerate terrain for new width
+          if (this.active && this.terrain.length > 0) {
+            this.generateTerrain();
+          }
+        },
+        
+        generateStars() {
+          this.stars = [];
+          const w = this.canvas?.width || 800;
+          for (let i = 0; i < 80; i++) {
+            this.stars.push({
+              x: Math.random() * w,
+              y: Math.random() * 400,
+              size: Math.random() * 1.5 + 0.5,
+              alpha: Math.random() * 0.6 + 0.2,
+              twinkle: Math.random() * 0.02
+            });
+          }
+        },
+        
+        generateTerrain() {
+          this.terrain = [];
+          const w = this.canvas?.width || 800;
+          const h = this.canvas?.height || 400;
+          const segments = 60;
+          
+          // Generate mountainous terrain with flat landing zones
+          let y = h * 0.6;
+          for (let i = 0; i <= segments; i++) {
+            const x = (i / segments) * w;
+            
+            // Add some randomness but keep landing zones flat
+            const isLandingZone = (i > 15 && i < 20) || (i > 35 && i < 42) || (i > 50 && i < 55);
+            
+            if (isLandingZone) {
+              y = y; // Keep flat
+            } else {
+              y += (Math.random() - 0.5) * 40;
+              y = Math.max(h * 0.4, Math.min(h * 0.85, y));
+            }
+            
+            this.terrain.push({ x, y, isLanding: isLandingZone });
+          }
+        },
+        
+        start() {
+          if (!this.canvas) this.init();
+          
+          // Ensure canvas is properly sized before starting
+          this.resizeCanvas();
+          this.generateStars();
+          
+          // Reset ship
+          this.ship = {
+            x: 80,
+            y: 40,
+            vx: 0.5,
+            vy: 0,
+            fuel: 100,
+            landed: false,
+            crashed: false
+          };
+          
+          this.generateTerrain();
+          this.updateUI();
+          
+          // Show overlay
+          const overlay = document.getElementById('landing-game-overlay');
+          if (overlay) overlay.classList.add('active');
+          
+          const msgEl = document.getElementById('landing-message');
+          if (msgEl) {
+            msgEl.textContent = 'Land gently on flat terrain zones!';
+            msgEl.className = 'landing-message';
+          }
+          
+          this.active = true;
+          this.gameLoop();
+          
+          if (typeof logTerminal === 'function') {
+            logTerminal('TERRAIN LANDER initialized. Good luck, pilot.');
+          }
+          if (window.MechSFX) {
+            MechSFX.powerUp(0.2);
+          }
+        },
+        
+        close() {
+          this.active = false;
+          if (this.animationId) cancelAnimationFrame(this.animationId);
+          
+          const overlay = document.getElementById('landing-game-overlay');
+          if (overlay) overlay.classList.remove('active');
+        },
+        
+        updateUI() {
+          const fuelEl = document.getElementById('landing-fuel');
+          const velEl = document.getElementById('landing-velocity');
+          const altEl = document.getElementById('landing-alt');
+          
+          if (fuelEl && this.ship) fuelEl.textContent = Math.round(this.ship.fuel || 0);
+          if (velEl && this.ship) velEl.textContent = Math.abs(this.ship.vy || 0).toFixed(1);
+          if (altEl && this.ship && this.canvas && this.terrain && this.terrain.length > 0) {
+            const groundY = this.getTerrainY(this.ship.x);
+            const alt = Math.max(0, Math.round((groundY || 0) - (this.ship.y || 0) - 10));
+            altEl.textContent = isNaN(alt) ? '0' : alt;
+          } else if (altEl) {
+            altEl.textContent = '0';
+          }
+        },
+        
+        getTerrainY(x) {
+          if (!this.terrain || this.terrain.length < 2 || !this.canvas) return 100;
+          
+          const w = this.canvas.width || 400;
+          if (w === 0) return 100;
+          const idx = ((x || 0) / w) * (this.terrain.length - 1);
+          const i = Math.floor(idx);
+          const t = idx - i;
+          
+          const p1 = this.terrain[Math.max(0, Math.min(i, this.terrain.length - 1))];
+          const p2 = this.terrain[Math.max(0, Math.min(i + 1, this.terrain.length - 1))];
+          
+          return p1.y + (p2.y - p1.y) * t;
+        },
+        
+        isLandingZone(x) {
+          const w = this.canvas.width;
+          const idx = Math.floor((x / w) * (this.terrain.length - 1));
+          const point = this.terrain[Math.max(0, Math.min(idx, this.terrain.length - 1))];
+          return point?.isLanding || false;
+        },
+        
+        gameLoop() {
+          if (!this.active) return;
+          
+          this.update();
+          this.render();
+          this.updateUI();
+          
+          this.animationId = requestAnimationFrame(() => this.gameLoop());
+        },
+        
+        update() {
+          if (this.ship.landed || this.ship.crashed) return;
+          
+          const ship = this.ship;
+          
+          // Apply gravity
+          ship.vy += this.gravity;
+          
+          // Controls
+          if (this.keys['ArrowUp'] && ship.fuel > 0) {
+            ship.vy -= this.thrust;
+            ship.fuel -= 0.3;
+          }
+          if (this.keys['ArrowLeft']) ship.vx -= 0.03;
+          if (this.keys['ArrowRight']) ship.vx += 0.03;
+          
+          // Apply velocity
+          ship.x += ship.vx;
+          ship.y += ship.vy;
+          
+          // Bounds
+          ship.x = Math.max(10, Math.min(this.canvas.width - 10, ship.x));
+          if (ship.y < 5) {
+            ship.y = 5;
+            ship.vy = 0;
+          }
+          
+          // Terrain collision
+          const groundY = this.getTerrainY(ship.x);
+          if (ship.y + 12 >= groundY) {
+            const speed = Math.abs(ship.vy);
+            const isFlat = this.isLandingZone(ship.x);
+            
+            if (speed < this.maxLandingSpeed && isFlat) {
+              // Successful landing!
+              ship.landed = true;
+              ship.y = groundY - 12;
+              this.onLand(true);
+            } else {
+              // Crash!
+              ship.crashed = true;
+              this.onLand(false);
+            }
+          }
+        },
+        
+        onLand(success) {
+          const msgEl = document.getElementById('landing-message');
+          
+          if (success) {
+            if (msgEl) {
+              msgEl.textContent = '✓ SOFT LANDING — DATA SECURED';
+              msgEl.className = 'landing-message success';
+            }
+            if (typeof showToast === 'function') {
+              showToast('Perfect landing! The terrain is yours.', 'alert');
+            }
+            if (typeof completeMission === 'function') {
+              completeMission('terrain_lander');
+            }
+            if (window.MechSFX) {
+              MechSFX.success();
+            }
+          } else {
+            if (msgEl) {
+              msgEl.textContent = '✗ CRASH — VOLATILITY TOO HIGH';
+              msgEl.className = 'landing-message failure';
+            }
+            if (window.MechSFX) {
+              MechSFX.impact(0.35);
+            }
+          }
+          
+          if (typeof logTerminal === 'function') {
+            logTerminal(success ? 'Terrain Lander: successful touchdown!' : 'Terrain Lander: impact detected');
+          }
+          
+          // Restart after delay
+          setTimeout(() => {
+            if (this.active) this.start();
+          }, 2500);
+        },
+        
+        render() {
+          const ctx = this.ctx;
+          const w = this.canvas.width;
+          const h = this.canvas.height;
+          
+          ctx.clearRect(0, 0, w, h);
+          
+          // Draw stars with twinkle
+          this.stars.forEach(star => {
+            star.alpha += star.twinkle;
+            if (star.alpha > 0.8 || star.alpha < 0.2) star.twinkle *= -1;
+            ctx.fillStyle = `rgba(51, 255, 153, ${star.alpha})`;
+            ctx.fillRect(star.x % w, star.y, star.size, star.size);
+          });
+          
+          // Draw terrain
+          ctx.beginPath();
+          ctx.moveTo(0, h);
+          this.terrain.forEach((p, i) => {
+            if (i === 0) ctx.lineTo(p.x, p.y);
+            else ctx.lineTo(p.x, p.y);
+          });
+          ctx.lineTo(w, h);
+          ctx.closePath();
+          
+          // Terrain gradient
+          const terrainGrad = ctx.createLinearGradient(0, h * 0.5, 0, h);
+          terrainGrad.addColorStop(0, 'rgba(51, 255, 153, 0.3)');
+          terrainGrad.addColorStop(1, 'rgba(51, 255, 153, 0.1)');
+          ctx.fillStyle = terrainGrad;
+          ctx.fill();
+          
+          // Terrain line
+          ctx.beginPath();
+          this.terrain.forEach((p, i) => {
+            if (i === 0) ctx.moveTo(p.x, p.y);
+            else ctx.lineTo(p.x, p.y);
+          });
+          ctx.strokeStyle = '#33ff99';
+          ctx.lineWidth = 2;
+          ctx.shadowColor = '#33ff99';
+          ctx.shadowBlur = 8;
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+          
+          // Highlight landing zones
+          this.terrain.forEach((p, i) => {
+            if (p.isLanding && i > 0) {
+              ctx.beginPath();
+              ctx.moveTo(this.terrain[i-1].x, this.terrain[i-1].y);
+              ctx.lineTo(p.x, p.y);
+              ctx.strokeStyle = '#ffb347';
+              ctx.lineWidth = 3;
+              ctx.stroke();
+            }
+          });
+          
+          // Draw ship
+          const ship = this.ship;
+          ctx.save();
+          ctx.translate(ship.x, ship.y);
+          
+          if (ship.crashed) {
+            // Explosion particles
+            const crashColor = tickerColors[SpriteCache?.selectedPlayerShip] || '#ff6b6b';
+            ctx.fillStyle = crashColor;
+            for (let i = 0; i < 12; i++) {
+              const angle = (i / 12) * Math.PI * 2;
+              const dist = 10 + Math.random() * 20;
+              ctx.fillRect(
+                Math.cos(angle) * dist - 2,
+                Math.sin(angle) * dist - 2,
+                4, 4
+              );
+            }
+          } else {
+            // Try to draw sprite, fallback to simple shape if not loaded
+            const landerTicker = (window.SpriteCache && SpriteCache.selectedPlayerShip) || 'LUNR';
+            const landerColor = tickerColors[landerTicker] || '#33ff99';
+            
+            let spriteDrawn = false;
+            if (window.SpriteCache && SpriteCache.loaded) {
+              spriteDrawn = SpriteCache.drawOnCanvas(ctx, landerTicker, 0, 0, 0.8, { 
+                glow: true, 
+                glowBlur: 12, 
+                glowColor: landerColor,
+                width: 50,
+                height: 38
+              });
+            }
+            
+            // Fallback to simple triangle ship if sprite not available
+            if (!spriteDrawn) {
+              ctx.fillStyle = landerColor;
+              ctx.shadowColor = landerColor;
+              ctx.shadowBlur = 10;
+              ctx.beginPath();
+              ctx.moveTo(0, -15);
+              ctx.lineTo(-12, 12);
+              ctx.lineTo(12, 12);
+              ctx.closePath();
+              ctx.fill();
+              ctx.shadowBlur = 0;
+            }
+            
+            // Thrust flame
+            if (this.keys['ArrowUp'] && ship.fuel > 0) {
+              ctx.fillStyle = '#ffb347';
+              ctx.shadowColor = '#ffb347';
+              ctx.shadowBlur = 10;
+              ctx.fillRect(-5, 14, 10, 6 + Math.random() * 8);
+              ctx.fillStyle = '#ff6b6b';
+              ctx.fillRect(-3, 20, 6, 4 + Math.random() * 6);
+              ctx.shadowBlur = 0;
+            }
+          }
+          
+          ctx.restore();
+          
+          // HUD overlay
+          ctx.fillStyle = 'rgba(51, 255, 153, 0.6)';
+          ctx.font = '10px "IBM Plex Mono", monospace';
+          ctx.fillText('LANDING ZONES', 10, 20);
+          ctx.fillStyle = '#ffb347';
+          ctx.fillRect(100, 14, 30, 3);
+        }
+      };
+      
+      window.LandingGame = LandingGame;
+
+      // =========================================================================
+      // ENHANCED EVENTS TIMELINE RENDERING
+      // =========================================================================
+      function initEnhancedCatalysts() {
+        const originalRenderCatalysts = window.renderCatalysts;
+        
+        window.renderCatalysts = function() {
+          const container = document.getElementById('catalyst-list');
+          if (!container) return;
+
+          // Gather all catalysts from ticker profiles
+          const allCatalysts = [];
+          const TICKER_PROFILES = window.TICKER_PROFILES || {};
+          
+          Object.entries(TICKER_PROFILES).forEach(([ticker, profile]) => {
+            if (profile.catalysts) {
+              profile.catalysts.forEach(cat => {
+                allCatalysts.push({
+                  ticker,
+                  date: cat.date,
+                  event: cat.event,
+                  impact: cat.impact || 'medium'
+                });
+              });
+            }
+          });
+
+          // Sort by date
+          allCatalysts.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+          // Render as timeline
+          if (allCatalysts.length > 0) {
+            container.innerHTML = '<div class="events-timeline">' + 
+              allCatalysts.slice(0, 12).map(cat => {
+                const impactClass = cat.impact.toLowerCase() + '-impact';
+                const daysUntil = Math.ceil((new Date(cat.date) - new Date()) / (1000 * 60 * 60 * 24));
+                const countdownText = daysUntil > 0 ? `T-${daysUntil} DAYS` : daysUntil === 0 ? 'TODAY' : `T+${Math.abs(daysUntil)} DAYS`;
+                
+                return `
+                  <div class="timeline-event ${impactClass}" onclick="if(window.openTickerDossier) openTickerDossier('${cat.ticker}')">
+                    <div class="timeline-header">
+                      <span class="timeline-ticker">${cat.ticker}</span>
+                      <span class="timeline-date">${cat.date}</span>
+                    </div>
+                    <div class="timeline-title">${cat.event}</div>
+                    <div class="timeline-meta">
+                      <span class="timeline-countdown">${countdownText}</span>
+                      <span class="catalyst-impact ${cat.impact.toLowerCase()}">${cat.impact.toUpperCase()}</span>
+                    </div>
+                  </div>
+                `;
+              }).join('') + 
+            '</div>';
+          } else if (typeof originalRenderCatalysts === 'function') {
+            originalRenderCatalysts();
+          }
+        };
+      }
+
+      // =========================================================================
+      // BUTTON RIPPLE EFFECT
+      // =========================================================================
+      function initRippleEffects() {
+        document.addEventListener('click', (e) => {
+          const button = e.target.closest('.push-btn, .sim-btn, .nav-tab, .chart-tab, .cargo-item');
+          if (!button) return;
+
+          const rect = button.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+
+          const ripple = document.createElement('span');
+          ripple.className = 'ripple';
+          ripple.style.left = x + 'px';
+          ripple.style.top = y + 'px';
+
+          button.style.position = 'relative';
+          button.style.overflow = 'hidden';
+          button.appendChild(ripple);
+
+          setTimeout(() => ripple.remove(), 600);
+        });
+      }
+
+      // Run initializations immediately
+      initInvaderArmy();
+      initColorProfileControl();
+      initAmbientParticles();
+      initKonamiCode();
+      initRippleEffects();
+      
+      // Expose SignalInvaders to window for console access
+      window.SignalInvaders = SignalInvaders;
+      
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initArcade);
+        document.addEventListener('DOMContentLoaded', initTubeOverload);
+        document.addEventListener('DOMContentLoaded', initEncountersBoard);
+        document.addEventListener('DOMContentLoaded', initCargoBay);
+        document.addEventListener('DOMContentLoaded', initTrajectoryCanvas);
+        document.addEventListener('DOMContentLoaded', initLoreEngine);
+        document.addEventListener('DOMContentLoaded', initEnhancedCatalysts);
+        document.addEventListener('DOMContentLoaded', () => SignalInvaders.init());
+        document.addEventListener('DOMContentLoaded', () => AdminConsole.init());
+        document.addEventListener('DOMContentLoaded', () => LandingGame.init());
+        document.addEventListener('DOMContentLoaded', initConsoleShip);
+      } else {
+        initArcade();
+        initTubeOverload();
+        initEncountersBoard();
+        initCargoBay();
+        initTrajectoryCanvas();
+        initLoreEngine();
+        initEnhancedCatalysts();
+        SignalInvaders.init();
+        AdminConsole.init();
+        LandingGame.init();
+        initConsoleShip();
+      }
+    })();
