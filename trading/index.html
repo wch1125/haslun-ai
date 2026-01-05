@@ -61,7 +61,17 @@
       background: var(--bg-void);
       color: var(--text);
       min-height: 100vh;
+      min-height: 100dvh;
       overflow-x: hidden;
+      overscroll-behavior: none;
+    }
+    
+    /* Prevent body scroll when modals are open */
+    body.modal-open {
+      overflow: hidden;
+      position: fixed;
+      width: 100%;
+      height: 100%;
     }
     
     /* CRT scanlines */
@@ -525,6 +535,7 @@
       top: 0;
       z-index: 100;
       box-shadow: 0 0 30px rgba(51, 255, 153, 0.05);
+      flex-shrink: 0;
     }
     
     .header::after {
@@ -578,7 +589,7 @@
     .time-display { font-size: 0.8rem; color: var(--phosphor); letter-spacing: 0.05em; text-shadow: 0 0 10px var(--phosphor-glow); }
     .time-display .blink { animation: blink 1s step-end infinite; }
     
-    .main { display: flex; height: calc(100vh - 56px); }
+    .main { display: flex; height: calc(100vh - 56px - 28px); height: calc(100dvh - 56px - 28px); }
     
     .sidebar { width: 280px; background: var(--bg-panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; }
     .sidebar-section { padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); }
@@ -755,8 +766,8 @@
     .watchlist-info-btn:hover { opacity: 1 !important; color: var(--phosphor); transform: translateY(-50%) scale(1.2); }
     .watchlist-item { padding-left: 1.75rem; }
     
-    .content { flex: 1; display: flex; flex-direction: column; min-width: 0; overflow: hidden; background: var(--bg-deep); }
-    .tab-panel { display: none; flex: 1; flex-direction: column; overflow: hidden; }
+    .content { flex: 1; display: flex; flex-direction: column; min-width: 0; overflow: hidden; overflow-y: auto; -webkit-overflow-scrolling: touch; background: var(--bg-deep); }
+    .tab-panel { display: none; flex: 1; flex-direction: column; overflow: hidden; overflow-y: auto; }
     .tab-panel.active { display: flex; }
     
     .chart-header { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1.25rem; background: var(--bg-panel); border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 0.75rem; }
@@ -2972,13 +2983,92 @@
        FLEET HOLOBAY
        ========================================================================= */
 
-    /* Global ship wireframe styling */
+    /* Pro ship wireframe styling - primary/secondary/tertiary layers */
+    .ship-primary,
+    .ship-secondary,
+    .ship-tertiary {
+      fill: none;
+    }
+
+    .ship-primary {
+      stroke: #b6ffe7;
+      stroke-width: 1.8;
+      stroke-linejoin: round;
+      stroke-linecap: round;
+    }
+
+    .ship-secondary {
+      stroke: #7cf7cd;
+      stroke-width: 1.1;
+      stroke-linejoin: round;
+      stroke-linecap: round;
+      stroke-dasharray: 2 3;
+    }
+
+    .ship-tertiary {
+      stroke: #4ff0c0;
+      stroke-width: 0.9;
+      stroke-linejoin: round;
+      stroke-linecap: round;
+      stroke-dasharray: 1.5 2.5;
+      opacity: .85;
+    }
+
+    /* Legacy support for .ship-line */
     .ship-line {
       fill: none;
       stroke: var(--phosphor);
       stroke-width: 1.6;
       stroke-linejoin: round;
       stroke-linecap: round;
+    }
+
+    /* Generic glow wrapper where the SVG lives */
+    .ship-svg,
+    .fleet-ship-svg {
+      filter:
+        drop-shadow(0 0 6px rgba(0,255,160,.7))
+        drop-shadow(0 0 16px rgba(0,255,200,.5));
+    }
+
+    /* Hero ship styling - stronger glow + pulse */
+    .hero-ship .ship-primary,
+    .hero-ship .ship-secondary,
+    .hero-ship .ship-tertiary {
+      filter: drop-shadow(0 0 8px rgba(0,255,190,.9));
+    }
+
+    .hero-ship .ship-secondary {
+      animation: hero-pulse 1.6s ease-in-out infinite;
+    }
+
+    @keyframes hero-pulse {
+      0%   { stroke-opacity: .4; }
+      50%  { stroke-opacity: 1; }
+      100% { stroke-opacity: .4; }
+    }
+
+    /* Winning ships get engine pulse animation */
+    .ship-winning .ship-secondary {
+      animation: engine-pulse 1.4s ease-in-out infinite;
+    }
+
+    @keyframes engine-pulse {
+      0%   { stroke-opacity: .4; }
+      50%  { stroke-opacity: 1; }
+      100% { stroke-opacity: .4; }
+    }
+
+    /* Losing ships look more dim/dead */
+    .ship-losing .ship-primary {
+      stroke: #ff9f9f;
+      stroke-opacity: 0.7;
+    }
+
+    .ship-losing .ship-secondary {
+      stroke: #ff7070;
+      stroke-opacity: 0.5;
+      animation: none;
     }
 
     .fleet-holobay {
@@ -3061,17 +3151,18 @@
       filter:
         drop-shadow(0 0 10px hsla(var(--accent-hue), 100%, 60%, 0.8))
         drop-shadow(0 0 26px hsla(var(--accent-hue), 100%, 65%, 0.5));
-      animation: holo-rock 9s ease-in-out infinite alternate;
-      transform-origin: 50% 60%;
+      animation: holo-drift 9s ease-in-out infinite alternate;
+      transform-origin: 50% 55%;
     }
 
-    @keyframes holo-rock {
-      0%   { transform: perspective(900px) rotateX(16deg) rotateY(-8deg) translateY(0); }
-      33%  { transform: perspective(900px) rotateX(18deg) rotateY(6deg) translateY(-6px); }
-      66%  { transform: perspective(900px) rotateX(14deg) rotateY(-4deg) translateY(-3px); }
-      100% { transform: perspective(900px) rotateX(16deg) rotateY(8deg) translateY(-8px); }
+    /* Soft idle motion for the big holo ship */
+    @keyframes holo-drift {
+      0%   { transform: perspective(900px) rotateX(16deg) rotateY(-6deg); }
+      50%  { transform: perspective(900px) rotateX(18deg) rotateY(5deg); }
+      100% { transform: perspective(900px) rotateX(16deg) rotateY(-3deg); }
     }
 
+    /* Legacy ship-line support in fleet svg */
     .fleet-ship-svg .ship-line {
       fill: none;
       stroke: var(--phosphor);
@@ -3278,6 +3369,22 @@
     .fleet-thumb:hover:not(.active) {
       border-color: var(--phosphor-dim);
       background: radial-gradient(circle at 50% 0%, hsla(var(--accent-hue), 100%, 60%, 0.3), #02090c);
+    }
+
+    /* Hero ship thumbnails get special treatment */
+    .fleet-thumb.hero {
+      border-color: hsla(var(--accent-hue), 100%, 70%, 0.4);
+      background: radial-gradient(circle at 50% 0%, hsla(var(--accent-hue), 100%, 70%, 0.25), #02090c);
+    }
+
+    .fleet-thumb.hero .ticker {
+      color: #b6ffe7;
+      text-shadow: 0 0 6px hsla(var(--accent-hue), 100%, 60%, 0.6);
+    }
+
+    .fleet-thumb.hero.active {
+      border-color: #b6ffe7;
+      box-shadow: 0 0 20px hsla(var(--accent-hue), 100%, 70%, 0.6);
     }
 
     @media (max-width: 768px) {
@@ -3595,6 +3702,13 @@
         flex-shrink: 0;
         padding: 0.5rem 0.75rem;
         font-size: 0.65rem;
+      }
+      
+      /* Main layout fix for mobile */
+      .main {
+        height: calc(100vh - 56px - 28px);
+        height: calc(100dvh - 56px - 28px);
+        flex-direction: column;
       }
       
       /* Main content */
@@ -4013,12 +4127,14 @@
       .sim-btn,
       .kill-switch-btn {
         min-height: 48px;
+        touch-action: manipulation;
       }
       
       .nav-tab {
         min-height: 44px;
         display: flex;
         align-items: center;
+        touch-action: manipulation;
       }
       
       /* Remove hover effects that don't work on touch */
@@ -4053,10 +4169,27 @@
       .header {
         padding-left: max(0.75rem, env(safe-area-inset-left));
         padding-right: max(0.75rem, env(safe-area-inset-right));
+        padding-top: env(safe-area-inset-top);
       }
       
       .status-strip {
         padding-bottom: max(0px, env(safe-area-inset-bottom));
+        height: calc(28px + env(safe-area-inset-bottom, 0px));
+      }
+      
+      .main {
+        height: calc(100vh - 56px - 28px - env(safe-area-inset-bottom, 0px) - env(safe-area-inset-top, 0px));
+        height: calc(100dvh - 56px - 28px - env(safe-area-inset-bottom, 0px));
+      }
+      
+      .watermark {
+        bottom: calc(2.5rem + env(safe-area-inset-bottom, 0px));
+        left: max(1.25rem, env(safe-area-inset-left));
+      }
+      
+      .mobile-drawer {
+        padding-top: env(safe-area-inset-top);
+        padding-bottom: env(safe-area-inset-bottom);
       }
     }
 
@@ -4629,92 +4762,246 @@
   </style>
 </head>
 <body>
-  <!-- GLOBAL SHIP WIREFRAME LIBRARY -->
+  <!-- HOLO FLEET LIBRARY :: refined ship wireframes -->
   <svg id="ship-library" width="0" height="0" style="position:absolute;visibility:hidden;">
     <defs>
-      <!-- SPACE FRIGATE / ORBITAL (RKLB, ASTS, etc.) -->
-      <symbol id="ship-orbital" viewBox="0 0 120 80">
-        <polygon class="ship-line"
-          points="10,40 28,26 52,18 68,18 92,26 110,40 92,54 68,62 52,62 28,54" />
-        <line class="ship-line" x1="60" y1="18" x2="60" y2="62" />
-        <polyline class="ship-line" points="22,40 60,50 98,40" />
-        <circle class="ship-line" cx="60" cy="40" r="10" />
+      <!-- ═══════════════════════════════════════════════════════════════════
+           HERO SHIPS (special, detailed designs)
+           ═══════════════════════════════════════════════════════════════════ -->
+
+      <!-- HERO: FLAGSHIP SPEAR (high-tier orbital - RKLB) -->
+      <symbol id="ship-flagship" viewBox="0 0 120 80">
+        <g class="ship-primary">
+          <!-- spear hull -->
+          <polygon points="60,8 88,20 108,40 88,60 60,72 32,60 12,40 32,20" />
+          <!-- inner hull -->
+          <polygon points="60,14 82,24 98,40 82,56 60,66 38,56 22,40 38,24" />
+          <!-- central spine -->
+          <line x1="60" y1="8" x2="60" y2="72" />
+          <!-- cross braces -->
+          <line x1="34" y1="40" x2="86" y2="40" />
+          <line x1="42" y1="28" x2="78" y2="52" />
+          <line x1="78" y1="28" x2="42" y2="52" />
+        </g>
+        <g class="ship-secondary">
+          <!-- bridge ring -->
+          <circle cx="60" cy="28" r="8" />
+          <circle cx="60" cy="28" r="3" />
+          <!-- engine fins -->
+          <polyline points="32,60 26,68 32,72" />
+          <polyline points="88,60 94,68 88,72" />
+          <!-- side cannons -->
+          <polyline points="32,32 20,28 16,24" />
+          <polyline points="88,32 100,28 104,24" />
+        </g>
+        <g class="ship-tertiary">
+          <!-- vent lines -->
+          <line x1="52" y1="46" x2="68" y2="46" />
+          <line x1="52" y1="49" x2="68" y2="49" />
+          <!-- subtle paneling -->
+          <polyline points="48,20 60,16 72,20" />
+        </g>
       </symbol>
 
-      <!-- SOLAR HAULER / PANEL ARRAY (LUNR) -->
-      <symbol id="ship-solar" viewBox="0 0 120 80">
-        <rect class="ship-line" x="20" y="24" width="80" height="32" rx="4" />
-        <line class="ship-line" x1="40" y1="24" x2="40" y2="56" />
-        <line class="ship-line" x1="60" y1="24" x2="60" y2="56" />
-        <line class="ship-line" x1="80" y1="24" x2="80" y2="56" />
-        <rect class="ship-line" x="52" y="12" width="16" height="8" rx="2" />
-        <line class="ship-line" x1="60" y1="20" x2="60" y2="24" />
+      <!-- HERO: DREADNOUGHT MECH (heavy / meme / boss ship - GME) -->
+      <symbol id="ship-dreadnought" viewBox="0 0 120 80">
+        <g class="ship-primary">
+          <!-- central body -->
+          <rect x="30" y="22" width="60" height="36" rx="6" />
+          <!-- shoulders -->
+          <rect x="18" y="26" width="16" height="28" rx="4" />
+          <rect x="86" y="26" width="16" height="28" rx="4" />
+          <!-- lower struts -->
+          <polyline points="34,58 30,70 40,70" />
+          <polyline points="86,58 90,70 80,70" />
+          <!-- head / tower -->
+          <polygon points="52,18 68,18 72,24 48,24" />
+        </g>
+        <g class="ship-secondary">
+          <!-- eyes / sensors -->
+          <circle cx="50" cy="32" r="3" />
+          <circle cx="70" cy="32" r="3" />
+          <line x1="54" y1="32" x2="66" y2="32" />
+          <!-- chest plate -->
+          <polygon points="46,38 74,38 70,46 50,46" />
+          <!-- arm cannons -->
+          <polyline points="18,32 10,30 6,26" />
+          <polyline points="104,32 112,30 116,26" />
+          <!-- side thrusters -->
+          <circle cx="26" cy="50" r="4" />
+          <circle cx="94" cy="50" r="4" />
+        </g>
+        <g class="ship-tertiary">
+          <!-- grill lines -->
+          <line x1="54" y1="48" x2="66" y2="48" />
+          <line x1="54" y1="51" x2="66" y2="51" />
+          <!-- knee panels -->
+          <rect x="36" y="54" width="8" height="6" />
+          <rect x="76" y="54" width="8" height="6" />
+        </g>
       </symbol>
 
-      <!-- EVTOL CARRIER / LIFT DECK (JOBY / ACHR / EVEX) -->
+      <!-- ═══════════════════════════════════════════════════════════════════
+           STANDARD FLEET (refined designs)
+           ═══════════════════════════════════════════════════════════════════ -->
+
+      <!-- ORBITAL FRIGATE (ASTS, IRDM, etc.) -->
+      <symbol id="ship-frigate" viewBox="0 0 120 80">
+        <g class="ship-primary">
+          <!-- outer hull -->
+          <polygon points="10,40 26,22 52,14 68,14 94,22 110,40 94,58 68,66 52,66 26,58" />
+          <!-- inner hull -->
+          <polygon points="26,40 40,26 60,22 80,26 94,40 80,54 60,58 40,54" />
+          <!-- spine -->
+          <line x1="60" y1="14" x2="60" y2="66" />
+          <!-- cross frame -->
+          <line x1="32" y1="40" x2="88" y2="40" />
+        </g>
+        <g class="ship-secondary">
+          <!-- engine cluster -->
+          <circle cx="24" cy="46" r="4" />
+          <circle cx="96" cy="46" r="4" />
+          <!-- nose sensor -->
+          <circle cx="60" cy="32" r="5" />
+          <circle cx="60" cy="32" r="2" />
+        </g>
+      </symbol>
+
+      <!-- LUNAR LANDER / SURFACE CRAFT (LUNR) -->
+      <symbol id="ship-lander" viewBox="0 0 120 80">
+        <g class="ship-primary">
+          <!-- main pod -->
+          <polygon points="38,20 82,20 96,40 82,60 38,60 24,40" />
+          <!-- cockpit dome -->
+          <path d="M46,24 Q60,10 74,24 Z" />
+          <!-- landing ring -->
+          <rect x="32" y="60" width="56" height="4" rx="2" />
+          <!-- struts -->
+          <line x1="32" y1="60" x2="24" y2="70" />
+          <line x1="88" y1="60" x2="96" y2="70" />
+        </g>
+        <g class="ship-secondary">
+          <!-- windows -->
+          <rect x="46" y="28" width="8" height="6" rx="1" />
+          <rect x="66" y="28" width="8" height="6" rx="1" />
+          <!-- legs -->
+          <line x1="38" y1="60" x2="34" y2="72" />
+          <line x1="82" y1="60" x2="86" y2="72" />
+        </g>
+      </symbol>
+
+      <!-- EVTOL CARRIER / LIFT DECK (JOBY, ACHR, EVEX) -->
       <symbol id="ship-evtol" viewBox="0 0 120 80">
-        <rect class="ship-line" x="26" y="30" width="68" height="20" rx="6" />
-        <circle class="ship-line" cx="30" cy="26" r="7" />
-        <circle class="ship-line" cx="90" cy="26" r="7" />
-        <circle class="ship-line" cx="30" cy="54" r="7" />
-        <circle class="ship-line" cx="90" cy="54" r="7" />
-        <line class="ship-line" x1="26" y1="40" x2="20" y2="40" />
-        <line class="ship-line" x1="94" y1="40" x2="100" y2="40" />
+        <g class="ship-primary">
+          <!-- deck -->
+          <rect x="26" y="30" width="68" height="20" rx="8" />
+          <!-- central fuselage -->
+          <rect x="48" y="24" width="24" height="32" rx="6" />
+          <!-- nose -->
+          <polygon points="60,18 70,24 50,24" />
+        </g>
+        <g class="ship-secondary">
+          <!-- rotors -->
+          <circle cx="26" cy="26" r="7" />
+          <circle cx="94" cy="26" r="7" />
+          <circle cx="26" cy="54" r="7" />
+          <circle cx="94" cy="54" r="7" />
+          <line x1="26" y1="19" x2="26" y2="33" />
+          <line x1="94" y1="19" x2="94" y2="33" />
+          <line x1="26" y1="47" x2="26" y2="61" />
+          <line x1="94" y1="47" x2="94" y2="61" />
+        </g>
       </symbol>
 
-      <!-- CARGO BARGE / INDUSTRIAL (CACI, HON, etc.) -->
+      <!-- CARGO HAULER / INDUSTRIAL (CACI, HON, MP, LOAR) -->
       <symbol id="ship-cargo" viewBox="0 0 120 80">
-        <polygon class="ship-line"
-          points="14,44 30,26 90,26 106,44 90,58 30,58" />
-        <rect class="ship-line" x="32" y="30" width="16" height="18" />
-        <rect class="ship-line" x="52" y="30" width="16" height="18" />
-        <rect class="ship-line" x="72" y="30" width="16" height="18" />
-        <polyline class="ship-line" points="22,44 30,50 38,44" />
+        <g class="ship-primary">
+          <!-- long hull -->
+          <polygon points="12,44 30,26 96,26 108,36 108,52 96,62 30,62" />
+          <!-- bow -->
+          <polygon points="12,44 22,36 22,52" />
+          <!-- spine -->
+          <line x1="30" y1="44" x2="96" y2="44" />
+        </g>
+        <g class="ship-secondary">
+          <!-- cargo containers -->
+          <rect x="34" y="30" width="12" height="14" />
+          <rect x="48" y="30" width="12" height="14" />
+          <rect x="62" y="30" width="12" height="14" />
+          <rect x="76" y="30" width="12" height="14" />
+          <!-- engine pods -->
+          <circle cx="36" cy="58" r="3" />
+          <circle cx="90" cy="58" r="3" />
+        </g>
       </symbol>
 
-      <!-- MEME PROBE / UNKNOWN OBJECT (GME, etc.) -->
+      <!-- MEME PROBE / UNKNOWN OBJECT (chaotic sectors) -->
       <symbol id="ship-meme" viewBox="0 0 120 80">
-        <ellipse class="ship-line" cx="60" cy="40" rx="32" ry="16" />
-        <ellipse class="ship-line" cx="60" cy="32" rx="18" ry="10" />
-        <circle class="ship-line" cx="45" cy="40" r="3" />
-        <circle class="ship-line" cx="60" cy="40" r="3" />
-        <circle class="ship-line" cx="75" cy="40" r="3" />
-        <polyline class="ship-line" points="28,40 20,40 16,34" />
-        <polyline class="ship-line" points="92,40 100,40 104,46" />
-      </symbol>
-
-      <!-- COMM RELAY / SATELLITE (ASTS, IRDM) -->
-      <symbol id="ship-relay" viewBox="0 0 120 80">
-        <rect class="ship-line" x="45" y="28" width="30" height="24" rx="3" />
-        <line class="ship-line" x1="10" y1="40" x2="45" y2="40" />
-        <line class="ship-line" x1="75" y1="40" x2="110" y2="40" />
-        <rect class="ship-line" x="5" y="30" width="14" height="20" rx="2" />
-        <rect class="ship-line" x="101" y="30" width="14" height="20" rx="2" />
-        <circle class="ship-line" cx="60" cy="40" r="5" />
-        <line class="ship-line" x1="60" y1="52" x2="60" y2="68" />
-        <polygon class="ship-line" points="52,68 60,60 68,68 60,76" />
+        <g class="ship-primary">
+          <!-- saucer -->
+          <ellipse cx="60" cy="40" rx="30" ry="14" />
+          <ellipse cx="60" cy="34" rx="18" ry="8" />
+        </g>
+        <g class="ship-secondary">
+          <!-- lights -->
+          <circle cx="44" cy="40" r="3" />
+          <circle cx="60" cy="40" r="3" />
+          <circle cx="76" cy="40" r="3" />
+          <!-- beams -->
+          <polyline points="45,47 40,56 38,64" />
+          <polyline points="75,47 80,56 82,64" />
+          <!-- weird antenna -->
+          <line x1="60" y1="26" x2="60" y2="20" />
+          <circle cx="60" cy="18" r="2" />
+        </g>
       </symbol>
 
       <!-- RECON DRONE / EARTH OBS (BKSY, PL) -->
       <symbol id="ship-recon" viewBox="0 0 120 80">
-        <ellipse class="ship-line" cx="60" cy="40" rx="28" ry="18" />
-        <circle class="ship-line" cx="60" cy="40" r="10" />
-        <circle class="ship-line" cx="60" cy="40" r="4" />
-        <line class="ship-line" x1="32" y1="40" x2="18" y2="28" />
-        <line class="ship-line" x1="88" y1="40" x2="102" y2="28" />
-        <line class="ship-line" x1="32" y1="40" x2="18" y2="52" />
-        <line class="ship-line" x1="88" y1="40" x2="102" y2="52" />
+        <g class="ship-primary">
+          <ellipse cx="60" cy="40" rx="28" ry="18" />
+          <circle cx="60" cy="40" r="10" />
+        </g>
+        <g class="ship-secondary">
+          <circle cx="60" cy="40" r="4" />
+          <line x1="32" y1="40" x2="18" y2="28" />
+          <line x1="88" y1="40" x2="102" y2="28" />
+          <line x1="32" y1="40" x2="18" y2="52" />
+          <line x1="88" y1="40" x2="102" y2="52" />
+        </g>
       </symbol>
 
       <!-- PATROL CORVETTE / DEFENSE (KTOS, RDW) -->
       <symbol id="ship-patrol" viewBox="0 0 120 80">
-        <polygon class="ship-line" points="15,40 35,22 85,22 105,40 85,58 35,58" />
-        <line class="ship-line" x1="35" y1="22" x2="35" y2="58" />
-        <line class="ship-line" x1="85" y1="22" x2="85" y2="58" />
-        <polygon class="ship-line" points="50,30 70,30 74,40 70,50 50,50 46,40" />
-        <line class="ship-line" x1="15" y1="40" x2="5" y2="40" />
-        <line class="ship-line" x1="105" y1="40" x2="115" y2="40" />
+        <g class="ship-primary">
+          <polygon points="15,40 35,22 85,22 105,40 85,58 35,58" />
+          <line x1="35" y1="22" x2="35" y2="58" />
+          <line x1="85" y1="22" x2="85" y2="58" />
+          <polygon points="50,30 70,30 74,40 70,50 50,50 46,40" />
+        </g>
+        <g class="ship-secondary">
+          <line x1="15" y1="40" x2="5" y2="40" />
+          <line x1="105" y1="40" x2="115" y2="40" />
+          <circle cx="60" cy="40" r="4" />
+        </g>
       </symbol>
+
+      <!-- COMM RELAY / SATELLITE (ASTS backup, IRDM) -->
+      <symbol id="ship-relay" viewBox="0 0 120 80">
+        <g class="ship-primary">
+          <rect x="45" y="28" width="30" height="24" rx="3" />
+          <line x1="10" y1="40" x2="45" y2="40" />
+          <line x1="75" y1="40" x2="110" y2="40" />
+          <rect x="5" y="30" width="14" height="20" rx="2" />
+          <rect x="101" y="30" width="14" height="20" rx="2" />
+        </g>
+        <g class="ship-secondary">
+          <circle cx="60" cy="40" r="5" />
+          <line x1="60" y1="52" x2="60" y2="68" />
+          <polygon points="52,68 60,60 68,68 60,76" />
+        </g>
+      </symbol>
+
     </defs>
   </svg>
 
@@ -6866,55 +7153,78 @@
     }
     
     // =========================================================================
-    // FLEET HOLOBAY SYSTEM (Using SVG Symbol Library)
+    // FLEET HOLOBAY SYSTEM (Pro Ship Library)
     // =========================================================================
     
-    // Map tickers/sectors to SVG symbols from the library
-    function getShipSymbol(ticker, sector) {
-      // Direct ticker mappings
-      if (/LUNR/i.test(ticker)) return "#ship-solar";
-      if (/JOBY|ACHR|EVEX/i.test(ticker)) return "#ship-evtol";
-      if (/GME/i.test(ticker)) return "#ship-meme";
-      if (/ASTS|IRDM/i.test(ticker)) return "#ship-relay";
-      if (/BKSY|PL/i.test(ticker)) return "#ship-recon";
-      if (/KTOS|RDW/i.test(ticker)) return "#ship-patrol";
-      
+    // Map tickers/sectors to SVG symbols - returns {symbol, label, isHero}
+    function mapTickerToShip(ticker, sector) {
+      ticker = (ticker || "").toUpperCase();
+      sector = sector || "";
+
+      // HERO mappings - special detailed ships
+      if (ticker === "RKLB") return { symbol: "#ship-flagship", label: "FLAGSHIP SPEAR", isHero: true };
+      if (ticker === "GME")  return { symbol: "#ship-dreadnought", label: "DREADNOUGHT MECH", isHero: true };
+
+      // Standard fleet mappings
+      if (ticker === "LUNR") return { symbol: "#ship-lander", label: "LUNAR LANDER", isHero: false };
+      if (/JOBY|ACHR|EVEX/.test(ticker)) return { symbol: "#ship-evtol", label: "EVTOL CARRIER", isHero: false };
+      if (/ASTS/.test(ticker)) return { symbol: "#ship-frigate", label: "ORBITAL FRIGATE", isHero: false };
+      if (/IRDM/.test(ticker)) return { symbol: "#ship-relay", label: "COMM RELAY", isHero: false };
+      if (/BKSY|PL/.test(ticker)) return { symbol: "#ship-recon", label: "RECON DRONE", isHero: false };
+      if (/KTOS|RDW/.test(ticker)) return { symbol: "#ship-patrol", label: "PATROL CORVETTE", isHero: false };
+
       // Sector-based fallbacks
-      if (/EVTOL|VTOL|air mobility/i.test(sector)) return "#ship-evtol";
-      if (/meme|retail|chaotic/i.test(sector)) return "#ship-meme";
-      if (/defense|military/i.test(sector)) return "#ship-patrol";
-      if (/industrial|materials|cargo/i.test(sector)) return "#ship-cargo";
-      if (/earth|geo|observation/i.test(sector)) return "#ship-recon";
-      if (/cellular|comms|relay/i.test(sector)) return "#ship-relay";
-      if (/lunar|solar|panel/i.test(sector)) return "#ship-solar";
-      
+      if (/EVTOL|VTOL|air mobility/i.test(sector)) return { symbol: "#ship-evtol", label: "EVTOL CARRIER", isHero: false };
+      if (/meme|retail|chaotic/i.test(sector)) return { symbol: "#ship-meme", label: "ANOMALOUS PROBE", isHero: false };
+      if (/defense|military/i.test(sector)) return { symbol: "#ship-patrol", label: "PATROL CORVETTE", isHero: false };
+      if (/industrial|materials|cargo|aerospace|components/i.test(sector)) return { symbol: "#ship-cargo", label: "CARGO HAULER", isHero: false };
+      if (/earth|geo|observation/i.test(sector)) return { symbol: "#ship-recon", label: "RECON DRONE", isHero: false };
+      if (/cellular|comms|relay/i.test(sector)) return { symbol: "#ship-relay", label: "COMM RELAY", isHero: false };
+      if (/lunar/i.test(sector)) return { symbol: "#ship-lander", label: "LUNAR LANDER", isHero: false };
+
       // Default
-      return "#ship-orbital";
+      return { symbol: "#ship-frigate", label: "ORBITAL FRIGATE", isHero: false };
+    }
+    
+    // Apply ship to an SVG element with use element
+    function applyShipToSvg(svgEl, useEl, mapping, pnlNum) {
+      if (!svgEl || !useEl) return;
+      
+      useEl.setAttribute("href", mapping.symbol);
+      useEl.setAttribute("xlink:href", mapping.symbol); // Legacy browser support
+
+      // Toggle hero-ship class
+      if (mapping.isHero) {
+        svgEl.classList.add("hero-ship");
+      } else {
+        svgEl.classList.remove("hero-ship");
+      }
+      
+      // Toggle winning/losing state for engine pulse animation
+      svgEl.classList.remove("ship-winning", "ship-losing");
+      if (pnlNum !== undefined) {
+        if (pnlNum >= 0) {
+          svgEl.classList.add("ship-winning");
+        } else {
+          svgEl.classList.add("ship-losing");
+        }
+      }
     }
     
     // Update sidebar ship profile
     function updateSidebarShip(ticker, sector, pnlNum) {
+      const svgEl = document.querySelector(".ship-profile .ship-svg");
       const useEl = document.getElementById("sidebar-ship-use");
       const caption = document.getElementById("ship-caption");
       const statusEl = document.getElementById("ship-status");
       const signalEl = document.getElementById("ship-signal");
       
-      if (!useEl) return;
+      if (!svgEl || !useEl) return;
 
-      const symbol = getShipSymbol(ticker, sector);
+      const mapping = mapTickerToShip(ticker, sector);
+      applyShipToSvg(svgEl, useEl, mapping, pnlNum);
       
-      // Determine ship class from symbol
-      let cls = "ORBITAL FRIGATE";
-      if (symbol === "#ship-solar") cls = "SOLAR ARRAY";
-      else if (symbol === "#ship-evtol") cls = "EVTOL DECK";
-      else if (symbol === "#ship-meme") cls = "ANOMALOUS OBJECT";
-      else if (symbol === "#ship-cargo") cls = "CARGO HAULER";
-      else if (symbol === "#ship-recon") cls = "RECON DRONE";
-      else if (symbol === "#ship-relay") cls = "COMM RELAY";
-      else if (symbol === "#ship-patrol") cls = "PATROL CORVETTE";
-
-      useEl.setAttribute("href", symbol);
-      if (caption) caption.textContent = `${ticker.toUpperCase()} · ${cls}`;
+      if (caption) caption.textContent = `${ticker.toUpperCase()} · ${mapping.label}`;
       
       // Update status based on P&L
       if (statusEl && signalEl) {
@@ -6956,17 +7266,13 @@
       const velText = document.getElementById("fleet-vel-text");
 
       if (!strip || !svg) return;
-
-      function makeShipClass(sector, ticker) {
-        const symbol = getShipSymbol(ticker, sector);
-        if (symbol === "#ship-solar") return "SOLAR ARRAY";
-        if (symbol === "#ship-evtol") return "EVTOL DECK";
-        if (symbol === "#ship-meme") return "ANOMALOUS OBJECT";
-        if (symbol === "#ship-cargo") return "CARGO HAULER";
-        if (symbol === "#ship-recon") return "RECON DRONE";
-        if (symbol === "#ship-relay") return "COMM RELAY";
-        if (symbol === "#ship-patrol") return "PATROL CORVETTE";
-        return "ORBITAL FRIGATE";
+      
+      // Ensure SVG has a use element
+      let fleetUse = svg.querySelector("use");
+      if (!fleetUse) {
+        fleetUse = document.createElementNS("http://www.w3.org/2000/svg", "use");
+        fleetUse.id = "fleet-ship-use";
+        svg.appendChild(fleetUse);
       }
 
       function pnlToHealth(pnl) {
@@ -6981,15 +7287,11 @@
         return "CRITICAL";
       }
       
-      // Render ship using <use> element pointing to symbol library
-      function renderShipSymbol(ticker, sector) {
-        const symbol = getShipSymbol(ticker, sector);
-        
-        // Clear and add use element
-        svg.innerHTML = '';
-        const useEl = document.createElementNS("http://www.w3.org/2000/svg", "use");
-        useEl.setAttribute("href", symbol);
-        svg.appendChild(useEl);
+      // Render ship using the mapping system
+      function renderFleetShip(ticker, sector, pnlNum) {
+        const mapping = mapTickerToShip(ticker, sector);
+        applyShipToSvg(svg, fleetUse, mapping, pnlNum);
+        return mapping;
       }
 
       const fleet = [];
@@ -7002,6 +7304,7 @@
           const pnlNum = ((pos.current_price - pos.entry_price) / pos.entry_price) * 100;
           const pnlText = (pnlNum >= 0 ? '+' : '') + pnlNum.toFixed(1) + '%';
           const sector = profile.sector || 'Unknown';
+          const mapping = mapTickerToShip(pos.ticker, sector);
 
           fleet.push({
             ticker: pos.ticker,
@@ -7009,8 +7312,9 @@
             value: value,
             pnlText: pnlText,
             pnlNum: pnlNum,
-            shipClass: makeShipClass(sector, pos.ticker),
-            codename: profile.codename || pos.ticker
+            shipClass: mapping.label,
+            codename: profile.codename || pos.ticker,
+            isHero: mapping.isHero
           });
         });
       }
@@ -7021,6 +7325,7 @@
       fleet.forEach(ship => {
         const thumb = document.createElement("div");
         thumb.className = "fleet-thumb " + (ship.pnlNum >= 0 ? "gain" : "loss");
+        if (ship.isHero) thumb.classList.add("hero");
         thumb.dataset.ticker = ship.ticker;
 
         thumb.innerHTML = `
@@ -7040,8 +7345,8 @@
         const ship = fleet.find(s => s.ticker === ticker);
         if (!ship) return;
 
-        // Render ship using symbol library
-        renderShipSymbol(ship.ticker, ship.sector);
+        // Render ship using pro symbol library
+        renderFleetShip(ship.ticker, ship.sector, ship.pnlNum);
         
         // Update sidebar ship profile too
         updateSidebarShip(ship.ticker, ship.sector, ship.pnlNum);
@@ -7162,13 +7467,26 @@
     }
     
     // Mobile drawer toggle
+    let scrollPosition = 0;
     function toggleMobileDrawer() {
       const drawer = document.getElementById('mobile-drawer');
       const backdrop = document.getElementById('mobile-drawer-backdrop');
       if (drawer && backdrop) {
+        const isOpening = !drawer.classList.contains('open');
         drawer.classList.toggle('open');
         backdrop.classList.toggle('open');
-        document.body.style.overflow = drawer.classList.contains('open') ? 'hidden' : '';
+        
+        if (isOpening) {
+          // Save scroll position and lock body
+          scrollPosition = window.pageYOffset;
+          document.body.classList.add('modal-open');
+          document.body.style.top = `-${scrollPosition}px`;
+        } else {
+          // Restore scroll position
+          document.body.classList.remove('modal-open');
+          document.body.style.top = '';
+          window.scrollTo(0, scrollPosition);
+        }
       }
     }
     
@@ -7919,23 +8237,298 @@
         return audioCtx;
       }
       
-      // Tiny beep sound
+      // 90s Anime Mech Beat Sound System
+      // Inspired by Gundam, Evangelion, Macross soundtracks
+      const MechSFX = {
+        // Bass-heavy synth hit (like mech footsteps)
+        bassHit(freq = 60, duration = 0.15) {
+          const ctx = getAudioContext();
+          if (!ctx) return;
+          if (ctx.state === 'suspended') ctx.resume();
+          
+          const osc = ctx.createOscillator();
+          const osc2 = ctx.createOscillator();
+          const gain = ctx.createGain();
+          const filter = ctx.createBiquadFilter();
+          
+          // Two detuned oscillators for thickness
+          osc.type = 'sawtooth';
+          osc.frequency.value = freq;
+          osc2.type = 'square';
+          osc2.frequency.value = freq * 0.5;
+          osc2.detune.value = -10;
+          
+          // Low pass filter for that analog warmth
+          filter.type = 'lowpass';
+          filter.frequency.value = 800;
+          filter.Q.value = 2;
+          // Filter sweep
+          filter.frequency.setValueAtTime(800, ctx.currentTime);
+          filter.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + duration);
+          
+          // Punchy envelope
+          gain.gain.setValueAtTime(0.18, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+          
+          osc.connect(filter);
+          osc2.connect(filter);
+          filter.connect(gain);
+          gain.connect(ctx.destination);
+          
+          osc.start();
+          osc2.start();
+          osc.stop(ctx.currentTime + duration);
+          osc2.stop(ctx.currentTime + duration);
+        },
+        
+        // Synth stab (like UI confirmations in mech cockpits)
+        synthStab(freq = 440, duration = 0.08) {
+          const ctx = getAudioContext();
+          if (!ctx) return;
+          if (ctx.state === 'suspended') ctx.resume();
+          
+          const osc = ctx.createOscillator();
+          const osc2 = ctx.createOscillator();
+          const gain = ctx.createGain();
+          const filter = ctx.createBiquadFilter();
+          
+          osc.type = 'square';
+          osc.frequency.value = freq;
+          osc2.type = 'sawtooth';
+          osc2.frequency.value = freq * 1.01; // Slight detune
+          
+          filter.type = 'bandpass';
+          filter.frequency.value = freq * 2;
+          filter.Q.value = 1;
+          
+          gain.gain.setValueAtTime(0.12, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+          
+          osc.connect(filter);
+          osc2.connect(filter);
+          filter.connect(gain);
+          gain.connect(ctx.destination);
+          
+          osc.start();
+          osc2.start();
+          osc.stop(ctx.currentTime + duration);
+          osc2.stop(ctx.currentTime + duration);
+        },
+        
+        // Alarm/alert sound (descending synth sweep)
+        alert(startFreq = 800, endFreq = 200, duration = 0.25) {
+          const ctx = getAudioContext();
+          if (!ctx) return;
+          if (ctx.state === 'suspended') ctx.resume();
+          
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          const distortion = ctx.createWaveShaper();
+          
+          // Create distortion curve for grit
+          const curve = new Float32Array(256);
+          for (let i = 0; i < 256; i++) {
+            const x = (i / 128) - 1;
+            curve[i] = Math.tanh(x * 2);
+          }
+          distortion.curve = curve;
+          
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(startFreq, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(endFreq, ctx.currentTime + duration);
+          
+          gain.gain.setValueAtTime(0.1, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+          
+          osc.connect(distortion);
+          distortion.connect(gain);
+          gain.connect(ctx.destination);
+          
+          osc.start();
+          osc.stop(ctx.currentTime + duration);
+        },
+        
+        // Power up sound (rising sweep with harmonics)
+        powerUp(duration = 0.3) {
+          const ctx = getAudioContext();
+          if (!ctx) return;
+          if (ctx.state === 'suspended') ctx.resume();
+          
+          const osc = ctx.createOscillator();
+          const osc2 = ctx.createOscillator();
+          const gain = ctx.createGain();
+          const filter = ctx.createBiquadFilter();
+          
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(80, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + duration);
+          
+          osc2.type = 'square';
+          osc2.frequency.setValueAtTime(160, ctx.currentTime);
+          osc2.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + duration);
+          
+          filter.type = 'lowpass';
+          filter.frequency.setValueAtTime(200, ctx.currentTime);
+          filter.frequency.exponentialRampToValueAtTime(3000, ctx.currentTime + duration);
+          filter.Q.value = 4;
+          
+          gain.gain.setValueAtTime(0.15, ctx.currentTime);
+          gain.gain.setValueAtTime(0.15, ctx.currentTime + duration * 0.7);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+          
+          osc.connect(filter);
+          osc2.connect(filter);
+          filter.connect(gain);
+          gain.connect(ctx.destination);
+          
+          osc.start();
+          osc2.start();
+          osc.stop(ctx.currentTime + duration);
+          osc2.stop(ctx.currentTime + duration);
+        },
+        
+        // Weapon fire sound
+        weaponFire(duration = 0.12) {
+          const ctx = getAudioContext();
+          if (!ctx) return;
+          if (ctx.state === 'suspended') ctx.resume();
+          
+          // Noise generator for "pew" texture
+          const bufferSize = ctx.sampleRate * duration;
+          const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+          const data = buffer.getChannelData(0);
+          for (let i = 0; i < bufferSize; i++) {
+            data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.1));
+          }
+          
+          const noise = ctx.createBufferSource();
+          noise.buffer = buffer;
+          
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          const filter = ctx.createBiquadFilter();
+          
+          osc.type = 'square';
+          osc.frequency.setValueAtTime(1200, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + duration);
+          
+          filter.type = 'bandpass';
+          filter.frequency.value = 800;
+          filter.Q.value = 2;
+          
+          gain.gain.setValueAtTime(0.15, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+          
+          noise.connect(filter);
+          osc.connect(filter);
+          filter.connect(gain);
+          gain.connect(ctx.destination);
+          
+          noise.start();
+          osc.start();
+          osc.stop(ctx.currentTime + duration);
+        },
+        
+        // Explosion/impact sound
+        impact(duration = 0.35) {
+          const ctx = getAudioContext();
+          if (!ctx) return;
+          if (ctx.state === 'suspended') ctx.resume();
+          
+          // Deep bass thump
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(150, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(30, ctx.currentTime + duration);
+          
+          gain.gain.setValueAtTime(0.25, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+          
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          
+          osc.start();
+          osc.stop(ctx.currentTime + duration);
+          
+          // Noise burst on top
+          const bufferSize = ctx.sampleRate * 0.1;
+          const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+          const data = buffer.getChannelData(0);
+          for (let i = 0; i < bufferSize; i++) {
+            data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.15));
+          }
+          
+          const noise = ctx.createBufferSource();
+          noise.buffer = buffer;
+          const noiseGain = ctx.createGain();
+          const noiseFilter = ctx.createBiquadFilter();
+          
+          noiseFilter.type = 'lowpass';
+          noiseFilter.frequency.value = 500;
+          
+          noiseGain.gain.setValueAtTime(0.12, ctx.currentTime);
+          noiseGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+          
+          noise.connect(noiseFilter);
+          noiseFilter.connect(noiseGain);
+          noiseGain.connect(ctx.destination);
+          
+          noise.start();
+        },
+        
+        // Selection/tick sound
+        tick(freq = 880, duration = 0.04) {
+          const ctx = getAudioContext();
+          if (!ctx) return;
+          if (ctx.state === 'suspended') ctx.resume();
+          
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          
+          osc.type = 'triangle';
+          osc.frequency.value = freq;
+          
+          gain.gain.setValueAtTime(0.08, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+          
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          
+          osc.start();
+          osc.stop(ctx.currentTime + duration);
+        },
+        
+        // Success fanfare (two-tone up)
+        success() {
+          this.synthStab(523, 0.08);
+          setTimeout(() => this.synthStab(659, 0.12), 80);
+        },
+        
+        // Error/warning tone
+        error() {
+          this.alert(400, 200, 0.15);
+        }
+      };
+      
+      // Legacy beep function mapped to new sound system
       window.beep = function(freq = 520, duration = 0.08) {
         if (!sfxEnabled) return;
-        const ctx = getAudioContext();
-        if (!ctx) return;
-        if (ctx.state === 'suspended') ctx.resume();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.frequency.value = freq;
-        osc.type = 'square';
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        gain.gain.setValueAtTime(0.12, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
-        osc.start();
-        osc.stop(ctx.currentTime + duration);
+        // Map frequency ranges to appropriate mech sounds
+        if (freq < 200) {
+          MechSFX.bassHit(freq, duration);
+        } else if (freq < 400) {
+          MechSFX.alert(freq, freq * 0.5, duration);
+        } else if (freq < 700) {
+          MechSFX.synthStab(freq, duration);
+        } else {
+          MechSFX.tick(freq, duration);
+        }
       };
+      
+      // Expose MechSFX globally for direct use
+      window.MechSFX = MechSFX;
       
       // Toast notifications
       window.showToast = function(message, level = 'info') {
@@ -9156,11 +9749,10 @@
         const flash = document.getElementById('attack-flash');
         if (!overlay) return;
 
-        // Play sound if available
-        if (typeof beep === 'function') {
-          beep(180, 0.3);
-          setTimeout(() => beep(140, 0.3), 100);
-          setTimeout(() => beep(100, 0.5), 200);
+        // Play mech impact sounds
+        if (window.MechSFX) {
+          MechSFX.impact(0.4);
+          setTimeout(() => MechSFX.alert(400, 150, 0.3), 150);
         }
 
         // Screen flash
@@ -9371,10 +9963,8 @@
           if (typeof logTerminal === 'function') {
             logTerminal('SIGNAL INVADERS initialized. Defend the array!');
           }
-          if (typeof beep === 'function') {
-            beep(440, 0.1);
-            setTimeout(() => beep(550, 0.1), 100);
-            setTimeout(() => beep(660, 0.15), 200);
+          if (window.MechSFX) {
+            MechSFX.powerUp(0.3);
           }
         },
         
@@ -9427,8 +10017,8 @@
               width: 4,
               height: 8
             });
-            if (typeof beep === 'function') {
-              beep(880, 0.05);
+            if (window.MechSFX) {
+              MechSFX.weaponFire(0.1);
             }
           }
         },
@@ -9521,8 +10111,8 @@
                 this.score += enemy.type === 'elite' ? 20 : 10;
                 this.updateUI();
                 
-                if (typeof beep === 'function') {
-                  beep(200, 0.08);
+                if (window.MechSFX) {
+                  MechSFX.bassHit(80, 0.1);
                 }
               }
             });
@@ -9547,8 +10137,8 @@
                 });
               }
               
-              if (typeof beep === 'function') {
-                beep(150, 0.2);
+              if (window.MechSFX) {
+                MechSFX.impact(0.25);
               }
               
               if (this.lives <= 0) {
@@ -9567,9 +10157,8 @@
             this.wave++;
             this.spawnWave();
             this.updateUI();
-            if (typeof beep === 'function') {
-              beep(660, 0.1);
-              setTimeout(() => beep(880, 0.15), 100);
+            if (window.MechSFX) {
+              MechSFX.success();
             }
           }
           
@@ -9828,8 +10417,8 @@
           if (typeof logTerminal === 'function') {
             logTerminal('snoop trap • ' + action.toUpperCase());
           }
-          if (typeof beep === 'function') {
-            beep(200, 0.1);
+          if (window.MechSFX) {
+            MechSFX.alert(300, 150, 0.15);
           }
           
           // Glitch effect on repeated attempts
@@ -9904,8 +10493,8 @@
           if (typeof logTerminal === 'function') {
             logTerminal(`auth attempt #${this.attempts} • user=${user}`);
           }
-          if (typeof beep === 'function') {
-            beep(150, 0.15);
+          if (window.MechSFX) {
+            MechSFX.error();
           }
           
           // Easter egg at attempt 5
@@ -10069,9 +10658,8 @@
           if (typeof logTerminal === 'function') {
             logTerminal('TERRAIN LANDER initialized. Good luck, pilot.');
           }
-          if (typeof beep === 'function') {
-            beep(440, 0.1);
-            setTimeout(() => beep(550, 0.1), 100);
+          if (window.MechSFX) {
+            MechSFX.powerUp(0.2);
           }
         },
         
@@ -10188,17 +10776,16 @@
             if (typeof completeMission === 'function') {
               completeMission('terrain_lander');
             }
-            if (typeof beep === 'function') {
-              beep(660, 0.1);
-              setTimeout(() => beep(880, 0.15), 100);
+            if (window.MechSFX) {
+              MechSFX.success();
             }
           } else {
             if (msgEl) {
               msgEl.textContent = '✗ CRASH — VOLATILITY TOO HIGH';
               msgEl.className = 'landing-message failure';
             }
-            if (typeof beep === 'function') {
-              beep(150, 0.3);
+            if (window.MechSFX) {
+              MechSFX.impact(0.35);
             }
           }
           
