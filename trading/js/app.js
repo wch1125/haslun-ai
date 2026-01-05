@@ -4334,6 +4334,7 @@
         document.addEventListener('DOMContentLoaded', () => window.AdminConsole && window.AdminConsole.init());
         document.addEventListener('DOMContentLoaded', () => window.LandingGame && window.LandingGame.init());
         document.addEventListener('DOMContentLoaded', initConsoleShip);
+        document.addEventListener('DOMContentLoaded', initMissionPanel); // Step 4
       } else {
         initArcade();
         initTubeOverload();
@@ -4346,5 +4347,177 @@
         window.AdminConsole && window.AdminConsole.init();
         window.LandingGame && window.LandingGame.init();
         initConsoleShip();
+        initMissionPanel(); // Step 4
       }
     })();
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // STEP 4: MISSION PANEL (Dashboard Mission Awareness)
+    // ═══════════════════════════════════════════════════════════════════
+    
+    function initMissionPanel() {
+      if (!window.MissionBridge) {
+        console.warn('[MissionPanel] MissionBridge not loaded');
+        return;
+      }
+      
+      // Initial render
+      updateMissionPanel();
+      
+      // Poll every 2 seconds for mission state changes
+      setInterval(updateMissionPanel, 2000);
+    }
+    
+    function updateMissionPanel() {
+      if (!window.MissionBridge) return;
+      
+      try {
+        const counts = MissionBridge.getCounts();
+        const recentCompleted = MissionBridge.getRecentCompleted(3);
+        
+        // Update active count badge
+        const countBadge = document.getElementById('active-mission-count');
+        if (countBadge) {
+          countBadge.textContent = counts.active;
+          countBadge.classList.toggle('zero', counts.active === 0);
+        }
+        
+        // Update summary counts
+        const activeCount = document.getElementById('mission-active-count');
+        const completeCount = document.getElementById('mission-complete-count');
+        if (activeCount) activeCount.textContent = counts.active;
+        if (completeCount) completeCount.textContent = counts.complete;
+        
+        // Update recent missions list
+        const recentList = document.getElementById('recent-missions-list');
+        if (recentList) {
+          if (recentCompleted.length === 0) {
+            // Polish: Improved zero state copy
+            recentList.innerHTML = '<div class="no-missions">Launch missions to track regime evolution over time.</div>';
+          } else {
+            recentList.innerHTML = recentCompleted.map(m => {
+              const grade = m.outcome?.grade || '?';
+              return `
+                <div class="recent-mission-item grade-${grade}">
+                  <div>
+                    <span class="recent-mission-ticker">${m.ticker}</span>
+                    <span class="recent-mission-type">${m.typeName || m.type}</span>
+                  </div>
+                  <span class="recent-mission-grade ${grade}">${grade}</span>
+                </div>
+              `;
+            }).join('');
+          }
+        }
+        
+        // Update mission context for selected ticker (if telemetry is showing)
+        updateMissionContext();
+        
+      } catch (e) {
+        console.warn('[MissionPanel] Update failed:', e);
+      }
+    }
+    
+    /**
+     * Update mission context card in telemetry for selected ticker
+     */
+    function updateMissionContext() {
+      if (!window.MissionBridge) return;
+      
+      const contextContainer = document.getElementById('mission-context-container');
+      if (!contextContainer) return;
+      
+      // Get currently selected ticker from app state
+      const ticker = window.currentTicker || null;
+      if (!ticker) {
+        contextContainer.innerHTML = '<div class="mission-context-none">Select a ticker to see mission context</div>';
+        return;
+      }
+      
+      const activeMission = MissionBridge.getActiveForTicker(ticker);
+      
+      if (!activeMission) {
+        contextContainer.innerHTML = `
+          <div class="mission-context-none">
+            No active mission for ${ticker}
+            <br><a href="derivatives.html?ticker=${ticker}" style="color:var(--cyan);font-size:0.65rem;">Launch from Mission Command →</a>
+          </div>
+        `;
+        return;
+      }
+      
+      // Render active mission context
+      const progress = MissionBridge.getMissionProgress(activeMission);
+      const supports = MissionBridge.getSupportSummary(activeMission);
+      const recentLogs = MissionBridge.getRecentLogs(activeMission, 3);
+      const stars = '★'.repeat(activeMission.difficulty || 2) + '☆'.repeat(3 - (activeMission.difficulty || 2));
+      
+      let supportsHtml = '';
+      if (supports.length > 0) {
+        supportsHtml = `
+          <div class="mission-context-supports">
+            ${supports.map(s => `<span class="mission-support-badge">${s.ticker} (${s.role})</span>`).join('')}
+          </div>
+        `;
+      }
+      
+      let logsHtml = '';
+      if (recentLogs.length > 0) {
+        logsHtml = `
+          <div class="mission-context-logs">
+            ${recentLogs.map(l => `<div class="mission-context-log">${l.msg}</div>`).join('')}
+          </div>
+        `;
+      }
+      
+      contextContainer.innerHTML = `
+        <div class="mission-context-card">
+          <div class="mission-context-header">
+            <span class="mission-context-type">${activeMission.icon || '🚀'} ${activeMission.typeName || activeMission.type}</span>
+            <span class="mission-context-difficulty">${stars}</span>
+          </div>
+          <div class="mission-context-progress">
+            <div class="mission-context-progress-fill" style="width:${(progress?.progress || 0) * 100}%"></div>
+          </div>
+          <div class="mission-context-meta">
+            <span>${progress?.barsElapsed || 0} / ${activeMission.end?.targetBars || activeMission.duration?.targetBars || '?'} bars</span>
+            <span>${progress?.timeRemaining || '--'}</span>
+          </div>
+          ${supportsHtml}
+          ${logsHtml}
+          <a href="derivatives.html?ticker=${ticker}" style="color:var(--cyan);font-size:0.65rem;display:block;text-align:center;margin-top:0.5rem;">
+            Open Mission Command →
+          </a>
+        </div>
+      `;
+    }
+    
+    /**
+     * Get mission badge for a ticker (for fleet display)
+     * Returns { type: 'deployed'|'escorting'|'benchmark'|null, label: string }
+     */
+    function getMissionBadgeForTicker(ticker) {
+      if (!window.MissionBridge) return null;
+      
+      // Check if ticker is XAR (benchmark)
+      if (ticker === 'XAR') {
+        return { type: 'benchmark', label: 'BENCHMARK' };
+      }
+      
+      // Check if ticker is deployed (has active mission)
+      const activeMission = MissionBridge.getActiveForTicker(ticker);
+      if (activeMission) {
+        return { type: 'deployed', label: 'DEPLOYED' };
+      }
+      
+      // Check if ticker is escorting (assigned as support)
+      const supportInfo = MissionBridge.getAssignedSupportForTicker(ticker);
+      if (supportInfo) {
+        return { type: 'escorting', label: supportInfo.role || 'ESCORTING' };
+      }
+      
+      return null;
+    }
+    
+    // Make getMissionBadgeForTicker available globally for fleet rendering
+    window.getMissionBadgeForTicker = getMissionBadgeForTicker;

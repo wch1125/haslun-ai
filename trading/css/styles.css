@@ -832,6 +832,12 @@
       max-width: 220px;
       text-shadow: 0 0 4px rgba(0, 0, 0, 0.9);
     }
+    
+    /* Step 4: Mission Context Container (inside telemetry HUD) */
+    .mission-context-container {
+      margin-top: 0.75rem;
+      max-width: 220px;
+    }
 
     /* hide HUD on small screens – keeps mobile clean */
     @media (max-width: 960px) {
@@ -2164,6 +2170,215 @@
     .mood-copy {
       color: var(--text-muted);
       font-style: italic;
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════════
+       STEP 4: MISSION STATUS PANEL
+       ═══════════════════════════════════════════════════════════════════ */
+    .mission-status-panel {
+      background: linear-gradient(180deg, rgba(0, 212, 255, 0.03) 0%, transparent 100%);
+    }
+    .mission-status-panel .sidebar-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .mission-count-badge {
+      background: var(--phosphor);
+      color: var(--bg-dark);
+      font-size: 0.6rem;
+      font-weight: 700;
+      padding: 0.15rem 0.4rem;
+      border-radius: 2px;
+      min-width: 1.2rem;
+      text-align: center;
+    }
+    .mission-count-badge.zero { background: var(--text-dim); }
+    .mission-summary {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 0.75rem;
+    }
+    .mission-summary-row {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .mission-summary-label {
+      font-size: 0.55rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .mission-summary-value {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--phosphor);
+    }
+    .recent-missions {
+      margin-bottom: 0.75rem;
+    }
+    .recent-missions-label {
+      font-size: 0.55rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.4rem;
+    }
+    .recent-missions-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+    .recent-mission-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.3rem 0.5rem;
+      background: var(--bg-card);
+      border-left: 2px solid var(--text-dim);
+      font-size: 0.7rem;
+    }
+    .recent-mission-item.grade-S { border-left-color: #ffd700; }
+    .recent-mission-item.grade-A { border-left-color: var(--phosphor); }
+    .recent-mission-item.grade-B { border-left-color: var(--cyan); }
+    .recent-mission-item.grade-C { border-left-color: var(--amber); }
+    .recent-mission-item.grade-D { border-left-color: var(--signal-down); }
+    .recent-mission-ticker {
+      font-weight: 600;
+      color: var(--text);
+    }
+    .recent-mission-type {
+      color: var(--text-dim);
+      font-size: 0.6rem;
+    }
+    .recent-mission-grade {
+      font-weight: 700;
+      font-size: 0.8rem;
+    }
+    .recent-mission-grade.S { color: #ffd700; }
+    .recent-mission-grade.A { color: var(--phosphor); }
+    .recent-mission-grade.B { color: var(--cyan); }
+    .recent-mission-grade.C { color: var(--amber); }
+    .recent-mission-grade.D { color: var(--signal-down); }
+    .no-missions {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      font-style: italic;
+      padding: 0.3rem 0;
+    }
+    .mission-cmd-btn {
+      width: 100%;
+      padding: 0.5rem;
+      background: linear-gradient(135deg, rgba(0, 212, 255, 0.1) 0%, transparent 100%);
+      border: 1px solid rgba(0, 212, 255, 0.3);
+      color: var(--cyan);
+      font-family: inherit;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .mission-cmd-btn:hover {
+      background: linear-gradient(135deg, rgba(0, 212, 255, 0.2) 0%, transparent 100%);
+      border-color: var(--cyan);
+      text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+    }
+    
+    /* Mission Context in Telemetry */
+    .mission-context-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 0.75rem;
+      margin-top: 0.75rem;
+    }
+    .mission-context-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+    .mission-context-type {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--phosphor);
+    }
+    .mission-context-difficulty {
+      font-size: 0.7rem;
+      color: var(--amber);
+    }
+    .mission-context-progress {
+      height: 4px;
+      background: rgba(255,255,255,0.1);
+      margin-bottom: 0.5rem;
+      overflow: hidden;
+    }
+    .mission-context-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--amber), var(--phosphor));
+      transition: width 0.3s;
+    }
+    .mission-context-meta {
+      font-size: 0.65rem;
+      color: var(--text-dim);
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+    }
+    .mission-context-supports {
+      display: flex;
+      gap: 0.4rem;
+      margin-bottom: 0.5rem;
+    }
+    .mission-support-badge {
+      font-size: 0.6rem;
+      padding: 0.15rem 0.3rem;
+      background: rgba(51,255,153,0.1);
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+    }
+    .mission-context-logs {
+      font-size: 0.6rem;
+      color: var(--text-dim);
+      max-height: 60px;
+      overflow-y: auto;
+    }
+    .mission-context-log {
+      padding: 0.2rem 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .mission-context-none {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      font-style: italic;
+      padding: 0.5rem 0;
+    }
+    
+    /* Fleet ship badges */
+    .ship-mission-badge {
+      position: absolute;
+      top: 0.25rem;
+      right: 0.25rem;
+      font-size: 0.5rem;
+      font-weight: 700;
+      padding: 0.1rem 0.3rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .ship-mission-badge.deployed {
+      background: var(--phosphor);
+      color: var(--bg-dark);
+    }
+    .ship-mission-badge.escorting {
+      background: var(--amber);
+      color: var(--bg-dark);
+    }
+    .ship-mission-badge.benchmark {
+      background: rgba(255, 200, 100, 0.3);
+      color: var(--amber);
+      border: 1px solid rgba(255, 200, 100, 0.5);
     }
     
     .macd-display { display: flex; flex-direction: column; gap: 0.6rem; }

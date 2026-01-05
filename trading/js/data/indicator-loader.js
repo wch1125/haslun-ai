@@ -68,13 +68,13 @@ const IndicatorLoader = (function() {
   }
   
   /**
-   * Get list of available tickers (ACTIVE only for main dropdown)
+   * Get list of available tickers (ACTIVE + BENCHMARK for main dropdown)
    */
   async function getAvailableTickers() {
     const m = await loadManifest();
-    // Step 3: Filter to only ACTIVE tickers for main functionality
+    // Step 3.1: Include ACTIVE and BENCHMARK, but mark them
     return m.tickers
-      .filter(t => t.status === 'ACTIVE' || !t.status) // Backward compat: treat undefined as ACTIVE
+      .filter(t => t.status === 'ACTIVE' || t.status === 'BENCHMARK' || !t.status)
       .map(t => ({
         ticker: t.ticker,
         name: t.name || t.ticker,

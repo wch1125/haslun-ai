@@ -633,6 +633,34 @@
             <span class="mood-copy">Green enough to feel smug, not enough to tweet about.</span>
           </div>
         </div>
+        
+        <!-- Step 4: Mission Status Mini-Panel -->
+        <div class="sidebar-section mission-status-panel" id="mission-status-panel">
+          <div class="sidebar-title">
+            <span>🚀 Mission Status</span>
+            <span class="mission-count-badge" id="active-mission-count">0</span>
+          </div>
+          <div class="mission-summary" id="mission-summary">
+            <div class="mission-summary-row">
+              <span class="mission-summary-label">Active</span>
+              <span class="mission-summary-value" id="mission-active-count">0</span>
+            </div>
+            <div class="mission-summary-row">
+              <span class="mission-summary-label">Completed</span>
+              <span class="mission-summary-value" id="mission-complete-count">0</span>
+            </div>
+          </div>
+          <div class="recent-missions" id="recent-missions">
+            <div class="recent-missions-label">Recent:</div>
+            <div class="recent-missions-list" id="recent-missions-list">
+            <div class="no-missions">Launch missions to track regime evolution.</div>
+            </div>
+          </div>
+          <button class="mission-cmd-btn" onclick="launchMissionCommand()">
+            ⚔️ Open Mission Command
+          </button>
+        </div>
+        
         <div class="sidebar-section">
           <div class="sidebar-title" data-glossary-id="macd">MACD Signal</div>
           <div class="macd-display">
@@ -745,6 +773,9 @@
                   <div class="telemetry-ship-caption" id="telemetry-ship-caption">
                     Spearhead command ship. Victory follows in its wake.
                   </div>
+                  
+                  <!-- Step 4: Mission Context Container -->
+                  <div id="mission-context-container" class="mission-context-container"></div>
                 </div>
                 
                 <div class="telemetry-chart-area">
@@ -1870,6 +1901,9 @@
   
   <!-- Mini-games -->
   <script src="js/games/mini-games.js"></script>
+  
+  <!-- Step 4: Mission Bridge (read-only adapter for dashboard) -->
+  <script src="js/mission-bridge.js"></script>
   
   <!-- Main application -->
   <script src="js/app.js"></script>

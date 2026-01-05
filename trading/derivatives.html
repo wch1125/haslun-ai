@@ -112,6 +112,17 @@
     .stat-bar-fill.medium { background: var(--amber); box-shadow: 0 0 10px var(--amber); }
     .stat-bar-fill.low { background: var(--red); box-shadow: 0 0 10px var(--red); }
     .stat-why { font-size: 0.7rem; color: var(--text-dim); line-height: 1.4; }
+    
+    /* Polish: Extreme stat narrative microcopy */
+    .stat-extreme {
+      font-size: 0.65rem;
+      color: var(--amber);
+      font-style: italic;
+      margin-top: 0.35rem;
+      padding: 0.3rem 0.5rem;
+      background: rgba(255,170,51,0.08);
+      border-left: 2px solid var(--amber);
+    }
     .latest-bar { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.75rem; color: var(--text-dim); }
     .latest-bar strong { color: var(--text); }
     
@@ -129,8 +140,36 @@
     .mission-name { font-size: 0.9rem; color: var(--phosphor); font-weight: 600; }
     .mission-meta { text-align: right; }
     .difficulty-stars { color: var(--amber); font-size: 0.9rem; letter-spacing: 2px; }
-    .suitability { font-size: 0.7rem; color: var(--text-dim); margin-top: 0.25rem; }
-    .suitability.high { color: var(--phosphor); }
+    
+    /* Polish: Fit bar visual affordance */
+    .suitability-container {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      cursor: help;
+      margin-top: 0.25rem;
+    }
+    .fit-bar {
+      width: 40px;
+      height: 4px;
+      background: rgba(255,255,255,0.1);
+      overflow: hidden;
+      border-radius: 2px;
+    }
+    .fit-fill {
+      height: 100%;
+      transition: width 0.3s;
+    }
+    .fit-bar.fit-high .fit-fill { background: var(--phosphor); }
+    .fit-bar.fit-medium .fit-fill { background: var(--amber); }
+    .fit-bar.fit-low .fit-fill { background: var(--red); }
+    .suitability-text {
+      font-size: 0.65rem;
+      color: var(--text-dim);
+    }
+    .fit-high + .suitability-text { color: var(--phosphor); }
+    .suitability-container:hover .suitability-text { color: var(--text); }
+    
     .mission-concept { font-size: 0.75rem; color: var(--amber); margin-bottom: 0.5rem; font-style: italic; }
     .mission-betting { font-size: 0.7rem; color: var(--text-dim); margin-bottom: 0.5rem; }
     .mission-betting strong { color: var(--cyan); }
@@ -213,6 +252,29 @@
     /* Empty states */
     .empty-state { text-align: center; padding: 2rem; color: var(--text-dim); font-size: 0.85rem; }
     
+    /* Polish: Improved zero state design */
+    .zero-state-missions {
+      padding: 1.5rem;
+      background: rgba(51,255,153,0.02);
+      border: 1px dashed rgba(51,255,153,0.2);
+    }
+    .zero-state-icon {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+      opacity: 0.6;
+    }
+    .zero-state-title {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 0.25rem;
+    }
+    .zero-state-copy {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      line-height: 1.4;
+    }
+    
     /* Loading */
     .loading { text-align: center; padding: 2rem; color: var(--text-dim); }
     
@@ -278,6 +340,13 @@
     .fleet-ship.silhouette .fleet-ship-ticker { color: var(--text-dim); letter-spacing: 2px; }
     .fleet-ship.silhouette .fleet-ship-name { font-style: italic; }
     .fleet-ship.silhouette .fleet-ship-role { background: rgba(100,100,100,0.2); color: var(--text-dim); }
+    
+    /* Benchmark Ticker (viewable but not assignable) */
+    .fleet-ship.benchmark { opacity: 0.6; cursor: not-allowed; border-color: rgba(255, 200, 100, 0.3); }
+    .fleet-ship.benchmark:hover { border-color: rgba(255, 200, 100, 0.5); background: var(--bg-card); }
+    .fleet-ship.benchmark .fleet-ship-ticker { color: var(--amber); }
+    .fleet-ship.benchmark .fleet-ship-role { background: rgba(255, 170, 51, 0.15); color: var(--amber); }
+    .fleet-ship-role.BENCHMARK { background: rgba(255, 170, 51, 0.15); color: var(--amber); }
     
     /* Support Slots */
     .support-slots { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); }
@@ -388,7 +457,11 @@
         </div>
         <div class="panel-body">
           <div class="active-missions-list" id="active-missions-list">
-            <div class="empty-state">No active missions</div>
+            <div class="empty-state zero-state-missions">
+              <div class="zero-state-icon">⚔️</div>
+              <div class="zero-state-title">No active missions</div>
+              <div class="zero-state-copy">Launch operations to observe how market conditions evolve over time.</div>
+            </div>
           </div>
           
           <!-- Mission Detail (hidden by default) -->
@@ -559,16 +632,26 @@
           const tickers = await IndicatorLoader.getAvailableTickers();
           const meta = await IndicatorLoader.getMetadata();
           
+          // Store ticker statuses for later use
+          this.tickerStatuses = {};
+          
           this.tickerSelect.innerHTML = '<option value="">Select sector...</option>';
           for (const t of tickers) {
             const opt = document.createElement('option');
             opt.value = t.ticker;
+            this.tickerStatuses[t.ticker] = t.status;
             
             // Check if active mission exists
             const activeMission = MissionSystem.getActiveMissionForTicker(t.ticker);
-            opt.textContent = activeMission 
-              ? `${t.ticker} — ${t.name} [ACTIVE]`
-              : `${t.ticker} — ${t.name}`;
+            
+            // Step 3.1: Mark BENCHMARK tickers
+            if (t.status === 'BENCHMARK') {
+              opt.textContent = `${t.ticker} — ${t.name} [BENCHMARK]`;
+            } else if (activeMission) {
+              opt.textContent = `${t.ticker} — ${t.name} [ACTIVE]`;
+            } else {
+              opt.textContent = `${t.ticker} — ${t.name}`;
+            }
             
             this.tickerSelect.appendChild(opt);
           }
@@ -647,6 +730,22 @@
             ? (value >= 60 ? 'low' : value >= 35 ? 'medium' : 'high')
             : (value >= 60 ? 'high' : value >= 35 ? 'medium' : 'low');
           
+          // Polish: Narrative microcopy for extreme values
+          let extremeNote = '';
+          if (stat.key === 'threat' && value >= 90) {
+            extremeNote = '<div class="stat-extreme">⚠️ Extreme boundary proximity. Regime stability may be deceptive.</div>';
+          } else if (stat.key === 'threat' && value >= 75) {
+            extremeNote = '<div class="stat-extreme">Elevated instability. Consider hedged positions.</div>';
+          } else if (stat.key === 'firepower' && value >= 90) {
+            extremeNote = '<div class="stat-extreme">Exceptional volatility. High risk / high opportunity.</div>';
+          } else if (stat.key === 'hull' && value <= 15) {
+            extremeNote = '<div class="stat-extreme">Trend structure severely compromised.</div>';
+          } else if (stat.key === 'sensors' && value >= 90) {
+            extremeNote = '<div class="stat-extreme">Exceptional flow clarity. Signal quality unusually high.</div>';
+          } else if (stat.key === 'fuel' && value <= 15) {
+            extremeNote = '<div class="stat-extreme">Time tolerance exhausted. Patience-based plays at risk.</div>';
+          }
+          
           html += `
             <div class="stat-item">
               <div class="stat-header">
@@ -655,6 +754,7 @@
               </div>
               <div class="stat-bar"><div class="stat-bar-fill ${colorClass}" style="width:${value}%"></div></div>
               <div class="stat-why">${why}</div>
+              ${extremeNote}
             </div>`;
         }
         
@@ -672,12 +772,36 @@
           ? MissionSystem.getActiveMissionForTicker(this.currentTicker)
           : null;
         
+        // Step 3.1: Check if current ticker is BENCHMARK
+        const isBenchmark = this.tickerStatuses?.[this.currentTicker] === 'BENCHMARK';
+        
         let html = '';
         for (const m of recommendations) {
           const stars = '★'.repeat(m.difficulty) + '☆'.repeat(3 - m.difficulty);
-          const suitClass = m.suitability >= 55 ? 'high' : '';
+          const canLaunch = !activeMission && !isBenchmark && this.currentTickerData;
+          
+          // Polish: Fit % visual affordance with color coding
+          let fitClass = 'fit-low';
+          let fitTooltip = 'Speculative — conditions don\'t favor this thesis';
+          if (m.suitability >= 70) {
+            fitClass = 'fit-high';
+            fitTooltip = 'Aligned — current regime supports this thesis';
+          } else if (m.suitability >= 50) {
+            fitClass = 'fit-medium';
+            fitTooltip = 'Conditional — some factors align, proceed with awareness';
+          }
+          
           const cardClass = m.recommended ? 'recommended' : '';
-          const canLaunch = !activeMission && this.currentTickerData;
+          
+          // Determine button text and title
+          let btnText = 'Launch Mission';
+          let btnTitle = '';
+          if (isBenchmark) {
+            btnText = 'Benchmark Only';
+            btnTitle = 'Benchmark asset — missions disabled';
+          } else if (activeMission) {
+            btnText = 'Mission Active';
+          }
           
           html += `
             <div class="mission-card ${cardClass}">
@@ -688,17 +812,20 @@
                 </div>
                 <div class="mission-meta">
                   <div class="difficulty-stars">${stars}</div>
-                  <div class="suitability ${suitClass}">${m.suitability}% fit</div>
+                  <div class="suitability-container" title="${fitTooltip}">
+                    <div class="fit-bar ${fitClass}"><div class="fit-fill" style="width:${m.suitability}%"></div></div>
+                    <span class="suitability-text">${m.suitability}%</span>
+                  </div>
                 </div>
               </div>
               <div class="mission-concept">${m.concept}</div>
               <div class="mission-betting"><strong>Betting on:</strong> ${m.bettingOn}</div>
               <div class="mission-why-now">${m.whyNow}</div>
               <div class="mission-actions">
-                <button class="launch-btn" ${canLaunch ? '' : 'disabled'} onclick="UI.launchMission('${m.type}', ${m.difficulty})">
-                  ${activeMission ? 'Mission Active' : 'Launch Mission'}
+                <button class="launch-btn" ${canLaunch ? '' : 'disabled'} title="${btnTitle}" onclick="UI.launchMission('${m.type}', ${m.difficulty})">
+                  ${btnText}
                 </button>
-                <select class="duration-select" id="duration-${m.type}" style="font-size:0.75rem;padding:0.3rem;">
+                <select class="duration-select" id="duration-${m.type}" style="font-size:0.75rem;padding:0.3rem;" ${isBenchmark ? 'disabled' : ''}>
                   ${m.durationBands.map(d => `<option value="${d}" ${d === m.defaultDuration ? 'selected' : ''}>${d}</option>`).join('')}
                 </select>
               </div>
@@ -755,7 +882,12 @@
         const missions = MissionSystem.loadMissions();
         
         if (missions.length === 0) {
-          this.activeMissionsList.innerHTML = '<div class="empty-state">No missions yet</div>';
+          this.activeMissionsList.innerHTML = `
+            <div class="empty-state zero-state-missions">
+              <div class="zero-state-icon">⚔️</div>
+              <div class="zero-state-title">No missions yet</div>
+              <div class="zero-state-copy">Select a sector above and launch a mission to observe how market conditions evolve over time.</div>
+            </div>`;
           return;
         }
         
@@ -963,9 +1095,11 @@
           const manifest = await IndicatorLoader.getMetadata();
           const allTickers = manifest.tickers || [];
           
-          // Separate active and locked
+          // Step 3.1: Separate active, benchmark, and locked
+          // BENCHMARK tickers can't be assigned as support
           const active = allTickers.filter(t => t.status === 'ACTIVE');
           const locked = allTickers.filter(t => t.status === 'LOCKED');
+          const benchmark = allTickers.filter(t => t.status === 'BENCHMARK');
           
           // Compute environments for active tickers (cached)
           for (const t of active) {
@@ -1001,6 +1135,18 @@
             });
           }
           
+          // Step 3.1: Add benchmark tickers as special category (viewable but not assignable)
+          for (const t of benchmark) {
+            this.fleetData.push({
+              ticker: t.ticker,
+              name: t.name,
+              status: 'BENCHMARK',
+              hint: 'Benchmark asset — not assignable as support',
+              env: null,
+              role: null
+            });
+          }
+          
           MissionSystem.FleetCache.loaded = true;
           this.renderFleet();
         } catch (e) {
@@ -1027,6 +1173,14 @@
                 <div class="fleet-ship-ticker">${ship.ticker}</div>
                 <div class="fleet-ship-name">${ship.name}</div>
                 <div class="fleet-ship-role">${ship.hint || 'CLASSIFIED'}</div>
+              </div>`;
+          } else if (ship.status === 'BENCHMARK') {
+            // Step 3.1: Render benchmark (distinct but not assignable)
+            html += `
+              <div class="fleet-ship benchmark" title="Benchmark asset — not assignable as support">
+                <div class="fleet-ship-ticker">${ship.ticker}</div>
+                <div class="fleet-ship-name">${ship.name}</div>
+                <div class="fleet-ship-role BENCHMARK">📊 BENCHMARK</div>
               </div>`;
           } else {
             const isLocked = locked[ship.ticker];

@@ -29,7 +29,7 @@
     { "ticker": "RDW", "file": "RDW_45m.csv", "name": "Redwire", "status": "ACTIVE" },
     { "ticker": "RKLB", "file": "RKLB_45m.csv", "name": "Rocket Lab USA", "status": "ACTIVE" },
     { "ticker": "RTX", "file": "RTX_45m.csv", "name": "RTX Corporation", "status": "ACTIVE" },
-    { "ticker": "XAR", "file": "XAR_45m.csv", "name": "SPDR S&P Aerospace & Defense ETF", "status": "ACTIVE" },
+    { "ticker": "XAR", "file": "XAR_45m.csv", "name": "SPDR S&P Aerospace & Defense ETF", "status": "BENCHMARK" },
     { "ticker": "████", "file": null, "name": "CLASSIFIED", "status": "LOCKED", "hint": "Unknown signal detected beyond mapped space" },
     { "ticker": "???-Σ", "file": null, "name": "SIGNAL LOST", "status": "LOCKED", "hint": "Encrypted transmission intercepted" },
     { "ticker": "∆∆∆∆", "file": null, "name": "RESTRICTED", "status": "LOCKED", "hint": "Requires higher clearance level" },
