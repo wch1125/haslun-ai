@@ -3817,14 +3817,25 @@
       /* Status strip */
       .status-strip {
         padding: 0 0.75rem;
-        gap: 0.75rem;
+        gap: 0.5rem;
         font-size: 0.5rem;
         overflow-x: auto;
         justify-content: flex-start;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+      }
+      
+      .status-strip::-webkit-scrollbar {
+        display: none;
       }
       
       .status-item {
         flex-shrink: 0;
+      }
+      
+      /* Hide less important status items on mobile */
+      .status-strip .status-item:nth-child(2) {
+        display: none;
       }
       
       #color-hue-slider {
@@ -4151,6 +4162,25 @@
       .timeline-event:active {
         background: var(--phosphor-ghost);
         border-color: var(--phosphor-dim);
+      }
+      
+      /* Ensure watchlist info button is visible on touch */
+      .watchlist-info-btn {
+        opacity: 0.5;
+      }
+      
+      /* Make toggle switches easier to tap */
+      .toggle-mini {
+        min-width: 44px;
+        min-height: 24px;
+      }
+      
+      /* Ensure scroll containers work smoothly */
+      .tab-panel,
+      .mobile-drawer-content,
+      #cargo-bay {
+        -webkit-overflow-scrolling: touch;
+        scroll-behavior: smooth;
       }
     }
     
@@ -5002,6 +5032,147 @@
         </g>
       </symbol>
 
+      <!-- ═══════════════════════════════════════════════════════════════════
+           UNIVERSE EXPANSION FLEET (8 new ships with lore)
+           ═══════════════════════════════════════════════════════════════════ -->
+
+      <!-- HERO FLAGSHIP — ORBITAL ARCHON (command/prestige) -->
+      <symbol id="ship-archon" viewBox="0 0 120 80">
+        <g class="ship-primary">
+          <polygon points="60,6 96,22 110,40 96,58 60,74 24,58 10,40 24,22"/>
+          <polygon points="60,16 88,28 100,40 88,52 60,64 32,52 20,40 32,28"/>
+          <line x1="60" y1="6" x2="60" y2="74"/>
+          <line x1="30" y1="40" x2="90" y2="40"/>
+        </g>
+        <g class="ship-secondary">
+          <circle cx="60" cy="24" r="9"/>
+          <circle cx="60" cy="24" r="4"/>
+          <polyline points="24,58 18,68 26,72"/>
+          <polyline points="96,58 102,68 94,72"/>
+          <polyline points="32,30 16,24 10,18"/>
+          <polyline points="88,30 104,24 110,18"/>
+        </g>
+        <g class="ship-tertiary">
+          <line x1="50" y1="48" x2="70" y2="48"/>
+          <line x1="50" y1="51" x2="70" y2="51"/>
+          <polyline points="46,20 60,14 74,20"/>
+        </g>
+      </symbol>
+
+      <!-- HERO DREADNOUGHT — IRON TYRANT (heavy/tank) -->
+      <symbol id="ship-tyrant" viewBox="0 0 120 80">
+        <g class="ship-primary">
+          <rect x="26" y="22" width="68" height="38" rx="6"/>
+          <rect x="14" y="26" width="18" height="30" rx="4"/>
+          <rect x="88" y="26" width="18" height="30" rx="4"/>
+          <polygon points="48,18 72,18 78,24 42,24"/>
+          <polyline points="30,60 24,70 36,72"/>
+          <polyline points="90,60 96,70 84,72"/>
+        </g>
+        <g class="ship-secondary">
+          <circle cx="50" cy="34" r="3"/>
+          <circle cx="70" cy="34" r="3"/>
+          <polygon points="46,40 74,40 72,48 48,48"/>
+          <polyline points="14,34 6,30 2,24"/>
+          <polyline points="106,34 114,30 118,24"/>
+          <circle cx="26" cy="50" r="4"/>
+          <circle cx="94" cy="50" r="4"/>
+        </g>
+        <g class="ship-tertiary">
+          <line x1="54" y1="50" x2="66" y2="50"/>
+          <rect x="38" y="54" width="8" height="6"/>
+          <rect x="74" y="54" width="8" height="6"/>
+        </g>
+      </symbol>
+
+      <!-- EXPERIMENTAL — PHANTOM NODE (weird science) -->
+      <symbol id="ship-phantom" viewBox="0 0 120 80">
+        <g class="ship-primary">
+          <ellipse cx="60" cy="40" rx="34" ry="22"/>
+          <ellipse cx="60" cy="40" rx="22" ry="12"/>
+        </g>
+        <g class="ship-secondary">
+          <circle cx="60" cy="40" r="4"/>
+          <polyline points="26,40 16,34 10,28"/>
+          <polyline points="94,40 104,34 110,28"/>
+        </g>
+        <g class="ship-tertiary">
+          <line x1="60" y1="18" x2="60" y2="10"/>
+          <line x1="60" y1="62" x2="60" y2="70"/>
+        </g>
+      </symbol>
+
+      <!-- SUPPORT — ATLAS HAULER (logistics) -->
+      <symbol id="ship-hauler" viewBox="0 0 120 80">
+        <g class="ship-primary">
+          <rect x="20" y="28" width="80" height="24" rx="6"/>
+        </g>
+        <g class="ship-secondary">
+          <rect x="24" y="32" width="14" height="16"/>
+          <rect x="44" y="32" width="14" height="16"/>
+          <rect x="64" y="32" width="14" height="16"/>
+          <rect x="84" y="32" width="14" height="16"/>
+        </g>
+        <g class="ship-tertiary">
+          <line x1="20" y1="28" x2="14" y2="18"/>
+          <line x1="100" y1="28" x2="106" y2="18"/>
+        </g>
+      </symbol>
+
+      <!-- RECON — FIREFLY DRONE (surveillance) -->
+      <symbol id="ship-drone" viewBox="0 0 120 80">
+        <g class="ship-primary">
+          <circle cx="60" cy="40" r="10"/>
+        </g>
+        <g class="ship-secondary">
+          <polyline points="50,40 26,32 20,28"/>
+          <polyline points="70,40 94,32 100,28"/>
+          <line x1="60" y1="30" x2="60" y2="10"/>
+        </g>
+        <g class="ship-tertiary">
+          <circle cx="60" cy="40" r="3"/>
+        </g>
+      </symbol>
+
+      <!-- CIVILIAN — SOJOURN LANDER (soft landings) -->
+      <symbol id="ship-sojourn" viewBox="0 0 120 80">
+        <g class="ship-primary">
+          <polygon points="60,20 88,40 60,60 32,40"/>
+        </g>
+        <g class="ship-secondary">
+          <line x1="60" y1="60" x2="60" y2="72"/>
+          <polyline points="50,60 44,70"/>
+          <polyline points="70,60 76,70"/>
+        </g>
+      </symbol>
+
+      <!-- BLACK OPS — NIGHT PARALLAX (stealth) -->
+      <symbol id="ship-parallax" viewBox="0 0 120 80">
+        <g class="ship-primary" style="stroke-dasharray:3 4;">
+          <polygon points="60,14 96,40 60,66 24,40"/>
+        </g>
+        <g class="ship-secondary">
+          <circle cx="60" cy="40" r="6"/>
+        </g>
+      </symbol>
+
+      <!-- RELIC — GARDENER FRAME (terraforming) -->
+      <symbol id="ship-gardener" viewBox="0 0 120 80">
+        <g class="ship-primary">
+          <rect x="34" y="24" width="52" height="32" rx="6"/>
+        </g>
+        <g class="ship-secondary">
+          <circle cx="44" cy="40" r="6"/>
+          <circle cx="76" cy="40" r="6"/>
+        </g>
+        <g class="ship-tertiary">
+          <line x1="34" y1="24" x2="28" y2="14"/>
+          <line x1="86" y1="24" x2="92" y2="14"/>
+          <circle cx="28" cy="12" r="2"/>
+          <circle cx="92" cy="12" r="2"/>
+        </g>
+      </symbol>
+
     </defs>
   </svg>
 
@@ -5746,6 +5917,15 @@
         <span class="value">SFX</span>
         <label class="toggle-mini">
           <input id="sfx-toggle" type="checkbox" checked />
+          <span class="toggle-mini-track"><span class="toggle-mini-knob"></span></span>
+        </label>
+      </div>
+      
+      <!-- BGM toggle (Epic Mecha Music) -->
+      <div class="status-item">
+        <span class="value" title="Epic Anime Mecha Music">BGM</span>
+        <label class="toggle-mini">
+          <input id="bgm-toggle" type="checkbox" />
           <span class="toggle-mini-track"><span class="toggle-mini-knob"></span></span>
         </label>
       </div>
@@ -7153,37 +7333,125 @@
     }
     
     // =========================================================================
-    // FLEET HOLOBAY SYSTEM (Pro Ship Library)
+    // FLEET HOLOBAY SYSTEM (Pro Ship Library with Universe Lore)
     // =========================================================================
     
-    // Map tickers/sectors to SVG symbols - returns {symbol, label, isHero}
+    // Ship lore database - HUD tags and descriptions
+    const SHIP_LORE = {
+      "#ship-flagship": {
+        hud: "COMMAND AUTHORITY ACTIVE",
+        lore: "Spearhead command carrier. Captains say it listens before it speaks."
+      },
+      "#ship-dreadnought": {
+        hud: "LEGACY COMBAT MEMORY ENABLED",
+        lore: "Heavy war machine. Refuses to die and logs its own kills without permission."
+      },
+      "#ship-archon": {
+        hud: "AUTHORITY PROTOCOL DETECTED",
+        lore: "Built to command fleets rather than win battles. Hull plating echoes cathedral geometry."
+      },
+      "#ship-tyrant": {
+        hud: "LEGACY COMBAT MEMORY ENABLED",
+        lore: "Technically illegal. Nobody remembers which war it survived."
+      },
+      "#ship-phantom": {
+        hud: "TOPOLOGY ANOMALY — TRACED BUT UNRESOLVED",
+        lore: "Appears on scans before it appears on the hull deck. Routes comms from ships that no longer exist."
+      },
+      "#ship-hauler": {
+        hud: "CARGO MANIFEST VERIFIED",
+        lore: "The Atlas doesn't have fans. It has people who quietly owe their lives to it."
+      },
+      "#ship-drone": {
+        hud: "PASSIVE CURIOSITY RISING...",
+        lore: "Buzzes. Watches. Reports. Occasionally expresses opinions in system logs."
+      },
+      "#ship-sojourn": {
+        hud: "DESCENT TRAJECTORY LOCKED",
+        lore: "Landers don't win wars. They bring people home."
+      },
+      "#ship-parallax": {
+        hud: "BLACK CHANNEL AUTHENTICATED",
+        lore: "Officially, this class does not exist. If you can see it — it chose to let you."
+      },
+      "#ship-gardener": {
+        hud: "LEGACY ECOLOGICAL ROUTINES ACTIVE",
+        lore: "Built for terraforming. Now escorts convoys because nobody funds ecosystems anymore."
+      },
+      "#ship-frigate": {
+        hud: "PATROL SYSTEMS NOMINAL",
+        lore: "Reliable, adaptable. The backbone of any fleet."
+      },
+      "#ship-lander": {
+        hud: "SURFACE APPROACH ENABLED",
+        lore: "Lunar descent specialist. Hope and precision in equal measure."
+      },
+      "#ship-evtol": {
+        hud: "VTOL SYSTEMS ONLINE",
+        lore: "Sky taxi of the future. Vertical freedom."
+      },
+      "#ship-cargo": {
+        hud: "CARGO SECURE",
+        lore: "The supply chain doesn't thank you. It just expects you to show up."
+      },
+      "#ship-meme": {
+        hud: "SIGNAL ANOMALY DETECTED",
+        lore: "Origin unknown. Trajectory chaotic. Somehow profitable."
+      },
+      "#ship-recon": {
+        hud: "SURVEILLANCE ACTIVE",
+        lore: "Eyes in the sky. Watching. Always watching."
+      },
+      "#ship-patrol": {
+        hud: "DEFENSE GRID LINKED",
+        lore: "First responder. Last line. No medals, just duty."
+      },
+      "#ship-relay": {
+        hud: "UPLINK ESTABLISHED",
+        lore: "Communication backbone. Every message passes through, trusted with all secrets."
+      }
+    };
+    
+    // Map tickers/sectors to SVG symbols - returns {symbol, label, isHero, lore}
     function mapTickerToShip(ticker, sector) {
       ticker = (ticker || "").toUpperCase();
       sector = sector || "";
 
       // HERO mappings - special detailed ships
-      if (ticker === "RKLB") return { symbol: "#ship-flagship", label: "FLAGSHIP SPEAR", isHero: true };
-      if (ticker === "GME")  return { symbol: "#ship-dreadnought", label: "DREADNOUGHT MECH", isHero: true };
+      if (ticker === "RKLB") return { symbol: "#ship-archon", label: "ORBITAL ARCHON", isHero: true };
+      if (ticker === "GME")  return { symbol: "#ship-tyrant", label: "IRON TYRANT", isHero: true };
+      if (ticker === "TSLA") return { symbol: "#ship-flagship", label: "FLAGSHIP SPEAR", isHero: true };
+      if (ticker === "NVDA") return { symbol: "#ship-dreadnought", label: "DREADNOUGHT MECH", isHero: true };
 
       // Standard fleet mappings
       if (ticker === "LUNR") return { symbol: "#ship-lander", label: "LUNAR LANDER", isHero: false };
       if (/JOBY|ACHR|EVEX/.test(ticker)) return { symbol: "#ship-evtol", label: "EVTOL CARRIER", isHero: false };
-      if (/ASTS/.test(ticker)) return { symbol: "#ship-frigate", label: "ORBITAL FRIGATE", isHero: false };
+      if (/ASTS/.test(ticker)) return { symbol: "#ship-phantom", label: "PHANTOM NODE", isHero: false };
       if (/IRDM/.test(ticker)) return { symbol: "#ship-relay", label: "COMM RELAY", isHero: false };
-      if (/BKSY|PL/.test(ticker)) return { symbol: "#ship-recon", label: "RECON DRONE", isHero: false };
+      if (/BKSY|PL/.test(ticker)) return { symbol: "#ship-drone", label: "FIREFLY DRONE", isHero: false };
       if (/KTOS|RDW/.test(ticker)) return { symbol: "#ship-patrol", label: "PATROL CORVETTE", isHero: false };
+      if (/ATI/.test(ticker)) return { symbol: "#ship-hauler", label: "ATLAS HAULER", isHero: false };
+      if (/CACI|HON/.test(ticker)) return { symbol: "#ship-gardener", label: "GARDENER FRAME", isHero: false };
+      if (/MP|LOAR/.test(ticker)) return { symbol: "#ship-cargo", label: "CARGO HAULER", isHero: false };
 
       // Sector-based fallbacks
       if (/EVTOL|VTOL|air mobility/i.test(sector)) return { symbol: "#ship-evtol", label: "EVTOL CARRIER", isHero: false };
       if (/meme|retail|chaotic/i.test(sector)) return { symbol: "#ship-meme", label: "ANOMALOUS PROBE", isHero: false };
       if (/defense|military/i.test(sector)) return { symbol: "#ship-patrol", label: "PATROL CORVETTE", isHero: false };
-      if (/industrial|materials|cargo|aerospace|components/i.test(sector)) return { symbol: "#ship-cargo", label: "CARGO HAULER", isHero: false };
-      if (/earth|geo|observation/i.test(sector)) return { symbol: "#ship-recon", label: "RECON DRONE", isHero: false };
-      if (/cellular|comms|relay/i.test(sector)) return { symbol: "#ship-relay", label: "COMM RELAY", isHero: false };
+      if (/industrial|materials|cargo|aerospace|components/i.test(sector)) return { symbol: "#ship-hauler", label: "ATLAS HAULER", isHero: false };
+      if (/earth|geo|observation/i.test(sector)) return { symbol: "#ship-drone", label: "FIREFLY DRONE", isHero: false };
+      if (/cellular|comms|relay|satellite/i.test(sector)) return { symbol: "#ship-relay", label: "COMM RELAY", isHero: false };
       if (/lunar/i.test(sector)) return { symbol: "#ship-lander", label: "LUNAR LANDER", isHero: false };
+      if (/stealth|black|secret/i.test(sector)) return { symbol: "#ship-parallax", label: "NIGHT PARALLAX", isHero: false };
+      if (/experimental|biotech|pharma/i.test(sector)) return { symbol: "#ship-phantom", label: "PHANTOM NODE", isHero: false };
 
       // Default
       return { symbol: "#ship-frigate", label: "ORBITAL FRIGATE", isHero: false };
+    }
+    
+    // Get ship lore for display
+    function getShipLore(symbol) {
+      return SHIP_LORE[symbol] || { hud: "SYSTEMS NOMINAL", lore: "Standard issue vessel." };
     }
     
     // Apply ship to an SVG element with use element
@@ -8512,19 +8780,205 @@
         }
       };
       
-      // Legacy beep function mapped to new sound system
-      window.beep = function(freq = 520, duration = 0.08) {
-        if (!sfxEnabled) return;
-        // Map frequency ranges to appropriate mech sounds
-        if (freq < 200) {
-          MechSFX.bassHit(freq, duration);
-        } else if (freq < 400) {
-          MechSFX.alert(freq, freq * 0.5, duration);
-        } else if (freq < 700) {
-          MechSFX.synthStab(freq, duration);
-        } else {
-          MechSFX.tick(freq, duration);
+      // =========================================================================
+      // EPIC ANIME MECHA BACKGROUND MUSIC SYSTEM
+      // Procedurally generated synth music inspired by Gundam, Evangelion, Macross
+      // =========================================================================
+      const MechaBGM = {
+        ctx: null,
+        masterGain: null,
+        isPlaying: false,
+        currentTrack: null,
+        volume: 0.12, // Default volume (subtle background)
+        
+        init() {
+          if (this.ctx) return;
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (!AudioCtx) return;
+          this.ctx = new AudioCtx();
+          this.masterGain = this.ctx.createGain();
+          this.masterGain.gain.value = this.volume;
+          this.masterGain.connect(this.ctx.destination);
+        },
+        
+        setVolume(v) {
+          this.volume = Math.max(0, Math.min(1, v));
+          if (this.masterGain) {
+            this.masterGain.gain.setTargetAtTime(this.volume, this.ctx.currentTime, 0.1);
+          }
+        },
+        
+        // Epic synth pad drone
+        createPad(freq, duration) {
+          const osc1 = this.ctx.createOscillator();
+          const osc2 = this.ctx.createOscillator();
+          const osc3 = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          const filter = this.ctx.createBiquadFilter();
+          
+          osc1.type = 'sawtooth';
+          osc1.frequency.value = freq;
+          osc2.type = 'sawtooth';
+          osc2.frequency.value = freq * 1.005;
+          osc3.type = 'square';
+          osc3.frequency.value = freq * 0.5;
+          
+          filter.type = 'lowpass';
+          filter.frequency.value = freq * 2;
+          filter.Q.value = 1;
+          
+          const now = this.ctx.currentTime;
+          gain.gain.setValueAtTime(0, now);
+          gain.gain.linearRampToValueAtTime(0.06, now + 0.5);
+          gain.gain.setValueAtTime(0.06, now + duration - 0.5);
+          gain.gain.linearRampToValueAtTime(0, now + duration);
+          
+          osc1.connect(filter);
+          osc2.connect(filter);
+          osc3.connect(filter);
+          filter.connect(gain);
+          gain.connect(this.masterGain);
+          
+          osc1.start(now);
+          osc2.start(now);
+          osc3.start(now);
+          osc1.stop(now + duration);
+          osc2.stop(now + duration);
+          osc3.stop(now + duration);
+        },
+        
+        // Rhythmic bass pulse
+        createBass(freq, pattern, loopDuration) {
+          const now = this.ctx.currentTime;
+          const eighthNote = loopDuration / 8;
+          
+          pattern.forEach((hit, i) => {
+            if (!hit) return;
+            const startTime = now + (i * eighthNote);
+            
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(freq, startTime);
+            osc.frequency.exponentialRampToValueAtTime(freq * 0.8, startTime + 0.15);
+            
+            gain.gain.setValueAtTime(0.1, startTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.2);
+            
+            osc.connect(gain);
+            gain.connect(this.masterGain);
+            
+            osc.start(startTime);
+            osc.stop(startTime + 0.25);
+          });
+        },
+        
+        // Epic arpeggio sequence
+        createArp(baseFreq, loopDuration) {
+          const now = this.ctx.currentTime;
+          const sixteenthNote = loopDuration / 16;
+          const intervals = [1, 1.2, 1.5, 2, 2.4, 3, 4, 3, 2.4, 2, 1.5, 1.2, 1, 1.5, 2, 1.5];
+          
+          for (let i = 0; i < 16; i++) {
+            if (Math.random() > 0.65) continue;
+            
+            const startTime = now + (i * sixteenthNote);
+            const freq = baseFreq * intervals[i % intervals.length];
+            
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            const filter = this.ctx.createBiquadFilter();
+            
+            osc.type = 'square';
+            osc.frequency.value = freq;
+            
+            filter.type = 'bandpass';
+            filter.frequency.value = freq * 2;
+            filter.Q.value = 2;
+            
+            gain.gain.setValueAtTime(0.03, startTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, startTime + sixteenthNote * 0.8);
+            
+            osc.connect(filter);
+            filter.connect(gain);
+            gain.connect(this.masterGain);
+            
+            osc.start(startTime);
+            osc.stop(startTime + sixteenthNote);
+          }
+        },
+        
+        // Main loop
+        playLoop() {
+          if (!this.ctx) this.init();
+          if (!this.ctx) return;
+          
+          if (this.ctx.state === 'suspended') {
+            this.ctx.resume();
+          }
+          
+          const bpm = 110;
+          const barDuration = (60 / bpm) * 4;
+          const loopDuration = barDuration * 2;
+          
+          const chords = [
+            { root: 110 },   // A minor
+            { root: 146.83 }, // D
+            { root: 130.81 }, // C
+            { root: 98 },     // G
+          ];
+          
+          const playSegment = (segmentIndex) => {
+            if (!this.isPlaying) return;
+            
+            const chord = chords[segmentIndex % chords.length];
+            
+            this.createPad(chord.root, loopDuration);
+            this.createPad(chord.root * 1.5, loopDuration);
+            this.createBass(chord.root * 0.5, [1,0,1,0,0,1,0,0], loopDuration);
+            this.createArp(chord.root * 2, loopDuration);
+            
+            setTimeout(() => playSegment(segmentIndex + 1), loopDuration * 1000);
+          };
+          
+          this.isPlaying = true;
+          playSegment(0);
+          
+          if (typeof logTerminal === 'function') {
+            logTerminal('BGM SYSTEM · MECHA SORTIE · playing');
+          }
+        },
+        
+        stop() {
+          this.isPlaying = false;
+          if (this.masterGain) {
+            this.masterGain.gain.setTargetAtTime(0, this.ctx.currentTime, 0.3);
+          }
+          if (typeof logTerminal === 'function') {
+            logTerminal('BGM SYSTEM · standby');
+          }
+        },
+        
+        toggle() {
+          if (this.isPlaying) {
+            this.stop();
+          } else {
+            if (this.masterGain) {
+              this.masterGain.gain.setTargetAtTime(this.volume, this.ctx.currentTime, 0.1);
+            }
+            this.playLoop();
+          }
+          return this.isPlaying;
         }
+      };
+      
+      window.MechaBGM = MechaBGM;
+      
+      // Silent beep by default - no more annoying sounds!
+      window.beep = function(freq = 520, duration = 0.08) {
+        // Silent - beeping disabled per user request
+        // Epic mecha music only!
       };
       
       // Expose MechSFX globally for direct use
@@ -8625,7 +9079,21 @@
         toggle.addEventListener('change', () => {
           sfxEnabled = toggle.checked;
           logTerminal('sfx ' + (sfxEnabled ? 'enabled' : 'muted'));
-          if (sfxEnabled) beep(700, 0.06);
+        });
+      }
+      
+      // BGM toggle (Epic Anime Mecha Music)
+      function initBgmToggle() {
+        const toggle = document.getElementById('bgm-toggle');
+        if (!toggle) return;
+        toggle.addEventListener('change', () => {
+          if (toggle.checked) {
+            MechaBGM.playLoop();
+            showToast('♫ MECHA SORTIE - BGM Active', 'info');
+          } else {
+            MechaBGM.stop();
+            showToast('BGM Stopped', 'info');
+          }
         });
       }
       
@@ -8695,6 +9163,7 @@
       function initArcade() {
         initThemeSelect();
         initSfxToggle();
+        initBgmToggle();
         initTabTracking();
         renderMissions();
         initAboutOverlay();
