@@ -8553,6 +8553,150 @@
     }
 
     /* ═══════════════════════════════════════════════════════════════════════════
+       CAPTAIN'S LOG (truth-rooted MACD events)
+       ═══════════════════════════════════════════════════════════════════════════ */
+    
+    .captains-log {
+      margin-top: 12px;
+      border: 1px solid var(--border);
+      background: rgba(0, 0, 0, 0.30);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    
+    .captains-log .panel-title {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.65rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+    
+    .captains-log-list {
+      padding: 10px 12px 12px;
+      max-height: 200px;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+    
+    .captains-log-list::-webkit-scrollbar {
+      height: 6px;
+      width: 6px;
+    }
+    
+    .captains-log-list::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 999px;
+    }
+    
+    .captains-log-list::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.14);
+    }
+    
+    .log-row {
+      display: grid;
+      grid-template-columns: 70px 1fr 90px;
+      gap: 10px;
+      padding: 7px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      font-size: 0.68rem;
+      line-height: 1.35;
+      color: var(--text);
+      opacity: 0.92;
+      font-family: var(--font-mono);
+    }
+    
+    .log-row:last-child {
+      border-bottom: none;
+    }
+    
+    .log-time {
+      color: var(--text-muted);
+      opacity: 0.85;
+      font-size: 0.62rem;
+      letter-spacing: 0.02em;
+    }
+    
+    .log-msg {
+      color: var(--text);
+      opacity: 0.88;
+    }
+    
+    .log-tag {
+      justify-self: end;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      font-size: 0.58rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    
+    .log-tag.good {
+      color: var(--phosphor);
+      border-color: rgba(51, 255, 153, 0.35);
+      background: rgba(51, 255, 153, 0.08);
+    }
+    
+    .log-tag.bad {
+      color: #ff4f6d;
+      border-color: rgba(255, 79, 109, 0.35);
+      background: rgba(255, 79, 109, 0.08);
+    }
+    
+    .log-tag.neutral {
+      color: var(--amber);
+      border-color: rgba(255, 179, 71, 0.35);
+      background: rgba(255, 179, 71, 0.08);
+    }
+    
+    .log-empty {
+      color: var(--text-muted);
+      opacity: 0.7;
+      padding: 8px 0;
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      letter-spacing: 0.04em;
+    }
+    
+    /* Mobile adjustments for Captain's Log */
+    @media (max-width: 768px) {
+      .captains-log {
+        margin-top: 10px;
+        border-radius: 8px;
+      }
+      
+      .captains-log .panel-title {
+        padding: 8px 10px;
+        font-size: 0.62rem;
+      }
+      
+      .captains-log-list {
+        padding: 8px 10px;
+        max-height: 160px;
+      }
+      
+      .log-row {
+        grid-template-columns: 60px 1fr 70px;
+        gap: 8px;
+        padding: 6px 0;
+        font-size: 0.64rem;
+      }
+      
+      .log-time {
+        font-size: 0.58rem;
+      }
+      
+      .log-tag {
+        font-size: 0.54rem;
+        padding: 2px 6px;
+      }
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════════════════
        TELEMETRY CONTEXT BAY (responsive)
        Desktop: fills empty space as a docked bay
        Mobile: becomes a bottom sheet

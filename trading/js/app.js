@@ -1940,6 +1940,148 @@
       // Update telemetry side console
       updateTelemetryConsole(source, closes);
       updateContextBay();
+      
+      // Update Captain's Log from MACD events
+      try {
+        const events = buildCaptainsLog({ labels, macd: macdData, signal: signalData, hist: histData });
+        renderCaptainsLog(events);
+      } catch (e) {
+        // non-fatal, log for debugging
+        console.warn('Captain\'s Log update failed:', e);
+      }
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // CAPTAIN'S LOG — Truth-rooted event generation from MACD data
+    // ═══════════════════════════════════════════════════════════════════════════
+    
+    /**
+     * Build Captain's Log events from MACD arrays
+     * Detects: MACD/Signal crossovers, histogram zero-crosses, momentum acceleration
+     */
+    function buildCaptainsLog({ labels, macd, signal, hist }) {
+      const events = [];
+      const n = labels.length;
+      
+      function push(i, kind, dir, strength) {
+        // Format time label from Date object
+        const date = labels[i];
+        let timeLabel;
+        if (date instanceof Date) {
+          const mo = (date.getMonth() + 1).toString().padStart(2, '0');
+          const dy = date.getDate().toString().padStart(2, '0');
+          const hr = date.getHours().toString().padStart(2, '0');
+          const mn = date.getMinutes().toString().padStart(2, '0');
+          timeLabel = `${mo}/${dy} ${hr}:${mn}`;
+        } else {
+          timeLabel = `T-${n - i}`;
+        }
+        
+        events.push({
+          i,
+          t: timeLabel,
+          kind,
+          dir,
+          strength
+        });
+      }
+      
+      for (let i = 2; i < n; i++) {
+        const m0 = macd[i - 1], m1 = macd[i];
+        const s0 = signal[i - 1], s1 = signal[i];
+        const h0 = hist[i - 1], h1 = hist[i];
+        
+        // Skip if data is not valid
+        if (![m0, m1, s0, s1, h0, h1].every(Number.isFinite)) continue;
+        
+        // 1) MACD crosses Signal (bullish/bearish crossover)
+        const prevDiff = m0 - s0;
+        const nextDiff = m1 - s1;
+        if (prevDiff <= 0 && nextDiff > 0) {
+          push(i, 'CROSSOVER', 'BULL', Math.abs(h1));
+        } else if (prevDiff >= 0 && nextDiff < 0) {
+          push(i, 'CROSSOVER', 'BEAR', Math.abs(h1));
+        }
+        
+        // 2) Histogram crosses zero (momentum regime flip)
+        if (h0 <= 0 && h1 > 0) {
+          push(i, 'MOMENTUM', 'BULL', Math.abs(h1));
+        } else if (h0 >= 0 && h1 < 0) {
+          push(i, 'MOMENTUM', 'BEAR', Math.abs(h1));
+        }
+        
+        // 3) Surge / exhaustion (acceleration detection)
+        if (i >= 2) {
+          const h_prev2 = hist[i - 2];
+          if (Number.isFinite(h_prev2)) {
+            const dh0 = h0 - h_prev2;
+            const dh1 = h1 - h0;
+            const accel = dh1 - dh0;
+            const threshold = 0.02 * Math.max(1e-6, Math.abs(h0));
+            
+            if (accel > threshold && Math.abs(accel) > 0.01) {
+              // Momentum building
+              push(i, 'THRUST', h1 >= 0 ? 'BULL' : 'BEAR', Math.abs(accel));
+            } else if (accel < -threshold && Math.abs(accel) > 0.01) {
+              // Momentum fading
+              push(i, 'DRAG', h1 >= 0 ? 'BULL' : 'BEAR', Math.abs(accel));
+            }
+          }
+        }
+      }
+      
+      // Return newest first, cap at 10 events for readability
+      events.sort((a, b) => b.i - a.i);
+      return events.slice(0, 10);
+    }
+    
+    /**
+     * Render Captain's Log events to the DOM
+     */
+    function renderCaptainsLog(events) {
+      const el = document.getElementById('captains-log-list');
+      if (!el) return;
+      
+      if (!events || !events.length) {
+        el.innerHTML = `<div class="log-empty">AWAITING SIGNAL EVENTS…</div>`;
+        return;
+      }
+      
+      el.innerHTML = events.map(e => {
+        const isGood = e.dir === 'BULL';
+        const tagClass = isGood ? 'good' : 'bad';
+        
+        // Generate cockpit-style phrasing based on event type
+        let msg;
+        switch (e.kind) {
+          case 'CROSSOVER':
+            msg = isGood 
+              ? 'MACD crossed above signal. Trend ignition.' 
+              : 'MACD crossed below signal. Trend decay.';
+            break;
+          case 'MOMENTUM':
+            msg = isGood 
+              ? 'Histogram flipped positive. Momentum aligned.' 
+              : 'Histogram flipped negative. Momentum degraded.';
+            break;
+          case 'THRUST':
+            msg = 'Momentum acceleration detected. Thrust building.';
+            break;
+          case 'DRAG':
+            msg = 'Momentum deceleration detected. Thrust fading.';
+            break;
+          default:
+            msg = 'Signal event registered.';
+        }
+        
+        return `
+          <div class="log-row">
+            <div class="log-time">${escapeHtml(String(e.t))}</div>
+            <div class="log-msg">${escapeHtml(msg)}</div>
+            <div class="log-tag ${tagClass}">${escapeHtml(e.kind)}</div>
+          </div>
+        `;
+      }).join('');
     }
     
     // Update the telemetry side console with current data
