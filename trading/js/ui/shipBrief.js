@@ -31,8 +31,24 @@ window.ShipBrief = (function() {
   let isVisible = false;
   let options = {};
   
+  // Timer references (for cleanup on close)
+  let bootTimer = null;
+  let barTimer = null;
+  let focusTimer = null;
+  let closeTimer = null;
+  
   // Default fallback sprite
   const DEFAULT_SPRITE = 'assets/ships/Unclaimed-Drone-ship.png';
+  
+  // ═══════════════════════════════════════════════════════════════════════════
+  // SOUND CONFIGURATION
+  // Global flag to enable/disable UI sounds (default: OFF for accessibility)
+  // Set window.UI_SOUND_ENABLED = true to enable sounds
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+  function isSoundEnabled() {
+    return window.UI_SOUND_ENABLED === true;
+  }
   
   // ═══════════════════════════════════════════════════════════════════════════
   // DIALOG HTML TEMPLATE
@@ -528,10 +544,12 @@ window.ShipBrief = (function() {
   }
   
   // ═══════════════════════════════════════════════════════════════════════════
-  // SOUND EFFECTS
+  // SOUND EFFECTS (gated behind UI_SOUND_ENABLED)
   // ═══════════════════════════════════════════════════════════════════════════
   
   function playOpenSound() {
+    if (!isSoundEnabled()) return;
+    
     if (window.beep) {
       beep(220, 0.1);
       setTimeout(() => beep(330, 0.08), 100);
@@ -542,6 +560,8 @@ window.ShipBrief = (function() {
   }
   
   function playCloseSound() {
+    if (!isSoundEnabled()) return;
+    
     if (window.beep) {
       beep(330, 0.05);
     } else if (window.SoundFX) {
@@ -550,6 +570,8 @@ window.ShipBrief = (function() {
   }
   
   function playBarSound() {
+    if (!isSoundEnabled()) return;
+    
     if (window.beep) {
       beep(523, 0.05);
     }
@@ -587,6 +609,9 @@ window.ShipBrief = (function() {
     // Lock scroll
     lockScroll();
     
+    // Clear any existing timers from previous open
+    clearAllTimers();
+    
     // Reset boot animation
     const bootOverlay = dialogEl.querySelector('#ship-brief-boot');
     bootOverlay.classList.remove('done');
@@ -605,18 +630,23 @@ window.ShipBrief = (function() {
     // Add global ESC listener
     document.addEventListener('keydown', globalKeydown);
     
-    // Boot animation sequence
-    setTimeout(() => {
+    // Boot animation sequence (tracked for cleanup)
+    bootTimer = setTimeout(() => {
+      if (!isVisible) return; // Guard against close during animation
       bootOverlay.classList.add('done');
       
       // Animate bars after boot
-      setTimeout(() => {
+      barTimer = setTimeout(() => {
+        if (!isVisible) return;
         animateBars(data);
         playBarSound();
       }, 200);
       
       // Trap focus after animation
-      setTimeout(trapFocus, 100);
+      focusTimer = setTimeout(() => {
+        if (!isVisible) return;
+        trapFocus();
+      }, 100);
     }, 600);
     
     // Dispatch event
@@ -631,6 +661,16 @@ window.ShipBrief = (function() {
   }
   
   /**
+   * Clear all pending timers
+   */
+  function clearAllTimers() {
+    if (bootTimer) { clearTimeout(bootTimer); bootTimer = null; }
+    if (barTimer) { clearTimeout(barTimer); barTimer = null; }
+    if (focusTimer) { clearTimeout(focusTimer); focusTimer = null; }
+    if (closeTimer) { clearTimeout(closeTimer); closeTimer = null; }
+  }
+  
+  /**
    * Close the ship brief dialog
    */
   function close() {
@@ -638,10 +678,13 @@ window.ShipBrief = (function() {
     
     const closingTicker = currentTicker;
     
+    // Clear all pending timers
+    clearAllTimers();
+    
     // Hide dialog
     dialogEl.classList.remove('visible');
     
-    setTimeout(() => {
+    closeTimer = setTimeout(() => {
       dialogEl.classList.add('hidden');
       currentTicker = null;
       isVisible = false;

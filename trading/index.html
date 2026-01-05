@@ -12,6 +12,8 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
   <link rel="stylesheet" href="css/styles.css">
+  <!-- Ship Brief dialog styles (isolated for modularity) -->
+  <link rel="stylesheet" href="css/ship-brief.css">
 </head>
 <body>
   <!-- HOLO FLEET LIBRARY :: refined ship wireframes -->
@@ -1604,7 +1606,14 @@
     <button class="about-trigger" id="about-trigger-btn">? ABOUT THIS SIMULATION</button>
   </div>
 
-  <!-- VESSEL DOSSIER OVERLAY - Cinematic ship information card -->
+  <!-- ═══════════════════════════════════════════════════════════════════════════
+       LEGACY: Vessel Dossier (DEPRECATED — replaced by ShipBrief module)
+       
+       This HTML is no longer used. The unified ShipBrief dialog (js/ui/shipBrief.js)
+       now handles all ship detail popups across the application.
+       
+       DO NOT DELETE until Step 3 cleanup is complete. Kept for rollback safety.
+       ═══════════════════════════════════════════════════════════════════════════ -->
   <div id="vessel-dossier" class="vessel-dossier hidden">
     <div class="vessel-backdrop"></div>
     <div class="vessel-container">
@@ -1766,6 +1775,11 @@
   </div>
 
   <!-- Data modules (load before app.js) -->
+  <script>
+    // Global UI sound configuration (default: OFF for accessibility)
+    // Set to true to enable Ship Brief and other UI sounds
+    window.UI_SOUND_ENABLED = false;
+  </script>
   <script src="js/data/ticker-profiles.js"></script>
   <script src="js/data/glossary.js"></script>
   <script src="js/data/ship-data.js"></script>
