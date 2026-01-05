@@ -2563,6 +2563,313 @@
     }
 
     /* =========================================================================
+       ARCADE LOBBY - Game Selection Hub
+       ========================================================================= */
+    .arcade-lobby {
+      padding: 1.5rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    .arcade-lobby-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid var(--phosphor-dim);
+    }
+    
+    .arcade-lobby-title {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    
+    .arcade-lobby-title .arcade-icon {
+      font-size: 2.5rem;
+      filter: drop-shadow(0 0 10px var(--phosphor));
+    }
+    
+    .arcade-lobby-title h2 {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      color: var(--phosphor);
+      letter-spacing: 0.15em;
+      margin: 0;
+      text-shadow: 0 0 20px var(--phosphor-glow);
+    }
+    
+    .arcade-subtitle {
+      font-size: 0.6rem;
+      color: var(--text-dim);
+      letter-spacing: 0.2em;
+    }
+    
+    .arcade-stats-bar {
+      display: flex;
+      gap: 2rem;
+    }
+    
+    .arcade-stat {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+    }
+    
+    .arcade-stat .label {
+      font-size: 0.5rem;
+      color: var(--text-dim);
+      letter-spacing: 0.1em;
+    }
+    
+    .arcade-stat .value {
+      font-family: var(--font-display);
+      font-size: 1.2rem;
+      color: var(--amber);
+    }
+    
+    .arcade-games-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    
+    .arcade-game-card {
+      background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-panel) 100%);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+    
+    .arcade-game-card:hover {
+      border-color: var(--phosphor);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 30px var(--phosphor-glow);
+    }
+    
+    .arcade-game-card:hover .game-card-overlay {
+      opacity: 1;
+    }
+    
+    .arcade-game-card:hover .play-icon {
+      transform: scale(1.2);
+    }
+    
+    .game-card-preview {
+      position: relative;
+      background: var(--bg-void);
+      height: 160px;
+      overflow: hidden;
+    }
+    
+    .game-card-preview canvas {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    .game-card-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    
+    .play-icon {
+      font-size: 3rem;
+      color: var(--phosphor);
+      text-shadow: 0 0 20px var(--phosphor);
+      transition: transform 0.3s ease;
+    }
+    
+    .game-card-info {
+      padding: 1rem;
+    }
+    
+    .game-card-title {
+      font-family: var(--font-display);
+      font-size: 1rem;
+      color: var(--phosphor);
+      letter-spacing: 0.1em;
+      margin-bottom: 0.5rem;
+    }
+    
+    .game-card-desc {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+      margin-bottom: 0.75rem;
+    }
+    
+    .game-card-controls {
+      display: flex;
+      gap: 1rem;
+      font-size: 0.6rem;
+      color: var(--text-dim);
+      font-family: var(--font-mono);
+      letter-spacing: 0.05em;
+    }
+    
+    .game-card-controls span {
+      background: var(--bg-void);
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+    }
+    
+    .game-card-badge {
+      position: absolute;
+      top: 0.75rem;
+      right: 0.75rem;
+      background: var(--amber);
+      color: var(--bg-void);
+      font-size: 0.5rem;
+      font-weight: 700;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      letter-spacing: 0.1em;
+    }
+    
+    /* Ship Selection Grid */
+    .arcade-ship-select {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    .ship-select-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .ship-select-title {
+      font-family: var(--font-display);
+      font-size: 0.85rem;
+      color: var(--amber);
+      letter-spacing: 0.1em;
+    }
+    
+    .ship-select-hint {
+      font-size: 0.6rem;
+      color: var(--text-dim);
+    }
+    
+    .ship-select-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 0.75rem;
+    }
+    
+    .ship-select-item {
+      background: var(--bg-panel);
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      padding: 0.5rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    
+    .ship-select-item:hover {
+      border-color: var(--phosphor-dim);
+      background: var(--bg-input);
+    }
+    
+    .ship-select-item.selected {
+      border-color: var(--phosphor);
+      background: var(--phosphor-ghost);
+      box-shadow: 0 0 15px var(--phosphor-glow);
+    }
+    
+    .ship-select-item img {
+      width: 60px;
+      height: 45px;
+      object-fit: contain;
+      image-rendering: pixelated;
+      filter: drop-shadow(0 0 5px var(--ship-color, var(--phosphor)));
+    }
+    
+    .ship-select-item .ship-ticker {
+      font-family: var(--font-display);
+      font-size: 0.65rem;
+      color: var(--ship-color, var(--phosphor));
+      letter-spacing: 0.1em;
+    }
+    
+    /* Secrets Section */
+    .arcade-secrets {
+      background: linear-gradient(135deg, rgba(255, 179, 71, 0.05) 0%, transparent 100%);
+      border: 1px dashed var(--amber-dim);
+      border-radius: 8px;
+      padding: 1rem;
+      text-align: center;
+    }
+    
+    .secrets-title {
+      font-family: var(--font-display);
+      font-size: 0.75rem;
+      color: var(--amber);
+      letter-spacing: 0.15em;
+      margin-bottom: 0.25rem;
+    }
+    
+    .secrets-hint {
+      font-size: 0.65rem;
+      color: var(--text-dim);
+      font-style: italic;
+    }
+    
+    /* Arcade tab glow effect */
+    .nav-tab.arcade-tab {
+      background: linear-gradient(135deg, rgba(255, 179, 71, 0.1) 0%, transparent 100%);
+    }
+    
+    .nav-tab.arcade-tab:hover,
+    .nav-tab.arcade-tab.active {
+      color: var(--amber);
+      border-color: var(--amber);
+      text-shadow: 0 0 10px var(--amber-glow);
+    }
+    
+    @media (max-width: 768px) {
+      .arcade-lobby-header {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+      }
+      
+      .arcade-stats-bar {
+        justify-content: center;
+      }
+      
+      .arcade-games-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .ship-select-grid {
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+      }
+    }
+
+    /* =========================================================================
        SIGNAL INVADERS ARCADE GAME
        ========================================================================= */
     .arcade-game-overlay {
@@ -7652,6 +7959,7 @@
           <button class="nav-tab" data-tab="positions" onclick="switchTab('positions')">HOLDINGS</button>
           <button class="nav-tab" data-tab="options" data-glossary-id="derivatives_tab" onclick="switchTab('options')">DERIVATIVES</button>
           <button class="nav-tab" data-tab="catalysts" onclick="switchTab('catalysts')">EVENTS</button>
+          <button class="nav-tab arcade-tab" data-tab="arcade" onclick="switchTab('arcade')">🎮 ARCADE</button>
         </nav>
       </div>
       <div class="header-right">
@@ -8198,6 +8506,82 @@
             </div>
           </div>
         </div>
+        
+        <!-- ARCADE PANEL -->
+        <div class="tab-panel" id="arcade-panel">
+          <div class="arcade-lobby">
+            <div class="arcade-lobby-header">
+              <div class="arcade-lobby-title">
+                <span class="arcade-icon">🕹️</span>
+                <div>
+                  <h2>HASLUN ARCADE</h2>
+                  <span class="arcade-subtitle">FLEET COMMAND TRAINING SIMULATIONS</span>
+                </div>
+              </div>
+              <div class="arcade-stats-bar">
+                <div class="arcade-stat"><span class="label">HIGH SCORE</span><span class="value" id="arcade-high-score">0</span></div>
+                <div class="arcade-stat"><span class="label">GAMES PLAYED</span><span class="value" id="arcade-games-played">0</span></div>
+              </div>
+            </div>
+            
+            <div class="arcade-games-grid">
+              <!-- Signal Invaders Card -->
+              <div class="arcade-game-card" onclick="window.SignalInvaders && SignalInvaders.start()">
+                <div class="game-card-preview" id="invaders-preview">
+                  <canvas id="invaders-preview-canvas" width="280" height="160"></canvas>
+                  <div class="game-card-overlay">
+                    <span class="play-icon">▶</span>
+                  </div>
+                </div>
+                <div class="game-card-info">
+                  <div class="game-card-title">👾 SIGNAL INVADERS</div>
+                  <div class="game-card-desc">Defend the array against hostile market signals. Your fleet ships become the enemy waves!</div>
+                  <div class="game-card-controls">
+                    <span>← → MOVE</span>
+                    <span>SPACE FIRE</span>
+                  </div>
+                </div>
+                <div class="game-card-badge">CLASSIC</div>
+              </div>
+              
+              <!-- Terrain Lander Card -->
+              <div class="arcade-game-card" onclick="window.LandingGame && LandingGame.start()">
+                <div class="game-card-preview" id="lander-preview">
+                  <canvas id="lander-preview-canvas" width="280" height="160"></canvas>
+                  <div class="game-card-overlay">
+                    <span class="play-icon">▶</span>
+                  </div>
+                </div>
+                <div class="game-card-info">
+                  <div class="game-card-title">🚀 TERRAIN LANDER</div>
+                  <div class="game-card-desc">Navigate treacherous market terrain and land safely on profit zones. Fuel management is critical.</div>
+                  <div class="game-card-controls">
+                    <span>← → STEER</span>
+                    <span>↑ THRUST</span>
+                  </div>
+                </div>
+                <div class="game-card-badge">LUNAR</div>
+              </div>
+            </div>
+            
+            <!-- Ship Selection for Games -->
+            <div class="arcade-ship-select">
+              <div class="ship-select-header">
+                <span class="ship-select-title">🚀 SELECT YOUR SHIP</span>
+                <span class="ship-select-hint">Choose your vessel for arcade missions</span>
+              </div>
+              <div class="ship-select-grid" id="arcade-ship-grid">
+                <!-- Ships will be populated dynamically -->
+              </div>
+            </div>
+            
+            <!-- Cheat Codes Section -->
+            <div class="arcade-secrets">
+              <div class="secrets-title">🔐 COMMAND CODES</div>
+              <div class="secrets-hint">Type secret codes anywhere to unlock special features...</div>
+            </div>
+          </div>
+        </div>
       </div>
       
       <aside class="right-sidebar">
@@ -8339,9 +8723,9 @@
           <span class="nav-icon">🚀</span>
           <span>Holdings</span>
         </button>
-        <button class="mobile-nav-item" data-tab="options" onclick="switchTabMobile('options')">
-          <span class="nav-icon">📈</span>
-          <span>Derivatives</span>
+        <button class="mobile-nav-item" data-tab="arcade" onclick="switchTabMobile('arcade')">
+          <span class="nav-icon">🎮</span>
+          <span>Arcade</span>
         </button>
         <button class="mobile-nav-item" data-tab="catalysts" onclick="switchTabMobile('catalysts')">
           <span class="nav-icon">📅</span>
@@ -11275,6 +11659,11 @@
     function switchTab(tabName) {
       document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tabName));
       document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === tabName + '-panel'));
+      
+      // Refresh arcade previews when switching to arcade tab
+      if (tabName === 'arcade' && window.SpriteCache && SpriteCache.loaded) {
+        setTimeout(() => SpriteCache.renderGamePreviews(), 100);
+      }
     }
     
     // =========================================================================
@@ -11552,6 +11941,209 @@
     
     // Default fallback sprite for tickers without custom ships
     const DEFAULT_SHIP_SPRITE = 'assets/ships/Unclaimed-Drone-ship.png';
+    
+    // =========================================================================
+    // SPRITE CACHE SYSTEM - Preload PNG sprites for canvas games
+    // =========================================================================
+    const SpriteCache = {
+      images: {},
+      loaded: false,
+      selectedPlayerShip: 'RKLB',
+      
+      // Preload all ship sprites
+      preload() {
+        const allSprites = { ...SHIP_SPRITES, DEFAULT: DEFAULT_SHIP_SPRITE };
+        const promises = Object.entries(allSprites).map(([key, src]) => {
+          return new Promise((resolve) => {
+            const img = new Image();
+            img.onload = () => {
+              this.images[key] = img;
+              resolve();
+            };
+            img.onerror = () => resolve(); // Continue even if one fails
+            img.src = src;
+          });
+        });
+        
+        Promise.all(promises).then(() => {
+          this.loaded = true;
+          console.log('[SpriteCache] All ship sprites loaded');
+          this.renderArcadeShipGrid();
+          this.renderGamePreviews();
+        });
+      },
+      
+      // Get a sprite image (returns Image object or null)
+      get(ticker) {
+        return this.images[ticker] || this.images['DEFAULT'] || null;
+      },
+      
+      // Get random fleet ship (for enemies)
+      getRandomFleetShip() {
+        const tickers = Object.keys(SHIP_SPRITES);
+        const randomTicker = tickers[Math.floor(Math.random() * tickers.length)];
+        return { ticker: randomTicker, image: this.get(randomTicker) };
+      },
+      
+      // Draw sprite on canvas with options
+      drawOnCanvas(ctx, ticker, x, y, scale = 1, options = {}) {
+        const img = this.get(ticker);
+        if (!img) return false;
+        
+        const width = (options.width || 60) * scale;
+        const height = (options.height || 45) * scale;
+        
+        ctx.save();
+        
+        // Glow effect
+        if (options.glow) {
+          ctx.shadowColor = options.glowColor || tickerColors[ticker] || '#33ff99';
+          ctx.shadowBlur = options.glowBlur || 10;
+        }
+        
+        // Flip if specified (for enemies facing down)
+        if (options.flipY) {
+          ctx.translate(x, y);
+          ctx.scale(1, -1);
+          ctx.drawImage(img, -width / 2, -height / 2, width, height);
+        } else {
+          ctx.drawImage(img, x - width / 2, y - height / 2, width, height);
+        }
+        
+        ctx.restore();
+        return true;
+      },
+      
+      // Render the arcade ship selection grid
+      renderArcadeShipGrid() {
+        const grid = document.getElementById('arcade-ship-grid');
+        if (!grid) return;
+        
+        const tickers = Object.keys(SHIP_SPRITES);
+        grid.innerHTML = tickers.map(ticker => {
+          const color = tickerColors[ticker] || '#33ff99';
+          const isSelected = ticker === this.selectedPlayerShip;
+          return `
+            <div class="ship-select-item ${isSelected ? 'selected' : ''}" 
+                 style="--ship-color: ${color}"
+                 onclick="SpriteCache.selectShip('${ticker}')"
+                 data-ticker="${ticker}">
+              <img src="${SHIP_SPRITES[ticker]}" alt="${ticker}">
+              <span class="ship-ticker">${ticker}</span>
+            </div>
+          `;
+        }).join('');
+      },
+      
+      // Select a ship for the player
+      selectShip(ticker) {
+        this.selectedPlayerShip = ticker;
+        // Update UI
+        document.querySelectorAll('.ship-select-item').forEach(el => {
+          el.classList.toggle('selected', el.dataset.ticker === ticker);
+        });
+        // Play sound
+        if (window.MechSFX) MechSFX.click();
+        // Toast
+        if (typeof showToast === 'function') {
+          const shipName = SHIP_NAMES[ticker]?.name || ticker;
+          showToast(`${shipName} selected as your ship`, 'info');
+        }
+      },
+      
+      // Render game preview canvases
+      renderGamePreviews() {
+        this.renderInvadersPreview();
+        this.renderLanderPreview();
+      },
+      
+      renderInvadersPreview() {
+        const canvas = document.getElementById('invaders-preview-canvas');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        
+        // Dark background
+        ctx.fillStyle = '#050608';
+        ctx.fillRect(0, 0, 280, 160);
+        
+        // Stars
+        ctx.fillStyle = 'rgba(51, 255, 153, 0.3)';
+        for (let i = 0; i < 30; i++) {
+          ctx.fillRect(Math.random() * 280, Math.random() * 160, 1, 1);
+        }
+        
+        // Draw some enemy ships
+        const enemyTickers = ['GE', 'KTOS', 'RTX', 'COHR'];
+        enemyTickers.forEach((ticker, i) => {
+          const x = 50 + (i % 4) * 55;
+          const y = 30 + Math.floor(i / 4) * 40;
+          this.drawOnCanvas(ctx, ticker, x, y, 0.6, { flipY: true, glow: true, glowBlur: 4 });
+        });
+        
+        // Draw player ship at bottom
+        this.drawOnCanvas(ctx, this.selectedPlayerShip, 140, 130, 0.7, { glow: true, glowBlur: 6 });
+        
+        // Draw some bullets
+        ctx.fillStyle = '#33ff99';
+        ctx.shadowColor = '#33ff99';
+        ctx.shadowBlur = 4;
+        ctx.fillRect(138, 100, 4, 10);
+        ctx.fillRect(138, 70, 4, 10);
+        ctx.shadowBlur = 0;
+      },
+      
+      renderLanderPreview() {
+        const canvas = document.getElementById('lander-preview-canvas');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        
+        // Dark background
+        ctx.fillStyle = '#050608';
+        ctx.fillRect(0, 0, 280, 160);
+        
+        // Stars
+        ctx.fillStyle = 'rgba(51, 255, 153, 0.2)';
+        for (let i = 0; i < 20; i++) {
+          ctx.fillRect(Math.random() * 280, Math.random() * 100, 1, 1);
+        }
+        
+        // Draw terrain
+        ctx.strokeStyle = '#33ff99';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(0, 140);
+        ctx.lineTo(40, 130);
+        ctx.lineTo(80, 145);
+        ctx.lineTo(120, 120);
+        ctx.lineTo(140, 120); // Landing zone
+        ctx.lineTo(160, 120);
+        ctx.lineTo(200, 140);
+        ctx.lineTo(240, 125);
+        ctx.lineTo(280, 135);
+        ctx.stroke();
+        
+        // Landing zone highlight
+        ctx.strokeStyle = '#ffb347';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(120, 120);
+        ctx.lineTo(160, 120);
+        ctx.stroke();
+        
+        // Draw lander ship
+        this.drawOnCanvas(ctx, 'LUNR', 140, 60, 0.7, { glow: true, glowBlur: 8 });
+        
+        // Thrust flame
+        ctx.fillStyle = '#ffb347';
+        ctx.shadowColor = '#ffb347';
+        ctx.shadowBlur = 8;
+        ctx.fillRect(136, 80, 8, 12);
+        ctx.shadowBlur = 0;
+      }
+    };
+    
+    // Initialize sprite cache on load
+    SpriteCache.preload();
     
     function renderFleetGrid() {
       const fleetGrid = document.getElementById('fleet-grid');
@@ -14083,19 +14675,29 @@
           const rows = Math.min(4 + Math.floor(this.wave / 2), 6);
           const cols = Math.min(8 + this.wave, 10);
           
+          // Get available fleet tickers for enemies
+          const fleetTickers = Object.keys(SHIP_SPRITES);
+          
           for (let row = 0; row < rows; row++) {
             for (let col = 0; col < cols; col++) {
+              // Assign a random fleet ship to each enemy
+              const ticker = fleetTickers[Math.floor(Math.random() * fleetTickers.length)];
+              const isElite = row < 2;
+              
               this.enemies.push({
                 x: 60 + col * 52,
                 y: 40 + row * 36,
-                width: 22,
-                height: 16,
-                type: row < 2 ? 'elite' : 'normal'
+                width: 32,
+                height: 24,
+                type: isElite ? 'elite' : 'normal',
+                ticker: ticker,
+                color: tickerColors[ticker] || '#33ff99',
+                points: isElite ? 30 : 10
               });
             }
           }
           
-          document.getElementById('invaders-message').textContent = `WAVE ${this.wave} - INCOMING!`;
+          document.getElementById('invaders-message').textContent = `WAVE ${this.wave} - HOSTILE FLEET INCOMING!`;
           setTimeout(() => {
             document.getElementById('invaders-message').textContent = '';
           }, 2000);
@@ -14186,25 +14788,30 @@
           this.bullets.forEach((bullet, bi) => {
             this.enemies.forEach((enemy, ei) => {
               if (this.collides(bullet, enemy)) {
-                // Create particles
-                for (let i = 0; i < 8; i++) {
+                // Create particles using enemy's fleet color
+                for (let i = 0; i < 10; i++) {
                   this.particles.push({
                     x: enemy.x + enemy.width / 2,
                     y: enemy.y + enemy.height / 2,
-                    vx: (Math.random() - 0.5) * 6,
-                    vy: (Math.random() - 0.5) * 6,
-                    life: 30,
-                    color: enemy.type === 'elite' ? '#ffb347' : '#33ff99'
+                    vx: (Math.random() - 0.5) * 8,
+                    vy: (Math.random() - 0.5) * 8,
+                    life: 35,
+                    color: enemy.color || '#33ff99'
                   });
                 }
                 
                 this.bullets.splice(bi, 1);
                 this.enemies.splice(ei, 1);
-                this.score += enemy.type === 'elite' ? 20 : 10;
+                this.score += enemy.points || (enemy.type === 'elite' ? 30 : 10);
                 this.updateUI();
                 
+                // Show ticker when destroyed
+                if (typeof showToast === 'function' && Math.random() > 0.7) {
+                  showToast(`${enemy.ticker} neutralized!`, 'info');
+                }
+                
                 if (window.MechSFX) {
-                  MechSFX.bassHit(80, 0.1);
+                  MechSFX.bassHit(80, 0.15);
                 }
               }
             });
@@ -14301,39 +14908,56 @@
             ctx.fillRect(star.x, star.y, star.size, star.size);
           });
           
-          // Draw player ship (SNES mecha style)
-          drawPixelShipOnCanvas(
-            ctx, 
-            'arcade_player', 
-            this.player.x + this.player.width / 2, 
-            this.player.y + this.player.height / 2, 
-            1.8, 
-            '#33ff99',
-            { glow: true, glowBlur: 8 }
+          // Draw player ship using selected sprite
+          const playerTicker = SpriteCache.selectedPlayerShip || 'RKLB';
+          const playerColor = tickerColors[playerTicker] || '#33ff99';
+          SpriteCache.drawOnCanvas(
+            ctx,
+            playerTicker,
+            this.player.x + this.player.width / 2,
+            this.player.y + this.player.height / 2,
+            1.0,
+            { glow: true, glowBlur: 10, glowColor: playerColor, width: 50, height: 38 }
           );
           
-          // Draw bullets
-          ctx.fillStyle = '#33ff99';
-          ctx.shadowColor = '#33ff99';
+          // Draw bullets with player color
+          ctx.fillStyle = playerColor;
+          ctx.shadowColor = playerColor;
           ctx.shadowBlur = 6;
           this.bullets.forEach(b => {
             ctx.fillRect(b.x, b.y, b.width, b.height);
           });
           ctx.shadowBlur = 0;
           
-          // Draw enemies (SNES mecha style)
+          // Draw enemies using their assigned fleet sprites (flipped to face down)
           this.enemies.forEach(e => {
-            const enemyPattern = e.type === 'elite' ? 'arcade_elite' : 'arcade_enemy';
-            const enemyColor = e.type === 'elite' ? '#ffb347' : '#33ff99';
-            drawPixelShipOnCanvas(
+            const glowIntensity = e.type === 'elite' ? 8 : 4;
+            SpriteCache.drawOnCanvas(
               ctx,
-              enemyPattern,
+              e.ticker,
               e.x + e.width / 2,
               e.y + e.height / 2,
-              1.4,
-              enemyColor,
-              { glow: true, glowBlur: 4 }
+              0.65,
+              { 
+                glow: true, 
+                glowBlur: glowIntensity, 
+                glowColor: e.color,
+                flipY: true,
+                width: 50,
+                height: 38
+              }
             );
+            
+            // Elite indicator ring
+            if (e.type === 'elite') {
+              ctx.strokeStyle = '#ffb347';
+              ctx.lineWidth = 1;
+              ctx.globalAlpha = 0.5;
+              ctx.beginPath();
+              ctx.arc(e.x + e.width / 2, e.y + e.height / 2, 18, 0, Math.PI * 2);
+              ctx.stroke();
+              ctx.globalAlpha = 1;
+            }
           });
           
           // Draw enemy bullets
@@ -14958,10 +15582,11 @@
           
           if (ship.crashed) {
             // Explosion particles
-            ctx.fillStyle = '#ff6b6b';
-            for (let i = 0; i < 8; i++) {
-              const angle = (i / 8) * Math.PI * 2;
-              const dist = 10 + Math.random() * 15;
+            const crashColor = tickerColors[SpriteCache.selectedPlayerShip] || '#ff6b6b';
+            ctx.fillStyle = crashColor;
+            for (let i = 0; i < 12; i++) {
+              const angle = (i / 12) * Math.PI * 2;
+              const dist = 10 + Math.random() * 20;
               ctx.fillRect(
                 Math.cos(angle) * dist - 2,
                 Math.sin(angle) * dist - 2,
@@ -14969,17 +15594,25 @@
               );
             }
           } else {
-            // Ship body (SNES mecha lander style)
-            drawPixelShipOnCanvas(ctx, 'lander', 0, 0, 1.4, '#33ff99', { glow: true, glowBlur: 10 });
+            // Draw selected player ship using sprite
+            const landerTicker = SpriteCache.selectedPlayerShip || 'LUNR';
+            const landerColor = tickerColors[landerTicker] || '#33ff99';
+            SpriteCache.drawOnCanvas(ctx, landerTicker, 0, 0, 0.8, { 
+              glow: true, 
+              glowBlur: 12, 
+              glowColor: landerColor,
+              width: 50,
+              height: 38
+            });
             
             // Thrust flame
             if (this.keys['ArrowUp'] && ship.fuel > 0) {
               ctx.fillStyle = '#ffb347';
               ctx.shadowColor = '#ffb347';
-              ctx.shadowBlur = 8;
-              ctx.fillRect(-4, 10, 8, 4 + Math.random() * 6);
+              ctx.shadowBlur = 10;
+              ctx.fillRect(-5, 18, 10, 6 + Math.random() * 8);
               ctx.fillStyle = '#ff6b6b';
-              ctx.fillRect(-2, 14, 4, 3 + Math.random() * 4);
+              ctx.fillRect(-3, 24, 6, 4 + Math.random() * 6);
               ctx.shadowBlur = 0;
             }
           }
