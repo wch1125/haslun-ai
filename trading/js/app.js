@@ -2362,7 +2362,7 @@
         const shipVisualMarkup = `<img src="${spritePath}" alt="${pos.ticker} ship" loading="lazy" decoding="async">`;
         
         return `
-          <div class="ship-card ${isOperational ? '' : 'negative'}" style="--ship-color: ${color}" onclick="selectTicker('${pos.ticker}'); switchTab('chart');">
+          <div class="ship-card ${isOperational ? '' : 'negative'}" style="--ship-color: ${color}" onclick="openVesselDossier('${pos.ticker}');">
             <div class="ship-card-inner">
               <div class="ship-visual">
                 ${shipVisualMarkup}
@@ -3076,6 +3076,7 @@
         renderMissions();
         initAboutOverlay();
         initPipboyDossier();
+        initVesselDossier();
         logTerminal('arcade module initialized');
         logTerminal('system ready · awaiting input');
       }
@@ -3309,6 +3310,188 @@
         });
         
         logTerminal('pip-boy dossier system initialized');
+      }
+      
+      // =========================================================================
+      // VESSEL DOSSIER CONTROLLER — Cinematic Ship Information Card
+      // =========================================================================
+      function initVesselDossier() {
+        const overlay = document.getElementById('vessel-dossier');
+        const closeBtn = document.getElementById('vessel-close-btn');
+        const bootOverlay = document.getElementById('vessel-boot');
+        const viewChartBtn = document.getElementById('vessel-view-chart');
+        
+        if (!overlay || !closeBtn) return;
+        
+        let currentVesselTicker = null;
+        
+        // Open vessel dossier for a specific ticker
+        window.openVesselDossier = function(ticker) {
+          const pos = DEMO_STOCK_POSITIONS.find(p => p.ticker === ticker);
+          if (!pos) {
+            logTerminal('ERROR: No vessel data found for ' + ticker);
+            return;
+          }
+          
+          currentVesselTicker = ticker;
+          const color = tickerColors[ticker] || '#33ff99';
+          const profile = TICKER_PROFILES[ticker] || {};
+          const shipInfo = SHIP_NAMES[ticker] || { name: ticker, designation: 'UNK-XXX' };
+          const sector = tickerThemes[ticker] || 'UNKNOWN';
+          const spritePath = SHIP_SPRITES[ticker] || DEFAULT_SHIP_SPRITE;
+          
+          // Calculate ship stats
+          const value = pos.shares * pos.current_price;
+          const pnl = (pos.current_price - pos.entry_price) * pos.shares;
+          const pnlPct = ((pos.current_price - pos.entry_price) / pos.entry_price * 100);
+          const totalShares = DEMO_STOCK_POSITIONS.reduce((s, p) => s + p.shares, 0);
+          
+          // Map to ship type
+          const shipMeta = mapTickerToPixelShip(ticker, sector, pnlPct);
+          const shipLore = PIXEL_SHIP_LORE[shipMeta.pattern] || PIXEL_SHIP_LORE.drone;
+          
+          // Calculate status bars
+          const hullHealth = Math.max(10, Math.min(100, 50 + pnlPct * 2));
+          const cargoPercent = Math.round((pos.shares / totalShares) * 100);
+          const fuelPercent = Math.max(10, Math.min(100, Math.random() * 40 + 60));
+          const isOperational = pnlPct >= 0;
+          
+          // Set CSS custom property for ship color
+          overlay.style.setProperty('--ship-color', color);
+          
+          // Update ship visual
+          const shipImg = document.getElementById('vessel-ship-img');
+          shipImg.src = spritePath;
+          shipImg.alt = ticker + ' vessel';
+          
+          // Update identity section
+          document.getElementById('vessel-ticker').textContent = ticker;
+          document.getElementById('vessel-ticker').style.color = color;
+          document.getElementById('vessel-name').textContent = shipInfo.name;
+          document.getElementById('vessel-designation').textContent = shipInfo.designation;
+          document.getElementById('vessel-sector').textContent = sector.toUpperCase();
+          
+          // Update class badge
+          const classBadge = document.getElementById('vessel-class');
+          classBadge.textContent = shipLore.label;
+          classBadge.style.color = color;
+          classBadge.style.borderColor = color;
+          
+          // Update HUD message
+          const hudText = document.querySelector('.vessel-hud-text');
+          hudText.textContent = shipLore.hud;
+          
+          // Update status bars (initially at 0 for animation)
+          const hullBar = document.getElementById('vessel-hull-bar');
+          const cargoBar = document.getElementById('vessel-cargo-bar');
+          const fuelBar = document.getElementById('vessel-fuel-bar');
+          
+          hullBar.style.width = '0%';
+          cargoBar.style.width = '0%';
+          fuelBar.style.width = '0%';
+          
+          document.getElementById('vessel-hull-val').textContent = hullHealth.toFixed(0) + '%';
+          document.getElementById('vessel-cargo-val').textContent = pos.shares + ' UNITS';
+          document.getElementById('vessel-fuel-val').textContent = fuelPercent.toFixed(0) + '%';
+          
+          // Update hull bar damage state
+          hullBar.classList.toggle('damaged', !isOperational);
+          
+          // Update operations data
+          document.getElementById('vessel-value').textContent = '$' + value.toLocaleString();
+          
+          const pnlEl = document.getElementById('vessel-pnl');
+          pnlEl.textContent = (pnl >= 0 ? '+' : '') + '$' + Math.abs(pnl).toFixed(0);
+          pnlEl.className = 'vessel-ops-value ' + (pnl >= 0 ? 'positive' : 'negative');
+          
+          const returnEl = document.getElementById('vessel-return');
+          returnEl.textContent = (pnlPct >= 0 ? '+' : '') + pnlPct.toFixed(1) + '%';
+          returnEl.className = 'vessel-ops-value ' + (pnlPct >= 0 ? 'positive' : 'negative');
+          
+          const missionEl = document.getElementById('vessel-mission');
+          missionEl.textContent = isOperational ? 'OPERATIONAL' : 'DAMAGED';
+          missionEl.className = 'vessel-ops-value status-' + (isOperational ? 'operational' : 'damaged');
+          
+          // Update lore
+          document.getElementById('vessel-lore').textContent = shipLore.lore;
+          
+          // Reset boot overlay
+          bootOverlay.classList.remove('done');
+          
+          // Reset section animations by forcing reflow
+          const sections = overlay.querySelectorAll('.vessel-section');
+          sections.forEach(s => {
+            s.style.animation = 'none';
+            s.offsetHeight; // Force reflow
+            s.style.animation = '';
+          });
+          
+          // Show overlay
+          overlay.classList.remove('hidden');
+          requestAnimationFrame(() => {
+            overlay.classList.add('visible');
+          });
+          
+          // Play boot sound
+          beep(220, 0.1);
+          setTimeout(() => beep(330, 0.08), 100);
+          setTimeout(() => beep(440, 0.08), 200);
+          
+          // Boot animation sequence
+          setTimeout(() => {
+            bootOverlay.classList.add('done');
+            // Now animate the bars
+            setTimeout(() => {
+              hullBar.style.width = hullHealth + '%';
+              cargoBar.style.width = cargoPercent + '%';
+              fuelBar.style.width = fuelPercent + '%';
+              beep(523, 0.05);
+            }, 200);
+          }, 700);
+          
+          logTerminal('VESSEL DOSSIER: ' + ticker + ' [' + shipInfo.name + '] accessed');
+        };
+        
+        // Close vessel dossier
+        window.closeVesselDossier = function() {
+          overlay.classList.remove('visible');
+          setTimeout(() => {
+            overlay.classList.add('hidden');
+            currentVesselTicker = null;
+          }, 300);
+          beep(330, 0.05);
+          logTerminal('vessel dossier closed');
+        };
+        
+        // Event listeners
+        closeBtn.addEventListener('click', closeVesselDossier);
+        
+        overlay.addEventListener('click', (e) => {
+          if (e.target === overlay || e.target.classList.contains('vessel-backdrop')) {
+            closeVesselDossier();
+          }
+        });
+        
+        window.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' && overlay.classList.contains('visible')) {
+            closeVesselDossier();
+          }
+        });
+        
+        // View Telemetry button - go to chart
+        if (viewChartBtn) {
+          viewChartBtn.addEventListener('click', () => {
+            if (currentVesselTicker) {
+              closeVesselDossier();
+              setTimeout(() => {
+                selectTicker(currentVesselTicker);
+                switchTab('chart');
+              }, 200);
+            }
+          });
+        }
+        
+        logTerminal('vessel dossier system initialized');
       }
       
       // About Overlay Controller

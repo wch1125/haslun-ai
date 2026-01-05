@@ -1697,6 +1697,167 @@
     <button class="about-trigger" id="about-trigger-btn">? ABOUT THIS SIMULATION</button>
   </div>
 
+  <!-- VESSEL DOSSIER OVERLAY - Cinematic ship information card -->
+  <div id="vessel-dossier" class="vessel-dossier hidden">
+    <div class="vessel-backdrop"></div>
+    <div class="vessel-container">
+      <!-- CRT Boot Animation Overlay -->
+      <div class="vessel-boot-overlay" id="vessel-boot">
+        <div class="vessel-boot-line"></div>
+        <div class="vessel-boot-text">ACCESSING FLEET REGISTRY...</div>
+      </div>
+      
+      <!-- Close Button -->
+      <button class="vessel-close" id="vessel-close-btn">
+        <span class="vessel-close-icon">×</span>
+        <span class="vessel-close-text">ESC</span>
+      </button>
+      
+      <!-- Main Content -->
+      <div class="vessel-content">
+        <!-- Left Panel: Ship Visual -->
+        <div class="vessel-visual-panel">
+          <div class="vessel-display">
+            <!-- Holographic Grid Background -->
+            <div class="vessel-holo-grid"></div>
+            <!-- Scan Sweep Animation -->
+            <div class="vessel-scan-sweep"></div>
+            <!-- Radar Rings -->
+            <div class="vessel-radar-rings">
+              <div class="vessel-radar-ring"></div>
+              <div class="vessel-radar-ring"></div>
+              <div class="vessel-radar-ring"></div>
+            </div>
+            <!-- Ship Image Container -->
+            <div class="vessel-ship-frame">
+              <img id="vessel-ship-img" src="" alt="Vessel" class="vessel-ship-img">
+            </div>
+            <!-- Corner Brackets -->
+            <div class="vessel-bracket vessel-bracket-tl"></div>
+            <div class="vessel-bracket vessel-bracket-tr"></div>
+            <div class="vessel-bracket vessel-bracket-bl"></div>
+            <div class="vessel-bracket vessel-bracket-br"></div>
+          </div>
+          
+          <!-- Ship Class Badge -->
+          <div class="vessel-class-badge" id="vessel-class">FLAGSHIP</div>
+          
+          <!-- HUD Message -->
+          <div class="vessel-hud-message" id="vessel-hud">
+            <span class="vessel-hud-icon">◈</span>
+            <span class="vessel-hud-text">COMMAND AUTHORITY ACTIVE</span>
+          </div>
+        </div>
+        
+        <!-- Right Panel: Ship Data -->
+        <div class="vessel-data-panel">
+          <!-- Identity Section -->
+          <div class="vessel-section vessel-identity">
+            <div class="vessel-section-header">
+              <span class="vessel-section-marker">▸</span>
+              <span class="vessel-section-label">VESSEL IDENTITY</span>
+            </div>
+            <div class="vessel-identity-content">
+              <div class="vessel-ticker" id="vessel-ticker">RKLB</div>
+              <div class="vessel-name" id="vessel-name">ELECTRON</div>
+              <div class="vessel-designation" id="vessel-designation">FSC-001</div>
+              <div class="vessel-sector" id="vessel-sector">SPACE LAUNCH</div>
+            </div>
+          </div>
+          
+          <!-- Status Section -->
+          <div class="vessel-section vessel-status">
+            <div class="vessel-section-header">
+              <span class="vessel-section-marker">▸</span>
+              <span class="vessel-section-label">SYSTEMS STATUS</span>
+            </div>
+            <div class="vessel-status-grid">
+              <div class="vessel-stat">
+                <div class="vessel-stat-header">
+                  <span class="vessel-stat-label">HULL INTEGRITY</span>
+                  <span class="vessel-stat-value" id="vessel-hull-val">87%</span>
+                </div>
+                <div class="vessel-stat-bar">
+                  <div class="vessel-stat-fill hull" id="vessel-hull-bar" style="width: 87%"></div>
+                  <div class="vessel-stat-glow hull"></div>
+                </div>
+              </div>
+              <div class="vessel-stat">
+                <div class="vessel-stat-header">
+                  <span class="vessel-stat-label">CARGO HOLD</span>
+                  <span class="vessel-stat-value" id="vessel-cargo-val">75 UNITS</span>
+                </div>
+                <div class="vessel-stat-bar">
+                  <div class="vessel-stat-fill cargo" id="vessel-cargo-bar" style="width: 65%"></div>
+                  <div class="vessel-stat-glow cargo"></div>
+                </div>
+              </div>
+              <div class="vessel-stat">
+                <div class="vessel-stat-header">
+                  <span class="vessel-stat-label">FUEL RESERVES</span>
+                  <span class="vessel-stat-value" id="vessel-fuel-val">92%</span>
+                </div>
+                <div class="vessel-stat-bar">
+                  <div class="vessel-stat-fill fuel" id="vessel-fuel-bar" style="width: 92%"></div>
+                  <div class="vessel-stat-glow fuel"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Operations Section -->
+          <div class="vessel-section vessel-ops">
+            <div class="vessel-section-header">
+              <span class="vessel-section-marker">▸</span>
+              <span class="vessel-section-label">OPERATIONS DATA</span>
+            </div>
+            <div class="vessel-ops-grid">
+              <div class="vessel-ops-item">
+                <span class="vessel-ops-label">POSITION VALUE</span>
+                <span class="vessel-ops-value" id="vessel-value">$5,460</span>
+              </div>
+              <div class="vessel-ops-item">
+                <span class="vessel-ops-label">P&L STATUS</span>
+                <span class="vessel-ops-value positive" id="vessel-pnl">+$326</span>
+              </div>
+              <div class="vessel-ops-item">
+                <span class="vessel-ops-label">RETURN</span>
+                <span class="vessel-ops-value positive" id="vessel-return">+6.4%</span>
+              </div>
+              <div class="vessel-ops-item">
+                <span class="vessel-ops-label">MISSION STATUS</span>
+                <span class="vessel-ops-value status-operational" id="vessel-mission">OPERATIONAL</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Lore Section -->
+          <div class="vessel-section vessel-lore-section">
+            <div class="vessel-section-header">
+              <span class="vessel-section-marker">▸</span>
+              <span class="vessel-section-label">TACTICAL ASSESSMENT</span>
+            </div>
+            <div class="vessel-lore" id="vessel-lore">
+              "Spearhead command ship. Victory follows in its wake."
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Footer Actions -->
+      <div class="vessel-footer">
+        <button class="vessel-action vessel-action-secondary" onclick="closeVesselDossier()">
+          <span class="vessel-action-icon">◁</span>
+          RETURN TO FLEET
+        </button>
+        <button class="vessel-action vessel-action-primary" id="vessel-view-chart">
+          <span class="vessel-action-icon">◈</span>
+          VIEW TELEMETRY
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Data modules (load before app.js) -->
   <script src="js/data/ticker-profiles.js"></script>
   <script src="js/data/glossary.js"></script>

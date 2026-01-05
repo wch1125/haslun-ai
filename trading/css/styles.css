@@ -7501,3 +7501,733 @@
     /* Hide the old static wedge formation */
     .ship-formation{ display:none !important; }
 
+    /* =========================================================================
+       VESSEL DOSSIER OVERLAY — Cinematic Ship Information Card
+       ========================================================================= */
+    
+    .vessel-dossier {
+      position: fixed;
+      inset: 0;
+      z-index: 27000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    
+    .vessel-dossier.visible {
+      pointer-events: auto;
+      opacity: 1;
+    }
+    
+    .vessel-dossier.hidden {
+      display: none;
+    }
+    
+    .vessel-backdrop {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at center, rgba(0, 10, 5, 0.85), rgba(0, 0, 0, 0.98));
+      backdrop-filter: blur(12px);
+    }
+    
+    .vessel-container {
+      position: relative;
+      width: min(1000px, 95vw);
+      max-height: 90vh;
+      background: 
+        linear-gradient(180deg, rgba(5, 12, 8, 0.98) 0%, rgba(2, 6, 4, 0.99) 100%);
+      border-radius: 4px;
+      border: 1px solid var(--phosphor-dim);
+      box-shadow: 
+        0 0 80px rgba(0, 0, 0, 0.95),
+        0 0 60px var(--phosphor-ghost),
+        inset 0 1px 0 rgba(51, 255, 153, 0.15),
+        inset 0 0 100px rgba(51, 255, 153, 0.02);
+      overflow: hidden;
+      z-index: 1;
+      animation: vessel-materialize 0.4s ease-out;
+    }
+    
+    @keyframes vessel-materialize {
+      0% {
+        opacity: 0;
+        transform: scale(0.95) translateY(20px);
+        filter: brightness(2) blur(4px);
+      }
+      50% {
+        filter: brightness(1.3) blur(1px);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+        filter: brightness(1) blur(0);
+      }
+    }
+    
+    /* CRT Scanlines */
+    .vessel-container::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, 0.12) 2px,
+        rgba(0, 0, 0, 0.12) 4px
+      );
+      pointer-events: none;
+      z-index: 200;
+    }
+    
+    /* Phosphor Glow */
+    .vessel-container::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 30% 20%, rgba(51, 255, 153, 0.06), transparent 50%);
+      pointer-events: none;
+      z-index: 199;
+    }
+    
+    /* Boot-up Animation Overlay */
+    .vessel-boot-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.95);
+      z-index: 300;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      opacity: 1;
+      transition: opacity 0.4s ease;
+      pointer-events: none;
+    }
+    
+    .vessel-boot-overlay.done {
+      opacity: 0;
+    }
+    
+    .vessel-boot-line {
+      width: 100%;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, var(--phosphor), transparent);
+      box-shadow: 0 0 20px var(--phosphor), 0 0 40px var(--phosphor);
+      animation: vessel-boot-scan 0.6s ease-out forwards;
+      position: absolute;
+      top: 0;
+    }
+    
+    @keyframes vessel-boot-scan {
+      0% { top: 0; opacity: 1; }
+      100% { top: 100%; opacity: 0.3; }
+    }
+    
+    .vessel-boot-text {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      letter-spacing: 0.3em;
+      color: var(--phosphor);
+      text-shadow: 0 0 20px var(--phosphor);
+      animation: vessel-boot-blink 0.15s steps(2) 3;
+    }
+    
+    @keyframes vessel-boot-blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+    
+    /* Close Button */
+    .vessel-close {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      z-index: 250;
+      background: rgba(0, 0, 0, 0.6);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.5rem 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .vessel-close:hover {
+      border-color: var(--phosphor-dim);
+      background: rgba(51, 255, 153, 0.1);
+    }
+    
+    .vessel-close-icon {
+      font-size: 1.2rem;
+      color: var(--text-muted);
+      line-height: 1;
+    }
+    
+    .vessel-close-text {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      color: var(--text-dim);
+    }
+    
+    /* Main Content Layout */
+    .vessel-content {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr;
+      gap: 0;
+      min-height: 400px;
+    }
+    
+    /* Left Panel: Ship Visual */
+    .vessel-visual-panel {
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, rgba(51, 255, 153, 0.03), transparent);
+      border-right: 1px solid var(--border);
+    }
+    
+    .vessel-display {
+      position: relative;
+      width: 280px;
+      height: 220px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    /* Holographic Grid Background */
+    .vessel-holo-grid {
+      position: absolute;
+      inset: 0;
+      background: 
+        linear-gradient(0deg, transparent 49%, rgba(51, 255, 153, 0.08) 50%, transparent 51%),
+        linear-gradient(90deg, transparent 49%, rgba(51, 255, 153, 0.08) 50%, transparent 51%);
+      background-size: 20px 20px;
+      opacity: 0.6;
+      animation: vessel-grid-pulse 4s ease-in-out infinite;
+    }
+    
+    @keyframes vessel-grid-pulse {
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 0.7; }
+    }
+    
+    /* Radar Rings */
+    .vessel-radar-rings {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .vessel-radar-ring {
+      position: absolute;
+      border: 1px solid rgba(51, 255, 153, 0.15);
+      border-radius: 50%;
+      animation: vessel-radar-expand 3s ease-out infinite;
+    }
+    
+    .vessel-radar-ring:nth-child(1) {
+      width: 60%;
+      height: 60%;
+      animation-delay: 0s;
+    }
+    
+    .vessel-radar-ring:nth-child(2) {
+      width: 80%;
+      height: 80%;
+      animation-delay: 1s;
+    }
+    
+    .vessel-radar-ring:nth-child(3) {
+      width: 100%;
+      height: 100%;
+      animation-delay: 2s;
+    }
+    
+    @keyframes vessel-radar-expand {
+      0% { opacity: 0.6; transform: scale(0.8); }
+      100% { opacity: 0; transform: scale(1.2); }
+    }
+    
+    /* Scan Sweep Animation */
+    .vessel-scan-sweep {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(0deg, transparent 0%, rgba(51, 255, 153, 0.15) 50%, transparent 100%);
+      animation: vessel-scan 2.5s ease-in-out infinite;
+      pointer-events: none;
+    }
+    
+    @keyframes vessel-scan {
+      0% { transform: translateY(-100%); opacity: 0; }
+      10% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { transform: translateY(100%); opacity: 0; }
+    }
+    
+    /* Ship Frame */
+    .vessel-ship-frame {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: vessel-ship-hover 4s ease-in-out infinite;
+    }
+    
+    @keyframes vessel-ship-hover {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+    
+    .vessel-ship-img {
+      width: 180px;
+      height: 140px;
+      object-fit: contain;
+      image-rendering: pixelated;
+      filter: 
+        drop-shadow(0 0 30px var(--ship-color, var(--phosphor)))
+        drop-shadow(0 0 15px var(--ship-color, var(--phosphor)));
+      animation: vessel-ship-glow 2s ease-in-out infinite alternate;
+    }
+    
+    @keyframes vessel-ship-glow {
+      0% { filter: drop-shadow(0 0 20px var(--ship-color, var(--phosphor))) drop-shadow(0 0 10px var(--ship-color, var(--phosphor))); }
+      100% { filter: drop-shadow(0 0 40px var(--ship-color, var(--phosphor))) drop-shadow(0 0 20px var(--ship-color, var(--phosphor))); }
+    }
+    
+    /* Corner Brackets */
+    .vessel-bracket {
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      border-color: var(--phosphor);
+      border-style: solid;
+      border-width: 0;
+      opacity: 0.7;
+    }
+    
+    .vessel-bracket-tl {
+      top: 10px;
+      left: 10px;
+      border-top-width: 2px;
+      border-left-width: 2px;
+    }
+    
+    .vessel-bracket-tr {
+      top: 10px;
+      right: 10px;
+      border-top-width: 2px;
+      border-right-width: 2px;
+    }
+    
+    .vessel-bracket-bl {
+      bottom: 10px;
+      left: 10px;
+      border-bottom-width: 2px;
+      border-left-width: 2px;
+    }
+    
+    .vessel-bracket-br {
+      bottom: 10px;
+      right: 10px;
+      border-bottom-width: 2px;
+      border-right-width: 2px;
+    }
+    
+    /* Class Badge */
+    .vessel-class-badge {
+      margin-top: 1rem;
+      font-family: var(--font-display);
+      font-size: 0.7rem;
+      letter-spacing: 0.25em;
+      color: var(--ship-color, var(--phosphor));
+      padding: 0.4rem 1rem;
+      border: 1px solid var(--ship-color, var(--phosphor-dim));
+      border-radius: 2px;
+      background: rgba(51, 255, 153, 0.08);
+      text-shadow: 0 0 10px var(--ship-color, var(--phosphor));
+    }
+    
+    /* HUD Message */
+    .vessel-hud-message {
+      margin-top: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      color: var(--amber);
+      padding: 0.5rem 0.75rem;
+      background: rgba(255, 179, 71, 0.08);
+      border-left: 2px solid var(--amber);
+      animation: vessel-hud-blink 3s ease-in-out infinite;
+    }
+    
+    @keyframes vessel-hud-blink {
+      0%, 90%, 100% { opacity: 1; }
+      95% { opacity: 0.5; }
+    }
+    
+    .vessel-hud-icon {
+      color: var(--amber);
+      animation: vessel-icon-pulse 1.5s ease-in-out infinite;
+    }
+    
+    @keyframes vessel-icon-pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+    
+    /* Right Panel: Ship Data */
+    .vessel-data-panel {
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      overflow-y: auto;
+      max-height: 70vh;
+    }
+    
+    /* Section Styling */
+    .vessel-section {
+      opacity: 0;
+      transform: translateX(20px);
+      animation: vessel-section-reveal 0.4s ease-out forwards;
+    }
+    
+    .vessel-section:nth-child(1) { animation-delay: 0.5s; }
+    .vessel-section:nth-child(2) { animation-delay: 0.7s; }
+    .vessel-section:nth-child(3) { animation-delay: 0.9s; }
+    .vessel-section:nth-child(4) { animation-delay: 1.1s; }
+    
+    @keyframes vessel-section-reveal {
+      0% { opacity: 0; transform: translateX(20px); }
+      100% { opacity: 1; transform: translateX(0); }
+    }
+    
+    .vessel-section-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .vessel-section-marker {
+      color: var(--phosphor);
+      font-size: 0.7rem;
+    }
+    
+    .vessel-section-label {
+      font-family: var(--font-display);
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      color: var(--text-dim);
+    }
+    
+    /* Identity Section */
+    .vessel-identity-content {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    
+    .vessel-ticker {
+      font-family: var(--font-display);
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      color: var(--ship-color, var(--phosphor));
+      text-shadow: 0 0 30px var(--ship-color, var(--phosphor-glow));
+      line-height: 1;
+    }
+    
+    .vessel-name {
+      font-family: var(--font-display);
+      font-size: 0.9rem;
+      letter-spacing: 0.15em;
+      color: var(--text);
+      margin-top: 0.25rem;
+    }
+    
+    .vessel-designation {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.15em;
+      color: var(--text-dim);
+    }
+    
+    .vessel-sector {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.12em;
+      color: var(--amber);
+      margin-top: 0.5rem;
+      padding: 0.25rem 0.5rem;
+      background: rgba(255, 179, 71, 0.1);
+      border-radius: 2px;
+      display: inline-block;
+    }
+    
+    /* Status Section */
+    .vessel-status-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    
+    .vessel-stat {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+    
+    .vessel-stat-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .vessel-stat-label {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.12em;
+      color: var(--text-dim);
+    }
+    
+    .vessel-stat-value {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--text);
+    }
+    
+    .vessel-stat-bar {
+      height: 8px;
+      background: var(--bg-void);
+      border-radius: 2px;
+      overflow: hidden;
+      position: relative;
+    }
+    
+    .vessel-stat-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.8s ease-out;
+      position: relative;
+    }
+    
+    .vessel-stat-fill.hull {
+      background: linear-gradient(90deg, var(--signal-up), var(--phosphor));
+    }
+    
+    .vessel-stat-fill.hull.damaged {
+      background: linear-gradient(90deg, var(--signal-down), var(--signal-warn));
+    }
+    
+    .vessel-stat-fill.cargo {
+      background: linear-gradient(90deg, var(--amber), var(--amber-dim));
+    }
+    
+    .vessel-stat-fill.fuel {
+      background: linear-gradient(90deg, #47d4ff, #47d4ff80);
+    }
+    
+    .vessel-stat-glow {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 30%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+      animation: vessel-bar-shine 2s ease-in-out infinite;
+    }
+    
+    @keyframes vessel-bar-shine {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(400%); }
+    }
+    
+    /* Operations Grid */
+    .vessel-ops-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+    }
+    
+    .vessel-ops-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      padding: 0.5rem;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 4px;
+      border-left: 2px solid var(--border);
+    }
+    
+    .vessel-ops-label {
+      font-family: var(--font-mono);
+      font-size: 0.55rem;
+      letter-spacing: 0.12em;
+      color: var(--text-dim);
+    }
+    
+    .vessel-ops-value {
+      font-family: var(--font-display);
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+    
+    .vessel-ops-value.positive {
+      color: var(--signal-up);
+    }
+    
+    .vessel-ops-value.negative {
+      color: var(--signal-down);
+    }
+    
+    .vessel-ops-value.status-operational {
+      color: var(--signal-up);
+      font-size: 0.75rem;
+    }
+    
+    .vessel-ops-value.status-damaged {
+      color: var(--signal-down);
+      font-size: 0.75rem;
+    }
+    
+    /* Lore Section */
+    .vessel-lore {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      line-height: 1.6;
+      color: var(--text-muted);
+      font-style: italic;
+      padding: 0.75rem;
+      background: rgba(51, 255, 153, 0.03);
+      border-left: 2px solid var(--phosphor-dim);
+      position: relative;
+    }
+    
+    .vessel-lore::before {
+      content: '"';
+      position: absolute;
+      top: 0.25rem;
+      left: 0.5rem;
+      font-size: 1.5rem;
+      color: var(--phosphor-dim);
+      opacity: 0.5;
+    }
+    
+    /* Footer Actions */
+    .vessel-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 1.5rem;
+      border-top: 1px solid var(--border);
+      background: rgba(0, 0, 0, 0.4);
+      opacity: 0;
+      animation: vessel-section-reveal 0.4s ease-out 1.3s forwards;
+    }
+    
+    .vessel-action {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.6rem 1rem;
+      border-radius: 4px;
+      font-family: var(--font-display);
+      font-size: 0.7rem;
+      letter-spacing: 0.12em;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .vessel-action-icon {
+      font-size: 0.8rem;
+    }
+    
+    .vessel-action-secondary {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+    }
+    
+    .vessel-action-secondary:hover {
+      border-color: var(--text-dim);
+      color: var(--text);
+    }
+    
+    .vessel-action-primary {
+      background: linear-gradient(135deg, var(--phosphor-dim), var(--phosphor-ghost));
+      border: 1px solid var(--phosphor);
+      color: var(--bg-void);
+      font-weight: 600;
+    }
+    
+    .vessel-action-primary:hover {
+      background: var(--phosphor);
+      box-shadow: 0 0 20px var(--phosphor-glow);
+    }
+    
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+      .vessel-content {
+        grid-template-columns: 1fr;
+      }
+      
+      .vessel-visual-panel {
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        padding: 1rem;
+      }
+      
+      .vessel-display {
+        width: 200px;
+        height: 160px;
+      }
+      
+      .vessel-ship-img {
+        width: 120px;
+        height: 100px;
+      }
+      
+      .vessel-data-panel {
+        padding: 1rem;
+        max-height: 50vh;
+      }
+      
+      .vessel-ticker {
+        font-size: 1.5rem;
+      }
+      
+      .vessel-ops-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .vessel-footer {
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+      
+      .vessel-action {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+
