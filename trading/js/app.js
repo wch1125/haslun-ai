@@ -1500,8 +1500,24 @@
       if (!data) return;
       let source = currentTimeframe === '1D' ? data.daily : data.intraday;
       if (!source || !source.length) return;
+      
+      // Smart date filtering: use data's own date range if "now" filtering returns nothing
       const cutoff = Date.now() - (rangeDays[currentRange] * 86400000);
-      source = source.filter(d => d.t > cutoff);
+      let filtered = source.filter(d => d.t > cutoff);
+      
+      // If filtering removed all data (historical data), use relative filtering from data's end date
+      if (filtered.length === 0 && source.length > 0) {
+        const dataEnd = source[source.length - 1].t;
+        const relativeCutoff = dataEnd - (rangeDays[currentRange] * 86400000);
+        filtered = source.filter(d => d.t > relativeCutoff);
+      }
+      
+      // If still no data, just use all available data
+      if (filtered.length === 0) {
+        filtered = source;
+      }
+      
+      source = filtered;
       
       if (!source.length) return;
       
@@ -1881,6 +1897,11 @@
       if (tabName === 'arcade' && window.SpriteCache && SpriteCache.loaded) {
         setTimeout(() => SpriteCache.renderGamePreviews(), 100);
       }
+      
+      // Re-initialize trajectory canvas when switching to holdings/options tab
+      if (tabName === 'options' && window.initTrajectoryCanvas) {
+        setTimeout(() => window.initTrajectoryCanvas(), 100);
+      }
     }
     
     // =========================================================================
@@ -1898,6 +1919,11 @@
       document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === tabName + '-panel'));
       // Play sound
       if (window.SoundFX) SoundFX.play('click');
+      
+      // Re-initialize trajectory canvas when switching to holdings/options tab
+      if (tabName === 'options' && window.initTrajectoryCanvas) {
+        setTimeout(() => window.initTrajectoryCanvas(), 150);
+      }
     }
     
     function toggleFabMenu() {
@@ -2545,10 +2571,16 @@
     }
     
     function renderPositionCharts() {
+      const chartSizes = document.getElementById('chart-sizes');
+      const chartPnl = document.getElementById('chart-pnl');
+      
+      if (!chartSizes || !chartPnl) return;
+      if (!DEMO_OPTIONS || !DEMO_OPTIONS.length) return;
+      
       const positions = DEMO_OPTIONS.map(pos => ({ ticker: pos.ticker, value: pos.current * pos.contracts * 100, color: tickerColors[pos.ticker] || '#33ff99' })).sort((a, b) => b.value - a.value);
       const maxValue = Math.max(...positions.map(p => p.value));
       const totalValue = positions.reduce((s, x) => s + x.value, 0);
-      document.getElementById('chart-sizes').innerHTML = '<div class="bar-chart">' + positions.map(p =>
+      chartSizes.innerHTML = '<div class="bar-chart">' + positions.map(p =>
         '<div class="bar-row"><span class="bar-ticker" style="color: ' + p.color + '">' + p.ticker + '</span>' +
         '<div class="bar-container"><div class="bar-fill" style="width: ' + (p.value/maxValue*100) + '%; background: ' + p.color + '">' + Math.round(p.value/totalValue*100) + '%</div></div>' +
         '<span class="bar-value">$' + p.value.toLocaleString() + '</span></div>'
@@ -2558,7 +2590,7 @@
       const maxPnl = Math.max(...pnlData.map(p => Math.abs(p.pnl)));
       let winners = 0, losers = 0, totalPnl = 0;
       pnlData.forEach(p => { if (p.pnl >= 0) winners++; else losers++; totalPnl += p.pnl; });
-      document.getElementById('chart-pnl').innerHTML = '<div class="bar-chart">' + pnlData.map(p =>
+      chartPnl.innerHTML = '<div class="bar-chart">' + pnlData.map(p =>
         '<div class="pnl-row"><span class="bar-ticker" style="color: ' + p.color + '">' + p.ticker + '</span>' +
         '<div class="pnl-bar-container"><div class="pnl-center-line"></div>' +
         '<div class="pnl-bar ' + (p.pnl >= 0 ? 'positive' : 'negative') + '" style="width: ' + (Math.abs(p.pnl)/maxPnl*50) + '%">' + (p.pnl >= 0 ? '+' : '') + p.pct.toFixed(0) + '%</div></div>' +
@@ -4008,6 +4040,9 @@
 
         logTerminal('trajectory navigator online — cinematic mode enabled');
       }
+      
+      // Expose to window for tab switching
+      window.initTrajectoryCanvas = initTrajectoryCanvas;
 
       // =========================================================================
       // LORE ENGINE - Random In-World Events

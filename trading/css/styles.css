@@ -485,10 +485,26 @@
     /* Legacy table - compact mode */
     .fleet-table-view {
       display: none;
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
     }
     
     .fleet-table-view.active {
       display: block;
+    }
+    
+    .fleet-table-view .data-table {
+      width: 100%;
+      min-width: 600px; /* Ensure table doesn't collapse on mobile */
+    }
+    
+    .fleet-table-view .data-table tbody {
+      display: table-row-group; /* Ensure tbody renders */
+    }
+    
+    .fleet-table-view .data-table tr {
+      display: table-row; /* Ensure rows render */
     }
     
     .fleet-grid-view {
@@ -7435,7 +7451,7 @@
        LOADING FLEET (data-driven ships)
        ================================ */
     .loading-fleet{
-      position:absolute;
+      position:fixed;  /* Changed from absolute to cover full viewport */
       inset:0;
       overflow:hidden;
       pointer-events:none;
