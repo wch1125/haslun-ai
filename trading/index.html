@@ -907,6 +907,198 @@
     .catalyst-impact.high { border-color: var(--signal-down); color: var(--signal-down); background: rgba(255, 107, 107, 0.1); }
     .catalyst-impact.medium { border-color: var(--amber); color: var(--amber); background: rgba(255, 179, 71, 0.1); }
     .catalyst-impact.low { border-color: var(--signal-up); color: var(--signal-up); background: var(--phosphor-ghost); }
+
+    /* Enhanced Events Timeline */
+    .events-timeline {
+      position: relative;
+      padding-left: 30px;
+    }
+
+    .events-timeline::before {
+      content: '';
+      position: absolute;
+      left: 8px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: linear-gradient(180deg, var(--phosphor) 0%, var(--amber) 50%, var(--signal-down) 100%);
+      opacity: 0.4;
+    }
+
+    .timeline-event {
+      position: relative;
+      padding: 1rem 1.25rem;
+      margin-bottom: 1rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+
+    .timeline-event::before {
+      content: '';
+      position: absolute;
+      left: -26px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--bg-card);
+      border: 2px solid var(--phosphor);
+      transition: all 0.2s ease;
+    }
+
+    .timeline-event:hover {
+      border-color: var(--phosphor-dim);
+      background: var(--phosphor-ghost);
+      transform: translateX(4px);
+    }
+
+    .timeline-event:hover::before {
+      background: var(--phosphor);
+      box-shadow: 0 0 12px var(--phosphor);
+    }
+
+    .timeline-event.high-impact::before {
+      border-color: var(--signal-down);
+    }
+    .timeline-event.high-impact:hover::before {
+      background: var(--signal-down);
+      box-shadow: 0 0 12px var(--signal-down);
+    }
+
+    .timeline-event.medium-impact::before {
+      border-color: var(--amber);
+    }
+    .timeline-event.medium-impact:hover::before {
+      background: var(--amber);
+      box-shadow: 0 0 12px var(--amber);
+    }
+
+    .timeline-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 0.5rem;
+    }
+
+    .timeline-ticker {
+      font-family: var(--font-display);
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      color: var(--text-bright);
+    }
+
+    .timeline-date {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .timeline-title {
+      font-size: 0.8rem;
+      color: var(--text);
+      margin-bottom: 0.5rem;
+    }
+
+    .timeline-meta {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+    }
+
+    .timeline-countdown {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: var(--phosphor);
+      letter-spacing: 0.1em;
+    }
+
+    /* Konami Code Easter Egg - Invader Attack */
+    .invader-attack-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 30000;
+      pointer-events: none;
+      overflow: hidden;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .invader-attack-overlay.active {
+      opacity: 1;
+    }
+
+    .attack-invader {
+      position: absolute;
+      width: 40px;
+      height: 32px;
+      fill: var(--phosphor);
+      filter: drop-shadow(0 0 8px var(--phosphor)) drop-shadow(0 0 16px var(--accent-glow));
+      animation: invader-descend 3s ease-in forwards;
+    }
+
+    @keyframes invader-descend {
+      0% { transform: translateY(-100px); opacity: 0; }
+      10% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { transform: translateY(calc(100vh + 100px)); opacity: 0; }
+    }
+
+    .attack-flash {
+      position: fixed;
+      inset: 0;
+      background: var(--phosphor);
+      opacity: 0;
+      pointer-events: none;
+      z-index: 29999;
+    }
+
+    .attack-flash.flash {
+      animation: screen-flash 0.15s ease-out;
+    }
+
+    @keyframes screen-flash {
+      0% { opacity: 0.3; }
+      100% { opacity: 0; }
+    }
+
+    /* Button interaction glow effects */
+    .push-btn:active,
+    .sim-btn:active,
+    .kill-switch-btn:active {
+      transform: scale(0.98);
+      box-shadow: 0 0 20px var(--phosphor), inset 0 0 10px rgba(255,255,255,0.1);
+    }
+
+    .push-btn.primary:active {
+      box-shadow: 0 0 25px var(--phosphor), 0 0 50px var(--phosphor-glow);
+    }
+
+    /* Interaction ripple effect */
+    .ripple-container {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .ripple {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(51, 255, 153, 0.4);
+      transform: scale(0);
+      animation: ripple-expand 0.6s ease-out;
+      pointer-events: none;
+    }
+
+    @keyframes ripple-expand {
+      to {
+        transform: scale(4);
+        opacity: 0;
+      }
+    }
     
     .right-sidebar { width: 260px; background: var(--bg-panel); border-left: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; }
     .kill-switch-section { padding: 1.25rem; border-bottom: 1px solid var(--border); }
@@ -2222,6 +2414,95 @@
       100% { top: 100%; }
     }
 
+    /* Radar sweep overlay for ship panel */
+    .holo-radar-sweep {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 150%;
+      height: 150%;
+      transform: translate(-50%, -50%);
+      background: conic-gradient(
+        from 0deg,
+        transparent 0deg,
+        transparent 350deg,
+        hsla(var(--accent-hue), 100%, 60%, 0.15) 355deg,
+        hsla(var(--accent-hue), 100%, 60%, 0.4) 360deg
+      );
+      border-radius: 50%;
+      animation: holo-radar-spin 4s linear infinite;
+      pointer-events: none;
+      opacity: 0.7;
+      mix-blend-mode: screen;
+    }
+
+    @keyframes holo-radar-spin {
+      from { transform: translate(-50%, -50%) rotate(0deg); }
+      to { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+
+    .holo-grid-overlay {
+      position: absolute;
+      inset: 0;
+      background-image: 
+        linear-gradient(0deg, hsla(var(--accent-hue), 100%, 60%, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, hsla(var(--accent-hue), 100%, 60%, 0.04) 1px, transparent 1px);
+      background-size: 10px 10px;
+      pointer-events: none;
+    }
+
+    .holo-body::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border: 1px solid hsla(var(--accent-hue), 100%, 60%, 0.2);
+      border-radius: 10px;
+      pointer-events: none;
+    }
+
+    /* Enhanced target lock animation for active tickers */
+    .holo-target-lock {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 40px;
+      height: 40px;
+      border: 1px solid var(--phosphor);
+      transform: translate(-50%, -50%);
+      opacity: 0.5;
+      animation: target-lock-pulse 2s ease-in-out infinite;
+    }
+
+    .holo-target-lock::before,
+    .holo-target-lock::after {
+      content: '';
+      position: absolute;
+      background: var(--phosphor);
+    }
+
+    .holo-target-lock::before {
+      width: 8px;
+      height: 1px;
+      top: 50%;
+      left: -4px;
+      transform: translateY(-50%);
+      box-shadow: 36px 0 0 var(--phosphor);
+    }
+
+    .holo-target-lock::after {
+      width: 1px;
+      height: 8px;
+      left: 50%;
+      top: -4px;
+      transform: translateX(-50%);
+      box-shadow: 0 36px 0 var(--phosphor);
+    }
+
+    @keyframes target-lock-pulse {
+      0%, 100% { opacity: 0.3; transform: translate(-50%, -50%) scale(1); }
+      50% { opacity: 0.7; transform: translate(-50%, -50%) scale(1.1); }
+    }
+
     /* =========================================================================
        CLOSE ENCOUNTERS SIGNAL BOARD
        ========================================================================= */
@@ -2853,6 +3134,8 @@
             <span id="holo-ticker-label" style="font-size: 0.6rem; color: var(--text-muted); margin-left: 0.5rem;">RKLB · ORBITAL</span>
           </div>
           <div class="holo-body">
+            <div class="holo-grid-overlay"></div>
+            <div class="holo-radar-sweep"></div>
             <svg id="holo-ship-svg" class="holo-ship" viewBox="0 0 100 60" aria-hidden="true">
               <!-- default wireframe -->
               <polyline points="10,30 30,10 70,10 90,30 70,50 30,50 10,30" class="holo-line"/>
@@ -2861,6 +3144,7 @@
               <line x1="40" y1="50" x2="40" y2="55" class="holo-line"/>
               <line x1="60" y1="50" x2="60" y2="55" class="holo-line"/>
             </svg>
+            <div class="holo-target-lock"></div>
             <div class="holo-scan-line"></div>
           </div>
         </div>
@@ -3297,6 +3581,10 @@
     
     <!-- Toast container for pop-up notifications -->
     <div id="toast-container" class="toast-container"></div>
+    
+    <!-- KONAMI CODE EASTER EGG - INVADER ATTACK -->
+    <div id="invader-attack-overlay" class="invader-attack-overlay"></div>
+    <div id="attack-flash" class="attack-flash"></div>
     
     <!-- ABOUT / STORY OVERLAY -->
     <div id="about-overlay" class="about-overlay hidden">
@@ -5981,6 +6269,115 @@
             <line x1="30" y1="25" x2="70" y2="25" class="holo-line"/>
             <line x1="30" y1="40" x2="70" y2="40" class="holo-line"/>
           `
+        },
+        ATI: {
+          label: "ATI · FORGE MATRIX",
+          path: `
+            <rect x="20" y="15" width="60" height="30" rx="3" class="holo-line"/>
+            <line x1="20" y1="25" x2="80" y2="25" class="holo-line"/>
+            <line x1="20" y1="35" x2="80" y2="35" class="holo-line"/>
+            <circle cx="35" cy="30" r="4" class="holo-line"/>
+            <circle cx="65" cy="30" r="4" class="holo-line"/>
+            <line x1="50" y1="45" x2="50" y2="55" class="holo-line"/>
+          `
+        },
+        CACI: {
+          label: "CACI · INTEL NODE",
+          path: `
+            <polygon points="50,8 80,20 80,40 50,52 20,40 20,20" class="holo-line"/>
+            <circle cx="50" cy="30" r="8" class="holo-line"/>
+            <line x1="50" y1="22" x2="50" y2="8" class="holo-line"/>
+            <line x1="58" y1="30" x2="80" y2="30" class="holo-line"/>
+            <line x1="42" y1="30" x2="20" y2="30" class="holo-line"/>
+          `
+        },
+        EVEX: {
+          label: "EVEX · DRONE SWARM",
+          path: `
+            <circle cx="50" cy="30" r="6" class="holo-line"/>
+            <circle cx="30" cy="20" r="4" class="holo-line"/>
+            <circle cx="70" cy="20" r="4" class="holo-line"/>
+            <circle cx="30" cy="40" r="4" class="holo-line"/>
+            <circle cx="70" cy="40" r="4" class="holo-line"/>
+            <line x1="36" y1="24" x2="44" y2="28" class="holo-line"/>
+            <line x1="64" y1="24" x2="56" y2="28" class="holo-line"/>
+            <line x1="36" y1="36" x2="44" y2="32" class="holo-line"/>
+            <line x1="64" y1="36" x2="56" y2="32" class="holo-line"/>
+          `
+        },
+        HON: {
+          label: "HON · AEGIS CRUISER",
+          path: `
+            <polyline points="15,30 25,15 75,15 85,30 75,45 25,45 15,30" class="holo-line"/>
+            <rect x="35" y="20" width="30" height="20" rx="2" class="holo-line"/>
+            <line x1="15" y1="30" x2="35" y2="30" class="holo-line"/>
+            <line x1="65" y1="30" x2="85" y2="30" class="holo-line"/>
+            <circle cx="50" cy="30" r="5" class="holo-line"/>
+          `
+        },
+        IRDM: {
+          label: "IRDM · COMM ARRAY",
+          path: `
+            <circle cx="50" cy="30" r="15" class="holo-line"/>
+            <circle cx="50" cy="30" r="8" class="holo-line"/>
+            <circle cx="50" cy="30" r="2" class="holo-line"/>
+            <line x1="50" y1="10" x2="50" y2="5" class="holo-line"/>
+            <line x1="35" y1="20" x2="28" y2="13" class="holo-line"/>
+            <line x1="65" y1="20" x2="72" y2="13" class="holo-line"/>
+          `
+        },
+        KTOS: {
+          label: "KTOS · STRIKE DRONE",
+          path: `
+            <polyline points="10,30 40,15 50,20 60,15 90,30 60,45 50,40 40,45 10,30" class="holo-line"/>
+            <circle cx="50" cy="30" r="5" class="holo-line"/>
+            <line x1="50" y1="25" x2="50" y2="15" class="holo-line"/>
+            <line x1="10" y1="30" x2="25" y2="30" class="holo-line"/>
+            <line x1="75" y1="30" x2="90" y2="30" class="holo-line"/>
+          `
+        },
+        LOAR: {
+          label: "LOAR · CARGO HAULER",
+          path: `
+            <rect x="20" y="18" width="60" height="24" rx="4" class="holo-line"/>
+            <line x1="35" y1="18" x2="35" y2="42" class="holo-line"/>
+            <line x1="50" y1="18" x2="50" y2="42" class="holo-line"/>
+            <line x1="65" y1="18" x2="65" y2="42" class="holo-line"/>
+            <circle cx="30" cy="50" r="4" class="holo-line"/>
+            <circle cx="70" cy="50" r="4" class="holo-line"/>
+          `
+        },
+        MP: {
+          label: "MP · RARE ELEMENT",
+          path: `
+            <polygon points="50,5 65,15 65,35 50,45 35,35 35,15" class="holo-line"/>
+            <polygon points="50,15 58,20 58,30 50,35 42,30 42,20" class="holo-line"/>
+            <line x1="35" y1="25" x2="20" y2="25" class="holo-line"/>
+            <line x1="65" y1="25" x2="80" y2="25" class="holo-line"/>
+            <line x1="50" y1="45" x2="50" y2="55" class="holo-line"/>
+          `
+        },
+        RDW: {
+          label: "RDW · RECON SAT",
+          path: `
+            <ellipse cx="50" cy="30" rx="20" ry="12" class="holo-line"/>
+            <line x1="30" y1="30" x2="15" y2="20" class="holo-line"/>
+            <line x1="70" y1="30" x2="85" y2="20" class="holo-line"/>
+            <rect x="12" y="15" width="8" height="12" rx="1" class="holo-line"/>
+            <rect x="80" y="15" width="8" height="12" rx="1" class="holo-line"/>
+            <circle cx="50" cy="30" r="4" class="holo-line"/>
+          `
+        },
+        PL: {
+          label: "PL · PLANET LABS",
+          path: `
+            <rect x="30" y="20" width="40" height="20" rx="3" class="holo-line"/>
+            <line x1="25" y1="25" x2="10" y2="18" class="holo-line"/>
+            <line x1="25" y1="35" x2="10" y2="42" class="holo-line"/>
+            <line x1="75" y1="25" x2="90" y2="18" class="holo-line"/>
+            <line x1="75" y1="35" x2="90" y2="42" class="holo-line"/>
+            <circle cx="50" cy="30" r="6" class="holo-line"/>
+          `
         }
       };
 
@@ -6312,10 +6709,191 @@
         }
       }
 
+      // =========================================================================
+      // KONAMI CODE EASTER EGG - INVADER ATTACK
+      // =========================================================================
+      function initKonamiCode() {
+        const KONAMI = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+        let konamiIndex = 0;
+        let konamiUnlocked = false;
+
+        document.addEventListener('keydown', (e) => {
+          const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+          
+          if (key === KONAMI[konamiIndex]) {
+            konamiIndex++;
+            
+            if (konamiIndex === KONAMI.length) {
+              konamiIndex = 0;
+              if (!konamiUnlocked) {
+                triggerInvaderAttack();
+                konamiUnlocked = true;
+                setTimeout(() => { konamiUnlocked = false; }, 10000);
+              }
+            }
+          } else {
+            konamiIndex = 0;
+          }
+        });
+      }
+
+      function triggerInvaderAttack() {
+        const overlay = document.getElementById('invader-attack-overlay');
+        const flash = document.getElementById('attack-flash');
+        if (!overlay) return;
+
+        // Play sound if available
+        if (typeof beep === 'function') {
+          beep(180, 0.3);
+          setTimeout(() => beep(140, 0.3), 100);
+          setTimeout(() => beep(100, 0.5), 200);
+        }
+
+        // Screen flash
+        flash.classList.add('flash');
+        setTimeout(() => flash.classList.remove('flash'), 150);
+
+        // Toast notification
+        if (typeof showToast === 'function') {
+          showToast('🛸 INVADER ATTACK DETECTED!', 'alert');
+        }
+
+        // Log to terminal
+        if (typeof logTerminal === 'function') {
+          logTerminal('⚠ ALERT: Hostile formation detected! Shields up!');
+        }
+
+        // Create invader wave
+        overlay.classList.add('active');
+        overlay.innerHTML = '';
+
+        const invaderCount = 15;
+        const invaderSVG = `<svg viewBox="0 0 11 8" class="attack-invader">
+          <rect x="2" y="0" width="1" height="1"/><rect x="8" y="0" width="1" height="1"/>
+          <rect x="3" y="1" width="1" height="1"/><rect x="7" y="1" width="1" height="1"/>
+          <rect x="2" y="2" width="7" height="1"/>
+          <rect x="1" y="3" width="2" height="1"/><rect x="4" y="3" width="3" height="1"/><rect x="8" y="3" width="2" height="1"/>
+          <rect x="0" y="4" width="11" height="1"/>
+          <rect x="0" y="5" width="1" height="1"/><rect x="2" y="5" width="7" height="1"/><rect x="10" y="5" width="1" height="1"/>
+          <rect x="0" y="6" width="1" height="1"/><rect x="2" y="6" width="1" height="1"/><rect x="8" y="6" width="1" height="1"/><rect x="10" y="6" width="1" height="1"/>
+          <rect x="3" y="7" width="2" height="1"/><rect x="6" y="7" width="2" height="1"/>
+        </svg>`;
+
+        for (let i = 0; i < invaderCount; i++) {
+          const wrapper = document.createElement('div');
+          wrapper.innerHTML = invaderSVG;
+          const invader = wrapper.firstChild;
+          invader.style.left = (5 + Math.random() * 90) + '%';
+          invader.style.animationDelay = (Math.random() * 2) + 's';
+          invader.style.animationDuration = (2 + Math.random() * 2) + 's';
+          overlay.appendChild(invader);
+        }
+
+        // Clear after animation
+        setTimeout(() => {
+          overlay.classList.remove('active');
+          overlay.innerHTML = '';
+          if (typeof logTerminal === 'function') {
+            logTerminal('Invader threat neutralized. Shields nominal.');
+          }
+        }, 5000);
+
+        // Complete arcade mission if available
+        if (typeof completeMission === 'function') {
+          completeMission('find_invader');
+        }
+      }
+
+      // =========================================================================
+      // ENHANCED EVENTS TIMELINE RENDERING
+      // =========================================================================
+      function initEnhancedCatalysts() {
+        const originalRenderCatalysts = window.renderCatalysts;
+        
+        window.renderCatalysts = function() {
+          const container = document.getElementById('catalyst-list');
+          if (!container) return;
+
+          // Gather all catalysts from ticker profiles
+          const allCatalysts = [];
+          const TICKER_PROFILES = window.TICKER_PROFILES || {};
+          
+          Object.entries(TICKER_PROFILES).forEach(([ticker, profile]) => {
+            if (profile.catalysts) {
+              profile.catalysts.forEach(cat => {
+                allCatalysts.push({
+                  ticker,
+                  date: cat.date,
+                  event: cat.event,
+                  impact: cat.impact || 'medium'
+                });
+              });
+            }
+          });
+
+          // Sort by date
+          allCatalysts.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+          // Render as timeline
+          if (allCatalysts.length > 0) {
+            container.innerHTML = '<div class="events-timeline">' + 
+              allCatalysts.slice(0, 12).map(cat => {
+                const impactClass = cat.impact.toLowerCase() + '-impact';
+                const daysUntil = Math.ceil((new Date(cat.date) - new Date()) / (1000 * 60 * 60 * 24));
+                const countdownText = daysUntil > 0 ? `T-${daysUntil} DAYS` : daysUntil === 0 ? 'TODAY' : `T+${Math.abs(daysUntil)} DAYS`;
+                
+                return `
+                  <div class="timeline-event ${impactClass}" onclick="if(window.openTickerDossier) openTickerDossier('${cat.ticker}')">
+                    <div class="timeline-header">
+                      <span class="timeline-ticker">${cat.ticker}</span>
+                      <span class="timeline-date">${cat.date}</span>
+                    </div>
+                    <div class="timeline-title">${cat.event}</div>
+                    <div class="timeline-meta">
+                      <span class="timeline-countdown">${countdownText}</span>
+                      <span class="catalyst-impact ${cat.impact.toLowerCase()}">${cat.impact.toUpperCase()}</span>
+                    </div>
+                  </div>
+                `;
+              }).join('') + 
+            '</div>';
+          } else if (typeof originalRenderCatalysts === 'function') {
+            originalRenderCatalysts();
+          }
+        };
+      }
+
+      // =========================================================================
+      // BUTTON RIPPLE EFFECT
+      // =========================================================================
+      function initRippleEffects() {
+        document.addEventListener('click', (e) => {
+          const button = e.target.closest('.push-btn, .sim-btn, .nav-tab, .chart-tab, .cargo-item');
+          if (!button) return;
+
+          const rect = button.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+
+          const ripple = document.createElement('span');
+          ripple.className = 'ripple';
+          ripple.style.left = x + 'px';
+          ripple.style.top = y + 'px';
+
+          button.style.position = 'relative';
+          button.style.overflow = 'hidden';
+          button.appendChild(ripple);
+
+          setTimeout(() => ripple.remove(), 600);
+        });
+      }
+
       // Run initializations immediately
       initInvaderArmy();
       initColorProfileControl();
       initAmbientParticles();
+      initKonamiCode();
+      initRippleEffects();
       
       if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initArcade);
@@ -6324,6 +6902,7 @@
         document.addEventListener('DOMContentLoaded', initCargoBay);
         document.addEventListener('DOMContentLoaded', initTrajectoryCanvas);
         document.addEventListener('DOMContentLoaded', initLoreEngine);
+        document.addEventListener('DOMContentLoaded', initEnhancedCatalysts);
       } else {
         initArcade();
         initTubeOverload();
@@ -6331,6 +6910,7 @@
         initCargoBay();
         initTrajectoryCanvas();
         initLoreEngine();
+        initEnhancedCatalysts();
       }
     })();
   </script>
