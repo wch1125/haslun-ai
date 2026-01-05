@@ -2886,6 +2886,19 @@
       text-shadow: 0 0 10px var(--amber-glow);
     }
     
+    /* Mission Command tab glow effect */
+    .nav-tab.mission-cmd-tab {
+      background: linear-gradient(135deg, rgba(0, 212, 255, 0.1) 0%, transparent 100%);
+      border-color: rgba(0, 212, 255, 0.3);
+    }
+    
+    .nav-tab.mission-cmd-tab:hover {
+      color: #00d4ff;
+      border-color: #00d4ff;
+      text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+      background: linear-gradient(135deg, rgba(0, 212, 255, 0.2) 0%, transparent 100%);
+    }
+    
     @media (max-width: 768px) {
       .arcade-lobby-header {
         flex-direction: column;

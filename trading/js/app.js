@@ -1904,6 +1904,28 @@
       }
     }
     
+    /**
+     * Navigate to Mission Command (derivatives.html)
+     * Passes currently selected ticker if available
+     */
+    function launchMissionCommand() {
+      // Get current ticker from app state if available
+      const currentTicker = window.currentTicker || window.AppState?.selectedTicker || null;
+      
+      let url = 'derivatives.html';
+      if (currentTicker) {
+        url += `?ticker=${encodeURIComponent(currentTicker)}`;
+      }
+      
+      // Play navigation sound if available
+      if (window.SoundFX) SoundFX.play('click');
+      
+      window.location.href = url;
+    }
+    
+    // Make launchMissionCommand available globally
+    window.launchMissionCommand = launchMissionCommand;
+    
     // =========================================================================
     // MOBILE UI FUNCTIONS
     // =========================================================================

@@ -50,8 +50,12 @@
     }
     .header-title h1 { font-size: 1.5rem; color: var(--phosphor); text-shadow: 0 0 20px var(--phosphor-dim); letter-spacing: 2px; }
     .header-title .subtitle { color: var(--text-dim); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; }
-    .back-link { color: var(--phosphor); text-decoration: none; font-size: 0.85rem; opacity: 0.7; transition: opacity 0.2s; }
-    .back-link:hover { opacity: 1; }
+    .back-btn { 
+      font-family: inherit; font-size: 0.85rem; background: transparent;
+      color: var(--phosphor); border: 1px solid var(--border); padding: 0.5rem 1rem;
+      cursor: pointer; transition: all 0.2s; text-transform: uppercase; letter-spacing: 1px;
+    }
+    .back-btn:hover { background: var(--bg-card-hover); border-color: var(--phosphor); }
     
     /* Controls */
     .controls { display: flex; gap: 1rem; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; }
@@ -226,9 +230,9 @@
     <header class="header">
       <div class="header-title">
         <h1>⚔️ MISSION COMMAND</h1>
-        <div class="subtitle">Derivatives Training Sandbox // Step 2 Play Loop</div>
+        <div class="subtitle">Derivatives Training Sandbox</div>
       </div>
-      <a href="index.html" class="back-link">← Back to Dashboard</a>
+      <button class="back-btn" onclick="returnToDashboard()">← Dashboard</button>
     </header>
     
     <!-- Controls -->
@@ -389,6 +393,10 @@
         this.tickerSelect.addEventListener('change', () => this.onTickerChange());
         this.computeBtn.addEventListener('click', () => this.computeEnvironment());
         
+        // Read ticker from URL params (Step 2.2)
+        const params = new URLSearchParams(window.location.search);
+        this.preselectedTicker = params.get('ticker')?.toUpperCase() || null;
+        
         this.loadTickers();
         this.renderActiveMissions();
         
@@ -428,6 +436,18 @@
           this.computeBtn.disabled = true;
           this.setStatus('Ready', 'ready');
           this.setMeta(`${tickers.length} sectors • Updated: ${meta.lastUpdated}`);
+          
+          // Auto-select ticker from URL params (Step 2.2)
+          if (this.preselectedTicker) {
+            const tickerExists = tickers.some(t => t.ticker === this.preselectedTicker);
+            if (tickerExists) {
+              this.tickerSelect.value = this.preselectedTicker;
+              this.onTickerChange();
+              // Auto-analyze after short delay
+              setTimeout(() => this.computeEnvironment(), 200);
+            }
+            this.preselectedTicker = null; // Clear so it doesn't trigger again
+          }
         } catch (err) {
           this.setStatus('Failed: ' + err.message, 'error');
         }
@@ -788,6 +808,18 @@
         }
       }
     };
+    
+    /**
+     * Return to main dashboard, optionally preserving ticker context (Step 2.2)
+     */
+    function returnToDashboard() {
+      let url = 'index.html';
+      // Optionally pass current ticker back (uncomment if index.html reads URL params)
+      // if (UI.currentTicker) {
+      //   url += `?ticker=${encodeURIComponent(UI.currentTicker)}`;
+      // }
+      window.location.href = url;
+    }
     
     // Initialize
     document.addEventListener('DOMContentLoaded', () => UI.init());

@@ -566,6 +566,7 @@ const MissionSystem = (function() {
   
   /**
    * Launch a mission (transition from PLANNING to ACTIVE)
+   * STEP 2.1 FIX: Now starts earlier in the CSV so mission can progress through bars
    */
   function launchMission(missionId, tickerData) {
     const missions = loadMissions();
@@ -575,11 +576,13 @@ const MissionSystem = (function() {
     if (mission.status !== 'PLANNING') throw new Error(`Mission already launched: ${mission.status}`);
     
     const rows = tickerData.rows;
-    const startBarIndex = rows.length - 1;
-    const targetBars = mission.duration.targetBars;
+    const requestedTargetBars = mission.duration.targetBars;
     
-    // Clamp end to available data (may complete early if data runs out)
-    const endBarIndex = Math.min(startBarIndex + targetBars, rows.length - 1);
+    // Choose a start that leaves enough bars to simulate forward
+    // End at the last available bar, work backwards to find start
+    const endBarIndex = rows.length - 1;
+    const startBarIndex = Math.max(0, endBarIndex - requestedTargetBars);
+    const effectiveTargetBars = endBarIndex - startBarIndex; // Could be < requested near beginning
     
     mission.start = {
       wallClockMs: Date.now(),
@@ -589,7 +592,8 @@ const MissionSystem = (function() {
     };
     
     mission.end = {
-      targetBars: targetBars,
+      targetBars: effectiveTargetBars,
+      requestedTargetBars: requestedTargetBars,
       endBarIndex: endBarIndex,
       endBarTime: rows[endBarIndex].time
     };
@@ -604,12 +608,23 @@ const MissionSystem = (function() {
       msg: `🚀 Mission launched from ${mission.ticker} @ $${rows[startBarIndex].close.toFixed(2)}`
     });
     
+    // Warn if mission window was shortened due to limited data
+    if (effectiveTargetBars < requestedTargetBars) {
+      mission.logs.push({
+        tMs: Date.now(),
+        barIndex: startBarIndex,
+        kind: 'INFO',
+        msg: `📋 Note: Mission window shortened to ${effectiveTargetBars} bars due to limited chart history`
+      });
+    }
+    
     saveMissions(missions);
     return mission;
   }
   
   /**
    * Calculate mission progress
+   * STEP 2.1 FIX: Safe division to avoid NaN
    */
   function getMissionProgress(mission) {
     if (mission.status === 'PLANNING') {
@@ -617,13 +632,17 @@ const MissionSystem = (function() {
     }
     
     if (mission.status === 'COMPLETE' || mission.status === 'DAMAGED') {
-      return { barsElapsed: mission.end.targetBars, currentBarIndex: mission.end.endBarIndex, progress: 1, timeRemaining: 'Complete' };
+      const targetBars = mission.end?.targetBars || 1;
+      return { barsElapsed: targetBars, currentBarIndex: mission.end?.endBarIndex || 0, progress: 1, timeRemaining: 'Complete' };
     }
     
     const elapsed = (Date.now() - mission.start.wallClockMs) / 1000;
     const barsElapsed = Math.floor(elapsed * mission.sim.speedBarsPerSec);
     const currentBarIndex = clamp(mission.start.barIndex + barsElapsed, mission.start.barIndex, mission.end.endBarIndex);
-    const progress = Math.min(barsElapsed / mission.end.targetBars, 1);
+    
+    // Safe division to avoid NaN
+    const denom = Math.max(1, mission.end.targetBars);
+    const progress = Math.min(barsElapsed / denom, 1);
     
     const barsRemaining = mission.end.targetBars - barsElapsed;
     const secsRemaining = barsRemaining / mission.sim.speedBarsPerSec;
@@ -796,11 +815,34 @@ const MissionSystem = (function() {
       }
     }
     
-    // --- Firepower spike ---
+    // --- Firepower spike (STEP 2.1: adaptive threshold) ---
     if (bar.high != null && bar.low != null && bar.close != null && bar.close > 0) {
-      const atr = (bar.high - bar.low) / bar.close;
-      if (atr > 0.05) { // High volatility threshold
-        triggers.push({ kind: 'EVENT', msg: `🔥 Engine burn: high volatility bar (${(atr * 100).toFixed(1)}% range)` });
+      const currentATR = (bar.high - bar.low) / bar.close;
+      
+      // Compute adaptive threshold using last 32 bars
+      const lookback = Math.min(32, barIndex);
+      if (lookback >= 5) {
+        const recentATRs = [];
+        for (let j = Math.max(0, barIndex - lookback); j < barIndex; j++) {
+          const r = rows[j];
+          if (r.high && r.low && r.close && r.close > 0) {
+            recentATRs.push((r.high - r.low) / r.close);
+          }
+        }
+        
+        if (recentATRs.length >= 5) {
+          // Sort and find 80th percentile
+          recentATRs.sort((a, b) => a - b);
+          const p80Index = Math.floor(recentATRs.length * 0.8);
+          const threshold = recentATRs[p80Index];
+          
+          if (currentATR > threshold && currentATR > 0.02) { // Also require minimum 2%
+            triggers.push({ kind: 'EVENT', msg: `🔥 Engine burn: high volatility bar (${(currentATR * 100).toFixed(1)}% range, above 80th percentile)` });
+          }
+        }
+      } else if (currentATR > 0.05) {
+        // Fallback for insufficient history
+        triggers.push({ kind: 'EVENT', msg: `🔥 Engine burn: high volatility bar (${(currentATR * 100).toFixed(1)}% range)` });
       }
     }
     
