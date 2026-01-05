@@ -434,14 +434,25 @@
           </div>
         </div>
         <nav class="nav-tabs">
-          <button class="nav-tab active" data-tab="chart" onclick="switchTab('chart')">TELEMETRY</button>
-          <button class="nav-tab" data-tab="positions" onclick="switchTab('positions')">HOLDINGS</button>
-          <button class="nav-tab" data-tab="options" data-glossary-id="derivatives_tab" onclick="switchTab('options')">DERIVATIVES</button>
-          <button class="nav-tab" data-tab="catalysts" onclick="switchTab('catalysts')">EVENTS</button>
-          <button class="nav-tab arcade-tab" data-tab="arcade" onclick="switchTab('arcade')">🎮 ARCADE</button>
-          <button class="nav-tab mission-cmd-tab" onclick="launchMissionCommand()" title="Derivatives Training Sandbox">🚀 MISSIONS</button>
+          <button class="nav-tab active" data-group="telemetry" data-tab="chart" onclick="switchTab('chart')">TELEMETRY</button>
+          <button class="nav-tab" data-group="ops" onclick="switchTab('positions')">OPERATIONS</button>
+          <button class="nav-tab" data-group="training" onclick="switchTab('arcade')">TRAINING</button>
         </nav>
       </div>
+      
+      <!-- Secondary subtabs for OPERATIONS -->
+      <div class="nav-subtabs" id="ops-subtabs" style="display:none;">
+        <button class="subtab active" data-tab="positions" onclick="switchTab('positions')">HOLDINGS</button>
+        <button class="subtab" data-tab="options" onclick="switchTab('options')">DERIVATIVES</button>
+        <button class="subtab" data-tab="catalysts" onclick="switchTab('catalysts')">EVENTS</button>
+      </div>
+      
+      <!-- Secondary subtabs for TRAINING -->
+      <div class="nav-subtabs" id="training-subtabs" style="display:none;">
+        <button class="subtab active" data-tab="arcade" onclick="switchTab('arcade')">ARCADE</button>
+        <button class="subtab" onclick="launchMissionCommand()">MISSIONS</button>
+      </div>
+      
       <div class="header-right">
         <button class="mobile-menu-btn" id="mobile-menu-btn" onclick="toggleMobileDrawer()">
           <span>☰</span> MENU
@@ -471,7 +482,7 @@
           </div>
         </div>
         <div class="sidebar-section" style="padding-bottom: 0.5rem;">
-          <div class="sidebar-title">Quick Actions</div>
+          <div class="sidebar-title">🚀 Operations</div>
         </div>
         <div style="padding: 0 0.5rem 0.5rem;">
           <button class="push-btn" style="width: 100%; margin-bottom: 0.5rem;" onclick="toggleMobileDrawer(); switchTab('positions');">📊 Holdings</button>
@@ -479,11 +490,11 @@
           <button class="push-btn" style="width: 100%; margin-bottom: 0.5rem;" onclick="toggleMobileDrawer(); switchTab('catalysts');">📅 Events</button>
         </div>
         <div class="sidebar-section" style="padding-bottom: 0.5rem;">
-          <div class="sidebar-title">🎮 Arcade</div>
+          <div class="sidebar-title">🎮 Training</div>
         </div>
         <div style="padding: 0 0.5rem 0.5rem;">
-          <button class="push-btn primary" style="width: 100%; margin-bottom: 0.5rem;" onclick="toggleMobileDrawer(); if(window.SignalInvaders) SignalInvaders.start();">👾 Signal Invaders</button>
-          <button class="push-btn" style="width: 100%; margin-bottom: 0.5rem;" onclick="toggleMobileDrawer(); if(window.LandingGame) LandingGame.start();">🚀 Terrain Lander</button>
+          <button class="push-btn" style="width: 100%; margin-bottom: 0.5rem;" onclick="toggleMobileDrawer(); switchTab('arcade');">🎮 Arcade</button>
+          <button class="push-btn primary" style="width: 100%; margin-bottom: 0.5rem;" onclick="toggleMobileDrawer(); launchMissionCommand();">⚔️ Mission Command</button>
         </div>
         <div class="sidebar-section" style="padding-bottom: 0.5rem;">
           <div class="sidebar-title">Tracking</div>
@@ -1259,21 +1270,17 @@
          ============================================================ -->
     <nav class="mobile-bottom-nav" id="mobile-bottom-nav">
       <div class="mobile-nav-items">
-        <button class="mobile-nav-item active" data-tab="chart" onclick="switchTabMobile('chart')">
+        <button class="mobile-nav-item active" data-tab="chart" data-group="telemetry" onclick="switchTabMobile('chart')">
           <span class="nav-icon">📡</span>
           <span>Telemetry</span>
         </button>
-        <button class="mobile-nav-item" data-tab="positions" onclick="switchTabMobile('positions')">
+        <button class="mobile-nav-item" data-tab="positions" data-group="ops" onclick="switchTabMobile('positions')">
           <span class="nav-icon">🚀</span>
-          <span>Holdings</span>
+          <span>Operations</span>
         </button>
-        <button class="mobile-nav-item" data-tab="arcade" onclick="switchTabMobile('arcade')">
+        <button class="mobile-nav-item" data-tab="arcade" data-group="training" onclick="switchTabMobile('arcade')">
           <span class="nav-icon">🎮</span>
-          <span>Arcade</span>
-        </button>
-        <button class="mobile-nav-item" data-tab="catalysts" onclick="switchTabMobile('catalysts')">
-          <span class="nav-icon">📅</span>
-          <span>Events</span>
+          <span>Training</span>
         </button>
         <button class="mobile-nav-item" onclick="toggleMobileDrawer()">
           <span class="nav-icon">⚙️</span>

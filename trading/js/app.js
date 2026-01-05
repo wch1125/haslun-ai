@@ -304,6 +304,97 @@
     const rangeDays = { '1W': 7, '1M': 30, '3M': 90, '6M': 180, '1Y': 365, 'ALL': 9999 };
     
     // =========================================================================
+    // EMA RIBBON CONFIGURATION (Step 3A - Telemetry Upgrade)
+    // =========================================================================
+    
+    const RIBBON_PERIODS = [8, 13, 21, 34, 55, 89];
+    const RIBBON_COLORS = [
+      '#33ff99', // phosphor
+      '#47d4ff', // cyan
+      '#b388ff', // violet
+      '#ff4fd8', // magenta
+      '#ffb347', // amber
+    ];
+    
+    /**
+     * Calculate Exponential Moving Average
+     */
+    function calcEMA(values, period) {
+      const k = 2 / (period + 1);
+      const out = new Array(values.length).fill(null);
+      
+      // find first finite value
+      let i0 = values.findIndex(v => Number.isFinite(v));
+      if (i0 < 0) return out;
+      
+      let ema = values[i0];
+      out[i0] = ema;
+      
+      for (let i = i0 + 1; i < values.length; i++) {
+        const v = values[i];
+        if (!Number.isFinite(v)) { out[i] = ema; continue; }
+        ema = v * k + ema * (1 - k);
+        out[i] = ema;
+      }
+      return out;
+    }
+    
+    /**
+     * Convert hex color to rgba with alpha
+     */
+    function hexToRgba(hex, a) {
+      const h = (hex || '').replace('#', '');
+      if (h.length !== 6) return `rgba(51,255,153,${a})`;
+      const r = parseInt(h.slice(0, 2), 16);
+      const g = parseInt(h.slice(2, 4), 16);
+      const b = parseInt(h.slice(4, 6), 16);
+      return `rgba(${r},${g},${b},${a})`;
+    }
+    
+    /**
+     * Chart.js plugin for arcade CRT glow + scanlines
+     */
+    const arcadeCRTPlugin = {
+      id: 'arcadeCRTPlugin',
+      beforeDatasetDraw(chart, args) {
+        const ds = chart.data.datasets[args.index];
+        if (!ds || !ds.borderColor) return;
+        
+        // Only glow line datasets (not bands/fills)
+        const isLine = (ds.type || chart.config.type) === 'line';
+        const isBand = ds.label && ds.label.startsWith('BAND');
+        if (!isLine || isBand) return;
+        
+        ds.__glowSaved = true;
+        const ctx = chart.ctx;
+        ctx.save();
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = ds.borderColor;
+        ctx.globalCompositeOperation = 'lighter';
+      },
+      afterDatasetDraw(chart, args) {
+        const ds = chart.data.datasets[args.index];
+        if (ds && ds.__glowSaved) {
+          ds.__glowSaved = false;
+          chart.ctx.restore();
+        }
+      },
+      afterDraw(chart) {
+        const { ctx, chartArea } = chart;
+        if (!chartArea) return;
+        
+        // Very subtle scanlines inside chart area
+        ctx.save();
+        ctx.globalAlpha = 0.04;
+        ctx.fillStyle = '#000';
+        for (let y = chartArea.top; y < chartArea.bottom; y += 3) {
+          ctx.fillRect(chartArea.left, y, chartArea.right - chartArea.left, 1);
+        }
+        ctx.restore();
+      }
+    };
+    
+    // =========================================================================
     // TICKER_PROFILES — Loaded from js/data/ticker-profiles.js
     // Access via: window.TICKER_PROFILES
     // =========================================================================
@@ -1564,22 +1655,69 @@
       const yPadding = isShortRange ? padding * 0.5 : padding;
       
       if (priceChart) priceChart.destroy();
-      const datasets = [{ 
+      
+      // Calculate EMA series for ribbon
+      const emaSeries = RIBBON_PERIODS.map((p, i) => ({
+        period: p,
+        color: RIBBON_COLORS[i % RIBBON_COLORS.length],
+        data: calcEMA(closes, p)
+      }));
+      
+      const datasets = [];
+      
+      // Main price trace (hero line)
+      datasets.push({ 
         label: currentTicker, 
         data: closes, 
         borderColor: color, 
-        backgroundColor: color + '15', 
+        backgroundColor: 'rgba(0,0,0,0)', // Let ribbon provide the fill vibe
         borderWidth: 2, 
-        fill: true, 
-        tension: 0.1, 
+        fill: false, 
+        tension: 0.12, 
         pointRadius: 0, 
         pointHoverRadius: 4 
-      }];
+      });
       
       if (showMA) {
-        if (source.some(d => d.g100)) datasets.push({ label: 'MA 100', data: source.map(d => d.g100), borderColor: '#ffb347', borderWidth: 1, fill: false, tension: 0.1, pointRadius: 0 });
-        if (source.some(d => d.g150)) datasets.push({ label: 'MA 150', data: source.map(d => d.g150), borderColor: '#b388ff', borderWidth: 1, fill: false, tension: 0.1, pointRadius: 0 });
-        if (source.some(d => d.g200)) datasets.push({ label: 'MA 200', data: source.map(d => d.g200), borderColor: '#47d4ff', borderWidth: 1, fill: false, tension: 0.1, pointRadius: 0 });
+        // 1) EMA lines (thin) - track indices for band fill targets
+        const emaLineIdx = [];
+        emaSeries.forEach((s) => {
+          emaLineIdx.push(datasets.length);
+          datasets.push({
+            label: `EMA ${s.period}`,
+            data: s.data,
+            borderColor: s.color,
+            borderWidth: 1,
+            fill: false,
+            tension: 0.12,
+            pointRadius: 0
+          });
+        });
+        
+        // 2) Filled "bands" between adjacent EMAs (ribbon effect)
+        for (let i = 0; i < emaSeries.length - 1; i++) {
+          const slowIdx = emaLineIdx[i + 1];
+          const c = emaSeries[i].color;
+          
+          datasets.push({
+            label: `BAND ${emaSeries[i].period}-${emaSeries[i + 1].period}`,
+            data: emaSeries[i].data,
+            borderColor: 'rgba(0,0,0,0)',
+            pointRadius: 0,
+            tension: 0.12,
+            fill: { target: slowIdx },
+            backgroundColor: (ctx) => {
+              const chart = ctx.chart;
+              const { ctx: c2, chartArea } = chart;
+              if (!chartArea) return hexToRgba(c, 0.08);
+              const g = c2.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+              g.addColorStop(0, hexToRgba(c, 0.14));
+              g.addColorStop(0.6, hexToRgba(c, 0.07));
+              g.addColorStop(1, hexToRgba(c, 0.00));
+              return g;
+            }
+          });
+        }
       }
       
       priceChart = new Chart(document.getElementById('price-chart'), {
@@ -1590,8 +1728,34 @@
           maintainAspectRatio: false, 
           interaction: { mode: 'index', intersect: false },
           plugins: {
-            legend: { display: showMA, position: 'top', labels: { boxWidth: 12, font: { size: 10, family: "'IBM Plex Mono', monospace" }, color: '#5a7068' } },
-            tooltip: { backgroundColor: 'rgba(10, 12, 15, 0.95)', titleColor: '#e8f4f0', bodyColor: '#a8c0b8', borderColor: '#1e2832', borderWidth: 1, titleFont: { family: "'IBM Plex Mono', monospace" }, bodyFont: { family: "'IBM Plex Mono', monospace" }, callbacks: { label: i => i.dataset.label + ': $' + i.parsed.y.toFixed(2) } }
+            legend: { 
+              display: showMA, 
+              position: 'top', 
+              labels: { 
+                boxWidth: 12, 
+                font: { size: 10, family: "'IBM Plex Mono', monospace" }, 
+                color: '#5a7068',
+                // Filter out band datasets from legend
+                filter: (item) => !item.text.startsWith('BAND')
+              } 
+            },
+            tooltip: { 
+              backgroundColor: 'rgba(10, 12, 15, 0.95)', 
+              titleColor: '#e8f4f0', 
+              bodyColor: '#a8c0b8', 
+              borderColor: '#1e2832', 
+              borderWidth: 1, 
+              titleFont: { family: "'IBM Plex Mono', monospace" }, 
+              bodyFont: { family: "'IBM Plex Mono', monospace" }, 
+              callbacks: { 
+                label: i => {
+                  // Skip band datasets in tooltip
+                  if (i.dataset.label && i.dataset.label.startsWith('BAND')) return null;
+                  return i.dataset.label + ': $' + i.parsed.y.toFixed(2);
+                }
+              },
+              filter: (item) => !item.dataset.label.startsWith('BAND')
+            }
           },
           scales: {
             x: { 
@@ -1607,7 +1771,8 @@
               ticks: { color: '#5a7068', font: { family: "'IBM Plex Mono', monospace", size: 10 }, callback: v => '$' + v.toFixed(2) } 
             }
           }
-        }
+        },
+        plugins: [arcadeCRTPlugin]
       });
       
       if (macdChart) macdChart.destroy();
@@ -1917,9 +2082,46 @@
       }
     }
     
+    /**
+     * Get primary group for a tab
+     */
+    function getPrimaryGroup(tab) {
+      if (tab === 'chart') return 'telemetry';
+      if (tab === 'arcade') return 'training';
+      if (tab === 'positions' || tab === 'options' || tab === 'catalysts') return 'ops';
+      return 'telemetry';
+    }
+    
     function switchTab(tabName) {
-      document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tabName));
+      // Toggle panel visibility
       document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === tabName + '-panel'));
+      
+      // Determine which group this tab belongs to
+      const group = getPrimaryGroup(tabName);
+      
+      // Update primary nav buttons (data-group)
+      document.querySelectorAll('.nav-tab[data-group]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.group === group);
+      });
+      
+      // Show/hide subtabs based on group
+      const opsSubtabs = document.getElementById('ops-subtabs');
+      const trainingSubtabs = document.getElementById('training-subtabs');
+      
+      if (opsSubtabs) {
+        opsSubtabs.style.display = (group === 'ops') ? 'flex' : 'none';
+      }
+      if (trainingSubtabs) {
+        trainingSubtabs.style.display = (group === 'training') ? 'flex' : 'none';
+      }
+      
+      // Update subtab active states
+      document.querySelectorAll('#ops-subtabs .subtab[data-tab]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tabName);
+      });
+      document.querySelectorAll('#training-subtabs .subtab[data-tab]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tabName);
+      });
       
       // Step 5.1: Start/stop fleet background animation
       handleFleetBackground(tabName);
@@ -1994,14 +2196,35 @@
     // =========================================================================
     
     function switchTabMobile(tabName) {
-      // Update mobile bottom nav
+      // Update mobile bottom nav (by group)
+      const group = getPrimaryGroup(tabName);
       document.querySelectorAll('.mobile-nav-item').forEach(t => {
-        t.classList.toggle('active', t.dataset.tab === tabName);
+        // Support both data-tab and data-group
+        const btnGroup = t.dataset.group || getPrimaryGroup(t.dataset.tab);
+        t.classList.toggle('active', btnGroup === group);
       });
-      // Update desktop nav tabs (keep in sync)
-      document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tabName));
+      
+      // Update desktop nav tabs (keep in sync - use group)
+      document.querySelectorAll('.nav-tab[data-group]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.group === group);
+      });
+      
+      // Update desktop subtabs
+      const opsSubtabs = document.getElementById('ops-subtabs');
+      const trainingSubtabs = document.getElementById('training-subtabs');
+      if (opsSubtabs) opsSubtabs.style.display = (group === 'ops') ? 'flex' : 'none';
+      if (trainingSubtabs) trainingSubtabs.style.display = (group === 'training') ? 'flex' : 'none';
+      
+      document.querySelectorAll('#ops-subtabs .subtab[data-tab]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tabName);
+      });
+      document.querySelectorAll('#training-subtabs .subtab[data-tab]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tabName);
+      });
+      
       // Update panels
       document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === tabName + '-panel'));
+      
       // Play sound
       if (window.SoundFX) SoundFX.play('click');
       
