@@ -3098,6 +3098,648 @@
     @media (max-width: 1200px) { .right-sidebar { display: none; } }
     @media (max-width: 900px) { .sidebar { width: 240px; } .positions-grid { grid-template-columns: repeat(2, 1fr); } .arcade-hud { display: none; } }
     @media (max-width: 768px) { .sidebar { display: none; } .positions-grid { grid-template-columns: 1fr 1fr; } .nav-tab { padding: 0.4rem 0.6rem; font-size: 0.6rem; } .terminal-log { display: none; } }
+
+    /* =========================================================================
+       COMPREHENSIVE MOBILE OPTIMIZATIONS
+       ========================================================================= */
+    
+    /* Tablet breakpoint */
+    @media (max-width: 1024px) {
+      .control-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+      }
+      
+      .chart-header {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+      
+      .timeframe-btns {
+        order: 3;
+        width: 100%;
+        justify-content: flex-start;
+      }
+    }
+    
+    /* Mobile breakpoint */
+    @media (max-width: 768px) {
+      /* Header adjustments */
+      .header {
+        padding: 0.5rem 0.75rem;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+      
+      .logo {
+        font-size: 0.85rem;
+      }
+      
+      .nav-tabs {
+        order: 3;
+        width: 100%;
+        justify-content: space-between;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        padding-bottom: 0.25rem;
+      }
+      
+      .nav-tabs::-webkit-scrollbar {
+        display: none;
+      }
+      
+      .nav-tab {
+        flex-shrink: 0;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.65rem;
+      }
+      
+      /* Main content */
+      .main-content {
+        padding: 0.5rem;
+      }
+      
+      .content {
+        padding: 0;
+      }
+      
+      /* Charts */
+      .chart-container {
+        flex-direction: column;
+      }
+      
+      .price-chart-wrapper {
+        min-height: 250px;
+      }
+      
+      .macd-chart-wrapper {
+        min-height: 120px;
+      }
+      
+      .chart-header {
+        padding: 0.75rem;
+      }
+      
+      .chart-ticker {
+        font-size: 1.5rem;
+      }
+      
+      .chart-price {
+        font-size: 1.1rem;
+      }
+      
+      /* Control panel */
+      .control-panel {
+        margin: 0.5rem;
+        padding: 0.75rem;
+      }
+      
+      .control-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 0.6rem;
+      }
+      
+      .control-module {
+        padding: 0.6rem;
+      }
+      
+      .knob {
+        width: 50px;
+        height: 50px;
+      }
+      
+      .push-btn {
+        padding: 0.75rem;
+        font-size: 0.7rem;
+        min-height: 44px; /* Touch-friendly */
+      }
+      
+      /* Positions grid */
+      .positions-grid {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+      }
+      
+      .metric-card {
+        padding: 1rem;
+      }
+      
+      .metric-value {
+        font-size: 1.2rem;
+      }
+      
+      /* Data tables */
+      .data-table {
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      
+      .data-table th,
+      .data-table td {
+        padding: 0.6rem 0.5rem;
+        font-size: 0.7rem;
+        white-space: nowrap;
+      }
+      
+      /* Cargo bay */
+      #cargo-bay {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      
+      .cargo-item {
+        min-width: 100px;
+        padding: 0.6rem;
+      }
+      
+      .cargo-ticker {
+        font-size: 0.7rem;
+      }
+      
+      /* Status strip */
+      .status-strip {
+        padding: 0 0.75rem;
+        gap: 0.75rem;
+        font-size: 0.5rem;
+        overflow-x: auto;
+        justify-content: flex-start;
+      }
+      
+      .status-item {
+        flex-shrink: 0;
+      }
+      
+      #color-hue-slider {
+        display: none;
+      }
+      
+      /* Watermark */
+      .watermark {
+        left: 0.5rem;
+        padding: 0.4rem 0.6rem;
+        font-size: 0.6rem;
+      }
+      
+      /* Hide non-essential on mobile */
+      .scan-line,
+      .holo-radar-sweep,
+      .ambient-particles {
+        display: none;
+      }
+      
+      /* Encounters board */
+      #encounters-console {
+        padding: 10px;
+      }
+      
+      .enc-light {
+        width: 12px;
+        height: 12px;
+      }
+    }
+    
+    /* Small mobile */
+    @media (max-width: 480px) {
+      .header {
+        padding: 0.4rem 0.5rem;
+      }
+      
+      .logo {
+        font-size: 0.75rem;
+      }
+      
+      .logo-sub {
+        display: none;
+      }
+      
+      .nav-tab {
+        padding: 0.4rem 0.5rem;
+        font-size: 0.55rem;
+      }
+      
+      .chart-ticker {
+        font-size: 1.2rem;
+      }
+      
+      .chart-price {
+        font-size: 0.95rem;
+      }
+      
+      .control-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .control-module {
+        padding: 0.5rem;
+      }
+      
+      .knob {
+        width: 44px;
+        height: 44px;
+      }
+      
+      .positions-content {
+        padding: 0.75rem;
+      }
+      
+      .metric-value {
+        font-size: 1rem;
+      }
+      
+      .metric-label {
+        font-size: 0.5rem;
+      }
+      
+      /* Timeline events */
+      .timeline-event {
+        padding: 0.75rem;
+      }
+      
+      .timeline-ticker {
+        font-size: 0.75rem;
+      }
+      
+      .timeline-title {
+        font-size: 0.7rem;
+      }
+      
+      /* Bar charts */
+      .bar-row {
+        grid-template-columns: 45px 1fr 55px;
+        gap: 0.5rem;
+      }
+      
+      .bar-ticker {
+        font-size: 0.65rem;
+      }
+    }
+    
+    /* =========================================================================
+       SIGNAL INVADERS MOBILE OPTIMIZATIONS
+       ========================================================================= */
+    @media (max-width: 768px) {
+      .arcade-game-container {
+        padding: 1rem;
+        width: 98%;
+        max-height: 95vh;
+        overflow-y: auto;
+      }
+      
+      .arcade-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+      }
+      
+      .arcade-title {
+        font-size: 1rem;
+      }
+      
+      .arcade-stats {
+        gap: 1rem;
+        font-size: 0.65rem;
+        flex-wrap: wrap;
+      }
+      
+      #invaders-canvas {
+        max-height: 300px;
+      }
+      
+      .arcade-controls {
+        display: none; /* Hide keyboard instructions on mobile */
+      }
+      
+      /* Touch controls for mobile */
+      .mobile-touch-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 0.75rem;
+        gap: 0.5rem;
+      }
+      
+      .touch-btn {
+        flex: 1;
+        max-width: 100px;
+        height: 50px;
+        background: var(--phosphor-ghost);
+        border: 1px solid var(--phosphor-dim);
+        color: var(--phosphor);
+        font-family: var(--font-display);
+        font-size: 1.2rem;
+        border-radius: 8px;
+        cursor: pointer;
+        user-select: none;
+        -webkit-user-select: none;
+        touch-action: manipulation;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      .touch-btn:active {
+        background: var(--phosphor);
+        color: var(--bg-void);
+      }
+      
+      .touch-btn.fire {
+        flex: 2;
+        max-width: 150px;
+        background: rgba(255, 107, 107, 0.15);
+        border-color: #ff6b6b;
+        color: #ff6b6b;
+      }
+      
+      .touch-btn.fire:active {
+        background: #ff6b6b;
+        color: #fff;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .arcade-game-container {
+        padding: 0.75rem;
+      }
+      
+      .arcade-title {
+        font-size: 0.85rem;
+      }
+      
+      .arcade-stats {
+        font-size: 0.55rem;
+      }
+      
+      #invaders-canvas {
+        max-height: 250px;
+      }
+      
+      .touch-btn {
+        height: 44px;
+        font-size: 1rem;
+      }
+    }
+    
+    /* Show touch controls only on touch devices */
+    .mobile-touch-controls {
+      display: none;
+    }
+    
+    @media (hover: none) and (pointer: coarse) {
+      .mobile-touch-controls {
+        display: flex;
+      }
+      
+      .arcade-controls {
+        display: none;
+      }
+    }
+    
+    /* =========================================================================
+       OVERLAY MOBILE OPTIMIZATIONS
+       ========================================================================= */
+    @media (max-width: 768px) {
+      /* Pip-boy dossier */
+      .pipboy-container {
+        width: 98%;
+        max-height: 90vh;
+        margin: 1rem auto;
+      }
+      
+      .pipboy-header {
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+      
+      .pipboy-ticker-name {
+        font-size: 1.3rem;
+      }
+      
+      .pipboy-nav {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 0.25rem;
+        gap: 0.25rem;
+      }
+      
+      .pipboy-dial {
+        flex-shrink: 0;
+        padding: 0.4rem 0.5rem;
+        font-size: 0.55rem;
+      }
+      
+      .pipboy-body {
+        max-height: 50vh;
+      }
+      
+      /* About overlay */
+      .about-panel {
+        width: 95%;
+        max-height: 85vh;
+        padding: 1.25rem;
+      }
+      
+      .about-title {
+        font-size: 1.1rem;
+      }
+      
+      .about-body {
+        font-size: 0.8rem;
+      }
+    }
+    
+    /* =========================================================================
+       TOUCH-FRIENDLY INTERACTIONS
+       ========================================================================= */
+    @media (hover: none) and (pointer: coarse) {
+      /* Larger touch targets */
+      .watchlist-item {
+        padding: 0.85rem 0.75rem;
+        min-height: 60px;
+      }
+      
+      .cargo-item {
+        min-height: 70px;
+      }
+      
+      .timeline-event {
+        padding: 1rem;
+      }
+      
+      .push-btn,
+      .sim-btn,
+      .kill-switch-btn {
+        min-height: 48px;
+      }
+      
+      .nav-tab {
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+      }
+      
+      /* Remove hover effects that don't work on touch */
+      .watchlist-item:hover,
+      .cargo-item:hover,
+      .timeline-event:hover,
+      .catalyst-item:hover {
+        transform: none;
+      }
+      
+      /* Active states instead */
+      .watchlist-item:active,
+      .cargo-item:active,
+      .timeline-event:active {
+        background: var(--phosphor-ghost);
+        border-color: var(--phosphor-dim);
+      }
+    }
+    
+    /* Prevent zoom on input focus (iOS) */
+    @media (max-width: 768px) {
+      input[type="text"],
+      input[type="number"],
+      input[type="date"],
+      select {
+        font-size: 16px;
+      }
+    }
+    
+    /* Safe area insets for notched devices */
+    @supports (padding: max(0px)) {
+      .header {
+        padding-left: max(0.75rem, env(safe-area-inset-left));
+        padding-right: max(0.75rem, env(safe-area-inset-right));
+      }
+      
+      .status-strip {
+        padding-bottom: max(0px, env(safe-area-inset-bottom));
+      }
+    }
+
+    /* =========================================================================
+       MOBILE MENU BUTTON
+       ========================================================================= */
+    .mobile-menu-btn {
+      display: none;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 0.4rem 0.6rem;
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    
+    .mobile-menu-btn:hover,
+    .mobile-menu-btn:active {
+      border-color: var(--phosphor);
+      color: var(--phosphor);
+    }
+    
+    @media (max-width: 768px) {
+      .mobile-menu-btn {
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+      }
+    }
+    
+    /* Mobile sidebar drawer */
+    .mobile-drawer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 280px;
+      max-width: 85vw;
+      background: var(--bg-panel);
+      border-right: 1px solid var(--border);
+      z-index: 20000;
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    
+    .mobile-drawer.open {
+      transform: translateX(0);
+    }
+    
+    .mobile-drawer-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 19999;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    
+    .mobile-drawer-backdrop.open {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .mobile-drawer-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .mobile-drawer-title {
+      font-family: var(--font-display);
+      font-size: 0.85rem;
+      color: var(--phosphor);
+      letter-spacing: 0.1em;
+    }
+    
+    .mobile-drawer-close {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: 0.25rem;
+    }
+    
+    .mobile-drawer-content {
+      padding: 0.5rem;
+    }
+    
+    /* Loading screen mobile */
+    @media (max-width: 768px) {
+      .loading-inner {
+        transform: scale(0.8);
+      }
+      
+      .loading-title {
+        font-size: 1.5rem !important;
+      }
+      
+      .loading-subtitle {
+        font-size: 0.7rem !important;
+      }
+      
+      .invader-army {
+        opacity: 0.25;
+      }
+      
+      .invader-row .invader-sprite-small {
+        width: 20px;
+        height: 14px;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .loading-inner {
+        transform: scale(0.65);
+      }
+    }
   </style>
 </head>
 <body>
@@ -3249,6 +3891,9 @@
         </nav>
       </div>
       <div class="header-right">
+        <button class="mobile-menu-btn" id="mobile-menu-btn" onclick="toggleMobileDrawer()">
+          <span>☰</span> MENU
+        </button>
         <span class="demo-badge" data-glossary-id="mode_simulation">SIMULATION</span>
         <div class="status-indicator" data-glossary-id="status_mkt_closed">
           <span class="status-dot"></span>
@@ -3257,6 +3902,37 @@
         <span class="time-display" id="time-display">--<span class="blink">:</span>--</span>
       </div>
     </header>
+    
+    <!-- MOBILE DRAWER -->
+    <div class="mobile-drawer-backdrop" id="mobile-drawer-backdrop" onclick="toggleMobileDrawer()"></div>
+    <div class="mobile-drawer" id="mobile-drawer">
+      <div class="mobile-drawer-header">
+        <span class="mobile-drawer-title">NAVIGATION</span>
+        <button class="mobile-drawer-close" onclick="toggleMobileDrawer()">✕</button>
+      </div>
+      <div class="mobile-drawer-content">
+        <div class="sidebar-section">
+          <div class="sidebar-title">Portfolio Status</div>
+          <div class="stats-grid">
+            <div class="stat-box highlight"><div class="stat-label">Today P&L</div><div class="stat-value positive">+$1,172</div></div>
+            <div class="stat-box"><div class="stat-label">Total P&L</div><div class="stat-value positive">+$34,015</div></div>
+          </div>
+        </div>
+        <div class="sidebar-section" style="padding-bottom: 0.5rem;">
+          <div class="sidebar-title">Quick Actions</div>
+        </div>
+        <div style="padding: 0 0.5rem 0.5rem;">
+          <button class="push-btn" style="width: 100%; margin-bottom: 0.5rem;" onclick="toggleMobileDrawer(); switchTab('positions');">📊 Holdings</button>
+          <button class="push-btn" style="width: 100%; margin-bottom: 0.5rem;" onclick="toggleMobileDrawer(); switchTab('options');">📈 Derivatives</button>
+          <button class="push-btn" style="width: 100%; margin-bottom: 0.5rem;" onclick="toggleMobileDrawer(); switchTab('catalysts');">📅 Events</button>
+          <button class="push-btn primary" style="width: 100%;" onclick="toggleMobileDrawer(); if(window.SignalInvaders) SignalInvaders.start();">👾 Signal Invaders</button>
+        </div>
+        <div class="sidebar-section" style="padding-bottom: 0.5rem;">
+          <div class="sidebar-title">Tracking</div>
+        </div>
+        <div class="watchlist" id="mobile-watchlist" style="max-height: 300px; overflow-y: auto;"></div>
+      </div>
+    </div>
     
     <main class="main">
       <aside class="sidebar">
@@ -3781,6 +4457,11 @@
           <span>← → MOVE</span>
           <span>SPACE FIRE</span>
           <span>ESC EXIT</span>
+        </div>
+        <div class="mobile-touch-controls" id="mobile-controls">
+          <button class="touch-btn" id="touch-left">◀</button>
+          <button class="touch-btn fire" id="touch-fire">FIRE</button>
+          <button class="touch-btn" id="touch-right">▶</button>
         </div>
         <div class="arcade-message" id="invaders-message"></div>
       </div>
@@ -5090,17 +5771,36 @@
     }
     
     function buildWatchlist(tickers) {
-      document.getElementById('watchlist').innerHTML = tickers.map(t => {
+      const watchlistHTML = tickers.map(t => {
         const stats = statsData[t] || {};
         const change = stats.return_1d || 0;
         const theme = tickerThemes[t] || '';
         const color = tickerColors[t] || '#33ff99';
-        return '<div class="watchlist-item ' + (t === currentTicker ? 'active' : '') + '" onclick="selectTicker(\'' + t + '\')">' +
+        return '<div class="watchlist-item ' + (t === currentTicker ? 'active' : '') + '" onclick="selectTicker(\'' + t + '\'); if(window.innerWidth <= 768) toggleMobileDrawer();">' +
           '<div class="watchlist-info"><div class="watchlist-ticker" style="color: ' + color + '">' + t + '</div>' +
           '<div class="watchlist-meta">' + theme + '</div></div>' +
           '<div class="watchlist-data"><div class="watchlist-price">$' + (stats.current || 0).toFixed(2) + '</div>' +
           '<div class="watchlist-change ' + (change >= 0 ? 'positive' : 'negative') + '">' + (change >= 0 ? '+' : '') + change.toFixed(2) + '%</div></div></div>';
       }).join('');
+      
+      document.getElementById('watchlist').innerHTML = watchlistHTML;
+      
+      // Also populate mobile watchlist
+      const mobileWatchlist = document.getElementById('mobile-watchlist');
+      if (mobileWatchlist) {
+        mobileWatchlist.innerHTML = watchlistHTML;
+      }
+    }
+    
+    // Mobile drawer toggle
+    function toggleMobileDrawer() {
+      const drawer = document.getElementById('mobile-drawer');
+      const backdrop = document.getElementById('mobile-drawer-backdrop');
+      if (drawer && backdrop) {
+        drawer.classList.toggle('open');
+        backdrop.classList.toggle('open');
+        document.body.style.overflow = drawer.classList.contains('open') ? 'hidden' : '';
+      }
     }
     
     async function loadTicker(ticker) {
@@ -7080,6 +7780,51 @@
           if (closeBtn) {
             closeBtn.onclick = () => this.close();
           }
+          
+          // Mobile touch controls
+          const touchLeft = document.getElementById('touch-left');
+          const touchRight = document.getElementById('touch-right');
+          const touchFire = document.getElementById('touch-fire');
+          
+          if (touchLeft) {
+            touchLeft.addEventListener('touchstart', (e) => {
+              e.preventDefault();
+              this.keys['ArrowLeft'] = true;
+            });
+            touchLeft.addEventListener('touchend', () => {
+              this.keys['ArrowLeft'] = false;
+            });
+            touchLeft.addEventListener('touchcancel', () => {
+              this.keys['ArrowLeft'] = false;
+            });
+          }
+          
+          if (touchRight) {
+            touchRight.addEventListener('touchstart', (e) => {
+              e.preventDefault();
+              this.keys['ArrowRight'] = true;
+            });
+            touchRight.addEventListener('touchend', () => {
+              this.keys['ArrowRight'] = false;
+            });
+            touchRight.addEventListener('touchcancel', () => {
+              this.keys['ArrowRight'] = false;
+            });
+          }
+          
+          if (touchFire) {
+            touchFire.addEventListener('touchstart', (e) => {
+              e.preventDefault();
+              if (!this.gameOver && this.active) {
+                this.shoot();
+              }
+            });
+          }
+          
+          // Prevent scrolling while playing on mobile
+          this.canvas.addEventListener('touchmove', (e) => {
+            if (this.active) e.preventDefault();
+          }, { passive: false });
         },
         
         start() {
