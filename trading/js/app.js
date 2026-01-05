@@ -417,89 +417,155 @@
      * ENHANCED: Heavy EM frequency stabilization effect
      * Each band jitters independently like unstable radio frequencies
      */
-    const ribbonJitterPlugin = {
-      id: 'ribbonJitterPlugin',
-      
-      // Per-band jitter state for independent movement
-      _bandStates: {},
-      _globalPhase: 0,
-      _lastGlobalUpdate: 0,
-      _spikeActive: false,
-      _spikeStart: 0,
-      
-      beforeDatasetDraw(chart, args) {
-        const ds = chart.data.datasets[args.index];
-        if (!ds || !ds.isRibbon) return;
-        
-        const now = performance.now();
-        const bandId = args.index;
-        
-        // Initialize per-band state
-        if (!this._bandStates[bandId]) {
-          this._bandStates[bandId] = {
-            offsetX: 0,
-            offsetY: 0,
-            phase: Math.random() * Math.PI * 2,
-            freq: 0.8 + Math.random() * 0.6, // Each band has different frequency
-            amplitude: 1.5 + Math.random() * 1.5 // Each band has different amplitude
-          };
-        }
-        
-        const state = this._bandStates[bandId];
-        const t = now * 0.001;
-        
-        // Update global phase for coordinated interference bursts
-        if (now - this._lastGlobalUpdate > 50) { // 20fps jitter updates
-          this._globalPhase = t;
-          this._lastGlobalUpdate = now;
-          
-          // Random interference spikes (every ~3-8 seconds)
-          if (!this._spikeActive && Math.random() < 0.008) {
-            this._spikeActive = true;
-            this._spikeStart = now;
-          }
-          if (this._spikeActive && now - this._spikeStart > 150) {
-            this._spikeActive = false;
-          }
-        }
-        
-        // Complex multi-frequency jitter (like unstable EM frequencies)
-        const baseJitter = 
-          Math.sin(t * state.freq * 3.1 + state.phase) * 1.2 +
-          Math.sin(t * state.freq * 7.3 + state.phase * 1.5) * 0.8 +
-          Math.sin(t * state.freq * 13.7 + state.phase * 2.1) * 0.5 +
-          Math.sin(t * state.freq * 23.1) * 0.3; // High freq shimmer
-        
-        // Vertical wobble (different per band)
-        const verticalWobble = 
-          Math.sin(t * state.freq * 2.7 + state.phase * 0.7) * 0.6 +
-          Math.sin(t * state.freq * 8.9) * 0.4;
-        
-        // Spike interference (occasional sharp glitch)
-        let spikeOffset = 0;
-        if (this._spikeActive) {
-          const spikeProgress = (now - this._spikeStart) / 150;
-          spikeOffset = Math.sin(spikeProgress * Math.PI) * 
-                        (Math.random() - 0.5) * 8 * state.amplitude;
-        }
-        
-        // Final offsets scaled by band's amplitude
-        state.offsetX = baseJitter * state.amplitude + spikeOffset;
-        state.offsetY = verticalWobble * state.amplitude * 0.4;
-        
-        // Apply transform
-        const ctx = chart.ctx;
-        ctx.save();
-        ctx.translate(state.offsetX, state.offsetY);
-        ds.__jitterApplied = true;
+    // =========================================================================
+    // EMA ELECTROMAGNETIC GLITCH PLUGIN — Post-process visual distortion
+    // Creates CRT/EM interference effect on ribbon (not price line)
+    // =========================================================================
+    
+    const ribbonEMGlitchPlugin = {
+      id: 'ribbonEMGlitchPlugin',
+
+      // Internal state for burst scheduling
+      _state: {
+        nextBurstAt: 0,
+        burstUntil: 0,
+        burstSeed: 0,
+        phase: 0,
       },
-      
-      afterDatasetDraw(chart, args) {
-        const ds = chart.data.datasets[args.index];
-        if (ds && ds.__jitterApplied) {
-          ds.__jitterApplied = false;
-          chart.ctx.restore();
+
+      afterDatasetsDraw(chart, args, pluginOpts) {
+        const { ctx, chartArea } = chart;
+        if (!chartArea) return;
+
+        // Only for the price chart
+        const canvas = chart.canvas;
+        if (!canvas || canvas.id !== 'price-chart') return;
+
+        // Determine if ribbon is visible (MA/RIBBON toggle)
+        const anyRibbon = chart.data.datasets.some(ds => ds && ds.isRibbon);
+        if (!anyRibbon) return;
+
+        // PERFORMANCE: skip on very small canvases
+        const w = chartArea.right - chartArea.left;
+        const h = chartArea.bottom - chartArea.top;
+        if (w < 240 || h < 160) return;
+
+        const now = performance.now();
+
+        // Mobile-friendly intensity
+        const isMobile = window.innerWidth < 768 || ('ontouchstart' in window);
+        const intensity = isMobile ? 0.55 : 1.0;
+
+        // Burst scheduling: mostly calm, occasional interference "packet"
+        const st = this._state;
+        if (now > st.nextBurstAt) {
+          // Next burst in 1.8s–6.5s
+          st.nextBurstAt = now + (1800 + Math.random() * 4700);
+          // Burst lasts 140–420ms
+          st.burstUntil = now + (140 + Math.random() * 280);
+          st.burstSeed = Math.random() * 1000;
         }
+
+        const inBurst = now < st.burstUntil;
+
+        // Constant subtle shimmer (very light)
+        const baseShimmer = 0.18 * intensity;
+
+        // Glitch amount spikes during bursts
+        const burstAmt = inBurst ? (0.9 * intensity) : 0.0;
+
+        // Total effect amount
+        const amt = baseShimmer + burstAmt;
+        if (amt <= 0) return;
+
+        // Restrict effect to the chart area
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(chartArea.left, chartArea.top, w, h);
+        ctx.clip();
+
+        // ------------- A) HORIZONTAL TEAR STRIPS -------------
+        // Each strip: small slice of the chart area shifted horizontally
+        // Creates scan interference look
+        const strips = inBurst ? 6 : 2;
+        for (let i = 0; i < strips; i++) {
+          const t = (now * 0.001) + st.burstSeed + i * 1.7;
+          const y = chartArea.top + (Math.random() * h);
+          const stripH = (inBurst ? (6 + Math.random() * 16) : (3 + Math.random() * 6)) * intensity;
+
+          // Oscillatory + random horizontal shift
+          const shift = (Math.sin(t * 9.0) * 6 + (Math.random() - 0.5) * 10) * amt;
+
+          // Copy slice and draw shifted
+          ctx.globalAlpha = inBurst ? (0.22 * intensity) : (0.10 * intensity);
+          ctx.globalCompositeOperation = 'lighter';
+          try {
+            ctx.drawImage(
+              canvas,
+              chartArea.left, y, w, stripH,
+              chartArea.left + shift, y, w, stripH
+            );
+          } catch (e) {
+            // Ignore cross-origin or other canvas errors
+          }
+        }
+
+        // ------------- B) PHOSPHOR "GHOST" AFTERIMAGE -------------
+        // Faint delayed echo creates unstable lock appearance
+        const echoShift = (inBurst ? 2.6 : 0.9) * amt;
+        ctx.globalAlpha = inBurst ? (0.10 * intensity) : (0.05 * intensity);
+        ctx.globalCompositeOperation = 'screen';
+        try {
+          ctx.drawImage(
+            canvas,
+            chartArea.left, chartArea.top, w, h,
+            chartArea.left + echoShift, chartArea.top + (inBurst ? 0.6 : 0.2) * amt, w, h
+          );
+        } catch (e) {
+          // Ignore canvas errors
+        }
+
+        // ------------- C) MICRO QUANTIZATION (pixel snap) -------------
+        // Creates "digitized" look during bursts
+        if (inBurst) {
+          const snap = Math.max(1, Math.round(1.5 * intensity));
+          ctx.globalAlpha = 0.08 * intensity;
+          ctx.globalCompositeOperation = 'lighter';
+
+          // Nearest-neighbor by scaling down then up
+          ctx.imageSmoothingEnabled = false;
+          try {
+            const scaledW = Math.floor(w / snap);
+            const scaledH = Math.floor(h / snap);
+            if (scaledW > 0 && scaledH > 0) {
+              ctx.drawImage(
+                canvas,
+                chartArea.left, chartArea.top, w, h,
+                chartArea.left, chartArea.top, scaledW, scaledH
+              );
+              ctx.drawImage(
+                canvas,
+                chartArea.left, chartArea.top, scaledW, scaledH,
+                chartArea.left, chartArea.top, w, h
+              );
+            }
+          } catch (e) {
+            // Ignore canvas errors
+          }
+          ctx.imageSmoothingEnabled = true;
+        }
+
+        // ------------- D) OCCASIONAL "LOCK SNAP" LINE -------------
+        // Thin bright line that sweeps during burst (system re-locking)
+        if (inBurst && Math.random() < 0.18) {
+          const y = chartArea.top + Math.random() * h;
+          ctx.globalAlpha = 0.10 * intensity;
+          ctx.globalCompositeOperation = 'screen';
+          ctx.fillStyle = '#33ff99';
+          ctx.fillRect(chartArea.left, y, w, 1);
+        }
+
+        ctx.restore();
       }
     };
     
@@ -1976,7 +2042,9 @@
         fill: false, 
         tension: 0.12, 
         pointRadius: 0, 
-        pointHoverRadius: 4 
+        pointHoverRadius: 4,
+        isPrice: true,    // Step: Tag as price (not ribbon)
+        isRibbon: false
       });
       
       if (showMA) {
@@ -2078,7 +2146,7 @@
             }
           }
         },
-        plugins: [arcadeCRTPlugin, ribbonJitterPlugin, shipOverlayPlugin]
+        plugins: [arcadeCRTPlugin, ribbonEMGlitchPlugin, shipOverlayPlugin]
       });
       
       if (macdChart) macdChart.destroy();
