@@ -68,15 +68,19 @@ const IndicatorLoader = (function() {
   }
   
   /**
-   * Get list of available tickers
+   * Get list of available tickers (ACTIVE only for main dropdown)
    */
   async function getAvailableTickers() {
     const m = await loadManifest();
-    return m.tickers.map(t => ({
-      ticker: t.ticker,
-      name: t.name || t.ticker,
-      file: t.file
-    }));
+    // Step 3: Filter to only ACTIVE tickers for main functionality
+    return m.tickers
+      .filter(t => t.status === 'ACTIVE' || !t.status) // Backward compat: treat undefined as ACTIVE
+      .map(t => ({
+        ticker: t.ticker,
+        name: t.name || t.ticker,
+        file: t.file,
+        status: t.status || 'ACTIVE'
+      }));
   }
   
   /**
@@ -258,6 +262,7 @@ const IndicatorLoader = (function() {
       source: m.source,
       lastUpdated: m.lastUpdated,
       tickerCount: m.tickers.length,
+      tickers: m.tickers,  // Step 3: Include full ticker list with status
       notes: m.notes
     };
   }

@@ -222,6 +222,102 @@
     
     /* Ticker badge */
     .ticker-badge { display: inline-block; background: var(--amber); color: var(--bg-dark); font-size: 0.6rem; padding: 0.1rem 0.4rem; margin-left: 0.5rem; font-weight: 600; }
+    
+    /* ═══════════════════════════════════════════════════════════════════
+       STEP 3: FLEET BAY & SUPPORT SLOTS
+       ═══════════════════════════════════════════════════════════════════ */
+    
+    /* Fleet Bay Panel */
+    .fleet-bay {
+      margin-top: 1.5rem;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+    }
+    .fleet-bay-header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0.75rem 1rem; border-bottom: 1px solid var(--border);
+      cursor: pointer;
+    }
+    .fleet-bay-header:hover { background: var(--bg-card-hover); }
+    .fleet-bay-title { color: var(--phosphor); font-size: 0.9rem; font-weight: 600; }
+    .fleet-bay-toggle { color: var(--text-dim); font-size: 0.8rem; }
+    .fleet-bay-content { padding: 1rem; display: none; }
+    .fleet-bay-content.open { display: block; }
+    .fleet-search { width: 100%; padding: 0.5rem; margin-bottom: 1rem; background: var(--bg-dark); border: 1px solid var(--border); color: var(--text); font-family: inherit; font-size: 0.8rem; }
+    .fleet-search::placeholder { color: var(--text-dim); }
+    
+    /* Fleet Grid */
+    .fleet-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.5rem; max-height: 300px; overflow-y: auto; }
+    
+    /* Fleet Ship Item */
+    .fleet-ship {
+      background: var(--bg-dark); border: 1px solid var(--border); padding: 0.5rem;
+      cursor: pointer; transition: all 0.2s; position: relative;
+    }
+    .fleet-ship:hover { border-color: var(--phosphor); background: var(--bg-card-hover); }
+    .fleet-ship.locked { opacity: 0.5; cursor: not-allowed; }
+    .fleet-ship.locked:hover { border-color: var(--red); }
+    .fleet-ship.assigned { border-color: var(--amber); background: rgba(255,170,51,0.1); }
+    .fleet-ship-ticker { font-weight: 600; font-size: 0.9rem; color: var(--phosphor); }
+    .fleet-ship-name { font-size: 0.65rem; color: var(--text-dim); margin-bottom: 0.25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .fleet-ship-role { display: inline-block; font-size: 0.6rem; padding: 0.1rem 0.4rem; background: rgba(51,255,153,0.15); color: var(--phosphor); border-radius: 2px; }
+    .fleet-ship-role.SCOUT { background: rgba(0,212,255,0.15); color: var(--cyan); }
+    .fleet-ship-role.ESCORT { background: rgba(255,170,51,0.15); color: var(--amber); }
+    .fleet-ship-role.CARRIER { background: rgba(51,255,153,0.15); color: var(--phosphor); }
+    .fleet-ship-role.UTILITY { background: rgba(200,212,224,0.15); color: var(--text); }
+    .fleet-ship-stats { display: flex; gap: 0.25rem; margin-top: 0.25rem; }
+    .fleet-mini-bar { height: 3px; flex: 1; background: rgba(255,255,255,0.1); overflow: hidden; }
+    .fleet-mini-bar-fill { height: 100%; }
+    .fleet-mini-bar-fill.hull { background: var(--phosphor); }
+    .fleet-mini-bar-fill.sensors { background: var(--cyan); }
+    .fleet-mini-bar-fill.threat { background: var(--red); }
+    .fleet-ship-lock { position: absolute; top: 0.25rem; right: 0.25rem; font-size: 0.6rem; color: var(--red); }
+    
+    /* Locked Ticker (silhouette) */
+    .fleet-ship.silhouette { opacity: 0.3; pointer-events: none; }
+    .fleet-ship.silhouette .fleet-ship-ticker { color: var(--text-dim); letter-spacing: 2px; }
+    .fleet-ship.silhouette .fleet-ship-name { font-style: italic; }
+    .fleet-ship.silhouette .fleet-ship-role { background: rgba(100,100,100,0.2); color: var(--text-dim); }
+    
+    /* Support Slots */
+    .support-slots { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+    .support-slots-label { font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase; margin-bottom: 0.5rem; }
+    .support-slots-container { display: flex; gap: 0.5rem; }
+    .support-slot {
+      flex: 1; padding: 0.5rem; background: var(--bg-dark); border: 2px dashed var(--border);
+      min-height: 60px; display: flex; flex-direction: column; justify-content: center; align-items: center;
+      transition: all 0.2s; cursor: pointer;
+    }
+    .support-slot:hover { border-color: var(--phosphor); background: rgba(51,255,153,0.05); }
+    .support-slot.filled { border-style: solid; border-color: var(--amber); }
+    .support-slot-label { font-size: 0.6rem; color: var(--text-dim); text-transform: uppercase; margin-bottom: 0.25rem; }
+    .support-slot-empty { font-size: 0.7rem; color: var(--text-dim); }
+    .support-slot-ticker { font-weight: 600; color: var(--phosphor); font-size: 0.85rem; }
+    .support-slot-role { font-size: 0.65rem; color: var(--amber); }
+    .support-slot-remove { font-size: 0.7rem; color: var(--red); cursor: pointer; margin-top: 0.25rem; opacity: 0.7; }
+    .support-slot-remove:hover { opacity: 1; }
+    
+    /* Assign Modal */
+    .assign-modal-backdrop {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.7); z-index: 1000; display: none;
+    }
+    .assign-modal-backdrop.open { display: flex; justify-content: center; align-items: center; }
+    .assign-modal {
+      background: var(--bg-card); border: 1px solid var(--phosphor); padding: 1.5rem;
+      max-width: 400px; width: 90%; max-height: 80vh; overflow-y: auto;
+    }
+    .assign-modal h3 { color: var(--phosphor); margin-bottom: 1rem; font-size: 1rem; }
+    .assign-modal-ships { display: flex; flex-direction: column; gap: 0.5rem; max-height: 300px; overflow-y: auto; }
+    .assign-modal-ship {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0.5rem; background: var(--bg-dark); border: 1px solid var(--border);
+      cursor: pointer; transition: all 0.2s;
+    }
+    .assign-modal-ship:hover { border-color: var(--phosphor); }
+    .assign-modal-ship.disabled { opacity: 0.4; cursor: not-allowed; }
+    .assign-modal-close { margin-top: 1rem; width: 100%; padding: 0.5rem; background: var(--bg-dark); border: 1px solid var(--border); color: var(--text); cursor: pointer; }
+    .assign-modal-close:hover { background: var(--bg-card-hover); border-color: var(--phosphor); }
   </style>
 </head>
 <body>
@@ -314,6 +410,21 @@
               </div>
             </div>
             
+            <!-- Step 3: Support Slots -->
+            <div class="support-slots" id="support-slots">
+              <div class="support-slots-label">Support Assets</div>
+              <div class="support-slots-container">
+                <div class="support-slot" id="support-slot-0" onclick="UI.openAssignModal(0)">
+                  <div class="support-slot-label">Slot A</div>
+                  <div class="support-slot-empty">+ Assign</div>
+                </div>
+                <div class="support-slot" id="support-slot-1" onclick="UI.openAssignModal(1)">
+                  <div class="support-slot-label">Slot B</div>
+                  <div class="support-slot-empty">+ Assign</div>
+                </div>
+              </div>
+            </div>
+            
             <div class="detail-section">
               <div class="detail-label">Mission Log</div>
               <div class="log-feed" id="detail-logs"></div>
@@ -339,6 +450,29 @@
       </div>
     </div>
     
+    <!-- Step 3: Fleet Bay Panel -->
+    <div class="fleet-bay">
+      <div class="fleet-bay-header" onclick="UI.toggleFleetBay()">
+        <span class="fleet-bay-title">🚀 FLEET BAY</span>
+        <span class="fleet-bay-toggle" id="fleet-bay-toggle">▼ Expand</span>
+      </div>
+      <div class="fleet-bay-content" id="fleet-bay-content">
+        <input type="text" class="fleet-search" id="fleet-search" placeholder="Search ships..." oninput="UI.filterFleet()">
+        <div class="fleet-grid" id="fleet-grid">
+          <div class="loading">Loading fleet...</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Step 3: Assign Modal -->
+    <div class="assign-modal-backdrop" id="assign-modal-backdrop" onclick="UI.closeAssignModal()">
+      <div class="assign-modal" onclick="event.stopPropagation()">
+        <h3>Assign Support to Slot <span id="assign-slot-label">A</span></h3>
+        <div class="assign-modal-ships" id="assign-modal-ships"></div>
+        <button class="assign-modal-close" onclick="UI.closeAssignModal()">Cancel</button>
+      </div>
+    </div>
+    
     <!-- Disclaimer -->
     <div class="disclaimer">
       ⚠️ TRAINING SIMULATION — Not investment advice. No real orders. Educational purposes only.
@@ -357,7 +491,7 @@
   <script src="js/mission-system.js"></script>
   <script>
     // ═══════════════════════════════════════════════════════════════════
-    // MISSION COMMAND UI (Step 2)
+    // MISSION COMMAND UI (Step 2 + Step 3: Fleet Support)
     // ═══════════════════════════════════════════════════════════════════
     
     const UI = {
@@ -379,6 +513,11 @@
       selectedMissionId: null,
       updateInterval: null,
       
+      // Step 3: Fleet state
+      fleetBayOpen: false,
+      fleetData: [],        // { ticker, name, status, env, role }
+      assignSlotIndex: null,
+      
       init() {
         this.tickerSelect = document.getElementById('ticker-select');
         this.computeBtn = document.getElementById('compute-btn');
@@ -399,6 +538,7 @@
         
         this.loadTickers();
         this.renderActiveMissions();
+        this.loadFleet(); // Step 3
         
         // Start update loop
         this.updateInterval = setInterval(() => this.updateLoop(), 500);
@@ -681,6 +821,9 @@
         document.getElementById('detail-bars-elapsed').textContent = `${progress.barsElapsed} / ${mission.duration.targetBars} bars`;
         document.getElementById('detail-time-remaining').textContent = progress.timeRemaining;
         
+        // Step 3: Render support slots
+        this.renderSupportSlots(mission);
+        
         // Render logs
         const logsHtml = mission.logs.map(log => `
           <div class="log-entry">
@@ -805,6 +948,259 @@
         if (this.currentEnv) {
           const recommendations = MissionSystem.generateRecommendations(this.currentEnv);
           this.renderMissionCards(recommendations);
+        }
+      },
+      
+      // ═══════════════════════════════════════════════════════════════════
+      // STEP 3: FLEET BAY & SUPPORT METHODS
+      // ═══════════════════════════════════════════════════════════════════
+      
+      async loadFleet() {
+        const grid = document.getElementById('fleet-grid');
+        grid.innerHTML = '<div class="loading">Loading fleet...</div>';
+        
+        try {
+          const manifest = await IndicatorLoader.getMetadata();
+          const allTickers = manifest.tickers || [];
+          
+          // Separate active and locked
+          const active = allTickers.filter(t => t.status === 'ACTIVE');
+          const locked = allTickers.filter(t => t.status === 'LOCKED');
+          
+          // Compute environments for active tickers (cached)
+          for (const t of active) {
+            try {
+              const env = await MissionSystem.computeEnvironment(t.ticker);
+              const role = MissionSystem.classifyRole(env);
+              
+              // Cache in FleetCache
+              MissionSystem.FleetCache.envs[t.ticker] = env;
+              MissionSystem.FleetCache.roles[t.ticker] = role;
+              
+              this.fleetData.push({
+                ticker: t.ticker,
+                name: t.name,
+                status: 'ACTIVE',
+                env: env,
+                role: role
+              });
+            } catch (e) {
+              console.warn(`Failed to compute env for ${t.ticker}:`, e);
+            }
+          }
+          
+          // Add locked tickers (silhouettes)
+          for (const t of locked) {
+            this.fleetData.push({
+              ticker: t.ticker,
+              name: t.name,
+              status: 'LOCKED',
+              hint: t.hint,
+              env: null,
+              role: null
+            });
+          }
+          
+          MissionSystem.FleetCache.loaded = true;
+          this.renderFleet();
+        } catch (e) {
+          grid.innerHTML = `<div class="empty-state" style="color:var(--red)">Failed to load fleet: ${e.message}</div>`;
+        }
+      },
+      
+      renderFleet() {
+        const grid = document.getElementById('fleet-grid');
+        const search = document.getElementById('fleet-search').value.toLowerCase();
+        const locked = MissionSystem.getLockedTickers();
+        
+        let html = '';
+        for (const ship of this.fleetData) {
+          // Filter by search
+          if (search && !ship.ticker.toLowerCase().includes(search) && !ship.name.toLowerCase().includes(search)) {
+            continue;
+          }
+          
+          if (ship.status === 'LOCKED') {
+            // Render silhouette
+            html += `
+              <div class="fleet-ship silhouette">
+                <div class="fleet-ship-ticker">${ship.ticker}</div>
+                <div class="fleet-ship-name">${ship.name}</div>
+                <div class="fleet-ship-role">${ship.hint || 'CLASSIFIED'}</div>
+              </div>`;
+          } else {
+            const isLocked = locked[ship.ticker];
+            const roleInfo = MissionSystem.SUPPORT_ROLES[ship.role] || MissionSystem.SUPPORT_ROLES.UTILITY;
+            
+            html += `
+              <div class="fleet-ship ${isLocked ? 'locked' : ''}" data-ticker="${ship.ticker}" onclick="UI.handleShipClick('${ship.ticker}')">
+                ${isLocked ? `<div class="fleet-ship-lock">🔒</div>` : ''}
+                <div class="fleet-ship-ticker">${ship.ticker}</div>
+                <div class="fleet-ship-name">${ship.name}</div>
+                <div class="fleet-ship-role ${ship.role}">${roleInfo.icon} ${ship.role}</div>
+                <div class="fleet-ship-stats">
+                  <div class="fleet-mini-bar" title="Hull"><div class="fleet-mini-bar-fill hull" style="width:${ship.env?.hull || 0}%"></div></div>
+                  <div class="fleet-mini-bar" title="Sensors"><div class="fleet-mini-bar-fill sensors" style="width:${ship.env?.sensors || 0}%"></div></div>
+                  <div class="fleet-mini-bar" title="Threat"><div class="fleet-mini-bar-fill threat" style="width:${ship.env?.threat || 0}%"></div></div>
+                </div>
+              </div>`;
+          }
+        }
+        
+        grid.innerHTML = html || '<div class="empty-state">No ships found</div>';
+      },
+      
+      filterFleet() {
+        this.renderFleet();
+      },
+      
+      toggleFleetBay() {
+        this.fleetBayOpen = !this.fleetBayOpen;
+        const content = document.getElementById('fleet-bay-content');
+        const toggle = document.getElementById('fleet-bay-toggle');
+        content.classList.toggle('open', this.fleetBayOpen);
+        toggle.textContent = this.fleetBayOpen ? '▲ Collapse' : '▼ Expand';
+      },
+      
+      handleShipClick(ticker) {
+        // If no mission selected, just show info
+        if (!this.selectedMissionId) {
+          alert(`Select an active mission first, then click a ship to assign it as support.`);
+          return;
+        }
+        
+        const mission = MissionSystem.getMission(this.selectedMissionId);
+        if (!mission || mission.status !== 'ACTIVE') {
+          alert('Can only assign supports to active missions.');
+          return;
+        }
+        
+        // Check if ship is locked
+        const lockStatus = MissionSystem.isTickerLocked(ticker);
+        if (lockStatus.locked && lockStatus.missionId !== mission.id) {
+          alert(`${ticker} is already assigned to another mission.`);
+          return;
+        }
+        
+        // Check if ticker is already assigned to this mission
+        const alreadyAssigned = mission.support?.slots?.some(s => s.ticker === ticker);
+        if (alreadyAssigned) {
+          alert(`${ticker} is already assigned to this mission.`);
+          return;
+        }
+        
+        // Find first empty slot
+        const emptySlot = mission.support?.slots?.findIndex(s => !s.ticker);
+        if (emptySlot === -1 || emptySlot === undefined) {
+          alert('Both support slots are full. Remove one first.');
+          return;
+        }
+        
+        this.assignShipToSlot(ticker, emptySlot);
+      },
+      
+      openAssignModal(slotIndex) {
+        if (!this.selectedMissionId) return;
+        
+        const mission = MissionSystem.getMission(this.selectedMissionId);
+        if (!mission || mission.status !== 'ACTIVE') return;
+        
+        this.assignSlotIndex = slotIndex;
+        document.getElementById('assign-slot-label').textContent = slotIndex === 0 ? 'A' : 'B';
+        
+        const locked = MissionSystem.getLockedTickers();
+        const modal = document.getElementById('assign-modal-ships');
+        let html = '';
+        
+        for (const ship of this.fleetData) {
+          if (ship.status === 'LOCKED') continue;
+          
+          const isLocked = locked[ship.ticker] && locked[ship.ticker].missionId !== mission.id;
+          const isSelf = ship.ticker === mission.ticker;
+          const alreadyAssigned = mission.support?.slots?.some(s => s.ticker === ship.ticker);
+          const disabled = isLocked || isSelf || alreadyAssigned;
+          
+          const roleInfo = MissionSystem.SUPPORT_ROLES[ship.role] || MissionSystem.SUPPORT_ROLES.UTILITY;
+          
+          html += `
+            <div class="assign-modal-ship ${disabled ? 'disabled' : ''}" onclick="${disabled ? '' : `UI.assignShipToSlot('${ship.ticker}', ${slotIndex})`}">
+              <div>
+                <strong>${ship.ticker}</strong>
+                <span style="color:var(--text-dim);font-size:0.75rem;margin-left:0.5rem">${ship.name}</span>
+              </div>
+              <span class="fleet-ship-role ${ship.role}">${roleInfo.icon} ${ship.role}</span>
+            </div>`;
+        }
+        
+        modal.innerHTML = html || '<div class="empty-state">No ships available</div>';
+        document.getElementById('assign-modal-backdrop').classList.add('open');
+      },
+      
+      closeAssignModal() {
+        document.getElementById('assign-modal-backdrop').classList.remove('open');
+        this.assignSlotIndex = null;
+      },
+      
+      assignShipToSlot(ticker, slotIndex) {
+        try {
+          MissionSystem.assignSupport(this.selectedMissionId, slotIndex, ticker);
+          this.closeAssignModal();
+          this.renderFleet();
+          
+          const mission = MissionSystem.getMission(this.selectedMissionId);
+          if (mission) this.renderMissionDetail(mission);
+        } catch (e) {
+          alert(e.message);
+        }
+      },
+      
+      removeSupport(slotIndex) {
+        try {
+          MissionSystem.removeSupport(this.selectedMissionId, slotIndex);
+          this.renderFleet();
+          
+          const mission = MissionSystem.getMission(this.selectedMissionId);
+          if (mission) this.renderMissionDetail(mission);
+        } catch (e) {
+          alert(e.message);
+        }
+      },
+      
+      renderSupportSlots(mission) {
+        const slot0 = document.getElementById('support-slot-0');
+        const slot1 = document.getElementById('support-slot-1');
+        
+        const slotsContainer = document.getElementById('support-slots');
+        
+        // Hide support slots for completed/damaged missions
+        if (mission.status !== 'ACTIVE') {
+          slotsContainer.style.display = 'none';
+          return;
+        }
+        slotsContainer.style.display = 'block';
+        
+        for (let i = 0; i < 2; i++) {
+          const slot = i === 0 ? slot0 : slot1;
+          const data = mission.support?.slots?.[i];
+          
+          if (data?.ticker) {
+            const roleInfo = MissionSystem.SUPPORT_ROLES[data.role] || MissionSystem.SUPPORT_ROLES.UTILITY;
+            slot.classList.add('filled');
+            slot.innerHTML = `
+              <div class="support-slot-label">Slot ${i === 0 ? 'A' : 'B'}</div>
+              <div class="support-slot-ticker">${data.ticker}</div>
+              <div class="support-slot-role">${roleInfo.icon} ${data.role}</div>
+              <div class="support-slot-remove" onclick="event.stopPropagation(); UI.removeSupport(${i})">✕ Remove</div>
+            `;
+            slot.onclick = null;
+          } else {
+            slot.classList.remove('filled');
+            slot.innerHTML = `
+              <div class="support-slot-label">Slot ${i === 0 ? 'A' : 'B'}</div>
+              <div class="support-slot-empty">+ Assign</div>
+            `;
+            slot.onclick = () => this.openAssignModal(i);
+          }
         }
       }
     };
