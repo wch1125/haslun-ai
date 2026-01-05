@@ -1,6 +1,8 @@
 /**
- * HASLUN-BOT Mission System
+ * HASLUN-BOT Mission System v2
  * NMS-inspired expedition system for derivatives training
+ * 
+ * STEP 2: Full play loop with simulation, logs, and scoring
  * 
  * Derived stats from TradingView 45m data:
  * - Hull: trend stability / structural integrity
@@ -17,6 +19,29 @@ const MissionSystem = (function() {
   const DEFAULT_LOOKBACK = 32; // bars for stat computation
   
   // ═══════════════════════════════════════════════════════════════════
+  // SIMULATION CONSTANTS
+  // ═══════════════════════════════════════════════════════════════════
+  
+  const SIM_SPEEDS = {
+    '1x': 0.25,    // 1 bar every 4 seconds
+    '5x': 1.25,    // 1 bar every 0.8 seconds
+    '20x': 5.0     // 5 bars per second
+  };
+  
+  const DEFAULT_SIM_SPEED = '1x';
+  const MAX_LOGS_PER_MISSION = 20;
+  
+  // Duration presets (in bars, where 1 bar = 45 minutes)
+  const DURATION_PRESETS = {
+    '45m': { targetBars: 1, label: '45 minutes' },
+    '4H': { targetBars: 5, label: '4 hours' },
+    '1D': { targetBars: 32, label: '1 day' },
+    '1W': { targetBars: 160, label: '1 week' },
+    '2W': { targetBars: 320, label: '2 weeks' },
+    '1M': { targetBars: 640, label: '1 month' }
+  };
+  
+  // ═══════════════════════════════════════════════════════════════════
   // MISSION ARCHETYPES
   // ═══════════════════════════════════════════════════════════════════
   
@@ -30,6 +55,7 @@ const MissionSystem = (function() {
       teaches: 'How to read market flow and identify regime changes before committing capital.',
       bettingOn: 'Information quality and timing',
       durationBands: ['45m', '4H', '1D'],
+      defaultDuration: '4H',
       idealConditions: { sensors: 'high', threat: 'low-moderate' },
       riskProfile: 'Low capital at risk, high information value'
     },
@@ -42,6 +68,7 @@ const MissionSystem = (function() {
       teaches: 'How time decay (theta) erodes option value, and why patience has a cost.',
       bettingOn: 'Time passage without adverse movement',
       durationBands: ['1D', '1W', '2W'],
+      defaultDuration: '1D',
       idealConditions: { hull: 'high', fuel: 'high', threat: 'low' },
       riskProfile: 'Moderate capital, success requires discipline'
     },
@@ -53,7 +80,8 @@ const MissionSystem = (function() {
       description: 'Protect the convoy with coordinated positioning. Spreads and hedges reduce damage exposure.',
       teaches: 'How structured positions (spreads) trade upside for reduced risk.',
       bettingOn: 'Defined risk/reward within a range',
-      durationBands: ['1W', '2W', '1M'],
+      durationBands: ['1D', '1W', '2W'],
+      defaultDuration: '1W',
       idealConditions: { hull: 'moderate-high', threat: 'moderate' },
       riskProfile: 'Capped loss, capped gain, high probability'
     },
@@ -65,7 +93,8 @@ const MissionSystem = (function() {
       description: 'High-risk assault on distant targets. Requires firepower and directional conviction.',
       teaches: 'How to size asymmetric bets where small losses can lead to large gains.',
       bettingOn: 'Large directional movement',
-      durationBands: ['1W', '2W', '1M'],
+      durationBands: ['1D', '1W', '2W'],
+      defaultDuration: '1W',
       idealConditions: { firepower: 'high', hull: 'directionally clear' },
       riskProfile: 'High risk of total loss, potential for outsized returns'
     },
@@ -78,18 +107,16 @@ const MissionSystem = (function() {
       teaches: 'How to profit from range-bound conditions by selling premium.',
       bettingOn: 'Price staying within a defined range',
       durationBands: ['45m', '1D', '1W'],
+      defaultDuration: '1D',
       idealConditions: { firepower: 'low-moderate', threat: 'low' },
       riskProfile: 'High win rate, occasional large losses'
     }
   };
   
   // ═══════════════════════════════════════════════════════════════════
-  // STAT DERIVATION FROM INDICATOR DATA
+  // UTILITY FUNCTIONS
   // ═══════════════════════════════════════════════════════════════════
   
-  /**
-   * Compute linear regression slope over an array of values
-   */
   function linearRegressionSlope(values) {
     const n = values.length;
     if (n < 2) return 0;
@@ -106,9 +133,6 @@ const MissionSystem = (function() {
     return slope;
   }
   
-  /**
-   * Count sign flips in an array of values
-   */
   function countSignFlips(values) {
     let flips = 0;
     for (let i = 1; i < values.length; i++) {
@@ -119,41 +143,34 @@ const MissionSystem = (function() {
     return flips;
   }
   
-  /**
-   * Normalize a value to 0-100 range with min/max
-   */
   function normalize(value, min, max) {
     if (max === min) return 50;
     return Math.max(0, Math.min(100, ((value - min) / (max - min)) * 100));
   }
   
-  /**
-   * Clamp a value between min and max
-   */
   function clamp(value, min, max) {
     return Math.max(min, Math.min(max, value));
   }
   
-  /**
-   * Compute HULL stat (0-100): trend stability / structural integrity
-   * Uses: Kernel Regression slope consistency, distance from G200
-   * PATCHED v1.1: Fixed KRE array alignment bug
-   */
+  function generateUUID() {
+    return 'MSN-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substr(2, 4).toUpperCase();
+  }
+  
+  // ═══════════════════════════════════════════════════════════════════
+  // STAT DERIVATION (same as Step 1.1)
+  // ═══════════════════════════════════════════════════════════════════
+  
   function computeHull(bars) {
     const n = bars.length;
     if (n < 5) return { value: 50, why: 'Insufficient data' };
     
-    // 1. KRE slope consistency (only on valid KRE points, maintaining order)
     const kreSeries = [];
     for (const b of bars) {
-      if (b.kernelRegression != null && !isNaN(b.kernelRegression)) {
-        kreSeries.push(b.kernelRegression);
-      }
+      if (b.kernelRegression != null && !isNaN(b.kernelRegression)) kreSeries.push(b.kernelRegression);
     }
     const kreSlope = kreSeries.length >= 2 ? linearRegressionSlope(kreSeries) : 0;
-    const slopeScore = Math.min(Math.abs(kreSlope) * 500, 50); // Cap contribution at 50
+    const slopeScore = Math.min(Math.abs(kreSlope) * 500, 50);
     
-    // 2. Chop penalty: sign flips in (close - KRE) using ALIGNED bars
     const deviations = [];
     for (const b of bars) {
       if (b.close != null && b.kernelRegression != null && !isNaN(b.kernelRegression)) {
@@ -161,9 +178,8 @@ const MissionSystem = (function() {
       }
     }
     const chopFlips = deviations.length >= 2 ? countSignFlips(deviations) : 0;
-    const chopPenalty = Math.min(chopFlips * 3, 30); // Max 30 point penalty
+    const chopPenalty = Math.min(chopFlips * 3, 30);
     
-    // 3. Anchor: how close is current price to G200 (scan backwards for latest valid)
     const latestClose = bars[n - 1].close;
     let latestG200 = null;
     for (let i = n - 1; i >= 0; i--) {
@@ -175,13 +191,11 @@ const MissionSystem = (function() {
     if (latestG200 == null) latestG200 = latestClose;
     
     const anchorDist = Math.abs((latestClose - latestG200) / latestClose);
-    const anchorScore = Math.max(0, 30 - anchorDist * 200); // Closer to G200 = higher score
+    const anchorScore = Math.max(0, 30 - anchorDist * 200);
     
-    // Combine: base 40 + slope contribution + anchor - chop penalty
     const rawHull = 40 + slopeScore + anchorScore - chopPenalty;
     const hull = clamp(Math.round(rawHull), 0, 100);
     
-    // Build explanation
     const slopeDir = kreSlope > 0.001 ? 'upward' : kreSlope < -0.001 ? 'downward' : 'flat';
     const chopDesc = chopFlips <= 5 ? 'low chop' : chopFlips <= 10 ? 'moderate chop' : 'high chop';
     const anchorDesc = anchorDist < 0.03 ? 'close to G200' : anchorDist < 0.08 ? 'moderate distance from G200' : 'far from G200';
@@ -192,16 +206,10 @@ const MissionSystem = (function() {
     };
   }
   
-  /**
-   * Compute FIREPOWER stat (0-100): volatility / thrust
-   * Uses: ATR proxy (high-low)/close, MACD Histogram magnitude
-   * PATCHED v1.1: NaN prevention when histogram data is missing
-   */
   function computeFirepower(bars) {
     const n = bars.length;
     if (n < 5) return { value: 50, why: 'Insufficient data' };
     
-    // 1. ATR proxy: mean (high-low)/close
     let atrSum = 0;
     let atrCount = 0;
     for (const bar of bars) {
@@ -210,11 +218,9 @@ const MissionSystem = (function() {
         atrCount++;
       }
     }
-    const avgATR = atrCount > 0 ? atrSum / atrCount : 0.03; // Default to mid-range
-    // Typical ATR ratio is 0.01-0.08 for these stocks
-    const atrScore = normalize(avgATR, 0.01, 0.06) * 0.6; // 60% weight
+    const avgATR = atrCount > 0 ? atrSum / atrCount : 0.03;
+    const atrScore = normalize(avgATR, 0.01, 0.06) * 0.6;
     
-    // 2. MACD Histogram magnitude (with NaN guard)
     const histValues = [];
     for (const bar of bars) {
       if (bar.histogram != null && !isNaN(bar.histogram)) {
@@ -228,14 +234,11 @@ const MissionSystem = (function() {
     
     if (histValues.length > 0) {
       avgHist = histValues.reduce((a, b) => a + b, 0) / histValues.length;
-      // Typical histogram range 0-0.5
-      histScore = normalize(avgHist, 0, 0.3) * 0.4; // 40% weight
+      histScore = normalize(avgHist, 0, 0.3) * 0.4;
       histDesc = avgHist < 0.1 ? 'weak momentum' : avgHist < 0.2 ? 'moderate momentum' : 'strong momentum';
     }
     
     const firepower = clamp(Math.round(atrScore + histScore), 0, 100);
-    
-    // Explanation
     const atrDesc = avgATR < 0.02 ? 'low range' : avgATR < 0.04 ? 'moderate range' : 'high range';
     
     return {
@@ -244,15 +247,10 @@ const MissionSystem = (function() {
     };
   }
   
-  /**
-   * Compute SENSORS stat (0-100): flow quality / signal clarity
-   * Uses: Volume / Volume MA consistency
-   */
   function computeSensors(bars) {
     const n = bars.length;
     if (n < 5) return { value: 50, why: 'Insufficient data' };
     
-    // Volume vs Volume MA ratio
     let aboveMACount = 0;
     let totalRatio = 0;
     let validCount = 0;
@@ -271,14 +269,11 @@ const MissionSystem = (function() {
     const avgRatio = totalRatio / validCount;
     const aboveMAPercent = aboveMACount / validCount;
     
-    // Score: combination of average ratio and consistency above MA
-    // avgRatio of 1.0 = neutral, 1.5+ = strong
     const ratioScore = normalize(avgRatio, 0.7, 1.5) * 0.5;
     const consistencyScore = aboveMAPercent * 50;
     
     const sensors = clamp(Math.round(ratioScore + consistencyScore), 0, 100);
     
-    // Explanation
     const flowDesc = avgRatio < 0.9 ? 'below-average flow' : avgRatio < 1.1 ? 'neutral flow' : 'above-average flow';
     const consistDesc = aboveMAPercent < 0.4 ? 'inconsistent' : aboveMAPercent < 0.6 ? 'mixed' : 'consistent';
     
@@ -288,19 +283,12 @@ const MissionSystem = (function() {
     };
   }
   
-  /**
-   * Compute FUEL stat (0-100): time tolerance / patience buffer
-   * Uses: Bars since last Buy/Sell signal, trend persistence
-   * PATCHED v1.1: Fixed KRE array alignment bug
-   */
   function computeFuel(bars) {
     const n = bars.length;
     if (n < 5) return { value: 50, why: 'Insufficient data' };
     
-    // Find bars since last signal (Buy or Sell)
-    let barsSinceSignal = n; // Default to full lookback if no signal found
+    let barsSinceSignal = n;
     for (let i = n - 1; i >= 0; i--) {
-      // Buy/Sell are typically signal values or null/0
       const hasBuy = bars[i].buy != null && bars[i].buy !== 0 && !isNaN(bars[i].buy);
       const hasSell = bars[i].sell != null && bars[i].sell !== 0 && !isNaN(bars[i].sell);
       if (hasBuy || hasSell) {
@@ -309,11 +297,8 @@ const MissionSystem = (function() {
       }
     }
     
-    // More bars since signal = trend has persisted = more fuel
-    // 32 bars ≈ 1 day at 45m, signal every few days is normal
     const persistenceScore = normalize(barsSinceSignal, 0, 32) * 0.6;
     
-    // Also factor in low chop using ALIGNED bars (same fix as computeHull)
     const deviations = [];
     for (const b of bars) {
       if (b.close != null && b.kernelRegression != null && !isNaN(b.kernelRegression)) {
@@ -321,11 +306,10 @@ const MissionSystem = (function() {
       }
     }
     const chopFlips = deviations.length >= 2 ? countSignFlips(deviations) : 0;
-    const lowChopBonus = Math.max(0, 40 - chopFlips * 4); // Fewer flips = more fuel
+    const lowChopBonus = Math.max(0, 40 - chopFlips * 4);
     
     const fuel = clamp(Math.round(persistenceScore + lowChopBonus), 0, 100);
     
-    // Explanation
     const persistDesc = barsSinceSignal < 5 ? 'recent signal' : barsSinceSignal < 15 ? 'signal aging' : 'mature trend';
     const chopDesc = chopFlips <= 5 ? 'steady path' : chopFlips <= 10 ? 'some turbulence' : 'choppy conditions';
     
@@ -335,17 +319,12 @@ const MissionSystem = (function() {
     };
   }
   
-  /**
-   * Compute THREAT stat (0-100): regime risk / storm probability
-   * Uses: Band proximity (A1-F5), histogram flip frequency
-   */
   function computeThreat(bars) {
     const n = bars.length;
     if (n < 5) return { value: 50, why: 'Insufficient data' };
     
     const latest = bars[n - 1];
     
-    // 1. Band proximity: how close to envelope extremes
     const bandKeys = [
       'A1', 'A2', 'A3', 'A4', 'A5',
       'B1', 'B2', 'B3', 'B4', 'B5',
@@ -357,32 +336,28 @@ const MissionSystem = (function() {
     
     const bandValues = bandKeys.map(k => latest[k]).filter(v => v != null && !isNaN(v));
     
-    let bandProximityScore = 50; // Default neutral
+    let bandProximityScore = 50;
     if (bandValues.length > 0) {
       const lower = Math.min(...bandValues);
       const upper = Math.max(...bandValues);
       const close = latest.close;
       
       if (upper > lower) {
-        const pos = (close - lower) / (upper - lower); // 0-1
-        // Threat increases as pos approaches 0 or 1
-        const distFromCenter = Math.abs(pos - 0.5) * 2; // 0 at center, 1 at edges
-        bandProximityScore = distFromCenter * 50; // 0-50 contribution
+        const pos = (close - lower) / (upper - lower);
+        const distFromCenter = Math.abs(pos - 0.5) * 2;
+        bandProximityScore = distFromCenter * 50;
       }
     }
     
-    // 2. Histogram flip rate (chop)
     const histValues = bars.map(b => b.histogram).filter(v => v != null);
     const flipRate = countSignFlips(histValues);
-    const flipScore = normalize(flipRate, 0, n / 2) * 30; // 0-30 contribution
+    const flipScore = normalize(flipRate, 0, n / 2) * 30;
     
-    // 3. High firepower adds to threat (volatile = dangerous)
     const firepower = computeFirepower(bars).value;
-    const volContribution = (firepower / 100) * 20; // 0-20 contribution
+    const volContribution = (firepower / 100) * 20;
     
     const threat = clamp(Math.round(bandProximityScore + flipScore + volContribution), 0, 100);
     
-    // Explanation
     const bandDesc = bandProximityScore < 20 ? 'mid-range' : bandProximityScore < 35 ? 'approaching bands' : 'near band extreme';
     const flipDesc = flipRate <= 5 ? 'stable regime' : flipRate <= 12 ? 'some chop' : 'high chop';
     
@@ -392,9 +367,6 @@ const MissionSystem = (function() {
     };
   }
   
-  /**
-   * Compute all environment stats for a ticker
-   */
   async function computeEnvironment(ticker, lookback = DEFAULT_LOOKBACK) {
     const bars = await IndicatorLoader.getRecentBars(ticker, lookback);
     
@@ -427,7 +399,6 @@ const MissionSystem = (function() {
         threat: threat.why
       },
       
-      // Latest price info for context
       latestBar: {
         time: new Date(bars[bars.length - 1].time * 1000).toISOString(),
         close: bars[bars.length - 1].close,
@@ -440,10 +411,6 @@ const MissionSystem = (function() {
   // MISSION RECOMMENDATIONS
   // ═══════════════════════════════════════════════════════════════════
   
-  /**
-   * Compute difficulty (1-3 stars) for a mission type given environment
-   * PATCHED v1.1: Recon difficulty now reacts to Sensors as spec requires
-   */
   function computeDifficulty(missionType, env) {
     const t = env.threat;
     const h = env.hull;
@@ -453,76 +420,46 @@ const MissionSystem = (function() {
     
     switch (missionType) {
       case 'RECON': {
-        // Difficulty rises with Threat, falls with high Sensors, rises with low Sensors
         let stars = t > 60 ? 3 : t > 35 ? 2 : 1;
-        
-        // Strong sensors reduce difficulty (easier to scout when signals are clear)
         if (s >= 70 && stars > 1) stars -= 1;
-        // Weak sensors increase difficulty (harder to navigate noisy data)
         if (s <= 35 && stars < 3) stars += 1;
-        
         return stars;
       }
-        
       case 'CARGO':
-        // Difficulty rises with Threat and low Fuel
         const cargoRisk = t * 0.5 + (100 - f) * 0.5;
         return cargoRisk > 60 ? 3 : cargoRisk > 35 ? 2 : 1;
-        
       case 'ESCORT':
-        // Moderate threat is ideal; extreme threat = harder
-        return t > 70 || t < 20 ? 2 : 1; // Sweet spot is 20-70
-        
+        return t > 70 || t < 20 ? 2 : 1;
       case 'STRIKE':
-        // Difficulty rises with Threat
         return t > 65 ? 3 : t > 40 ? 2 : 1;
-        
       case 'HARVEST':
-        // Difficulty rises with Firepower/Threat
         const harvestRisk = fp * 0.5 + t * 0.5;
         return harvestRisk > 55 ? 3 : harvestRisk > 35 ? 2 : 1;
-        
       default:
         return 2;
     }
   }
   
-  /**
-   * Compute suitability score (0-100) for a mission type given environment
-   */
   function computeSuitability(missionType, env) {
     const { hull, firepower, sensors, fuel, threat } = env;
     
     switch (missionType) {
       case 'RECON':
-        // Wants: high sensors, low-moderate threat
         return (sensors * 0.5) + ((100 - threat) * 0.3) + (fuel * 0.2);
-        
       case 'CARGO':
-        // Wants: high hull, high fuel, low threat
         return (hull * 0.35) + (fuel * 0.35) + ((100 - threat) * 0.3);
-        
       case 'ESCORT':
-        // Wants: moderate-high hull, moderate threat (not too calm, not too stormy)
-        const threatPenalty = Math.abs(threat - 45) * 0.5; // Optimal around 45
+        const threatPenalty = Math.abs(threat - 45) * 0.5;
         return (hull * 0.5) + (50 - threatPenalty) + (sensors * 0.2);
-        
       case 'STRIKE':
-        // Wants: high firepower, clear hull direction
         return (firepower * 0.5) + (hull * 0.3) + ((100 - threat) * 0.2);
-        
       case 'HARVEST':
-        // Wants: low firepower, low threat
         return ((100 - firepower) * 0.4) + ((100 - threat) * 0.4) + (sensors * 0.2);
-        
       default:
         return 50;
     }
   }
   
-  /**
-   * Generate "why now" explanation for a mission recommendation
-   */
   function generateWhyNow(missionType, env) {
     const { hull, firepower, sensors, fuel, threat } = env;
     
@@ -531,35 +468,27 @@ const MissionSystem = (function() {
         if (sensors >= 60) return 'Flow signals are clear—good conditions for reconnaissance.';
         if (threat < 40) return 'Low threat environment allows for safe scouting.';
         return 'Standard conditions for sector reconnaissance.';
-        
       case 'CARGO':
         if (hull >= 60 && fuel >= 60) return 'Stable trend with high fuel reserves—ideal for time-based transport.';
         if (threat < 35) return 'Calm sector reduces journey risk.';
         return 'Conditions acceptable for cargo operations.';
-        
       case 'ESCORT':
         if (threat >= 30 && threat <= 60) return 'Moderate threat level—hedged formations add value here.';
         if (hull >= 55) return 'Solid hull integrity supports structured positioning.';
         return 'Standard escort formation conditions.';
-        
       case 'STRIKE':
         if (firepower >= 65) return 'High volatility provides thrust for directional assault.';
         if (hull >= 60 && firepower >= 50) return 'Clear trend direction with adequate firepower.';
         return 'Conditions support tactical strike operations.';
-        
       case 'HARVEST':
         if (firepower <= 40 && threat <= 40) return 'Low volatility, low threat—prime harvesting conditions.';
         if (sensors >= 55) return 'Clear flow signals help identify range boundaries.';
         return 'Range conditions may support premium collection.';
-        
       default:
         return 'Standard operating conditions.';
     }
   }
   
-  /**
-   * Generate mission recommendations for all types given an environment
-   */
   function generateRecommendations(env) {
     const recommendations = [];
     
@@ -578,32 +507,26 @@ const MissionSystem = (function() {
       });
     }
     
-    // Sort by suitability (highest first)
     recommendations.sort((a, b) => b.suitability - a.suitability);
-    
     return recommendations;
   }
   
   // ═══════════════════════════════════════════════════════════════════
-  // MISSION LIFECYCLE
+  // MISSION LIFECYCLE (Step 2: Full Play Loop)
   // ═══════════════════════════════════════════════════════════════════
   
   /**
-   * Generate a unique mission ID
-   */
-  function generateMissionId() {
-    return 'MSN-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substr(2, 4).toUpperCase();
-  }
-  
-  /**
-   * Create a new mission (planning state)
+   * Create a new mission with full schema
    */
   function createMission(ticker, type, options = {}) {
     const missionType = MISSION_TYPES[type];
     if (!missionType) throw new Error(`Unknown mission type: ${type}`);
     
+    const durationKey = options.durationKey || missionType.defaultDuration;
+    const duration = DURATION_PRESETS[durationKey] || DURATION_PRESETS['1D'];
+    
     return {
-      id: generateMissionId(),
+      id: generateUUID(),
       createdAt: new Date().toISOString(),
       ticker: ticker.toUpperCase(),
       type: type,
@@ -611,28 +534,644 @@ const MissionSystem = (function() {
       icon: missionType.icon,
       
       difficulty: options.difficulty || 2,
-      duration: options.duration || { unit: '1D', targetBars: 32 },
+      duration: {
+        key: durationKey,
+        targetBars: duration.targetBars,
+        label: duration.label
+      },
       
       thesis: {
         primary: options.thesis || missionType.bettingOn,
         notes: options.notes || ''
       },
       
-      env: options.env || null, // Snapshot of environment at creation
+      env: options.env || null,
+      
+      // Step 2: Simulation state
+      start: null,  // Set when launched
+      sim: {
+        speed: options.simSpeed || DEFAULT_SIM_SPEED,
+        speedBarsPerSec: SIM_SPEEDS[options.simSpeed || DEFAULT_SIM_SPEED]
+      },
+      end: null,    // Set when launched
       
       status: 'PLANNING',
-      startedAt: null,
-      completedAt: null,
+      logs: [],
       outcome: null,
-      log: [
-        { time: new Date().toISOString(), event: 'Mission created', type: 'system' }
-      ]
+      
+      // Track which bars have been processed for logs
+      _lastProcessedBarIndex: null
     };
   }
   
   /**
-   * Load missions from localStorage
+   * Launch a mission (transition from PLANNING to ACTIVE)
    */
+  function launchMission(missionId, tickerData) {
+    const missions = loadMissions();
+    const mission = missions.find(m => m.id === missionId);
+    
+    if (!mission) throw new Error(`Mission not found: ${missionId}`);
+    if (mission.status !== 'PLANNING') throw new Error(`Mission already launched: ${mission.status}`);
+    
+    const rows = tickerData.rows;
+    const startBarIndex = rows.length - 1;
+    const targetBars = mission.duration.targetBars;
+    
+    // Clamp end to available data (may complete early if data runs out)
+    const endBarIndex = Math.min(startBarIndex + targetBars, rows.length - 1);
+    
+    mission.start = {
+      wallClockMs: Date.now(),
+      barIndex: startBarIndex,
+      barTime: rows[startBarIndex].time,
+      price: rows[startBarIndex].close
+    };
+    
+    mission.end = {
+      targetBars: targetBars,
+      endBarIndex: endBarIndex,
+      endBarTime: rows[endBarIndex].time
+    };
+    
+    mission.status = 'ACTIVE';
+    mission._lastProcessedBarIndex = startBarIndex;
+    
+    mission.logs.push({
+      tMs: Date.now(),
+      barIndex: startBarIndex,
+      kind: 'EVENT',
+      msg: `🚀 Mission launched from ${mission.ticker} @ $${rows[startBarIndex].close.toFixed(2)}`
+    });
+    
+    saveMissions(missions);
+    return mission;
+  }
+  
+  /**
+   * Calculate mission progress
+   */
+  function getMissionProgress(mission) {
+    if (mission.status === 'PLANNING') {
+      return { barsElapsed: 0, currentBarIndex: 0, progress: 0, timeRemaining: mission.duration.label };
+    }
+    
+    if (mission.status === 'COMPLETE' || mission.status === 'DAMAGED') {
+      return { barsElapsed: mission.end.targetBars, currentBarIndex: mission.end.endBarIndex, progress: 1, timeRemaining: 'Complete' };
+    }
+    
+    const elapsed = (Date.now() - mission.start.wallClockMs) / 1000;
+    const barsElapsed = Math.floor(elapsed * mission.sim.speedBarsPerSec);
+    const currentBarIndex = clamp(mission.start.barIndex + barsElapsed, mission.start.barIndex, mission.end.endBarIndex);
+    const progress = Math.min(barsElapsed / mission.end.targetBars, 1);
+    
+    const barsRemaining = mission.end.targetBars - barsElapsed;
+    const secsRemaining = barsRemaining / mission.sim.speedBarsPerSec;
+    
+    let timeRemaining;
+    if (secsRemaining <= 0) {
+      timeRemaining = 'Completing...';
+    } else if (secsRemaining < 60) {
+      timeRemaining = `${Math.ceil(secsRemaining)}s`;
+    } else if (secsRemaining < 3600) {
+      timeRemaining = `${Math.ceil(secsRemaining / 60)}m`;
+    } else {
+      timeRemaining = `${(secsRemaining / 3600).toFixed(1)}h`;
+    }
+    
+    return { barsElapsed, currentBarIndex, progress, timeRemaining, secsRemaining };
+  }
+  
+  /**
+   * Fast-forward mission by N bars
+   */
+  function fastForwardMission(missionId, bars) {
+    const missions = loadMissions();
+    const mission = missions.find(m => m.id === missionId);
+    
+    if (!mission || mission.status !== 'ACTIVE') return null;
+    
+    // Adjust wall clock time backwards to simulate elapsed time
+    const secsToSubtract = bars / mission.sim.speedBarsPerSec;
+    mission.start.wallClockMs -= secsToSubtract * 1000;
+    
+    saveMissions(missions);
+    return mission;
+  }
+  
+  /**
+   * Complete mission immediately
+   */
+  function completeMissionNow(missionId) {
+    const missions = loadMissions();
+    const mission = missions.find(m => m.id === missionId);
+    
+    if (!mission || mission.status !== 'ACTIVE') return null;
+    
+    // Set wall clock so full duration has elapsed
+    const totalSecs = mission.end.targetBars / mission.sim.speedBarsPerSec;
+    mission.start.wallClockMs = Date.now() - (totalSecs * 1000) - 1000;
+    
+    saveMissions(missions);
+    return mission;
+  }
+  
+  /**
+   * Abort a mission
+   */
+  function abortMission(missionId) {
+    const missions = loadMissions();
+    const mission = missions.find(m => m.id === missionId);
+    
+    if (!mission) return null;
+    
+    mission.status = 'DAMAGED';
+    mission.outcome = {
+      grade: 'D',
+      score: 0,
+      explanation: 'Mission aborted by command. No data collected.',
+      whatHelped: [],
+      whatHurt: ['Mission terminated prematurely']
+    };
+    mission.logs.push({
+      tMs: Date.now(),
+      barIndex: mission._lastProcessedBarIndex || 0,
+      kind: 'WARN',
+      msg: '⚠️ Mission aborted by operator command'
+    });
+    
+    saveMissions(missions);
+    return mission;
+  }
+  
+  /**
+   * Delete a mission
+   */
+  function deleteMission(missionId) {
+    let missions = loadMissions();
+    missions = missions.filter(m => m.id !== missionId);
+    saveMissions(missions);
+  }
+  
+  // ═══════════════════════════════════════════════════════════════════
+  // LOG GENERATION (Step 2)
+  // ═══════════════════════════════════════════════════════════════════
+  
+  /**
+   * Generate logs for bars that have elapsed since last check
+   */
+  function generateLogsForMission(mission, tickerData) {
+    if (mission.status !== 'ACTIVE') return [];
+    
+    const rows = tickerData.rows;
+    const progress = getMissionProgress(mission);
+    const currentBarIndex = progress.currentBarIndex;
+    const lastProcessed = mission._lastProcessedBarIndex || mission.start.barIndex;
+    
+    if (currentBarIndex <= lastProcessed) return [];
+    
+    const newLogs = [];
+    
+    // Process each new bar
+    for (let i = lastProcessed + 1; i <= currentBarIndex && i < rows.length; i++) {
+      if (mission.logs.length >= MAX_LOGS_PER_MISSION) break;
+      
+      const bar = rows[i];
+      const prevBar = i > 0 ? rows[i - 1] : bar;
+      const triggers = evaluateLogTriggers(bar, prevBar, rows, i);
+      
+      // Add up to 2 logs per bar
+      let logsThisBar = 0;
+      for (const trigger of triggers) {
+        if (logsThisBar >= 2) break;
+        if (mission.logs.length >= MAX_LOGS_PER_MISSION) break;
+        
+        const log = {
+          tMs: Date.now(),
+          barIndex: i,
+          kind: trigger.kind,
+          msg: trigger.msg
+        };
+        newLogs.push(log);
+        mission.logs.push(log);
+        logsThisBar++;
+      }
+    }
+    
+    mission._lastProcessedBarIndex = currentBarIndex;
+    return newLogs;
+  }
+  
+  /**
+   * Evaluate log triggers for a specific bar
+   */
+  function evaluateLogTriggers(bar, prevBar, rows, barIndex) {
+    const triggers = [];
+    
+    // --- Band extremes ---
+    const bandKeys = ['A1','A2','A3','A4','A5','B1','B2','B3','B4','B5','C1','C2','C3','C4','C5','D1','D2','D3','D4','D5','E1','E2','E3','E4','E5','F1','F2','F3','F4','F5'];
+    const bandValues = bandKeys.map(k => bar[k]).filter(v => v != null && !isNaN(v));
+    
+    if (bandValues.length > 0) {
+      const lower = Math.min(...bandValues);
+      const upper = Math.max(...bandValues);
+      const range = upper - lower;
+      
+      if (range > 0) {
+        const pos = (bar.close - lower) / range;
+        if (pos > 0.95) {
+          triggers.push({ kind: 'WARN', msg: '⚠️ Storm front: price approaching upper envelope extreme' });
+        } else if (pos < 0.05) {
+          triggers.push({ kind: 'WARN', msg: '⚠️ Storm front: price approaching lower envelope extreme' });
+        }
+      }
+    }
+    
+    // --- Histogram flip ---
+    if (bar.histogram != null && prevBar.histogram != null) {
+      const currSign = bar.histogram >= 0;
+      const prevSign = prevBar.histogram >= 0;
+      if (currSign !== prevSign) {
+        triggers.push({ kind: 'WARN', msg: '⚡ Turbulence: momentum flip detected (histogram sign change)' });
+      }
+    }
+    
+    // --- Firepower spike ---
+    if (bar.high != null && bar.low != null && bar.close != null && bar.close > 0) {
+      const atr = (bar.high - bar.low) / bar.close;
+      if (atr > 0.05) { // High volatility threshold
+        triggers.push({ kind: 'EVENT', msg: `🔥 Engine burn: high volatility bar (${(atr * 100).toFixed(1)}% range)` });
+      }
+    }
+    
+    // --- Volume surge/drought ---
+    if (bar.volume != null && bar.volumeMA != null && bar.volumeMA > 0) {
+      const ratio = bar.volume / bar.volumeMA;
+      if (ratio > 1.5) {
+        triggers.push({ kind: 'INFO', msg: `📡 Sensors: flow surge detected (${ratio.toFixed(2)}x Volume MA)` });
+      } else if (ratio < 0.7) {
+        triggers.push({ kind: 'INFO', msg: `📡 Sensors: flow drought (${ratio.toFixed(2)}x Volume MA)` });
+      }
+    }
+    
+    // --- KRE cross ---
+    if (bar.kernelRegression != null && prevBar.kernelRegression != null) {
+      const currAbove = bar.close > bar.kernelRegression;
+      const prevAbove = prevBar.close > prevBar.kernelRegression;
+      if (currAbove !== prevAbove) {
+        const direction = currAbove ? 'above' : 'below';
+        triggers.push({ kind: 'EVENT', msg: `🎯 Course correction: price crossed ${direction} trend line` });
+      }
+    }
+    
+    // --- Buy/Sell signal ---
+    const hasBuy = bar.buy != null && bar.buy !== 0 && !isNaN(bar.buy);
+    const hasSell = bar.sell != null && bar.sell !== 0 && !isNaN(bar.sell);
+    if (hasBuy) {
+      triggers.push({ kind: 'EVENT', msg: '🟢 Signal flare: BUY indicator triggered' });
+    }
+    if (hasSell) {
+      triggers.push({ kind: 'EVENT', msg: '🔴 Signal flare: SELL indicator triggered' });
+    }
+    
+    return triggers;
+  }
+  
+  // ═══════════════════════════════════════════════════════════════════
+  // MISSION RESOLUTION & SCORING (Step 2)
+  // ═══════════════════════════════════════════════════════════════════
+  
+  /**
+   * Compute summary features from mission window
+   */
+  function computeMissionWindowFeatures(mission, tickerData) {
+    const rows = tickerData.rows;
+    const startIdx = mission.start.barIndex;
+    const endIdx = mission.end.endBarIndex;
+    
+    // Clamp indices
+    const actualEnd = Math.min(endIdx, rows.length - 1);
+    const windowBars = rows.slice(startIdx, actualEnd + 1);
+    
+    if (windowBars.length < 2) {
+      return { returnPct: 0, rangePct: 0, chop: 0, extremes: 0, flowAvg: 1, trendClarity: 0 };
+    }
+    
+    const closeStart = windowBars[0].close;
+    const closeEnd = windowBars[windowBars.length - 1].close;
+    const returnPct = (closeEnd - closeStart) / closeStart;
+    
+    // Average range
+    let rangeSum = 0;
+    let rangeCount = 0;
+    for (const bar of windowBars) {
+      if (bar.high && bar.low && bar.close && bar.close > 0) {
+        rangeSum += (bar.high - bar.low) / bar.close;
+        rangeCount++;
+      }
+    }
+    const rangePct = rangeCount > 0 ? rangeSum / rangeCount : 0;
+    
+    // Histogram chop
+    const histValues = windowBars.map(b => b.histogram).filter(v => v != null);
+    const chop = countSignFlips(histValues);
+    
+    // Envelope extremes
+    let extremes = 0;
+    const bandKeys = ['A1','A2','A3','A4','A5','B1','B2','B3','B4','B5','C1','C2','C3','C4','C5','D1','D2','D3','D4','D5','E1','E2','E3','E4','E5','F1','F2','F3','F4','F5'];
+    
+    for (const bar of windowBars) {
+      const bandValues = bandKeys.map(k => bar[k]).filter(v => v != null && !isNaN(v));
+      if (bandValues.length > 0) {
+        const lower = Math.min(...bandValues);
+        const upper = Math.max(...bandValues);
+        const range = upper - lower;
+        if (range > 0) {
+          const pos = (bar.close - lower) / range;
+          if (pos > 0.95 || pos < 0.05) extremes++;
+        }
+      }
+    }
+    
+    // Flow average
+    let flowSum = 0;
+    let flowCount = 0;
+    for (const bar of windowBars) {
+      if (bar.volume && bar.volumeMA && bar.volumeMA > 0) {
+        flowSum += bar.volume / bar.volumeMA;
+        flowCount++;
+      }
+    }
+    const flowAvg = flowCount > 0 ? flowSum / flowCount : 1;
+    
+    // Trend clarity (KRE slope)
+    const kreSeries = windowBars.map(b => b.kernelRegression).filter(v => v != null && !isNaN(v));
+    const kreSlope = kreSeries.length >= 2 ? linearRegressionSlope(kreSeries) : 0;
+    const trendClarity = Math.min(Math.abs(kreSlope) * 100, 1); // Normalized 0-1
+    
+    // Max adverse excursion
+    let maxDrawdown = 0;
+    for (const bar of windowBars) {
+      const drawdown = (closeStart - bar.low) / closeStart;
+      if (drawdown > maxDrawdown) maxDrawdown = drawdown;
+    }
+    
+    return {
+      returnPct,
+      rangePct,
+      chop,
+      extremes,
+      flowAvg,
+      trendClarity,
+      maxDrawdown,
+      closeStart,
+      closeEnd,
+      barsActual: windowBars.length
+    };
+  }
+  
+  /**
+   * Score mission by type
+   */
+  function scoreMission(mission, features) {
+    const type = mission.type;
+    const startingThreat = mission.env?.threat || 50;
+    const startingSensors = mission.env?.sensors || 50;
+    const startingHull = mission.env?.hull || 50;
+    const startingFirepower = mission.env?.firepower || 50;
+    
+    let score = 50; // Base score
+    const whatHelped = [];
+    const whatHurt = [];
+    
+    switch (type) {
+      case 'RECON': {
+        // Reward when threat prediction matched reality
+        const realizedChaos = (features.chop + features.extremes) / (features.barsActual || 1);
+        const predictedChaos = startingThreat > 50;
+        const actualChaos = realizedChaos > 0.3;
+        
+        if ((predictedChaos && actualChaos) || (!predictedChaos && !actualChaos)) {
+          score += 25;
+          whatHelped.push('Threat assessment matched realized conditions');
+        } else {
+          score -= 15;
+          whatHurt.push('Threat prediction did not match market behavior');
+        }
+        
+        // Reward high flow
+        if (features.flowAvg > 1.2) {
+          score += 15;
+          whatHelped.push(`Strong flow quality (${features.flowAvg.toFixed(2)}x MA)`);
+        } else if (features.flowAvg < 0.8) {
+          score -= 10;
+          whatHurt.push('Low flow quality degraded reconnaissance');
+        }
+        
+        // Bonus for low chop
+        if (features.chop <= 3) {
+          score += 10;
+          whatHelped.push('Stable regime made pattern recognition easier');
+        }
+        break;
+      }
+      
+      case 'CARGO': {
+        // Reward quiet markets
+        if (features.rangePct < 0.025) {
+          score += 25;
+          whatHelped.push('Low volatility—smooth passage');
+        } else if (features.rangePct > 0.05) {
+          score -= 20;
+          whatHurt.push('High volatility disrupted cargo transport');
+        }
+        
+        if (features.extremes <= 1) {
+          score += 15;
+          whatHelped.push('Price stayed within safe corridor');
+        } else if (features.extremes >= 5) {
+          score -= 15;
+          whatHurt.push('Multiple envelope breaches caused damage');
+        }
+        
+        if (features.chop <= 4) {
+          score += 10;
+          whatHelped.push('Consistent direction minimized time cost');
+        } else if (features.chop >= 10) {
+          score -= 10;
+          whatHurt.push('Excessive chop eroded time value');
+        }
+        break;
+      }
+      
+      case 'ESCORT': {
+        // Reward low drawdown
+        if (features.maxDrawdown < 0.02) {
+          score += 30;
+          whatHelped.push('Excellent risk control—minimal adverse excursion');
+        } else if (features.maxDrawdown > 0.08) {
+          score -= 25;
+          whatHurt.push('Large drawdown exceeded hedge coverage');
+        }
+        
+        if (features.extremes <= 2) {
+          score += 15;
+          whatHelped.push('Stable path within formation parameters');
+        } else {
+          score -= 10;
+          whatHurt.push('Envelope breaches stressed formation');
+        }
+        
+        // Moderate conditions are ideal
+        if (features.rangePct > 0.02 && features.rangePct < 0.05) {
+          score += 5;
+          whatHelped.push('Volatility within hedge-profitable range');
+        }
+        break;
+      }
+      
+      case 'STRIKE': {
+        // Reward strong directional move
+        const absReturn = Math.abs(features.returnPct);
+        if (absReturn > 0.05) {
+          score += 30;
+          whatHelped.push(`Strong directional move (${(features.returnPct * 100).toFixed(1)}%)`);
+        } else if (absReturn < 0.02) {
+          score -= 20;
+          whatHurt.push('Insufficient directional movement');
+        }
+        
+        // Reward alignment with trend
+        if (features.trendClarity > 0.3) {
+          score += 15;
+          whatHelped.push('Clear trend supported strike trajectory');
+        }
+        
+        // Penalize chop
+        if (features.chop >= 8) {
+          score -= 15;
+          whatHurt.push('Choppy conditions wasted strike energy');
+        } else if (features.chop <= 3) {
+          score += 10;
+          whatHelped.push('Clean momentum maintained strike efficiency');
+        }
+        break;
+      }
+      
+      case 'HARVEST': {
+        // Reward staying in range
+        if (features.extremes <= 1) {
+          score += 30;
+          whatHelped.push('Price remained within harvest zone');
+        } else if (features.extremes >= 5) {
+          score -= 25;
+          whatHurt.push('Multiple breakouts ruined harvest conditions');
+        }
+        
+        // Low range is good
+        if (features.rangePct < 0.025) {
+          score += 20;
+          whatHelped.push('Low volatility maximized premium capture');
+        } else if (features.rangePct > 0.05) {
+          score -= 20;
+          whatHurt.push('High volatility exceeded harvest parameters');
+        }
+        
+        // Low chop
+        if (features.chop <= 4) {
+          score += 10;
+          whatHelped.push('Stable regime supported range strategy');
+        }
+        break;
+      }
+    }
+    
+    // Clamp score
+    score = clamp(score, 0, 100);
+    
+    // Convert to grade
+    let grade;
+    if (score >= 90) grade = 'S';
+    else if (score >= 80) grade = 'A';
+    else if (score >= 70) grade = 'B';
+    else if (score >= 60) grade = 'C';
+    else grade = 'D';
+    
+    return { score, grade, whatHelped, whatHurt };
+  }
+  
+  /**
+   * Generate explanation paragraph
+   */
+  function generateExplanation(mission, features, scoreResult) {
+    const type = MISSION_TYPES[mission.type];
+    const returnDesc = features.returnPct >= 0 
+      ? `gained ${(features.returnPct * 100).toFixed(1)}%`
+      : `lost ${(Math.abs(features.returnPct) * 100).toFixed(1)}%`;
+    
+    const gradeDesc = {
+      'S': 'exceptional',
+      'A': 'strong',
+      'B': 'solid',
+      'C': 'acceptable',
+      'D': 'poor'
+    }[scoreResult.grade];
+    
+    let explanation = `This ${type.name} mission concluded with a ${gradeDesc} Grade ${scoreResult.grade} (score: ${scoreResult.score}/100). `;
+    explanation += `Over ${features.barsActual} bars, ${mission.ticker} ${returnDesc}. `;
+    
+    if (scoreResult.whatHelped.length > 0) {
+      explanation += `Key factors that supported success: ${scoreResult.whatHelped.slice(0, 2).join('; ')}. `;
+    }
+    
+    if (scoreResult.whatHurt.length > 0) {
+      explanation += `Challenges encountered: ${scoreResult.whatHurt.slice(0, 2).join('; ')}. `;
+    }
+    
+    explanation += `This teaches: ${type.teaches}`;
+    
+    return explanation;
+  }
+  
+  /**
+   * Resolve a completed mission
+   */
+  function resolveMission(missionId, tickerData) {
+    const missions = loadMissions();
+    const mission = missions.find(m => m.id === missionId);
+    
+    if (!mission || mission.status !== 'ACTIVE') return null;
+    
+    const features = computeMissionWindowFeatures(mission, tickerData);
+    const scoreResult = scoreMission(mission, features);
+    const explanation = generateExplanation(mission, features, scoreResult);
+    
+    mission.status = 'COMPLETE';
+    mission.completedAt = new Date().toISOString();
+    mission.outcome = {
+      grade: scoreResult.grade,
+      score: scoreResult.score,
+      explanation: explanation,
+      whatHelped: scoreResult.whatHelped,
+      whatHurt: scoreResult.whatHurt,
+      features: features
+    };
+    
+    mission.logs.push({
+      tMs: Date.now(),
+      barIndex: mission.end.endBarIndex,
+      kind: 'EVENT',
+      msg: `🏁 Mission complete — Grade ${scoreResult.grade} (${scoreResult.score}/100)`
+    });
+    
+    saveMissions(missions);
+    return mission;
+  }
+  
+  // ═══════════════════════════════════════════════════════════════════
+  // PERSISTENCE
+  // ═══════════════════════════════════════════════════════════════════
+  
   function loadMissions() {
     try {
       const data = localStorage.getItem(STORAGE_KEY);
@@ -643,9 +1182,6 @@ const MissionSystem = (function() {
     }
   }
   
-  /**
-   * Save missions to localStorage
-   */
   function saveMissions(missions) {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(missions));
@@ -654,30 +1190,17 @@ const MissionSystem = (function() {
     }
   }
   
-  /**
-   * Add a log entry to a mission
-   */
-  function addMissionLog(missionId, event, type = 'info') {
+  function getMission(missionId) {
     const missions = loadMissions();
-    const mission = missions.find(m => m.id === missionId);
-    if (mission) {
-      mission.log.push({ time: new Date().toISOString(), event, type });
-      saveMissions(missions);
-    }
+    return missions.find(m => m.id === missionId) || null;
   }
   
-  /**
-   * Get mission type info
-   */
-  function getMissionType(type) {
-    return MISSION_TYPES[type] || null;
+  function getActiveMissions() {
+    return loadMissions().filter(m => m.status === 'ACTIVE');
   }
   
-  /**
-   * Get all mission types
-   */
-  function getAllMissionTypes() {
-    return Object.values(MISSION_TYPES);
+  function getActiveMissionForTicker(ticker) {
+    return loadMissions().find(m => m.ticker === ticker.toUpperCase() && m.status === 'ACTIVE') || null;
   }
   
   // ═══════════════════════════════════════════════════════════════════
@@ -685,28 +1208,44 @@ const MissionSystem = (function() {
   // ═══════════════════════════════════════════════════════════════════
   
   return {
+    // Constants
+    SIM_SPEEDS,
+    DURATION_PRESETS,
+    DEFAULT_SIM_SPEED,
+    DEFAULT_LOOKBACK,
+    MISSION_TYPES,
+    
     // Stat computation
     computeEnvironment,
     
-    // Mission recommendations
+    // Recommendations
     generateRecommendations,
     computeSuitability,
     computeDifficulty,
     
     // Mission lifecycle
     createMission,
+    launchMission,
+    getMissionProgress,
+    fastForwardMission,
+    completeMissionNow,
+    abortMission,
+    deleteMission,
+    resolveMission,
+    
+    // Logs
+    generateLogsForMission,
+    
+    // Persistence
     loadMissions,
     saveMissions,
-    addMissionLog,
-    generateMissionId,
+    getMission,
+    getActiveMissions,
+    getActiveMissionForTicker,
     
     // Mission type info
-    getMissionType,
-    getAllMissionTypes,
-    MISSION_TYPES,
-    
-    // Constants
-    DEFAULT_LOOKBACK
+    getMissionType: (type) => MISSION_TYPES[type] || null,
+    getAllMissionTypes: () => Object.values(MISSION_TYPES)
   };
   
 })();
