@@ -2237,50 +2237,6 @@
       }
     }
     
-    function toggleFabMenu() {
-      const fabMain = document.getElementById('fab-main');
-      const fabMenu = document.getElementById('fab-menu');
-      if (fabMain && fabMenu) {
-        fabMain.classList.toggle('open');
-        fabMenu.classList.toggle('open');
-        if (window.SoundFX) SoundFX.play('click');
-      }
-    }
-    
-    function toggleFabSFX() {
-      const sfxToggle = document.getElementById('sfx-toggle');
-      const fabSfx = document.getElementById('fab-sfx');
-      if (sfxToggle) {
-        sfxToggle.checked = !sfxToggle.checked;
-        sfxToggle.dispatchEvent(new Event('change'));
-        if (fabSfx) {
-          fabSfx.innerHTML = '<span class="fab-icon">🔊</span><span>SFX ' + (sfxToggle.checked ? 'ON' : 'OFF') + '</span>';
-          fabSfx.classList.toggle('active', sfxToggle.checked);
-        }
-      }
-    }
-    
-    function toggleFabBGM() {
-      const bgmToggle = document.getElementById('bgm-toggle');
-      const fabBgm = document.getElementById('fab-bgm');
-      if (bgmToggle) {
-        bgmToggle.checked = !bgmToggle.checked;
-        bgmToggle.dispatchEvent(new Event('change'));
-        if (fabBgm) {
-          fabBgm.innerHTML = '<span class="fab-icon">🎵</span><span>BGM ' + (bgmToggle.checked ? 'ON' : 'OFF') + '</span>';
-          fabBgm.classList.toggle('active', bgmToggle.checked);
-        }
-      }
-    }
-    
-    function showAboutOverlay() {
-      const aboutTrigger = document.getElementById('about-trigger-btn');
-      if (aboutTrigger) {
-        aboutTrigger.click();
-      }
-      toggleFabMenu();
-    }
-    
     function populateMobileTickerCarousel() {
       const carouselInner = document.getElementById('ticker-carousel-inner');
       if (!carouselInner) return;

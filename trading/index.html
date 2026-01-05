@@ -482,19 +482,19 @@
           </div>
         </div>
         <div class="sidebar-section" style="padding-bottom: 0.5rem;">
-          <div class="sidebar-title">🚀 Operations</div>
+          <div class="sidebar-title">▲ Operations</div>
         </div>
         <div style="padding: 0 0.5rem 0.5rem;">
-          <button class="push-btn" style="width: 100%; margin-bottom: 0.5rem;" onclick="toggleMobileDrawer(); switchTab('positions');">📊 Holdings</button>
-          <button class="push-btn" style="width: 100%; margin-bottom: 0.5rem;" onclick="toggleMobileDrawer(); switchTab('options');">📈 Derivatives</button>
-          <button class="push-btn" style="width: 100%; margin-bottom: 0.5rem;" onclick="toggleMobileDrawer(); switchTab('catalysts');">📅 Events</button>
+          <button class="push-btn" style="width: 100%; margin-bottom: 0.5rem;" onclick="toggleMobileDrawer(); switchTab('positions');">› Holdings</button>
+          <button class="push-btn" style="width: 100%; margin-bottom: 0.5rem;" onclick="toggleMobileDrawer(); switchTab('options');">› Derivatives</button>
+          <button class="push-btn" style="width: 100%; margin-bottom: 0.5rem;" onclick="toggleMobileDrawer(); switchTab('catalysts');">› Events</button>
         </div>
         <div class="sidebar-section" style="padding-bottom: 0.5rem;">
-          <div class="sidebar-title">🎮 Training</div>
+          <div class="sidebar-title">◇ Training</div>
         </div>
         <div style="padding: 0 0.5rem 0.5rem;">
-          <button class="push-btn" style="width: 100%; margin-bottom: 0.5rem;" onclick="toggleMobileDrawer(); switchTab('arcade');">🎮 Arcade</button>
-          <button class="push-btn primary" style="width: 100%; margin-bottom: 0.5rem;" onclick="toggleMobileDrawer(); launchMissionCommand();">⚔️ Mission Command</button>
+          <button class="push-btn" style="width: 100%; margin-bottom: 0.5rem;" onclick="toggleMobileDrawer(); switchTab('arcade');">› Arcade</button>
+          <button class="push-btn primary" style="width: 100%; margin-bottom: 0.5rem;" onclick="toggleMobileDrawer(); launchMissionCommand();">› Mission Command</button>
         </div>
         <div class="sidebar-section" style="padding-bottom: 0.5rem;">
           <div class="sidebar-title">Tracking</div>
@@ -522,7 +522,7 @@
         <!-- Step 4: Mission Status Mini-Panel -->
         <div class="sidebar-section mission-status-panel" id="mission-status-panel">
           <div class="sidebar-title">
-            <span>🚀 Mission Status</span>
+            <span>▲ Mission Status</span>
             <span class="mission-count-badge" id="active-mission-count">0</span>
           </div>
           <div class="mission-summary" id="mission-summary">
@@ -542,7 +542,7 @@
             </div>
           </div>
           <button class="mission-cmd-btn" onclick="launchMissionCommand()">
-            ⚔️ Open Mission Command
+            › Open Mission Command
           </button>
         </div>
         
@@ -567,9 +567,9 @@
             </div>
             <div class="trend-detail" id="trend-status-detail">Awaiting data...</div>
             <div class="trend-metrics">
-              <div class="trend-metric"><span class="trend-metric-label">MA-100</span><span class="trend-metric-value" id="ma100-val">--</span></div>
-              <div class="trend-metric"><span class="trend-metric-label">MA-150</span><span class="trend-metric-value" id="ma150-val">--</span></div>
-              <div class="trend-metric"><span class="trend-metric-label">MA-200</span><span class="trend-metric-value" id="ma200-val">--</span></div>
+              <div class="trend-metric"><span class="trend-metric-label">G-100</span><span class="trend-metric-value" id="ma100-val">--</span></div>
+              <div class="trend-metric"><span class="trend-metric-label">G-150</span><span class="trend-metric-value" id="ma150-val">--</span></div>
+              <div class="trend-metric"><span class="trend-metric-label">G-200</span><span class="trend-metric-value" id="ma200-val">--</span></div>
             </div>
           </div>
         </div>
@@ -679,7 +679,7 @@
                       </div>
                     </div>
                     <div class="chart-tools">
-                      <button class="ctrl-btn active" id="ma-toggle" onclick="toggleMA()">MA</button>
+                      <button class="ctrl-btn active" id="ma-toggle" onclick="toggleMA()" title="EMA Ribbon Overlay">RIBBON</button>
                       <div class="tool-divider"></div>
                       <div class="control-group">
                         <button class="ctrl-btn" data-range="1W" onclick="setRange('1W')">1W</button>
@@ -709,10 +709,10 @@
                 </div>
                 
                 <div class="console-section">
-                  <div class="console-title">// SENSOR BANK</div>
-                  <div class="console-row"><span>MA-100</span><span id="tm-ma100">--</span></div>
-                  <div class="console-row"><span>MA-150</span><span id="tm-ma150">--</span></div>
-                  <div class="console-row"><span>MA-200</span><span id="tm-ma200">--</span></div>
+                  <div class="console-title">// GUIDE LEVELS</div>
+                  <div class="console-row"><span>G-100</span><span id="tm-ma100">--</span></div>
+                  <div class="console-row"><span>G-150</span><span id="tm-ma150">--</span></div>
+                  <div class="console-row"><span>G-200</span><span id="tm-ma200">--</span></div>
                   <div class="console-row"><span>PRICE</span><span id="tm-price">--</span></div>
                 </div>
 
@@ -934,7 +934,7 @@
             <!-- Fleet Command Header -->
             <div class="fleet-command-header">
               <div class="fleet-command-title">
-                <span class="icon">🚀</span>
+                <span class="icon">▲</span>
                 <div>
                   <h2>FLEET COMMAND</h2>
                   <div class="subtitle">ACTIVE VESSEL MANIFEST</div>
@@ -1089,7 +1089,7 @@
                   </div>
                 </div>
                 <div class="game-card-info">
-                  <div class="game-card-title">👾 SIGNAL INVADERS</div>
+                  <div class="game-card-title">[SIGNAL INVADERS]</div>
                   <div class="game-card-desc">Defend the array against hostile market signals. Your fleet ships become the enemy waves!</div>
                   <div class="game-card-controls">
                     <span>← → MOVE</span>
@@ -1108,7 +1108,7 @@
                   </div>
                 </div>
                 <div class="game-card-info">
-                  <div class="game-card-title">🚀 TERRAIN LANDER</div>
+                  <div class="game-card-title">[TERRAIN LANDER]</div>
                   <div class="game-card-desc">Navigate treacherous market terrain and land safely on profit zones. Fuel management is critical.</div>
                   <div class="game-card-controls">
                     <span>← → STEER</span>
@@ -1122,7 +1122,7 @@
             <!-- Ship Selection for Games -->
             <div class="arcade-ship-select">
               <div class="ship-select-header">
-                <span class="ship-select-title">🚀 SELECT YOUR SHIP</span>
+                <span class="ship-select-title">▲ SELECT YOUR SHIP</span>
                 <span class="ship-select-hint">Choose your vessel for arcade missions</span>
               </div>
               <div class="ship-select-grid" id="arcade-ship-grid">
@@ -1132,7 +1132,7 @@
             
             <!-- Cheat Codes Section -->
             <div class="arcade-secrets">
-              <div class="secrets-title">🔐 COMMAND CODES</div>
+              <div class="secrets-title">[COMMAND CODES]</div>
               <div class="secrets-hint">Type secret codes anywhere to unlock special features...</div>
             </div>
           </div>
@@ -1173,7 +1173,7 @@
             <button class="push-btn dummy-control" data-dummy-action="buy" style="background: rgba(51, 255, 153, 0.1); border-color: var(--phosphor);">BUY</button>
             <button class="push-btn dummy-control" data-dummy-action="sell" style="background: rgba(255, 107, 107, 0.1); border-color: #ff6b6b; color: #ff6b6b;">SELL</button>
           </div>
-          <button class="push-btn dummy-control" data-dummy-action="leverage" style="width: 100%; margin-top: 0.5rem;">⚡ 10X LEVERAGE</button>
+          <button class="push-btn dummy-control" data-dummy-action="leverage" style="width: 100%; margin-top: 0.5rem;">× 10X LEVERAGE</button>
         </div>
         
         <div class="sidebar-section">
@@ -1206,12 +1206,12 @@
         
         <!-- SNOOP TRAP: Fake Admin Access -->
         <div class="sidebar-section" style="border-bottom: 1px solid var(--border);">
-          <div class="sidebar-title" style="color: var(--amber);">⚠ Admin Access</div>
+          <div class="sidebar-title" style="color: var(--amber);">! Admin Access</div>
           <button class="push-btn dummy-control" data-dummy-action="admin" style="width: 100%; border-color: var(--amber); color: var(--amber);">
-            🔐 MISSION CONTROL LOGIN
+            › MISSION CONTROL LOGIN
           </button>
           <button class="push-btn dummy-control" data-dummy-action="withdraw" style="width: 100%; margin-top: 0.5rem;">
-            💰 WITHDRAW FUNDS
+            › WITHDRAW FUNDS
           </button>
         </div>
         
@@ -1271,19 +1271,19 @@
     <nav class="mobile-bottom-nav" id="mobile-bottom-nav">
       <div class="mobile-nav-items">
         <button class="mobile-nav-item active" data-tab="chart" data-group="telemetry" onclick="switchTabMobile('chart')">
-          <span class="nav-icon">📡</span>
+          <span class="nav-icon">◈</span>
           <span>Telemetry</span>
         </button>
         <button class="mobile-nav-item" data-tab="positions" data-group="ops" onclick="switchTabMobile('positions')">
-          <span class="nav-icon">🚀</span>
+          <span class="nav-icon">▲</span>
           <span>Operations</span>
         </button>
         <button class="mobile-nav-item" data-tab="arcade" data-group="training" onclick="switchTabMobile('arcade')">
-          <span class="nav-icon">🎮</span>
+          <span class="nav-icon">◇</span>
           <span>Training</span>
         </button>
         <button class="mobile-nav-item" onclick="toggleMobileDrawer()">
-          <span class="nav-icon">⚙️</span>
+          <span class="nav-icon">≡</span>
           <span>More</span>
         </button>
       </div>
@@ -1313,33 +1313,10 @@
           <span class="quick-stat-value">CLOSED</span>
         </div>
         <div class="quick-stat">
-          <span class="quick-stat-label">⏱</span>
+          <span class="quick-stat-label">T+</span>
           <span class="quick-stat-value" id="mobile-uptime">00:00</span>
         </div>
       </div>
-    </div>
-    
-    <!-- ============================================================
-         MOBILE FLOATING ACTION BUTTON
-         ============================================================ -->
-    <div class="mobile-fab" id="mobile-fab">
-      <div class="fab-menu" id="fab-menu">
-        <button class="fab-item" id="fab-sfx" onclick="toggleFabSFX()">
-          <span class="fab-icon">🔊</span>
-          <span>SFX ON</span>
-        </button>
-        <button class="fab-item" id="fab-bgm" onclick="toggleFabBGM()">
-          <span class="fab-icon">🎵</span>
-          <span>BGM OFF</span>
-        </button>
-        <button class="fab-item" onclick="showAboutOverlay()">
-          <span class="fab-icon">❓</span>
-          <span>ABOUT</span>
-        </button>
-      </div>
-      <button class="fab-main" id="fab-main" onclick="toggleFabMenu()">
-        <span>⚡</span>
-      </button>
     </div>
     
     <!-- ============================================================
@@ -1367,17 +1344,17 @@
     
     <!-- ARCADE HUD – mini mission list -->
     <div id="arcade-hud" class="arcade-hud hidden">
-      <div class="hud-title">👾 ARCADE MODE</div>
+      <div class="hud-title">[ARCADE MODE]</div>
       <ul id="mission-list"></ul>
       <div style="display: flex; flex-direction: column; gap: 0.4rem; margin-top: 0.5rem;">
         <button class="arcade-launch-btn" onclick="window.SignalInvaders && SignalInvaders.start()">
-          👾 SIGNAL INVADERS
+          › SIGNAL INVADERS
         </button>
         <button class="arcade-launch-btn" onclick="window.LandingGame && LandingGame.start()">
-          🚀 TERRAIN LANDER
+          › TERRAIN LANDER
         </button>
         <button class="arcade-launch-btn" onclick="window.AdminConsole && AdminConsole.open()" style="border-color: var(--amber); color: var(--amber);">
-          🔐 ADMIN CONSOLE
+          › ADMIN CONSOLE
         </button>
       </div>
     </div>
@@ -1431,7 +1408,7 @@
       <div class="landing-game-container">
         <button class="landing-close" id="landing-close">✕ ESC</button>
         <div class="landing-game-header">
-          <div class="landing-game-title">🚀 TERRAIN LANDER</div>
+          <div class="landing-game-title">[TERRAIN LANDER]</div>
           <div class="landing-game-stats">
             <span>FUEL: <span id="landing-fuel">100</span>%</span>
             <span>VELOCITY: <span id="landing-velocity">0.0</span></span>
@@ -1459,7 +1436,7 @@
       <div class="arcade-game-container">
         <button class="arcade-close" id="invaders-close-btn">✕ ESC</button>
         <div class="arcade-header">
-          <div class="arcade-title">👾 SIGNAL INVADERS</div>
+          <div class="arcade-title">[SIGNAL INVADERS]</div>
           <div class="arcade-stats">
             <span class="arcade-score">SCORE: <span id="invaders-score">0</span></span>
             <span class="arcade-lives">LIVES: <span id="invaders-lives">♥♥♥</span></span>
@@ -1548,7 +1525,7 @@
           <button class="pipboy-dial active" data-panel="overview">◈ OVERVIEW</button>
           <button class="pipboy-dial" data-panel="thesis">◉ THESIS</button>
           <button class="pipboy-dial" data-panel="catalysts">▲ CATALYSTS</button>
-          <button class="pipboy-dial" data-panel="risks">⚠ RISKS</button>
+          <button class="pipboy-dial" data-panel="risks">! RISKS</button>
           <button class="pipboy-dial" data-panel="vitals">◐ VITALS</button>
         </nav>
 

@@ -6834,109 +6834,6 @@
     }
     
     /* =========================================================================
-       FLOATING ACTION BUTTON (FAB)
-       Quick access to audio and settings
-       ========================================================================= */
-    .mobile-fab {
-      display: none;
-      position: fixed;
-      bottom: 80px;
-      right: 1rem;
-      z-index: 14000;
-    }
-    
-    .fab-main {
-      width: 52px;
-      height: 52px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-panel) 100%);
-      border: 1px solid var(--border);
-      color: var(--phosphor);
-      font-size: 1.4rem;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 20px var(--phosphor-ghost);
-      transition: all 0.2s ease;
-      -webkit-tap-highlight-color: transparent;
-    }
-    
-    .fab-main:active {
-      transform: scale(0.92);
-    }
-    
-    .fab-main.open {
-      transform: rotate(45deg);
-      background: var(--phosphor-ghost);
-    }
-    
-    .fab-menu {
-      position: absolute;
-      bottom: 60px;
-      right: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-      opacity: 0;
-      visibility: hidden;
-      transform: translateY(10px);
-      transition: all 0.2s ease;
-    }
-    
-    .fab-menu.open {
-      opacity: 1;
-      visibility: visible;
-      transform: translateY(0);
-    }
-    
-    .fab-item {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0.5rem 0.75rem;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 24px;
-      color: var(--text);
-      font-family: var(--font-mono);
-      font-size: 0.65rem;
-      letter-spacing: 0.05em;
-      white-space: nowrap;
-      cursor: pointer;
-      transition: all 0.15s ease;
-    }
-    
-    .fab-item:active {
-      transform: scale(0.95);
-      background: var(--phosphor-ghost);
-    }
-    
-    .fab-item .fab-icon {
-      font-size: 1.1rem;
-    }
-    
-    .fab-item.active {
-      border-color: var(--phosphor);
-      color: var(--phosphor);
-    }
-    
-    @media (max-width: 768px) {
-      .mobile-fab {
-        display: block;
-      }
-    }
-    
-    @supports (padding: max(0px)) {
-      @media (max-width: 768px) {
-        .mobile-fab {
-          bottom: calc(80px + env(safe-area-inset-bottom, 0px));
-          right: max(1rem, env(safe-area-inset-right));
-        }
-      }
-    }
-    
-    /* =========================================================================
        MOBILE QUICK STATS BAR
        Replaces status strip with portfolio-focused info
        ========================================================================= */
@@ -7014,20 +6911,12 @@
         height: calc(100vh - 56px - 64px - 36px) !important;
         height: calc(100dvh - 56px - 64px - 36px) !important;
       }
-      
-      .mobile-fab {
-        bottom: calc(100px + 36px);
-      }
     }
     
     @supports (padding: max(0px)) {
       @media (max-width: 768px) {
         .mobile-quick-stats {
           bottom: calc(64px + env(safe-area-inset-bottom, 0px));
-        }
-        
-        .mobile-fab {
-          bottom: calc(116px + env(safe-area-inset-bottom, 0px));
         }
         
         .main {
