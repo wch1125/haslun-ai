@@ -1066,6 +1066,160 @@
       100% { opacity: 0; }
     }
 
+    /* =========================================================================
+       SIGNAL INVADERS ARCADE GAME
+       ========================================================================= */
+    .arcade-game-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 25000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+
+    .arcade-game-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .arcade-game-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.95);
+      backdrop-filter: blur(8px);
+    }
+
+    .arcade-game-container {
+      position: relative;
+      background: radial-gradient(ellipse at 50% 0%, rgba(51, 255, 153, 0.08), transparent 50%), var(--bg-void);
+      border: 2px solid var(--phosphor);
+      box-shadow: 
+        0 0 40px var(--phosphor-glow),
+        inset 0 0 60px rgba(0, 0, 0, 0.5);
+      padding: 1.5rem;
+      max-width: 700px;
+      width: 95%;
+    }
+
+    .arcade-game-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, var(--phosphor), transparent);
+    }
+
+    .arcade-close {
+      position: absolute;
+      top: 0.75rem;
+      right: 0.75rem;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      padding: 0.3rem 0.6rem;
+      cursor: pointer;
+      transition: all 0.15s;
+      z-index: 10;
+    }
+
+    .arcade-close:hover {
+      border-color: var(--phosphor);
+      color: var(--phosphor);
+    }
+
+    .arcade-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .arcade-title {
+      font-family: var(--font-display);
+      font-size: 1.2rem;
+      letter-spacing: 0.15em;
+      color: var(--phosphor);
+      text-shadow: 0 0 20px var(--phosphor-glow);
+    }
+
+    .arcade-stats {
+      display: flex;
+      gap: 1.5rem;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+      color: var(--text);
+    }
+
+    .arcade-stats span {
+      display: flex;
+      gap: 0.3rem;
+    }
+
+    #invaders-canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+      background: radial-gradient(ellipse at 50% 50%, #041a22 0%, #01060a 70%);
+      border: 1px solid var(--phosphor-dim);
+      box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.5);
+      image-rendering: pixelated;
+    }
+
+    .arcade-controls {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      margin-top: 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.15em;
+      color: var(--text-dim);
+    }
+
+    .arcade-message {
+      text-align: center;
+      margin-top: 0.75rem;
+      font-family: var(--font-display);
+      font-size: 0.9rem;
+      letter-spacing: 0.1em;
+      color: var(--amber);
+      min-height: 1.2em;
+    }
+
+    /* Scanline effect on game canvas */
+    #invaders-canvas {
+      position: relative;
+    }
+
+    .arcade-game-container::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, 0.1) 2px,
+        rgba(0, 0, 0, 0.1) 4px
+      );
+      pointer-events: none;
+      z-index: 5;
+    }
+
     /* Button interaction glow effects */
     .push-btn:active,
     .sim-btn:active,
@@ -1737,6 +1891,26 @@
     .arcade-mission.completed::before {
       content: '●';
       color: var(--phosphor);
+    }
+    
+    .arcade-launch-btn {
+      width: 100%;
+      margin-top: 0.6rem;
+      padding: 0.5rem;
+      background: transparent;
+      border: 1px solid var(--phosphor-dim);
+      color: var(--phosphor);
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    
+    .arcade-launch-btn:hover {
+      background: var(--phosphor-ghost);
+      border-color: var(--phosphor);
+      box-shadow: 0 0 15px var(--phosphor-glow);
     }
     
     /* Terminal-style uplink log */
@@ -3574,6 +3748,9 @@
     <div id="arcade-hud" class="arcade-hud hidden">
       <div class="hud-title">👾 ARCADE MODE</div>
       <ul id="mission-list"></ul>
+      <button class="arcade-launch-btn" onclick="window.SignalInvaders && SignalInvaders.start()">
+        ▶ LAUNCH SIGNAL INVADERS
+      </button>
     </div>
     
     <!-- Tiny uplink terminal -->
@@ -3585,6 +3762,29 @@
     <!-- KONAMI CODE EASTER EGG - INVADER ATTACK -->
     <div id="invader-attack-overlay" class="invader-attack-overlay"></div>
     <div id="attack-flash" class="attack-flash"></div>
+    
+    <!-- SIGNAL INVADERS ARCADE GAME -->
+    <div id="signal-invaders-overlay" class="arcade-game-overlay hidden">
+      <div class="arcade-game-backdrop"></div>
+      <div class="arcade-game-container">
+        <button class="arcade-close" id="invaders-close-btn">✕ ESC</button>
+        <div class="arcade-header">
+          <div class="arcade-title">👾 SIGNAL INVADERS</div>
+          <div class="arcade-stats">
+            <span class="arcade-score">SCORE: <span id="invaders-score">0</span></span>
+            <span class="arcade-lives">LIVES: <span id="invaders-lives">♥♥♥</span></span>
+            <span class="arcade-wave">WAVE: <span id="invaders-wave">1</span></span>
+          </div>
+        </div>
+        <canvas id="invaders-canvas" width="600" height="400"></canvas>
+        <div class="arcade-controls">
+          <span>← → MOVE</span>
+          <span>SPACE FIRE</span>
+          <span>ESC EXIT</span>
+        </div>
+        <div class="arcade-message" id="invaders-message"></div>
+      </div>
+    </div>
     
     <!-- ABOUT / STORY OVERLAY -->
     <div id="about-overlay" class="about-overlay hidden">
@@ -5614,7 +5814,8 @@
         { id:'tabs',      text:'Explore 3 panels', done:false },
         { id:'analysis',  text:'Run analysis once', done:false },
         { id:'simulation', text:'Run P&L simulation', done:false },
-        { id:'secret',    text:'Find the hidden invader', done:false }
+        { id:'find_invader', text:'Find the hidden invader', done:false },
+        { id:'arcade_score', text:'Score 500+ in Signal Invaders', done:false }
       ];
       
       const THEMES = {
@@ -6805,6 +7006,447 @@
       }
 
       // =========================================================================
+      // SIGNAL INVADERS - PLAYABLE ARCADE GAME
+      // =========================================================================
+      const SignalInvaders = {
+        canvas: null,
+        ctx: null,
+        active: false,
+        animationId: null,
+        
+        // Game state
+        score: 0,
+        lives: 3,
+        wave: 1,
+        gameOver: false,
+        paused: false,
+        
+        // Player
+        player: { x: 270, y: 360, width: 26, height: 16, speed: 5 },
+        
+        // Game objects
+        bullets: [],
+        enemies: [],
+        enemyBullets: [],
+        particles: [],
+        stars: [],
+        
+        // Timing
+        lastEnemyShot: 0,
+        enemyDirection: 1,
+        enemyDropAmount: 0,
+        
+        // Keys
+        keys: {},
+        
+        init() {
+          this.canvas = document.getElementById('invaders-canvas');
+          if (!this.canvas) return;
+          this.ctx = this.canvas.getContext('2d');
+          
+          // Generate starfield
+          this.stars = [];
+          for (let i = 0; i < 50; i++) {
+            this.stars.push({
+              x: Math.random() * 600,
+              y: Math.random() * 400,
+              size: Math.random() * 1.5 + 0.5,
+              alpha: Math.random() * 0.5 + 0.2
+            });
+          }
+          
+          // Event listeners
+          this.handleKeyDown = (e) => {
+            if (!this.active) return;
+            this.keys[e.key] = true;
+            if (e.key === ' ' && !this.gameOver) {
+              e.preventDefault();
+              this.shoot();
+            }
+            if (e.key === 'Escape') {
+              this.close();
+            }
+          };
+          
+          this.handleKeyUp = (e) => {
+            this.keys[e.key] = false;
+          };
+          
+          document.addEventListener('keydown', this.handleKeyDown);
+          document.addEventListener('keyup', this.handleKeyUp);
+          
+          // Close button
+          const closeBtn = document.getElementById('invaders-close-btn');
+          if (closeBtn) {
+            closeBtn.onclick = () => this.close();
+          }
+        },
+        
+        start() {
+          if (!this.canvas) this.init();
+          
+          // Reset game state
+          this.score = 0;
+          this.lives = 3;
+          this.wave = 1;
+          this.gameOver = false;
+          this.player.x = 270;
+          this.bullets = [];
+          this.enemies = [];
+          this.enemyBullets = [];
+          this.particles = [];
+          this.enemyDirection = 1;
+          
+          this.spawnWave();
+          this.updateUI();
+          
+          // Show overlay
+          const overlay = document.getElementById('signal-invaders-overlay');
+          if (overlay) {
+            overlay.classList.remove('hidden');
+            overlay.classList.add('active');
+          }
+          
+          this.active = true;
+          this.gameLoop();
+          
+          if (typeof logTerminal === 'function') {
+            logTerminal('SIGNAL INVADERS initialized. Defend the array!');
+          }
+          if (typeof beep === 'function') {
+            beep(440, 0.1);
+            setTimeout(() => beep(550, 0.1), 100);
+            setTimeout(() => beep(660, 0.15), 200);
+          }
+        },
+        
+        close() {
+          this.active = false;
+          if (this.animationId) {
+            cancelAnimationFrame(this.animationId);
+          }
+          
+          const overlay = document.getElementById('signal-invaders-overlay');
+          if (overlay) {
+            overlay.classList.remove('active');
+            setTimeout(() => overlay.classList.add('hidden'), 300);
+          }
+          
+          // Log final score
+          if (typeof logTerminal === 'function') {
+            logTerminal(`SIGNAL INVADERS ended. Final score: ${this.score}`);
+          }
+        },
+        
+        spawnWave() {
+          this.enemies = [];
+          const rows = Math.min(4 + Math.floor(this.wave / 2), 6);
+          const cols = Math.min(8 + this.wave, 10);
+          
+          for (let row = 0; row < rows; row++) {
+            for (let col = 0; col < cols; col++) {
+              this.enemies.push({
+                x: 60 + col * 52,
+                y: 40 + row * 36,
+                width: 22,
+                height: 16,
+                type: row < 2 ? 'elite' : 'normal'
+              });
+            }
+          }
+          
+          document.getElementById('invaders-message').textContent = `WAVE ${this.wave} - INCOMING!`;
+          setTimeout(() => {
+            document.getElementById('invaders-message').textContent = '';
+          }, 2000);
+        },
+        
+        shoot() {
+          if (this.bullets.length < 3) { // Max 3 bullets at once
+            this.bullets.push({
+              x: this.player.x + this.player.width / 2 - 2,
+              y: this.player.y - 8,
+              width: 4,
+              height: 8
+            });
+            if (typeof beep === 'function') {
+              beep(880, 0.05);
+            }
+          }
+        },
+        
+        updateUI() {
+          document.getElementById('invaders-score').textContent = this.score;
+          document.getElementById('invaders-lives').textContent = '♥'.repeat(Math.max(0, this.lives));
+          document.getElementById('invaders-wave').textContent = this.wave;
+        },
+        
+        gameLoop() {
+          if (!this.active) return;
+          
+          this.update();
+          this.render();
+          
+          this.animationId = requestAnimationFrame(() => this.gameLoop());
+        },
+        
+        update() {
+          if (this.gameOver) return;
+          
+          // Player movement
+          if (this.keys['ArrowLeft'] || this.keys['a']) {
+            this.player.x = Math.max(10, this.player.x - this.player.speed);
+          }
+          if (this.keys['ArrowRight'] || this.keys['d']) {
+            this.player.x = Math.min(600 - this.player.width - 10, this.player.x + this.player.speed);
+          }
+          
+          // Update bullets
+          this.bullets = this.bullets.filter(b => {
+            b.y -= 7;
+            return b.y > -10;
+          });
+          
+          // Update enemy bullets
+          this.enemyBullets = this.enemyBullets.filter(b => {
+            b.y += 4;
+            return b.y < 420;
+          });
+          
+          // Move enemies
+          let hitEdge = false;
+          this.enemies.forEach(e => {
+            e.x += this.enemyDirection * (1 + this.wave * 0.3);
+            if (e.x < 10 || e.x > 600 - e.width - 10) hitEdge = true;
+          });
+          
+          if (hitEdge) {
+            this.enemyDirection *= -1;
+            this.enemies.forEach(e => e.y += 12);
+          }
+          
+          // Enemy shooting
+          if (Date.now() - this.lastEnemyShot > Math.max(500, 2000 - this.wave * 200)) {
+            const shooters = this.enemies.filter(e => 
+              !this.enemies.some(other => other.x === e.x && other.y > e.y)
+            );
+            if (shooters.length > 0) {
+              const shooter = shooters[Math.floor(Math.random() * shooters.length)];
+              this.enemyBullets.push({
+                x: shooter.x + shooter.width / 2 - 2,
+                y: shooter.y + shooter.height,
+                width: 4,
+                height: 6
+              });
+              this.lastEnemyShot = Date.now();
+            }
+          }
+          
+          // Collision: bullets vs enemies
+          this.bullets.forEach((bullet, bi) => {
+            this.enemies.forEach((enemy, ei) => {
+              if (this.collides(bullet, enemy)) {
+                // Create particles
+                for (let i = 0; i < 8; i++) {
+                  this.particles.push({
+                    x: enemy.x + enemy.width / 2,
+                    y: enemy.y + enemy.height / 2,
+                    vx: (Math.random() - 0.5) * 6,
+                    vy: (Math.random() - 0.5) * 6,
+                    life: 30,
+                    color: enemy.type === 'elite' ? '#ffb347' : '#33ff99'
+                  });
+                }
+                
+                this.bullets.splice(bi, 1);
+                this.enemies.splice(ei, 1);
+                this.score += enemy.type === 'elite' ? 20 : 10;
+                this.updateUI();
+                
+                if (typeof beep === 'function') {
+                  beep(200, 0.08);
+                }
+              }
+            });
+          });
+          
+          // Collision: enemy bullets vs player
+          this.enemyBullets.forEach((bullet, bi) => {
+            if (this.collides(bullet, this.player)) {
+              this.enemyBullets.splice(bi, 1);
+              this.lives--;
+              this.updateUI();
+              
+              // Player hit particles
+              for (let i = 0; i < 12; i++) {
+                this.particles.push({
+                  x: this.player.x + this.player.width / 2,
+                  y: this.player.y + this.player.height / 2,
+                  vx: (Math.random() - 0.5) * 8,
+                  vy: (Math.random() - 0.5) * 8,
+                  life: 40,
+                  color: '#ff6b6b'
+                });
+              }
+              
+              if (typeof beep === 'function') {
+                beep(150, 0.2);
+              }
+              
+              if (this.lives <= 0) {
+                this.endGame();
+              }
+            }
+          });
+          
+          // Enemy reaches bottom
+          if (this.enemies.some(e => e.y > 340)) {
+            this.endGame();
+          }
+          
+          // Wave cleared
+          if (this.enemies.length === 0) {
+            this.wave++;
+            this.spawnWave();
+            this.updateUI();
+            if (typeof beep === 'function') {
+              beep(660, 0.1);
+              setTimeout(() => beep(880, 0.15), 100);
+            }
+          }
+          
+          // Update particles
+          this.particles = this.particles.filter(p => {
+            p.x += p.vx;
+            p.y += p.vy;
+            p.life--;
+            return p.life > 0;
+          });
+        },
+        
+        collides(a, b) {
+          return a.x < b.x + b.width &&
+                 a.x + a.width > b.x &&
+                 a.y < b.y + b.height &&
+                 a.y + a.height > b.y;
+        },
+        
+        endGame() {
+          this.gameOver = true;
+          document.getElementById('invaders-message').textContent = `GAME OVER - SCORE: ${this.score}`;
+          
+          if (typeof showToast === 'function') {
+            showToast(`Signal Invaders: ${this.score} points!`, 'info');
+          }
+          
+          // Complete arcade mission for high score
+          if (this.score >= 500 && typeof completeMission === 'function') {
+            completeMission('arcade_score');
+          }
+          
+          // Restart after delay
+          setTimeout(() => {
+            if (this.active) {
+              this.start();
+            }
+          }, 3000);
+        },
+        
+        render() {
+          const ctx = this.ctx;
+          ctx.clearRect(0, 0, 600, 400);
+          
+          // Draw starfield
+          this.stars.forEach(star => {
+            ctx.fillStyle = `rgba(51, 255, 153, ${star.alpha})`;
+            ctx.fillRect(star.x, star.y, star.size, star.size);
+          });
+          
+          // Draw player ship (pixel art style)
+          ctx.fillStyle = '#33ff99';
+          ctx.shadowColor = '#33ff99';
+          ctx.shadowBlur = 8;
+          // Ship body
+          ctx.fillRect(this.player.x + 10, this.player.y, 6, 4);
+          ctx.fillRect(this.player.x + 6, this.player.y + 4, 14, 4);
+          ctx.fillRect(this.player.x + 2, this.player.y + 8, 22, 4);
+          ctx.fillRect(this.player.x, this.player.y + 12, 26, 4);
+          ctx.shadowBlur = 0;
+          
+          // Draw bullets
+          ctx.fillStyle = '#33ff99';
+          ctx.shadowColor = '#33ff99';
+          ctx.shadowBlur = 6;
+          this.bullets.forEach(b => {
+            ctx.fillRect(b.x, b.y, b.width, b.height);
+          });
+          ctx.shadowBlur = 0;
+          
+          // Draw enemies
+          this.enemies.forEach(e => {
+            ctx.fillStyle = e.type === 'elite' ? '#ffb347' : '#33ff99';
+            ctx.shadowColor = ctx.fillStyle;
+            ctx.shadowBlur = 4;
+            // Invader shape
+            ctx.fillRect(e.x + 4, e.y, 4, 4);
+            ctx.fillRect(e.x + 14, e.y, 4, 4);
+            ctx.fillRect(e.x + 2, e.y + 4, 18, 4);
+            ctx.fillRect(e.x, e.y + 8, 22, 4);
+            ctx.fillRect(e.x + 2, e.y + 12, 4, 4);
+            ctx.fillRect(e.x + 16, e.y + 12, 4, 4);
+            ctx.shadowBlur = 0;
+          });
+          
+          // Draw enemy bullets
+          ctx.fillStyle = '#ff6b6b';
+          ctx.shadowColor = '#ff6b6b';
+          ctx.shadowBlur = 4;
+          this.enemyBullets.forEach(b => {
+            ctx.fillRect(b.x, b.y, b.width, b.height);
+          });
+          ctx.shadowBlur = 0;
+          
+          // Draw particles
+          this.particles.forEach(p => {
+            ctx.fillStyle = p.color;
+            ctx.globalAlpha = p.life / 40;
+            ctx.fillRect(p.x, p.y, 3, 3);
+          });
+          ctx.globalAlpha = 1;
+          
+          // Game over overlay
+          if (this.gameOver) {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+            ctx.fillRect(0, 0, 600, 400);
+            ctx.fillStyle = '#ff6b6b';
+            ctx.font = '24px Orbitron';
+            ctx.textAlign = 'center';
+            ctx.fillText('SIGNAL LOST', 300, 180);
+            ctx.fillStyle = '#33ff99';
+            ctx.font = '16px "IBM Plex Mono"';
+            ctx.fillText(`Final Score: ${this.score}`, 300, 220);
+            ctx.fillStyle = '#888';
+            ctx.font = '12px "IBM Plex Mono"';
+            ctx.fillText('Restarting...', 300, 260);
+          }
+        }
+      };
+
+      // Cheat code listener for "INVADER" text
+      let cheatBuffer = '';
+      document.addEventListener('keydown', (e) => {
+        if (e.key.length === 1) {
+          cheatBuffer += e.key.toUpperCase();
+          cheatBuffer = cheatBuffer.slice(-10);
+          
+          if (cheatBuffer.includes('INVADER')) {
+            cheatBuffer = '';
+            SignalInvaders.start();
+          }
+        }
+      });
+
+      // =========================================================================
       // ENHANCED EVENTS TIMELINE RENDERING
       // =========================================================================
       function initEnhancedCatalysts() {
@@ -6895,6 +7537,9 @@
       initKonamiCode();
       initRippleEffects();
       
+      // Expose SignalInvaders to window for console access
+      window.SignalInvaders = SignalInvaders;
+      
       if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initArcade);
         document.addEventListener('DOMContentLoaded', initTubeOverload);
@@ -6903,6 +7548,7 @@
         document.addEventListener('DOMContentLoaded', initTrajectoryCanvas);
         document.addEventListener('DOMContentLoaded', initLoreEngine);
         document.addEventListener('DOMContentLoaded', initEnhancedCatalysts);
+        document.addEventListener('DOMContentLoaded', () => SignalInvaders.init());
       } else {
         initArcade();
         initTubeOverload();
@@ -6911,6 +7557,7 @@
         initTrajectoryCanvas();
         initLoreEngine();
         initEnhancedCatalysts();
+        SignalInvaders.init();
       }
     })();
   </script>
