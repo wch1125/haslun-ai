@@ -8736,7 +8736,8 @@
       'RKLB': '#33ff99', 'LUNR': '#47d4ff', 'ASTS': '#ffb347', 'ACHR': '#ff6b9d',
       'JOBY': '#b388ff', 'GME': '#ff6b6b', 'BKSY': '#47d4ff', 'RDW': '#33ff99',
       'PL': '#b388ff', 'EVEX': '#ff6b9d', 'MP': '#ffb347', 'KTOS': '#47d4ff',
-      'IRDM': '#33ff99', 'HON': '#b388ff', 'ATI': '#ffb347', 'CACI': '#47d4ff', 'LOAR': '#ff6b9d'
+      'IRDM': '#33ff99', 'HON': '#b388ff', 'ATI': '#ffb347', 'CACI': '#47d4ff', 'LOAR': '#ff6b9d',
+      'COHR': '#47d4ff', 'GE': '#ff6b6b', 'LHX': '#33ff99', 'RTX': '#ff6b6b'
     };
     
     const tickerThemes = {
@@ -8744,7 +8745,8 @@
       'RDW': 'SPACE', 'PL': 'SPACE', 'IRDM': 'SPACE', 'KTOS': 'DEFENSE',
       'ACHR': 'eVTOL', 'JOBY': 'eVTOL', 'EVEX': 'eVTOL', 'GME': 'MEME',
       'MP': 'MATERIALS', 'HON': 'INDUSTRIAL', 'ATI': 'MATERIALS',
-      'CACI': 'DEFENSE', 'LOAR': 'AEROSPACE'
+      'CACI': 'DEFENSE', 'LOAR': 'AEROSPACE',
+      'COHR': 'OPTICS', 'GE': 'INDUSTRIAL', 'LHX': 'DEFENSE', 'RTX': 'DEFENSE'
     };
     
     const rangeDays = { '1W': 7, '1M': 30, '3M': 90, '6M': 180, '1Y': 365, 'ALL': 9999 };
@@ -11201,44 +11203,25 @@
       const lore = PIXEL_SHIP_LORE[meta.pattern] || PIXEL_SHIP_LORE.drone;
       const color = tickerColors[ticker] || '#33ff99';
       
-      // Check if PNG sprite exists for this ticker
-      const spritePath = SHIP_SPRITES[ticker];
+      // Use PNG sprite (custom or fallback)
+      const spritePath = SHIP_SPRITES[ticker] || DEFAULT_SHIP_SPRITE;
       
-      if (spritePath) {
-        // Use PNG sprite
-        let img = container.querySelector('img.console-ship-img');
-        let svg = container.querySelector('svg#console-ship-svg');
-        
-        if (!img) {
-          img = document.createElement('img');
-          img.className = 'console-ship-img';
-          img.style.cssText = 'width: 80px; height: 50px; object-fit: contain; filter: drop-shadow(0 0 8px var(--phosphor));';
-          container.insertBefore(img, container.firstChild);
-        }
-        
-        img.src = spritePath;
-        img.alt = `${ticker} vessel`;
-        img.style.display = 'block';
-        
-        if (svg) svg.style.display = 'none';
-      } else {
-        // Use procedural SVG
-        let svg = container.querySelector('svg#console-ship-svg');
-        let img = container.querySelector('img.console-ship-img');
-        
-        if (!svg) {
-          svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-          svg.id = 'console-ship-svg';
-          svg.setAttribute('viewBox', '0 0 120 80');
-          container.insertBefore(svg, container.firstChild);
-        }
-        
-        const svgContent = generateShipSvgString(meta.pattern, color, pnlPercent);
-        svg.innerHTML = svgContent;
-        svg.style.display = 'block';
-        
-        if (img) img.style.display = 'none';
+      // Use PNG sprite
+      let img = container.querySelector('img.console-ship-img');
+      let svg = container.querySelector('svg#console-ship-svg');
+      
+      if (!img) {
+        img = document.createElement('img');
+        img.className = 'console-ship-img';
+        img.style.cssText = 'width: 80px; height: 50px; object-fit: contain; filter: drop-shadow(0 0 8px var(--phosphor));';
+        container.insertBefore(img, container.firstChild);
       }
+      
+      img.src = spritePath;
+      img.alt = `${ticker} vessel`;
+      img.style.display = 'block';
+      
+      if (svg) svg.style.display = 'none';
       
       if (labelEl) labelEl.textContent = lore.label;
     }
@@ -11541,7 +11524,11 @@
       HON: { name: "HONEYBEE", designation: "IND-014" },
       ATI: { name: "TITANIUM", designation: "MAT-015" },
       CACI: { name: "SENTINEL", designation: "DEF-016" },
-      LOAR: { name: "PHOENIX", designation: "AER-017" }
+      LOAR: { name: "PHOENIX", designation: "AER-017" },
+      COHR: { name: "PRISM", designation: "OPT-018" },
+      GE: { name: "SPECTRE", designation: "IND-019" },
+      LHX: { name: "HELIX", designation: "AAM-020" },
+      RTX: { name: "RAYTHEON", designation: "DEF-021" }
     };
 
     // Per-ticker ship sprites (PNG). If a ticker isn't listed here, we fall back to the procedural SVG.
@@ -11549,14 +11536,22 @@
       ACHR: 'assets/ships/ACHR-eVTOL-ship.png',
       ASTS: 'assets/ships/ASTS-Communications-Relay-Ship.png',
       BKSY: 'assets/ships/BKSY-recon-ship.png',
+      COHR: 'assets/ships/COHR-Glass-Reflector-ship.png',
       EVEX: 'assets/ships/EVEX-Transport-Ship.png',
+      GE: 'assets/ships/GE-Stealth-Bomber-ship.png',
       GME: 'assets/ships/GME-moonshot-ship.png',
       JOBY: 'assets/ships/JOBY-eVTOL-light-class-ship.png',
+      KTOS: 'assets/ships/KTOS-Fighter-Ship.png',
+      LHX: 'assets/ships/LHX-Drone-ship.png',
       LUNR: 'assets/ships/LUNR-lander-ship.png',
       PL: 'assets/ships/PL-scout-ship.png',
       RDW: 'assets/ships/RDW-Hauler-ship.png',
-      RKLB: 'assets/ships/RKLB-flagship-ship.png'
+      RKLB: 'assets/ships/RKLB-flagship-ship.png',
+      RTX: 'assets/ships/RTX-Officer-Class-Ship.png'
     };
+    
+    // Default fallback sprite for tickers without custom ships
+    const DEFAULT_SHIP_SPRITE = 'assets/ships/Unclaimed-Drone-ship.png';
     
     function renderFleetGrid() {
       const fleetGrid = document.getElementById('fleet-grid');
@@ -11596,12 +11591,9 @@
         if (isOperational) operational++;
         else damaged++;
         
-        // Sprite if available; otherwise fall back to procedural SVG
-        const spritePath = SHIP_SPRITES[pos.ticker];
-        const shipSvg = spritePath ? '' : generateShipSvgString(shipMeta.pattern, color, pnlPct);
-        const shipVisualMarkup = spritePath
-          ? `<img src="${spritePath}" alt="${pos.ticker} ship" loading="lazy" decoding="async">`
-          : `<svg viewBox="0 0 120 80" aria-hidden="true">${shipSvg}</svg>`;
+        // Sprite if available; otherwise use fallback sprite (all ships now have sprites)
+        const spritePath = SHIP_SPRITES[pos.ticker] || DEFAULT_SHIP_SPRITE;
+        const shipVisualMarkup = `<img src="${spritePath}" alt="${pos.ticker} ship" loading="lazy" decoding="async">`;
         
         return `
           <div class="ship-card ${isOperational ? '' : 'negative'}" style="--ship-color: ${color}" onclick="selectTicker('${pos.ticker}'); switchTab('chart');">
