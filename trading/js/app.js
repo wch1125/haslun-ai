@@ -2364,11 +2364,24 @@
     function startMacdOrbitAnimation() {
       if (macdOrbitAnimFrame) return; // Already running
       
-      function animate() {
+      // Mobile detection for frame throttling
+      const isMobile = window.innerWidth < 768 || ('ontouchstart' in window);
+      let lastFrame = 0;
+      const targetFps = isMobile ? 30 : 60; // Throttle on mobile
+      const frameInterval = 1000 / targetFps;
+      
+      function animate(timestamp) {
+        // Throttle frame rate on mobile
+        if (isMobile && timestamp - lastFrame < frameInterval) {
+          macdOrbitAnimFrame = requestAnimationFrame(animate);
+          return;
+        }
+        lastFrame = timestamp;
+        
         drawMacdOrbitFrame();
         macdOrbitAnimFrame = requestAnimationFrame(animate);
       }
-      animate();
+      animate(0);
     }
     
     /**
@@ -2394,7 +2407,14 @@
       if (!wrapper || !canvas) return;
       
       const rect = wrapper.getBoundingClientRect();
-      const dpr = window.devicePixelRatio || 1;
+      
+      // Skip if canvas is too small
+      if (rect.width < 100 || rect.height < 60) return;
+      
+      // Mobile detection
+      const isMobile = window.innerWidth < 768 || ('ontouchstart' in window);
+      
+      const dpr = isMobile ? Math.min(window.devicePixelRatio, 2) : (window.devicePixelRatio || 1);
       
       // Resize canvas if needed
       const targetW = Math.max(1, Math.floor(rect.width * dpr));
@@ -2412,8 +2432,8 @@
       // If no data, bail
       if (!macd?.length || !signal?.length) return;
       
-      // Use last N points for "recent orbit"
-      const N = Math.min(120, macd.length);
+      // Use last N points for "recent orbit" - fewer on mobile
+      const N = Math.min(isMobile ? 60 : 120, macd.length);
       const start = macd.length - N;
       
       const macdSlice = macd.slice(start);
@@ -2514,9 +2534,10 @@
       ctx.stroke();
       ctx.setLineDash([]);
       
-      // ORBIT TRAIL (historical path)
+      // ORBIT TRAIL (historical path) - skip points on mobile for perf
       ctx.globalCompositeOperation = 'screen';
-      for (let j = 0; j < N; j++) {
+      const trailStep = isMobile ? 2 : 1;
+      for (let j = 0; j < N; j += trailStep) {
         const mj = macdSlice[j] ?? 0;
         const hj = histSlice[j] ?? 0;
         

@@ -754,14 +754,53 @@
         margin: 0.75rem 0;
       }
       
+      .command-brief-header {
+        padding: 0.6rem 0.75rem;
+      }
+      
+      .command-brief-title {
+        font-size: 0.7rem;
+      }
+      
       .brief-row {
         flex-direction: column;
         align-items: flex-start;
         gap: 0.2rem;
+        padding: 0.5rem 0;
       }
       
       .brief-value {
         text-align: left;
+      }
+      
+      .command-brief-footer {
+        padding: 0.75rem;
+      }
+      
+      .brief-link {
+        display: inline-block;
+        padding: 0.5rem 0;
+        min-height: 44px;
+        line-height: 44px;
+        font-size: 0.75rem;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .command-brief-body {
+        padding: 0.75rem;
+      }
+      
+      .brief-label {
+        font-size: 0.65rem;
+      }
+      
+      .brief-value {
+        font-size: 0.7rem;
+      }
+      
+      .brief-note {
+        font-size: 0.62rem;
       }
     }
     
@@ -2653,10 +2692,15 @@
       backdrop-filter: blur(2px);
     }
     
-    /* Reduced motion: freeze flight animations */
+    /* Reduced motion: freeze all decorative animations */
     @media (prefers-reduced-motion: reduce) {
       .loading-overlay,
-      .fleet-bg-canvas {
+      .fleet-bg-canvas,
+      .hangar-glass-overlay,
+      .hangar-glass-overlay::after,
+      .command-brief::before,
+      .command-brief-icon,
+      .energy-bar-fill {
         animation: none !important;
       }
     }
@@ -7290,7 +7334,7 @@
       align-items: center;
       justify-content: center;
       gap: 0.2rem;
-      padding: 0.4rem 0.75rem;
+      padding: 0.5rem 0.75rem;
       border: none;
       background: transparent;
       color: var(--text-dim);
@@ -7301,6 +7345,7 @@
       cursor: pointer;
       transition: all 0.2s ease;
       min-width: 60px;
+      min-height: 52px; /* Ensure touch-friendly height */
       border-radius: 8px;
       -webkit-tap-highlight-color: transparent;
     }
@@ -9359,7 +9404,7 @@
         position: fixed;
         left: 10px;
         right: 10px;
-        bottom: 110px; /* above mobile nav + quick stats */
+        bottom: calc(74px + env(safe-area-inset-bottom, 0px)); /* above mobile nav + safe area */
         z-index: 60;
         margin: 0;
         backdrop-filter: blur(10px);
@@ -9367,15 +9412,39 @@
       }
       
       .context-bay-content {
-        max-height: 55vh;
+        max-height: 50vh;
       }
       
       .context-bay-grid {
         grid-template-columns: 1fr;
       }
       
+      .context-bay-handle {
+        min-height: 44px; /* Touch-friendly tap target */
+      }
+      
       .feed-mini {
         max-height: 22vh;
+      }
+    }
+    
+    /* Very small screens */
+    @media (max-width: 400px) {
+      .context-bay {
+        left: 5px;
+        right: 5px;
+      }
+      
+      .context-bay-content {
+        max-height: 45vh;
+      }
+      
+      .context-panel .panel-title {
+        font-size: 0.65rem;
+      }
+      
+      .context-panel .panel-body {
+        font-size: 0.7rem;
       }
     }
 
