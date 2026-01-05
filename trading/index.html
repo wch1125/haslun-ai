@@ -737,6 +737,93 @@
       transform: translateY(-50%);
     }
     
+    /* =========================================================================
+       TELEMETRY SHIP HUD – pixel mech floating over the main viewport
+       ========================================================================= */
+
+    .telemetry-ship-hud {
+      position: absolute;
+      left: 1.5rem;
+      top: 1.2rem;
+      width: 190px;
+      pointer-events: none;
+      z-index: 4;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .telemetry-ship-frame {
+      position: relative;
+      padding: 0.6rem 0.7rem;
+      border-radius: 10px;
+      border: 1px solid hsla(var(--accent-hue), 100%, 60%, 0.25);
+      background:
+        radial-gradient(circle at 0% 0%, rgba(0, 255, 200, 0.18), transparent 55%),
+        radial-gradient(circle at 100% 100%, rgba(0, 180, 255, 0.16), transparent 60%),
+        linear-gradient(145deg, rgba(0, 0, 0, 0.85), rgba(0, 12, 20, 0.96));
+      box-shadow:
+        0 0 0 1px rgba(0, 0, 0, 0.8),
+        0 0 20px rgba(0, 255, 200, 0.25);
+      backdrop-filter: blur(10px);
+    }
+
+    .telemetry-ship-frame::before {
+      content: "";
+      position: absolute;
+      inset: 2px;
+      border-radius: 8px;
+      border: 1px solid rgba(0, 0, 0, 0.6);
+      pointer-events: none;
+    }
+
+    .telemetry-ship-svg {
+      width: 100%;
+      height: 90px;
+      display: block;
+      filter:
+        drop-shadow(0 0 6px rgba(0, 255, 160, 0.7))
+        drop-shadow(0 0 18px rgba(0, 255, 210, 0.45));
+    }
+
+    /* small grid behind the mech */
+    .telemetry-ship-grid {
+      position: absolute;
+      inset: 0.4rem 0.5rem;
+      opacity: 0.22;
+      background-image:
+        linear-gradient(to right, rgba(0, 255, 190, 0.25) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(0, 255, 190, 0.25) 1px, transparent 1px);
+      background-size: 9px 9px;
+      border-radius: 7px;
+    }
+
+    /* text under the sprite */
+    .telemetry-ship-label {
+      font-family: var(--font-mono), monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #e9fff9;
+      text-shadow: 0 0 4px rgba(0, 255, 210, 0.7);
+    }
+
+    .telemetry-ship-caption {
+      font-family: var(--font-mono), monospace;
+      font-size: 0.65rem;
+      line-height: 1.4;
+      color: rgba(190, 255, 240, 0.85);
+      max-width: 220px;
+      text-shadow: 0 0 4px rgba(0, 0, 0, 0.9);
+    }
+
+    /* hide HUD on small screens – keeps mobile clean */
+    @media (max-width: 960px) {
+      .telemetry-ship-hud {
+        display: none;
+      }
+    }
+    
     /* Chart wrapper inside viewport */
     .telemetry-chart-area {
       flex: 1;
@@ -7572,6 +7659,26 @@
                 <div class="telemetry-overlay-grid"></div>
                 <div class="telemetry-crosshair"></div>
                 
+                <!-- Pixel mech HUD -->
+                <div class="telemetry-ship-hud">
+                  <div class="telemetry-ship-frame">
+                    <div class="telemetry-ship-grid"></div>
+                    <svg
+                      id="telemetry-ship-svg"
+                      class="telemetry-ship-svg"
+                      viewBox="0 0 120 80"
+                      aria-hidden="true">
+                      <!-- renderPixelShip() will paint into here -->
+                    </svg>
+                  </div>
+                  <div class="telemetry-ship-label" id="telemetry-ship-label">
+                    RKLB · FLAGSHIP
+                  </div>
+                  <div class="telemetry-ship-caption" id="telemetry-ship-caption">
+                    Spearhead command ship. Victory follows in its wake.
+                  </div>
+                </div>
+                
                 <div class="telemetry-chart-area">
                   <!-- Chart Header with Controls -->
                   <div class="chart-header">
@@ -10021,6 +10128,44 @@
       }
     }
     
+    // Telemetry HUD ship – uses the same pixel mech system
+    function updateTelemetryShipSprite(ticker) {
+      const svgEl      = document.getElementById("telemetry-ship-svg");
+      const labelEl    = document.getElementById("telemetry-ship-label");
+      const captionEl  = document.getElementById("telemetry-ship-caption");
+      const headerName = document.getElementById("telemetry-ship-name"); // existing title text
+
+      if (!svgEl) return;
+
+      const upper = (ticker || "").toUpperCase();
+
+      // Pull sector + returns from existing data sources
+      const profile = (window.TICKER_PROFILES && TICKER_PROFILES[upper]) || {};
+      const sector  = profile.sector || profile.theme || "Unknown";
+
+      const stats = (window.statsData && statsData[upper]) || {};
+      // Prefer "total" return; fall back to 1Y / 3M if needed
+      const pnl =
+        (typeof stats.return_total === "number" ? stats.return_total :
+        typeof stats.return_1y    === "number" ? stats.return_1y    :
+        typeof stats.return_3m    === "number" ? stats.return_3m    :
+        0);
+
+      // Map into a sprite pattern
+      const meta = mapTickerToPixelShip(upper, sector, pnl);
+      renderPixelShip(svgEl, meta.pattern, {
+        hero: meta.hero,
+        pnlPercent: pnl
+      });
+
+      const lore = getPixelShipLore(meta.pattern);
+      const shipName = `${upper} · ${lore.label}`;
+
+      if (labelEl)   labelEl.textContent   = shipName;
+      if (captionEl) captionEl.textContent = lore.lore;
+      if (headerName) headerName.textContent = shipName; // keeps header in sync
+    }
+    
     function initFleetHolobay() {
       const strip = document.getElementById("fleet-holo-strip");
       const svg = document.getElementById("fleet-ship-svg");
@@ -10294,6 +10439,11 @@
       const pnlNum = pos ? ((pos.current_price - pos.entry_price) / pos.entry_price) * 100 : 0;
       if (typeof updateSidebarShip === 'function') {
         updateSidebarShip(ticker, sector, pnlNum);
+      }
+      
+      // Update telemetry HUD ship sprite
+      if (typeof updateTelemetryShipSprite === 'function') {
+        updateTelemetryShipSprite(ticker);
       }
       
       document.querySelectorAll('.watchlist-item').forEach(el => {
