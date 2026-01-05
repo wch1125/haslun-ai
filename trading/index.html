@@ -3467,38 +3467,61 @@
     }
 
     /* =========================================================================
-       PIXEL SHIP RENDERING (8-bit Space Invaders style)
+       PIXEL SHIP RENDERING (HD Sprite / SNES Mecha HUD Style)
        ========================================================================= */
-    .pixel-ship-square {
-      fill: #b6ffe7;
-      stroke: #00ffbf;
-      stroke-width: 0.2;
+    
+    /* OUTER HULL – darker neon */
+    .pixel-ship-outer {
+      fill: #00f2a0;
+      stroke: #00ffd0;
+      stroke-width: 0.22;
     }
 
-    .pixel-ship-square--hero {
-      fill: #e4fff5;
-      stroke-width: 0.35;
+    /* INNER CORE – brighter, "reactor" */
+    .pixel-ship-inner {
+      fill: #eafffb;
+      stroke: #e4fff7;
+      stroke-width: 0.18;
     }
 
+    /* HIGHLIGHT / EDGE TRIM – very light accent */
+    .pixel-ship-highlight {
+      fill: #bfffee;
+      stroke: #f5fffd;
+      stroke-width: 0.12;
+    }
+
+    /* global glow wrapper (keep on SVG container) */
     .pixel-ship-glow {
       filter:
-        drop-shadow(0 0 6px rgba(0,255,190,.8))
-        drop-shadow(0 0 16px rgba(0,255,220,.6));
+        drop-shadow(0 0 7px rgba(0,255,190,.9))
+        drop-shadow(0 0 18px rgba(0,255,220,.6));
     }
 
-    /* idle wobble for main holobay */
-    .fleet-ship-svg.pixel-mode {
-      animation: pixel-holo-rock 7s ease-in-out infinite alternate;
+    /* hero ships: breathing mech aura */
+    .hero-ship {
+      animation: pixel-hero-pulse 1.9s ease-in-out infinite;
+    }
+
+    @keyframes pixel-hero-pulse {
+      0%   { opacity: .82; filter: drop-shadow(0 0 6px rgba(0,255,220,.7)); }
+      50%  { opacity: 1;   filter: drop-shadow(0 0 12px rgba(0,255,240,1)); }
+      100% { opacity: .82; filter: drop-shadow(0 0 6px rgba(0,255,220,.7)); }
+    }
+
+    /* holobay idle "hover" – mech hologram rock */
+    .fleet-ship-svg {
+      animation: mech-holo-rock 7s ease-in-out infinite alternate;
       transform-origin: 50% 55%;
     }
 
-    @keyframes pixel-holo-rock {
-      0%   { transform: perspective(700px) rotateX(16deg) rotateY(-6deg); }
-      50%  { transform: perspective(700px) rotateX(18deg) rotateY(6deg); }
-      100% { transform: perspective(700px) rotateX(16deg) rotateY(-3deg); }
+    @keyframes mech-holo-rock {
+      0%   { transform: perspective(700px) rotateX(17deg) rotateY(-5deg); }
+      50%  { transform: perspective(700px) rotateX(19deg) rotateY( 4deg); }
+      100% { transform: perspective(700px) rotateX(17deg) rotateY(-2deg); }
     }
 
-    /* damage flicker for big losers */
+    /* damaged ships for big losers */
     .ship-damaged {
       position: relative;
     }
@@ -3507,33 +3530,44 @@
       content: "";
       position: absolute;
       inset: 0;
-      background: radial-gradient(circle at 50% 50%, rgba(255,80,80,.4), transparent 65%);
+      background: radial-gradient(circle at 50% 50%, rgba(255,80,80,.45), transparent 65%);
       mix-blend-mode: screen;
+      pointer-events: none;
       opacity: 0;
-      animation: pixel-damage 1.4s infinite;
+      animation: mech-damage 1.5s infinite;
     }
 
-    @keyframes pixel-damage {
-      0%,30%,100% { opacity: 0; }
-      35%         { opacity: 0.9; }
-      40%         { opacity: 0.2; }
-      50%         { opacity: 0.5; }
+    @keyframes mech-damage {
+      0%,35%,100% { opacity: 0; }
+      40%         { opacity: .95; }
+      48%         { opacity: .25; }
+      58%         { opacity: .6;  }
     }
 
     /* Pixel ship winning state - bright pulse */
-    .pixel-ship-winning .pixel-ship-square {
+    .pixel-ship-winning .pixel-ship-outer,
+    .pixel-ship-winning .pixel-ship-inner,
+    .pixel-ship-winning .pixel-ship-highlight {
       animation: pixel-win-pulse 1.2s ease-in-out infinite;
     }
 
     @keyframes pixel-win-pulse {
-      0%, 100% { fill: #b6ffe7; }
-      50% { fill: #e4fff5; }
+      0%, 100% { filter: brightness(1); }
+      50% { filter: brightness(1.3); }
     }
 
     /* Pixel ship losing state - red tint */
-    .pixel-ship-losing .pixel-ship-square {
+    .pixel-ship-losing .pixel-ship-outer {
+      fill: #ff8080;
+      stroke: #ff5050;
+    }
+    .pixel-ship-losing .pixel-ship-inner {
+      fill: #ffcccc;
+      stroke: #ffaaaa;
+    }
+    .pixel-ship-losing .pixel-ship-highlight {
       fill: #ffb0b0;
-      stroke: #ff6060;
+      stroke: #ff9090;
     }
 
     .fleet-holobay {
@@ -7928,108 +7962,143 @@
     // PIXEL SHIP RENDERING SYSTEM (8-bit Space Invaders style)
     // =========================================================================
     
-    // Each row is a string of "0"/"1" for the LEFT HALF.
-    // Code will mirror them horizontally, so total columns = row.length * 2.
-    // Grid is dense enough that each design has >= 50 squares.
+    // 17 cols x 11 rows – enough detail to feel "sprite-like" / SNES mech HUD
+    // Each character: "0" = empty, "1" = outer hull, "2" = inner core, "3" = highlight accent
+
     const PIXEL_SHIPS = {
-      // Hero flagship – spear / eye / command ship (RKLB)
+      // RKLB: long spear / command cruiser
       flagship: [
-        "00110",
-        "01111",
-        "11111",
-        "11111",
-        "11111",
-        "01111",
-        "00110",
-        "00010"
+        "00000011100000000",
+        "00000122210000000",
+        "00001122221000000",
+        "00011222222100000",
+        "00112222222210000",
+        "01122222322221000",
+        "00112223222210000",
+        "00011222222100000",
+        "00001122221000000",
+        "00000123210000000",
+        "00000011100000000"
       ],
-      // Chunky mech / dreadnought (GME, volatile stocks)
+
+      // GME: chunky anime dreadnought / mech chest
       dreadnought: [
-        "01110",
-        "11111",
-        "11111",
-        "11111",
-        "11111",
-        "11111",
-        "01110",
-        "00100"
+        "00000111111000000",
+        "00011222222110000",
+        "00122222222221000",
+        "01122222222221100",
+        "11222223222222110",
+        "11222222222222110",
+        "01122222222221100",
+        "00122222222221000",
+        "00011222222110000",
+        "00000111111000000",
+        "00000001000000000"
       ],
-      // Lander / shuttle style (LUNR)
-      lander: [
-        "00100",
-        "01110",
-        "11111",
-        "11111",
-        "11111",
-        "01110",
-        "01110",
-        "00100"
-      ],
-      // Carrier (wide, flat) - EVTOL / Aviation
-      carrier: [
-        "01111",
-        "11111",
-        "11111",
-        "11111",
-        "11111",
-        "11111",
-        "01111",
-        "00111"
-      ],
-      // Recon drone (compact) - surveillance
-      drone: [
-        "00110",
-        "01111",
-        "11111",
-        "11111",
-        "11111",
-        "01111",
-        "00110",
-        "00000"
-      ],
-      // Cruiser - defense / patrol
-      cruiser: [
-        "00111",
-        "01111",
-        "11111",
-        "11111",
-        "11111",
-        "11111",
-        "01111",
-        "00110"
-      ],
-      // Station / relay - comms
-      station: [
-        "01110",
-        "11111",
-        "01110",
-        "11111",
-        "11111",
-        "01110",
-        "11111",
-        "01110"
-      ],
-      // Probe - experimental / meme
+
+      // ASTS: twin-pod probe / sensor array
       probe: [
-        "00100",
-        "01110",
-        "01110",
-        "11111",
-        "11111",
-        "01110",
-        "01110",
-        "00100"
+        "00001100110000000",
+        "00012221122200000",
+        "00122222222210000",
+        "01122222222211000",
+        "01222232232221000",
+        "01122222222211000",
+        "00122222222210000",
+        "00012221122200000",
+        "00001100110000000",
+        "00000100010000000",
+        "00000100010000000"
       ],
-      // Hauler - cargo / industrial
+
+      // ACHR / EVEX / JOBY carriers – wide flight deck
+      carrier: [
+        "00000011111000000",
+        "00000122222100000",
+        "00001222222210000",
+        "00012222222221000",
+        "00122222222222100",
+        "01122223222322110",
+        "00122222222222100",
+        "00012222222221000",
+        "00001222222210000",
+        "00000122222100000",
+        "00000011111000000"
+      ],
+
+      // LUNR: lander / dropship
+      lander: [
+        "00000011100000000",
+        "00000122210000000",
+        "00001222221000000",
+        "00012222222100000",
+        "00122222222210000",
+        "01122223222211000",
+        "00122222222210000",
+        "00012222222100000",
+        "00001222221000000",
+        "00000123210000000",
+        "00000011100000000"
+      ],
+
+      // default drone frame – compact but still mech-y
+      drone: [
+        "00000011100000000",
+        "00000122210000000",
+        "00001222221000000",
+        "00001223221000000",
+        "00001222221000000",
+        "00000122210000000",
+        "00000122210000000",
+        "00000011100000000",
+        "00000001000000000",
+        "00000001000000000",
+        "00000000000000000"
+      ],
+      
+      // Cruiser - defense / patrol ship
+      cruiser: [
+        "00000111110000000",
+        "00001222221000000",
+        "00012222222100000",
+        "00122222222210000",
+        "01122223222211000",
+        "01222222222221000",
+        "00122222222210000",
+        "00012222222100000",
+        "00001222221000000",
+        "00000111110000000",
+        "00000010100000000"
+      ],
+      
+      // Station / relay - comms hub
+      station: [
+        "00001110111000000",
+        "00011221122110000",
+        "00012222222100000",
+        "00011222221100000",
+        "00122223222210000",
+        "00011222221100000",
+        "00012222222100000",
+        "00011221122110000",
+        "00001110111000000",
+        "00000100010000000",
+        "00000100010000000"
+      ],
+      
+      // Hauler - cargo / industrial transport
       hauler: [
-        "01111",
-        "11111",
-        "11111",
-        "11111",
-        "11111",
-        "11111",
-        "11111",
-        "01110"
+        "00000111111000000",
+        "00001222222100000",
+        "00012222222210000",
+        "00122222222221000",
+        "00122222222221000",
+        "01122223222221100",
+        "00122222222221000",
+        "00122222222221000",
+        "00012222222210000",
+        "00001222222100000",
+        "00000111111000000"
       ]
     };
     
@@ -8047,72 +8116,70 @@
     };
     
     /**
-     * Render a symmetric pixel ship into an SVG element.
-     * @param {SVGElement} svgEl
-     * @param {string} patternKey - key in PIXEL_SHIPS
-     * @param {Object} opts
-     *   opts.hero {boolean}
-     *   opts.pnlPercent {number} - to mark damaged on big losers
+     * Render HD mech sprite into an SVG.
+     * patternKey in PIXEL_SHIPS.
+     * opts: { hero: bool, pnlPercent: number }
      */
     function renderPixelShip(svgEl, patternKey, opts = {}) {
       if (!svgEl) return;
 
       const pattern = PIXEL_SHIPS[patternKey] || PIXEL_SHIPS.flagship;
       const hero    = !!opts.hero;
-      const pnl     = typeof opts.pnlPercent === "number" ? opts.pnlPercent : null;
+      const pnl     = (typeof opts.pnlPercent === "number") ? opts.pnlPercent : null;
 
-      // Clear previous content
+      // wipe previous content
       while (svgEl.firstChild) svgEl.removeChild(svgEl.firstChild);
 
-      // Basic grid metrics
-      const rows      = pattern.length;
-      const colsHalf  = pattern[0].length;
-      const colsTotal = colsHalf * 2;
-      const cell      = 4;             // size of a square in viewBox units
-      const width     = colsTotal * cell;
-      const height    = rows * cell;
-      const viewW     = 120;
-      const viewH     = 80;
+      const rows = pattern.length;
+      const cols = pattern[0].length;
 
+      const cell  = 2.9; // smaller cells = more "resolution"
+      const width = cols * cell;
+      const height = rows * cell;
+
+      const viewW = 120;
+      const viewH = 80;
       const offsetX = (viewW - width) / 2;
       const offsetY = (viewH - height) / 2;
 
-      const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      const ns = "http://www.w3.org/2000/svg";
+      const g = document.createElementNS(ns, "g");
       svgEl.appendChild(g);
 
       for (let r = 0; r < rows; r++) {
-        const rowBits = pattern[r];
-        for (let c = 0; c < colsHalf; c++) {
-          if (rowBits[c] !== "1") continue;
+        const row = pattern[r];
+        for (let c = 0; c < cols; c++) {
+          const ch = row[c];
+          if (ch === "0") continue;
 
-          // Left square
-          const leftX = offsetX + c * cell;
-          const y     = offsetY + r * cell;
+          const x = offsetX + c * cell;
+          const y = offsetY + r * cell;
 
-          const rectL = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-          rectL.setAttribute("x", leftX);
-          rectL.setAttribute("y", y);
-          rectL.setAttribute("width", cell);
-          rectL.setAttribute("height", cell);
-          rectL.setAttribute("class", hero ? "pixel-ship-square pixel-ship-square--hero" : "pixel-ship-square");
-          g.appendChild(rectL);
+          const rect = document.createElementNS(ns, "rect");
+          rect.setAttribute("x", x);
+          rect.setAttribute("y", y);
+          rect.setAttribute("width", cell);
+          rect.setAttribute("height", cell);
+          rect.setAttribute("rx", 0.6);
+          rect.setAttribute("ry", 0.6);
 
-          // Mirrored square
-          const mirrorC = colsTotal - 1 - c;
-          const rightX  = offsetX + mirrorC * cell;
+          let cls;
+          if (ch === "1") cls = "pixel-ship-outer";
+          else if (ch === "2") cls = "pixel-ship-inner";
+          else if (ch === "3") cls = "pixel-ship-highlight";
+          else continue;
 
-          const rectR = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-          rectR.setAttribute("x", rightX);
-          rectR.setAttribute("y", y);
-          rectR.setAttribute("width", cell);
-          rectR.setAttribute("height", cell);
-          rectR.setAttribute("class", hero ? "pixel-ship-square pixel-ship-square--hero" : "pixel-ship-square");
-          g.appendChild(rectR);
+          rect.setAttribute("class", cls);
+          g.appendChild(rect);
         }
       }
 
       // Add pixel-mode class for animations
       svgEl.classList.add("pixel-mode", "pixel-ship-glow");
+
+      // hero / damage states on the container
+      if (hero) svgEl.classList.add("hero-ship");
+      else      svgEl.classList.remove("hero-ship");
       
       // Damage overlay on big losers / winning state
       svgEl.classList.remove("ship-damaged", "pixel-ship-winning", "pixel-ship-losing");
