@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HASLUN-BOT // Mission Command</title>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0a0e14;
+      --bg-card: #0d1218;
+      --bg-card-hover: #111820;
+      --phosphor: #33ff99;
+      --phosphor-dim: rgba(51, 255, 153, 0.3);
+      --amber: #ffaa33;
+      --amber-dim: rgba(255, 170, 51, 0.3);
+      --red: #ff4444;
+      --cyan: #00d4ff;
+      --text: #c8d4e0;
+      --text-dim: #6a7a8a;
+      --border: rgba(51, 255, 153, 0.15);
+    }
+    
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      font-family: 'IBM Plex Mono', monospace;
+      background: var(--bg-dark);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+    
+    /* Scanline effect */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, 0.1) 2px,
+        rgba(0, 0, 0, 0.1) 4px
+      );
+      pointer-events: none;
+      z-index: 9999;
+    }
+    
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 1.5rem;
+    }
+    
+    /* Header */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .header-title {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    
+    .header-title h1 {
+      font-size: 1.5rem;
+      color: var(--phosphor);
+      text-shadow: 0 0 20px var(--phosphor-dim);
+      letter-spacing: 2px;
+    }
+    
+    .header-title .subtitle {
+      color: var(--text-dim);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    
+    .back-link {
+      color: var(--phosphor);
+      text-decoration: none;
+      font-size: 0.85rem;
+      opacity: 0.7;
+      transition: opacity 0.2s;
+    }
+    
+    .back-link:hover { opacity: 1; }
+    
+    /* Controls */
+    .controls {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+    
+    .control-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .control-group label {
+      color: var(--text-dim);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    
+    select, button {
+      font-family: inherit;
+      font-size: 0.85rem;
+      background: var(--bg-card);
+      color: var(--phosphor);
+      border: 1px solid var(--border);
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    select:hover, button:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--phosphor);
+    }
+    
+    button {
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    /* Status bar */
+    .status-bar {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 0.75rem 1rem;
+      margin-bottom: 1.5rem;
+      font-size: 0.8rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .status-bar .status {
+      color: var(--text-dim);
+    }
+    
+    .status-bar .status.ready { color: var(--phosphor); }
+    .status-bar .status.loading { color: var(--amber); }
+    .status-bar .status.error { color: var(--red); }
+    
+    .status-bar .meta {
+      color: var(--text-dim);
+      font-size: 0.7rem;
+    }
+    
+    /* Main grid */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 350px 1fr;
+      gap: 1.5rem;
+    }
+    
+    @media (max-width: 900px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    /* Environment panel */
+    .env-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+    }
+    
+    .panel-header {
+      padding: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .panel-label {
+      color: var(--text-dim);
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 0.25rem;
+    }
+    
+    .panel-title {
+      color: var(--phosphor);
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    
+    .panel-body {
+      padding: 1rem;
+    }
+    
+    /* Stats list */
+    .stat-item {
+      margin-bottom: 1rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .stat-item:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+    
+    .stat-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+    
+    .stat-name {
+      font-size: 0.85rem;
+      color: var(--text);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    
+    .stat-value {
+      font-size: 1.25rem;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+    
+    .stat-value.high { color: var(--phosphor); }
+    .stat-value.medium { color: var(--amber); }
+    .stat-value.low { color: var(--red); }
+    
+    .stat-bar {
+      height: 4px;
+      background: rgba(255,255,255,0.1);
+      margin-bottom: 0.5rem;
+      overflow: hidden;
+    }
+    
+    .stat-bar-fill {
+      height: 100%;
+      transition: width 0.5s ease;
+    }
+    
+    .stat-bar-fill.high { background: var(--phosphor); box-shadow: 0 0 10px var(--phosphor); }
+    .stat-bar-fill.medium { background: var(--amber); box-shadow: 0 0 10px var(--amber); }
+    .stat-bar-fill.low { background: var(--red); box-shadow: 0 0 10px var(--red); }
+    
+    .stat-why {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      line-height: 1.4;
+    }
+    
+    /* Latest bar info */
+    .latest-bar {
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.75rem;
+      color: var(--text-dim);
+    }
+    
+    .latest-bar strong {
+      color: var(--text);
+    }
+    
+    /* Mission cards */
+    .missions-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+    }
+    
+    .missions-grid {
+      display: grid;
+      gap: 1rem;
+      padding: 1rem;
+    }
+    
+    .mission-card {
+      background: var(--bg-dark);
+      border: 1px solid var(--border);
+      padding: 1rem;
+      transition: all 0.2s;
+    }
+    
+    .mission-card:hover {
+      border-color: var(--phosphor);
+      box-shadow: 0 0 20px var(--phosphor-dim);
+    }
+    
+    .mission-card.recommended {
+      border-color: var(--phosphor);
+    }
+    
+    .mission-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 0.75rem;
+    }
+    
+    .mission-card-title {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .mission-icon {
+      font-size: 1.5rem;
+    }
+    
+    .mission-name {
+      font-size: 0.9rem;
+      color: var(--phosphor);
+      font-weight: 600;
+    }
+    
+    .mission-meta {
+      text-align: right;
+    }
+    
+    .difficulty-stars {
+      color: var(--amber);
+      font-size: 0.9rem;
+      letter-spacing: 2px;
+    }
+    
+    .suitability {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      margin-top: 0.25rem;
+    }
+    
+    .suitability.high { color: var(--phosphor); }
+    
+    .mission-concept {
+      font-size: 0.75rem;
+      color: var(--amber);
+      margin-bottom: 0.5rem;
+      font-style: italic;
+    }
+    
+    .mission-desc {
+      font-size: 0.8rem;
+      color: var(--text);
+      margin-bottom: 0.75rem;
+      line-height: 1.5;
+    }
+    
+    .mission-betting {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      margin-bottom: 0.5rem;
+    }
+    
+    .mission-betting strong {
+      color: var(--cyan);
+    }
+    
+    .mission-why-now {
+      font-size: 0.75rem;
+      color: var(--phosphor);
+      padding: 0.5rem;
+      background: rgba(51, 255, 153, 0.05);
+      border-left: 2px solid var(--phosphor);
+    }
+    
+    .mission-durations {
+      margin-top: 0.75rem;
+      font-size: 0.7rem;
+      color: var(--text-dim);
+    }
+    
+    .mission-durations span {
+      display: inline-block;
+      background: var(--bg-card);
+      padding: 0.2rem 0.5rem;
+      margin-right: 0.5rem;
+      border: 1px solid var(--border);
+    }
+    
+    /* Recommended badge */
+    .recommended-badge {
+      display: inline-block;
+      background: var(--phosphor);
+      color: var(--bg-dark);
+      font-size: 0.6rem;
+      padding: 0.2rem 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 700;
+      margin-top: 0.5rem;
+    }
+    
+    /* Loading state */
+    .loading {
+      text-align: center;
+      padding: 3rem;
+      color: var(--text-dim);
+    }
+    
+    .loading::after {
+      content: '';
+      display: inline-block;
+      width: 1em;
+      animation: dots 1.5s infinite;
+    }
+    
+    @keyframes dots {
+      0%, 20% { content: '.'; }
+      40% { content: '..'; }
+      60%, 100% { content: '...'; }
+    }
+    
+    /* Error state */
+    .error-message {
+      background: rgba(255, 68, 68, 0.1);
+      border: 1px solid var(--red);
+      padding: 1rem;
+      color: var(--red);
+      font-size: 0.85rem;
+    }
+    
+    /* Debug panel */
+    .debug-panel {
+      margin-top: 2rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+    }
+    
+    .debug-panel pre {
+      padding: 1rem;
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      overflow-x: auto;
+      max-height: 300px;
+    }
+    
+    /* Footer */
+    .footer {
+      margin-top: 2rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 0.7rem;
+    }
+    
+    .footer a {
+      color: var(--phosphor);
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-title">
+        <div>
+          <h1>⚔️ MISSION COMMAND</h1>
+          <div class="subtitle">Derivatives Training Sandbox // Step 1 Verification</div>
+        </div>
+      </div>
+      <a href="index.html" class="back-link">← Back to Dashboard</a>
+    </header>
+    
+    <!-- Controls -->
+    <div class="controls">
+      <div class="control-group">
+        <label>Sector:</label>
+        <select id="ticker-select">
+          <option value="">Loading...</option>
+        </select>
+      </div>
+      <button id="compute-btn" disabled>Compute Environment</button>
+      <button id="refresh-btn" disabled>↻ Refresh</button>
+    </div>
+    
+    <!-- Status bar -->
+    <div class="status-bar">
+      <span class="status" id="status-text">Initializing...</span>
+      <span class="meta" id="status-meta"></span>
+    </div>
+    
+    <!-- Main content -->
+    <div class="main-grid">
+      <!-- Environment Stats -->
+      <div class="env-panel">
+        <div class="panel-header">
+          <div class="panel-label">// Sector Analysis</div>
+          <div class="panel-title">Environment Stats</div>
+        </div>
+        <div class="panel-body" id="env-stats">
+          <div class="loading">Select a ticker to begin</div>
+        </div>
+      </div>
+      
+      <!-- Mission Recommendations -->
+      <div class="missions-panel">
+        <div class="panel-header">
+          <div class="panel-label">// Available Operations</div>
+          <div class="panel-title">Mission Recommendations</div>
+        </div>
+        <div class="missions-grid" id="missions-grid">
+          <div class="loading">Awaiting sector analysis</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Debug panel (collapsible) -->
+    <details class="debug-panel">
+      <summary style="padding: 1rem; cursor: pointer; color: var(--text-dim);">🔧 Debug Output</summary>
+      <pre id="debug-output">No data yet</pre>
+    </details>
+    
+    <!-- Footer -->
+    <div class="footer">
+      HASLUN-BOT Mission System v0.1 // Step 1 Verification Build<br>
+      Data source: TradingView 45m exports // <a href="#" onclick="IndicatorLoader.clearCache(); location.reload();">Clear Cache & Reload</a>
+    </div>
+  </div>
+  
+  <!-- Scripts -->
+  <script src="js/data/indicator-loader.js"></script>
+  <script src="js/mission-system.js"></script>
+  <script>
+    // ═══════════════════════════════════════════════════════════════════
+    // MISSION COMMAND UI
+    // ═══════════════════════════════════════════════════════════════════
+    
+    const UI = {
+      tickerSelect: null,
+      computeBtn: null,
+      refreshBtn: null,
+      statusText: null,
+      statusMeta: null,
+      envStats: null,
+      missionsGrid: null,
+      debugOutput: null,
+      
+      currentTicker: null,
+      currentEnv: null,
+      
+      init() {
+        // Get DOM elements
+        this.tickerSelect = document.getElementById('ticker-select');
+        this.computeBtn = document.getElementById('compute-btn');
+        this.refreshBtn = document.getElementById('refresh-btn');
+        this.statusText = document.getElementById('status-text');
+        this.statusMeta = document.getElementById('status-meta');
+        this.envStats = document.getElementById('env-stats');
+        this.missionsGrid = document.getElementById('missions-grid');
+        this.debugOutput = document.getElementById('debug-output');
+        
+        // Bind events
+        this.tickerSelect.addEventListener('change', () => this.onTickerChange());
+        this.computeBtn.addEventListener('click', () => this.computeEnvironment());
+        this.refreshBtn.addEventListener('click', () => this.computeEnvironment());
+        
+        // Load manifest
+        this.loadTickers();
+      },
+      
+      setStatus(text, type = 'ready') {
+        this.statusText.textContent = text;
+        this.statusText.className = 'status ' + type;
+      },
+      
+      setMeta(text) {
+        this.statusMeta.textContent = text;
+      },
+      
+      async loadTickers() {
+        this.setStatus('Loading manifest...', 'loading');
+        
+        try {
+          const tickers = await IndicatorLoader.getAvailableTickers();
+          const meta = await IndicatorLoader.getMetadata();
+          
+          // Populate dropdown
+          this.tickerSelect.innerHTML = '<option value="">Select sector...</option>';
+          for (const t of tickers) {
+            const opt = document.createElement('option');
+            opt.value = t.ticker;
+            opt.textContent = `${t.ticker} — ${t.name}`;
+            this.tickerSelect.appendChild(opt);
+          }
+          
+          this.computeBtn.disabled = true;
+          this.setStatus('Ready', 'ready');
+          this.setMeta(`${tickers.length} sectors available • Last updated: ${meta.lastUpdated}`);
+          
+          this.log('Manifest loaded', { tickers, meta });
+          
+        } catch (err) {
+          this.setStatus('Failed to load manifest: ' + err.message, 'error');
+          this.log('Error loading manifest', err);
+        }
+      },
+      
+      onTickerChange() {
+        const ticker = this.tickerSelect.value;
+        this.computeBtn.disabled = !ticker;
+        this.currentTicker = ticker;
+        
+        if (ticker) {
+          this.setStatus(`Selected: ${ticker}`, 'ready');
+        }
+      },
+      
+      async computeEnvironment() {
+        if (!this.currentTicker) return;
+        
+        this.setStatus(`Computing environment for ${this.currentTicker}...`, 'loading');
+        this.computeBtn.disabled = true;
+        this.refreshBtn.disabled = true;
+        
+        this.envStats.innerHTML = '<div class="loading">Analyzing sector data</div>';
+        this.missionsGrid.innerHTML = '<div class="loading">Computing recommendations</div>';
+        
+        try {
+          // Compute environment stats
+          const env = await MissionSystem.computeEnvironment(this.currentTicker);
+          this.currentEnv = env;
+          
+          // Generate recommendations
+          const recommendations = MissionSystem.generateRecommendations(env);
+          
+          // Render UI
+          this.renderEnvironment(env);
+          this.renderMissions(recommendations);
+          
+          this.setStatus(`Analysis complete for ${this.currentTicker}`, 'ready');
+          this.setMeta(`${env.barsUsed} bars analyzed • Latest: ${new Date(env.latestBar.time).toLocaleString()}`);
+          
+          this.log('Environment computed', { env, recommendations });
+          
+        } catch (err) {
+          this.setStatus('Error: ' + err.message, 'error');
+          this.envStats.innerHTML = `<div class="error-message">${err.message}</div>`;
+          this.log('Error computing environment', err);
+        }
+        
+        this.computeBtn.disabled = false;
+        this.refreshBtn.disabled = false;
+      },
+      
+      renderEnvironment(env) {
+        const stats = [
+          { key: 'hull', name: 'Hull', icon: '🛡️', description: 'Trend stability' },
+          { key: 'firepower', name: 'Firepower', icon: '⚡', description: 'Volatility / Thrust' },
+          { key: 'sensors', name: 'Sensors', icon: '📡', description: 'Flow clarity' },
+          { key: 'fuel', name: 'Fuel', icon: '⛽', description: 'Time tolerance' },
+          { key: 'threat', name: 'Threat', icon: '⚠️', description: 'Regime risk', inverted: true }
+        ];
+        
+        let html = '';
+        
+        for (const stat of stats) {
+          const value = env[stat.key];
+          const why = env.why[stat.key];
+          
+          // Determine color class (for threat, high = bad)
+          let colorClass;
+          if (stat.inverted) {
+            colorClass = value >= 60 ? 'low' : value >= 35 ? 'medium' : 'high';
+          } else {
+            colorClass = value >= 60 ? 'high' : value >= 35 ? 'medium' : 'low';
+          }
+          
+          html += `
+            <div class="stat-item">
+              <div class="stat-header">
+                <span class="stat-name">${stat.icon} ${stat.name}</span>
+                <span class="stat-value ${colorClass}">${value}</span>
+              </div>
+              <div class="stat-bar">
+                <div class="stat-bar-fill ${colorClass}" style="width: ${value}%"></div>
+              </div>
+              <div class="stat-why">${why}</div>
+            </div>
+          `;
+        }
+        
+        // Add latest bar info
+        html += `
+          <div class="latest-bar">
+            <strong>${env.ticker}</strong> @ $${env.latestBar.close.toFixed(2)}<br>
+            Volume: ${env.latestBar.volume?.toLocaleString() || 'N/A'}<br>
+            As of: ${new Date(env.latestBar.time).toLocaleString()}
+          </div>
+        `;
+        
+        this.envStats.innerHTML = html;
+      },
+      
+      renderMissions(recommendations) {
+        let html = '';
+        
+        for (const mission of recommendations) {
+          const stars = '★'.repeat(mission.difficulty) + '☆'.repeat(3 - mission.difficulty);
+          const suitClass = mission.suitability >= 55 ? 'high' : '';
+          const cardClass = mission.recommended ? 'recommended' : '';
+          
+          html += `
+            <div class="mission-card ${cardClass}">
+              <div class="mission-card-header">
+                <div class="mission-card-title">
+                  <span class="mission-icon">${mission.icon}</span>
+                  <span class="mission-name">${mission.name}</span>
+                </div>
+                <div class="mission-meta">
+                  <div class="difficulty-stars">${stars}</div>
+                  <div class="suitability ${suitClass}">Suitability: ${mission.suitability}%</div>
+                </div>
+              </div>
+              
+              <div class="mission-concept">${mission.concept}</div>
+              <div class="mission-desc">${mission.description}</div>
+              
+              <div class="mission-betting">
+                <strong>Betting on:</strong> ${mission.bettingOn}
+              </div>
+              
+              <div class="mission-why-now">${mission.whyNow}</div>
+              
+              <div class="mission-durations">
+                Duration bands: ${mission.durationBands.map(d => `<span>${d}</span>`).join('')}
+              </div>
+              
+              ${mission.recommended ? '<div class="recommended-badge">✓ Recommended</div>' : ''}
+            </div>
+          `;
+        }
+        
+        this.missionsGrid.innerHTML = html;
+      },
+      
+      log(label, data) {
+        const timestamp = new Date().toISOString().substr(11, 8);
+        const entry = `[${timestamp}] ${label}\n${JSON.stringify(data, null, 2)}\n\n`;
+        this.debugOutput.textContent = entry + this.debugOutput.textContent;
+      }
+    };
+    
+    // Initialize on load
+    document.addEventListener('DOMContentLoaded', () => UI.init());
+  </script>
+</body>
+</html>
