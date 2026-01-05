@@ -422,6 +422,7 @@
     // EMA ELECTROMAGNETIC GLITCH PLUGIN — True Signal Lock Effect
     // Creates authentic 80s EM interference / signal stabilization on ribbon
     // Price trace stays clean; ribbon looks like energy being wrangled
+    // Mobile-optimized: reduced effects to prevent performance issues
     // =========================================================================
     
     // Noise helpers for EM displacement
@@ -490,7 +491,7 @@
         // PERFORMANCE: skip on very small canvases
         const w = chartArea.right - chartArea.left;
         const h = chartArea.bottom - chartArea.top;
-        if (w < 240 || h < 160) return;
+        if (w < 200 || h < 120) return;
         
         // Get ribbon-only bounds (price line stays clean!)
         const rb = getRibbonBounds(chart);
@@ -499,25 +500,31 @@
         const now = performance.now();
         const t = now * 0.001;
 
-        // Mobile-friendly intensity
+        // Mobile detection - be conservative
         const isMobile = window.innerWidth < 768 || ('ontouchstart' in window);
-        const intensity = isMobile ? 0.55 : 1.0;
+        const intensity = isMobile ? 0.4 : 1.0;
+        
+        // On mobile: skip heavy effects entirely during normal operation
+        // Only show effects during bursts, and keep them minimal
 
         // Burst scheduling: mostly calm, occasional interference "packet"
         const st = this._state;
         if (now > st.nextBurstAt) {
-          // Next burst in 1.8s–6.5s
-          st.nextBurstAt = now + (1800 + Math.random() * 4700);
-          // Burst lasts 140–420ms
-          st.burstUntil = now + (140 + Math.random() * 280);
+          // Next burst in 2.5s–8s (longer gaps on mobile)
+          st.nextBurstAt = now + (isMobile ? 3500 : 1800) + Math.random() * (isMobile ? 6000 : 4700);
+          // Burst lasts 100–300ms
+          st.burstUntil = now + (100 + Math.random() * 200);
           st.burstSeed = Math.random() * 1000;
         }
 
         const inBurst = now < st.burstUntil;
+        
+        // On mobile: only render during bursts to save performance
+        if (isMobile && !inBurst) return;
 
         // Intensity: baseline + burst spike
-        const base = 0.10 * intensity;
-        const burst = inBurst ? (0.85 * intensity) : 0.0;
+        const base = isMobile ? 0 : (0.10 * intensity);
+        const burst = inBurst ? (0.75 * intensity) : 0.0;
         const amt = base + burst;
         if (amt <= 0) return;
         
@@ -525,6 +532,9 @@
         const bandTop = Math.max(chartArea.top, rb.top);
         const bandBottom = Math.min(chartArea.bottom, rb.bottom);
         const bandH = Math.max(1, bandBottom - bandTop);
+        
+        // Sanity check - don't process if band is too large (prevents runaway)
+        if (bandH > 800) return;
 
         // ============================================================
         // CLIP TO RIBBON BAND ONLY — Price line stays perfectly clean
@@ -535,56 +545,69 @@
         ctx.clip();
 
         // ============================================================
-        // A) SCANLINE DISPLACEMENT MAPPING — True analog warp
-        // Each scanline gets smoothly displaced based on EM wave noise
+        // A) SCANLINE DISPLACEMENT — Simplified for mobile
+        // On mobile: just do a few strategic strips, not per-scanline
         // ============================================================
         ctx.globalCompositeOperation = 'lighter';
         
-        const step = isMobile ? 4 : 2;              // Fewer ops on mobile
-        const maxShift = (isMobile ? 4 : 10) * amt; // Max px displacement
-        
-        for (let y = 0; y < bandH; y += step) {
-          const yy = bandTop + y;
-          
-          // Smooth EM wave displacement
-          let shift = smoothNoise(yy, t) * maxShift;
-          
-          // During bursts: occasional "packet jump" (relock attempt)
-          if (inBurst && Math.random() < 0.06) {
-            shift += (Math.random() - 0.5) * (maxShift * 3.5);
+        if (isMobile) {
+          // MOBILE: Just 3-5 horizontal tear strips (not per-scanline)
+          const numStrips = inBurst ? 4 : 2;
+          for (let i = 0; i < numStrips; i++) {
+            const stripY = bandTop + (bandH * (i + 0.5)) / numStrips;
+            const stripH = 8 + Math.random() * 12;
+            const shift = smoothNoise(stripY, t) * 6 * amt;
+            
+            ctx.globalAlpha = 0.15 * intensity;
+            try {
+              ctx.drawImage(
+                canvas,
+                chartArea.left, stripY, w, stripH,
+                chartArea.left + shift, stripY, w, stripH
+              );
+            } catch (e) { /* ignore */ }
           }
+        } else {
+          // DESKTOP: Full scanline displacement
+          const step = 3;
+          const maxShift = 8 * amt;
+          const maxIterations = Math.min(Math.floor(bandH / step), 150); // Cap iterations
           
-          // Copy thin slice and redraw shifted
-          const sliceH = step;
-          ctx.globalAlpha = inBurst ? (0.20 * intensity) : (0.08 * intensity);
-          
-          try {
-            ctx.drawImage(
-              canvas,
-              chartArea.left, yy, w, sliceH,
-              chartArea.left + shift, yy, w, sliceH
-            );
-          } catch (e) {
-            // Ignore canvas errors
+          for (let i = 0; i < maxIterations; i++) {
+            const y = i * step;
+            const yy = bandTop + y;
+            
+            let shift = smoothNoise(yy, t) * maxShift;
+            
+            if (inBurst && Math.random() < 0.06) {
+              shift += (Math.random() - 0.5) * (maxShift * 3);
+            }
+            
+            ctx.globalAlpha = inBurst ? (0.18 * intensity) : (0.07 * intensity);
+            
+            try {
+              ctx.drawImage(
+                canvas,
+                chartArea.left, yy, w, step,
+                chartArea.left + shift, yy, w, step
+              );
+            } catch (e) { /* ignore */ }
           }
         }
 
         // ============================================================
-        // B) CHROMATIC PHOSPHOR SPLIT — Retro CRT color gun misalignment
-        // Cyan/magenta separation creates that analog video feel
+        // B) CHROMATIC SPLIT — Desktop only (ctx.filter not reliable on mobile)
         // ============================================================
-        if (amt > 0.12) {
-          const cs = (inBurst ? 2.0 : 0.8) * amt; // Chroma shift in px
+        if (!isMobile && amt > 0.12) {
+          const cs = (inBurst ? 2.0 : 0.8) * amt;
           ctx.globalCompositeOperation = 'screen';
           
           try {
-            // Cyan offset (shifted right)
-            ctx.globalAlpha = inBurst ? 0.10 : 0.05;
+            ctx.globalAlpha = inBurst ? 0.08 : 0.04;
             ctx.filter = 'hue-rotate(25deg) saturate(1.2)';
             ctx.drawImage(canvas, chartArea.left, bandTop, w, bandH, 
                           chartArea.left + cs, bandTop, w, bandH);
             
-            // Magenta offset (shifted left)
             ctx.filter = 'hue-rotate(-25deg) saturate(1.2)';
             ctx.drawImage(canvas, chartArea.left, bandTop, w, bandH,
                           chartArea.left - cs, bandTop, w, bandH);
@@ -592,13 +615,11 @@
             ctx.filter = 'none';
           } catch (e) {
             ctx.filter = 'none';
-            // Ignore canvas errors
           }
         }
 
         // ============================================================
-        // C) FIELD LOCK LINE SWEEP — System trying to regain lock
-        // A bright horizontal line that sweeps during bursts
+        // C) FIELD LOCK LINE SWEEP — Works on both platforms
         // ============================================================
         if (inBurst) {
           const sweepY = bandTop + (hashNoise(t * 3.0) * bandH);
@@ -607,8 +628,8 @@
           ctx.fillStyle = '#33ff99';
           ctx.fillRect(chartArea.left, sweepY, w, 1);
           
-          // Secondary fainter sweep line
-          if (Math.random() < 0.3) {
+          // Secondary line (desktop only)
+          if (!isMobile && Math.random() < 0.3) {
             const sweepY2 = bandTop + (hashNoise(t * 7.0 + 100) * bandH);
             ctx.globalAlpha = 0.06 * intensity;
             ctx.fillStyle = '#47d4ff';
@@ -617,36 +638,22 @@
         }
 
         // ============================================================
-        // D) PHOSPHOR PERSISTENCE — Faint ghost echo
-        // Creates unstable lock / afterimage appearance
+        // D) PHOSPHOR ECHO — Simplified, both platforms
         // ============================================================
-        const echoShift = (inBurst ? 1.8 : 0.6) * amt;
-        ctx.globalAlpha = inBurst ? (0.08 * intensity) : (0.04 * intensity);
-        ctx.globalCompositeOperation = 'screen';
-        try {
-          ctx.drawImage(
-            canvas,
-            chartArea.left, bandTop, w, bandH,
-            chartArea.left + echoShift, bandTop + (0.3 * amt), w, bandH
-          );
-        } catch (e) {
-          // Ignore canvas errors
+        if (inBurst) {
+          const echoShift = 1.5 * amt;
+          ctx.globalAlpha = 0.06 * intensity;
+          ctx.globalCompositeOperation = 'screen';
+          try {
+            ctx.drawImage(
+              canvas,
+              chartArea.left, bandTop, w, bandH,
+              chartArea.left + echoShift, bandTop + 0.5, w, bandH
+            );
+          } catch (e) { /* ignore */ }
         }
 
-        // ============================================================
-        // E) MICRO STATIC — Noise grain during intense bursts
-        // ============================================================
-        if (inBurst && intensity > 0.5) {
-          ctx.globalAlpha = 0.03 * intensity;
-          ctx.fillStyle = '#33ff99';
-          for (let i = 0; i < 12; i++) {
-            const sx = chartArea.left + Math.random() * w;
-            const sy = bandTop + Math.random() * bandH;
-            ctx.fillRect(sx, sy, 1, 1);
-          }
-        }
-
-        ctx.restore(); // End ribbon clip
+        ctx.restore();
       }
     };
     
