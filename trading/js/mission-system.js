@@ -1,5 +1,5 @@
 /**
- * HASLUN-BOT Mission System v2
+ * PARALLAX Mission System v2
  * NMS-inspired expedition system for derivatives training
  * 
  * STEP 2: Full play loop with simulation, logs, and scoring
@@ -15,7 +15,7 @@
 const MissionSystem = (function() {
   'use strict';
   
-  const STORAGE_KEY = 'HASLUN_MISSIONS_V1';
+  const STORAGE_KEY = 'PARALLAX_MISSIONS_V1';
   const DEFAULT_LOOKBACK = 32; // bars for stat computation
   
   // ═══════════════════════════════════════════════════════════════════
@@ -991,8 +991,8 @@ const MissionSystem = (function() {
     saveMissions(missions);
     
     // Step 8: Emit mission:damaged event for progression system
-    if (window.HASLUN_BUS) {
-      window.HASLUN_BUS.emit('mission:damaged', {
+    if (window.PARALLAX_BUS) {
+      window.PARALLAX_BUS.emit('mission:damaged', {
         ticker: missionTicker,
         missionType: missionType
       });
@@ -1598,8 +1598,8 @@ const MissionSystem = (function() {
     saveMissions(missions);
     
     // Step 8: Emit mission:complete event for progression system
-    if (window.HASLUN_BUS) {
-      window.HASLUN_BUS.emit('mission:complete', {
+    if (window.PARALLAX_BUS) {
+      window.PARALLAX_BUS.emit('mission:complete', {
         ticker: mission.ticker,
         missionType: mission.type,
         difficulty: mission.difficulty || 1,

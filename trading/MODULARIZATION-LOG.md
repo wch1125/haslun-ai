@@ -1,7 +1,7 @@
-# HASLUN-BOT Modularization Progress Log
+# PARALLAX Modularization Progress Log
 
 ## Overview
-This document tracks all changes made during the modularization of the HASLUN-BOT codebase. Use this as a reference for rollback if anything breaks.
+This document tracks all changes made during the modularization of the PARALLAX codebase. Use this as a reference for rollback if anything breaks.
 
 ---
 
@@ -14,7 +14,7 @@ trading/
 ├── js/app.js               (7,061 lines)
 ├── assets/ships/           (16 PNG files)
 ├── data/                   (18 JSON files)
-└── HASLUN-BOT-README.md
+└── PARALLAX-README.md
 ```
 
 **Total JS lines:** 7,061
@@ -57,16 +57,16 @@ trading/
 
 ---
 
-## Step 1.2: Extract HASLUN_GLOSSARY
+## Step 1.2: Extract PARALLAX_GLOSSARY
 **Date:** 2025-01-05  
 **Status:** ✅ Complete
 
 ### Changes Made:
 1. **Created:** `js/data/glossary.js` (295 lines)
-   - Contains `HASLUN_GLOSSARY` object (tooltips, flavor text, lore)
+   - Contains `PARALLAX_GLOSSARY` object (tooltips, flavor text, lore)
    - Contains `PORTFOLIO_MOODS` object (mood states based on P&L)
    - Contains `MACD_STATES` object (MACD status messages)
-   - Exposes via `window.HASLUN_GLOSSARY`, `window.PORTFOLIO_MOODS`, `window.MACD_STATES`
+   - Exposes via `window.PARALLAX_GLOSSARY`, `window.PORTFOLIO_MOODS`, `window.MACD_STATES`
 
 2. **Modified:** `index.html`
    - Added script tag to load `js/data/glossary.js` before `app.js`
@@ -84,7 +84,7 @@ trading/
 ### Rollback Instructions:
 1. Delete `js/data/glossary.js`
 2. Remove the `<script src="js/data/glossary.js"></script>` line from `index.html`
-3. Restore HASLUN_GLOSSARY, PORTFOLIO_MOODS, MACD_STATES to `app.js` at line 274
+3. Restore PARALLAX_GLOSSARY, PORTFOLIO_MOODS, MACD_STATES to `app.js` at line 274
 4. Remove the aliases for these three objects at top of `app.js`
 
 ---
@@ -253,7 +253,7 @@ trading/
 │       └── mini-games.js      (1,210 lines)
 ├── assets/ships/           (16 PNG files)
 ├── data/                   (18 JSON files)
-├── HASLUN-BOT-README.md
+├── PARALLAX-README.md
 └── MODULARIZATION-LOG.md   (this file)
 ```
 

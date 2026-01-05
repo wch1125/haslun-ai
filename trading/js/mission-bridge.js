@@ -12,7 +12,7 @@
 window.MissionBridge = (function() {
   'use strict';
   
-  const STORAGE_KEY = 'HASLUN_MISSIONS_V1';
+  const STORAGE_KEY = 'PARALLAX_MISSIONS_V1';
   
   // Simulation speed constants (mirrored from mission-system.js)
   const SIM_SPEEDS = {

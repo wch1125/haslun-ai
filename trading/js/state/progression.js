@@ -1,10 +1,10 @@
 /**
  * ═══════════════════════════════════════════════════════════════════════════
- * HASLUN-BOT PROGRESSION STORE (Step 8: Progression Architecture)
+ * PARALLAX PROGRESSION STORE (Step 8: Progression Architecture)
  * ═══════════════════════════════════════════════════════════════════════════
  * 
  * Source of truth for ship leveling and upgrades.
- * Persists to localStorage, emits events via HASLUN_BUS.
+ * Persists to localStorage, emits events via PARALLAX_BUS.
  * 
  * State structure (per ship):
  *   { xp, level, upgrades: { thrusters, hull, sensors, weapons, core }, cosmetics, history }
@@ -21,7 +21,7 @@
 (function() {
   'use strict';
 
-  const STORAGE_KEY = 'HASLUN_PROGRESS_V1';
+  const STORAGE_KEY = 'PARALLAX_PROGRESS_V1';
   const VERSION = 1;
   const MAX_LEVEL = 30;
 
@@ -190,8 +190,8 @@
     save(state);
 
     // Emit events
-    if (window.HASLUN_BUS) {
-      window.HASLUN_BUS.emit('progress:xp', {
+    if (window.PARALLAX_BUS) {
+      window.PARALLAX_BUS.emit('progress:xp', {
         ticker: ticker.toUpperCase(),
         amount: a,
         reason,
@@ -201,7 +201,7 @@
       });
 
       if (ship.level !== prevLevel) {
-        window.HASLUN_BUS.emit('progress:level', {
+        window.PARALLAX_BUS.emit('progress:level', {
           ticker: ticker.toUpperCase(),
           from: prevLevel,
           to: ship.level
@@ -256,8 +256,8 @@
     save(state);
 
     // Emit event
-    if (window.HASLUN_BUS) {
-      window.HASLUN_BUS.emit('progress:equip', {
+    if (window.PARALLAX_BUS) {
+      window.PARALLAX_BUS.emit('progress:equip', {
         ticker: ticker.toUpperCase(),
         slot: up.slot,
         id: up.id,

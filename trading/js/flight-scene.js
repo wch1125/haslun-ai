@@ -669,7 +669,7 @@ window.FlightScene = (function() {
       ctx.font = '600 24px "IBM Plex Mono", monospace';
       ctx.fillStyle = 'rgba(51, 255, 153, 0.9)';
       ctx.textAlign = 'center';
-      ctx.fillText('HASLUN-BOT', this.width / 2, 50);
+      ctx.fillText('PARALLAX', this.width / 2, 50);
       
       // Subtitle
       ctx.font = '400 12px "IBM Plex Mono", monospace';

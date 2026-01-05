@@ -1,6 +1,6 @@
 /**
  * ═══════════════════════════════════════════════════════════════════════════
- * HASLUN-BOT UPGRADE CATALOG (Step 8: Progression Architecture)
+ * PARALLAX UPGRADE CATALOG (Step 8: Progression Architecture)
  * ═══════════════════════════════════════════════════════════════════════════
  * 
  * Data-only upgrade definitions. No DOM, no side-effects.

@@ -1,5 +1,5 @@
 // =========================================================================
-// SHIP DATA — All ship-related data objects for HASLUN-BOT
+// SHIP DATA — All ship-related data objects for PARALLAX
 // Extracted from app.js for modularity
 // =========================================================================
 

@@ -1,11 +1,11 @@
     // =========================================================================
-    // HASLUN-BOT :: Main Application
+    // PARALLAX :: Main Application
     // External data modules loaded via separate scripts (see index.html)
     // =========================================================================
     
     // Alias externally loaded data modules
     const TICKER_PROFILES = window.TICKER_PROFILES || {};
-    const HASLUN_GLOSSARY = window.HASLUN_GLOSSARY || {};
+    const PARALLAX_GLOSSARY = window.PARALLAX_GLOSSARY || {};
     const PORTFOLIO_MOODS = window.PORTFOLIO_MOODS || {};
     const MACD_STATES = window.MACD_STATES || {};
     const SHIP_LORE = window.SHIP_LORE || {};
@@ -661,28 +661,28 @@
     // =========================================================================
     
     // =========================================================================
-    // HASLUN_GLOSSARY, PORTFOLIO_MOODS, MACD_STATES — Loaded from js/data/glossary.js
-    // Access via: window.HASLUN_GLOSSARY, window.PORTFOLIO_MOODS, window.MACD_STATES
+    // PARALLAX_GLOSSARY, PORTFOLIO_MOODS, MACD_STATES — Loaded from js/data/glossary.js
+    // Access via: window.PARALLAX_GLOSSARY, window.PORTFOLIO_MOODS, window.MACD_STATES
     // =========================================================================
     
     // Glossary helper functions
     function getGlossary(id) {
-      return HASLUN_GLOSSARY[id] || null;
+      return PARALLAX_GLOSSARY[id] || null;
     }
     
     function getTooltip(id) {
-      const entry = HASLUN_GLOSSARY[id];
+      const entry = PARALLAX_GLOSSARY[id];
       return entry ? entry.tooltip : '';
     }
     
     function getFlavor(id) {
-      const entry = HASLUN_GLOSSARY[id];
+      const entry = PARALLAX_GLOSSARY[id];
       return entry ? entry.flavor : '';
     }
     
     // Get trend state based on price, MACD data, and volatility
     function getTrendState(price, ma100, ma150, ma200, macdVal, volScore) {
-      if (!price || !ma200) return HASLUN_GLOSSARY.trend_analyzing;
+      if (!price || !ma200) return PARALLAX_GLOSSARY.trend_analyzing;
       
       const aboveMa100 = price > ma100;
       const aboveMa150 = price > ma150;
@@ -693,26 +693,26 @@
       
       // FULL THRUST: Above all MAs with positive momentum and calm vol
       if (aboveMa200 && aboveMa150 && macdPositive && !volHigh) {
-        return HASLUN_GLOSSARY.trend_full_thrust;
+        return PARALLAX_GLOSSARY.trend_full_thrust;
       }
       
       // REVERSAL ATTEMPT: Above short-term but below long-term, calm vol
       if (aboveMa100 && !aboveMa200 && macdPositive && !volHigh) {
-        return HASLUN_GLOSSARY.trend_reversal_attempt;
+        return PARALLAX_GLOSSARY.trend_reversal_attempt;
       }
       
       // DRIFTING: Near MAs with weak momentum and tame vol
       if (nearMa100 && Math.abs(macdVal) < 0.1 && !volHigh) {
-        return HASLUN_GLOSSARY.trend_drifting;
+        return PARALLAX_GLOSSARY.trend_drifting;
       }
       
       // REENTRY RISK: Below long-term with negative momentum
       if (!aboveMa200 && !macdPositive && !volHigh) {
-        return HASLUN_GLOSSARY.trend_reentry_risk;
+        return PARALLAX_GLOSSARY.trend_reentry_risk;
       }
       
       // NEBULOUS: High volatility OR mixed signals
-      return HASLUN_GLOSSARY.trend_nebula;
+      return PARALLAX_GLOSSARY.trend_nebula;
     }
     
     // Get MACD status
@@ -755,7 +755,7 @@
     function attachGlossaryTooltips() {
       document.querySelectorAll('[data-glossary-id]').forEach(el => {
         const id = el.getAttribute('data-glossary-id');
-        const entry = HASLUN_GLOSSARY[id];
+        const entry = PARALLAX_GLOSSARY[id];
         if (!entry) return;
         
         // Build tooltip with both serious and flavor text
@@ -1803,11 +1803,11 @@
       
       // Determine CSS mode class
       let mode = 'neutral';
-      if (trendState === HASLUN_GLOSSARY.trend_full_thrust) mode = 'bull';
-      else if (trendState === HASLUN_GLOSSARY.trend_reentry_risk) mode = 'bear';
-      else if (trendState === HASLUN_GLOSSARY.trend_nebula) mode = 'volatile';
-      else if (trendState === HASLUN_GLOSSARY.trend_reversal_attempt) mode = 'neutral';
-      else if (trendState === HASLUN_GLOSSARY.trend_drifting) mode = 'neutral';
+      if (trendState === PARALLAX_GLOSSARY.trend_full_thrust) mode = 'bull';
+      else if (trendState === PARALLAX_GLOSSARY.trend_reentry_risk) mode = 'bear';
+      else if (trendState === PARALLAX_GLOSSARY.trend_nebula) mode = 'volatile';
+      else if (trendState === PARALLAX_GLOSSARY.trend_reversal_attempt) mode = 'neutral';
+      else if (trendState === PARALLAX_GLOSSARY.trend_drifting) mode = 'neutral';
       
       // Update UI with glossary content
       labelEl.textContent = trendState.label;
@@ -3740,9 +3740,9 @@
     // Step 8: Progression System Event Listeners
     // ═══════════════════════════════════════════════════════════════════════════
     
-    if (window.HASLUN_BUS) {
+    if (window.PARALLAX_BUS) {
       // Training game results → XP
-      window.HASLUN_BUS.on('training:result', (e) => {
+      window.PARALLAX_BUS.on('training:result', (e) => {
         const t = e?.ticker;
         if (!t || !window.Progression) return;
         
@@ -3765,7 +3765,7 @@
       });
       
       // Mission completions → XP + random upgrade drop
-      window.HASLUN_BUS.on('mission:complete', (e) => {
+      window.PARALLAX_BUS.on('mission:complete', (e) => {
         const t = e?.ticker;
         if (!t || !window.Progression) return;
         
@@ -3807,7 +3807,7 @@
       });
       
       // Mission damaged/aborted → small XP for participation
-      window.HASLUN_BUS.on('mission:damaged', (e) => {
+      window.PARALLAX_BUS.on('mission:damaged', (e) => {
         const t = e?.ticker;
         if (!t || !window.Progression) return;
         
@@ -3822,7 +3822,7 @@
       });
       
       // Level up notifications
-      window.HASLUN_BUS.on('progress:level', (e) => {
+      window.PARALLAX_BUS.on('progress:level', (e) => {
         if (typeof showToast === 'function') {
           showToast(`🎖️ ${e.ticker} reached Level ${e.to}!`, 'alert');
         }

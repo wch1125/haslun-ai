@@ -1,5 +1,5 @@
 /**
- * HASLUN-BOT Indicator Loader
+ * PARALLAX Indicator Loader
  * Loads and parses TradingView 45m CSV exports for the mission system
  * 
  * CSV Structure (51 columns):

@@ -1,6 +1,6 @@
 /**
  * ═══════════════════════════════════════════════════════════════════════════
- * HASLUN-BOT EVENT BUS (Step 8: Progression Architecture)
+ * PARALLAX EVENT BUS (Progression Architecture)
  * ═══════════════════════════════════════════════════════════════════════════
  * 
  * Global event bus for communication between components.
@@ -15,9 +15,9 @@
  *   - progress:equip      { ticker, slot, id }
  * 
  * Usage:
- *   HASLUN_BUS.on('training:result', (e) => console.log(e.ticker, e.score))
- *   HASLUN_BUS.emit('training:result', { ticker: 'RKLB', score: 500, ... })
- *   const unsub = HASLUN_BUS.on('event', handler); unsub(); // cleanup
+ *   PARALLAX_BUS.on('training:result', (e) => console.log(e.ticker, e.score))
+ *   PARALLAX_BUS.emit('training:result', { ticker: 'RKLB', score: 500, ... })
+ *   const unsub = PARALLAX_BUS.on('event', handler); unsub(); // cleanup
  * 
  * ═══════════════════════════════════════════════════════════════════════════
  */
@@ -26,7 +26,7 @@
   'use strict';
 
   // Avoid re-initialization if already loaded (cross-page safety)
-  if (window.HASLUN_BUS && typeof window.HASLUN_BUS.emit === 'function') {
+  if (window.PARALLAX_BUS && typeof window.PARALLAX_BUS.emit === 'function') {
     return;
   }
 
@@ -41,7 +41,7 @@
    */
   function on(event, fn) {
     if (typeof fn !== 'function') {
-      console.warn('[HASLUN_BUS] on() requires a function handler');
+      console.warn('[PARALLAX_BUS] on() requires a function handler');
       return () => {};
     }
     
@@ -81,7 +81,7 @@
       try {
         fn(payload);
       } catch (e) {
-        console.warn('[HASLUN_BUS] Error in handler for', event, e);
+        console.warn('[PARALLAX_BUS] Error in handler for', event, e);
       }
     }
   }
@@ -111,7 +111,7 @@
   }
 
   // Export to window
-  window.HASLUN_BUS = {
+  window.PARALLAX_BUS = {
     on,
     off,
     emit,
@@ -119,5 +119,5 @@
     listenerCount
   };
 
-  console.log('[HASLUN_BUS] Event bus initialized');
+  console.log('[PARALLAX] Event bus initialized');
 })();

@@ -3909,6 +3909,7 @@
     .watermark { position: fixed; bottom: 2.5rem; left: 1.25rem; display: flex; align-items: center; gap: 0.85rem; padding: 0.6rem 1rem; background: var(--bg-panel); border: 1px solid var(--border); font-size: 0.7rem; color: var(--text-muted); z-index: 50; }
     .watermark a { color: var(--amber); text-decoration: none; letter-spacing: 0.05em; }
     .watermark a:hover { text-shadow: 0 0 10px var(--amber-glow); }
+    .watermark .parallax-mark { color: var(--phosphor); letter-spacing: 0.15em; font-weight: 500; opacity: 0.7; }
     
     .status-strip { position: fixed; bottom: 0; left: 0; right: 0; height: 28px; background: var(--bg-panel); border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: flex-end; padding: 0 1.5rem; gap: 2rem; z-index: 100; font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; }
     .status-item { display: flex; align-items: center; gap: 0.5rem; color: var(--text-dim); }

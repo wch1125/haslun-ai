@@ -1,5 +1,5 @@
 // =========================================================================
-// HASLUN-BOT MINI-GAMES
+// PARALLAX MINI-GAMES
 // Signal Invaders, Admin Console Trap, and Terrain Lander
 // Extracted from app.js for modularity
 // =========================================================================
@@ -18,8 +18,8 @@
        * @param {string} outcome - 'WIN' or 'LOSS'
        */
       function reportTrainingResult(ticker, gameId, score, outcome) {
-        if (window.HASLUN_BUS) {
-          window.HASLUN_BUS.emit('training:result', {
+        if (window.PARALLAX_BUS) {
+          window.PARALLAX_BUS.emit('training:result', {
             ticker: ticker,
             gameId: gameId,
             score: score,
