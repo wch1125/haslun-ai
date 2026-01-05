@@ -1008,6 +1008,13 @@
       filter: drop-shadow(0 0 8px var(--phosphor));
     }
     
+    .console-ship-display img.console-ship-img {
+      width: 80px;
+      height: 50px;
+      object-fit: contain;
+      filter: drop-shadow(0 0 8px var(--phosphor));
+    }
+    
     .console-ship-label {
       font-size: 0.45rem;
       color: var(--text-dim);
@@ -1702,8 +1709,123 @@
       image-rendering: crisp-edges;
     }
     
-    /* Main pixel invader */
+    /* Ship Formation - Wedge (4-3-2-1) */
+    .ship-formation {
+      position: relative;
+      width: 320px;
+      height: 200px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      z-index: 2;
+    }
+    
+    .formation-row {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+    }
+    
+    .formation-ship {
+      width: 48px;
+      height: 48px;
+      object-fit: contain;
+      image-rendering: pixelated;
+      filter: drop-shadow(0 0 12px var(--phosphor));
+      opacity: 0;
+      transform: translateY(-40px) scale(0.5);
+      animation: ship-form-up 0.6s ease-out forwards;
+    }
+    
+    .formation-ship:nth-child(1) { animation-delay: 0.1s; }
+    .formation-ship:nth-child(2) { animation-delay: 0.15s; }
+    .formation-ship:nth-child(3) { animation-delay: 0.2s; }
+    .formation-ship:nth-child(4) { animation-delay: 0.25s; }
+    
+    .formation-row:nth-child(1) .formation-ship { animation-delay: 0.4s; }
+    .formation-row:nth-child(2) .formation-ship:nth-child(1) { animation-delay: 0.3s; }
+    .formation-row:nth-child(2) .formation-ship:nth-child(2) { animation-delay: 0.35s; }
+    .formation-row:nth-child(2) .formation-ship:nth-child(3) { animation-delay: 0.4s; }
+    .formation-row:nth-child(3) .formation-ship:nth-child(1) { animation-delay: 0.2s; }
+    .formation-row:nth-child(3) .formation-ship:nth-child(2) { animation-delay: 0.25s; }
+    .formation-row:nth-child(4) .formation-ship { animation-delay: 0.1s; }
+    
+    @keyframes ship-form-up {
+      0% {
+        opacity: 0;
+        transform: translateY(-40px) scale(0.5);
+      }
+      60% {
+        opacity: 1;
+        transform: translateY(5px) scale(1.05);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+    
+    /* Subtle hover animation after form-up */
+    .formation-ship.formed {
+      animation: ship-hover 2.5s ease-in-out infinite;
+    }
+    
+    @keyframes ship-hover {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-4px); }
+    }
+    
+    /* Leader ship (RKLB) gets extra glow */
+    .formation-row:last-child .formation-ship {
+      width: 56px;
+      height: 56px;
+      filter: drop-shadow(0 0 16px var(--phosphor)) drop-shadow(0 0 24px rgba(51, 255, 153, 0.5));
+    }
+    
+    /* Mobile responsive for ship formation */
+    @media (max-width: 480px) {
+      .ship-formation {
+        width: 280px;
+        height: 170px;
+        gap: 6px;
+      }
+      
+      .formation-row {
+        gap: 8px;
+      }
+      
+      .formation-ship {
+        width: 38px;
+        height: 38px;
+      }
+      
+      .formation-row:last-child .formation-ship {
+        width: 46px;
+        height: 46px;
+      }
+    }
+    
+    @media (max-width: 360px) {
+      .ship-formation {
+        width: 240px;
+        height: 150px;
+      }
+      
+      .formation-ship {
+        width: 32px;
+        height: 32px;
+      }
+      
+      .formation-row:last-child .formation-ship {
+        width: 40px;
+        height: 40px;
+      }
+    }
+    
+    /* Keep legacy pixel-invader for fallback */
     .pixel-invader {
+      display: none; /* Hidden - replaced by ship formation */
       width: 96px;
       height: 72px;
       image-rendering: pixelated;
@@ -7439,32 +7561,50 @@
             </svg>
           </div>
           
-          <!-- Main invader sprite (classic Space Invaders crab) -->
-          <svg class="pixel-invader" viewBox="0 0 11 8" fill="var(--phosphor)">
-            <!-- Row 0 - antennae -->
+          <!-- Ship Formation - Wedge (4-3-2-1) using PNG sprites -->
+          <div class="ship-formation" id="ship-formation">
+            <!-- Row 1: 4 ships (back row) -->
+            <div class="formation-row">
+              <img class="formation-ship" src="assets/ships/BKSY-recon-ship.png" alt="BKSY" title="BKSY - Recon">
+              <img class="formation-ship" src="assets/ships/PL-scout-ship.png" alt="PL" title="PL - Scout">
+              <img class="formation-ship" src="assets/ships/RDW-Hauler-ship.png" alt="RDW" title="RDW - Hauler">
+              <img class="formation-ship" src="assets/ships/EVEX-Transport-Ship.png" alt="EVEX" title="EVEX - Transport">
+            </div>
+            <!-- Row 2: 3 ships -->
+            <div class="formation-row">
+              <img class="formation-ship" src="assets/ships/ACHR-eVTOL-ship.png" alt="ACHR" title="ACHR - eVTOL">
+              <img class="formation-ship" src="assets/ships/JOBY-eVTOL-light-class-ship.png" alt="JOBY" title="JOBY - Light eVTOL">
+              <img class="formation-ship" src="assets/ships/GME-moonshot-ship.png" alt="GME" title="GME - Moonshot">
+            </div>
+            <!-- Row 3: 2 ships -->
+            <div class="formation-row">
+              <img class="formation-ship" src="assets/ships/LUNR-lander-ship.png" alt="LUNR" title="LUNR - Lander">
+              <img class="formation-ship" src="assets/ships/ASTS-Communications-Relay-Ship.png" alt="ASTS" title="ASTS - Comms">
+            </div>
+            <!-- Row 4: 1 ship (leader/flagship) -->
+            <div class="formation-row">
+              <img class="formation-ship" src="assets/ships/RKLB-flagship-ship.png" alt="RKLB" title="RKLB - Flagship">
+            </div>
+          </div>
+          
+          <!-- Legacy pixel-invader (hidden, kept for compatibility) -->
+          <svg class="pixel-invader" viewBox="0 0 11 8" fill="var(--phosphor)" style="display:none;">
             <rect x="2" y="0" width="1" height="1"/>
             <rect x="8" y="0" width="1" height="1"/>
-            <!-- Row 1 -->
             <rect x="3" y="1" width="1" height="1"/>
             <rect x="7" y="1" width="1" height="1"/>
-            <!-- Row 2 - top of head -->
             <rect x="2" y="2" width="7" height="1"/>
-            <!-- Row 3 - eyes row -->
             <rect x="1" y="3" width="2" height="1"/>
             <rect x="4" y="3" width="3" height="1"/>
             <rect x="8" y="3" width="2" height="1"/>
-            <!-- Row 4 - full body -->
             <rect x="0" y="4" width="11" height="1"/>
-            <!-- Row 5 - body with gaps -->
             <rect x="0" y="5" width="1" height="1"/>
             <rect x="2" y="5" width="7" height="1"/>
             <rect x="10" y="5" width="1" height="1"/>
-            <!-- Row 6 - legs upper -->
             <rect x="0" y="6" width="1" height="1"/>
             <rect x="2" y="6" width="1" height="1"/>
             <rect x="8" y="6" width="1" height="1"/>
             <rect x="10" y="6" width="1" height="1"/>
-            <!-- Row 7 - feet -->
             <rect x="3" y="7" width="2" height="1"/>
             <rect x="6" y="7" width="2" height="1"/>
           </svg>
@@ -8547,6 +8687,7 @@
       const ground = document.getElementById('pixel-ground');
       const loadingScreen = document.getElementById('loading-screen');
       const app = document.getElementById('app');
+      const formationShips = document.querySelectorAll('.formation-ship');
       
       let count = 3;
       
@@ -8555,6 +8696,13 @@
         'DEFENSIVE GRID ONLINE...',
         'SIGNAL LOCK ACQUIRED...'
       ];
+      
+      // Transition formation ships to hover animation after form-up completes
+      setTimeout(() => {
+        formationShips.forEach(ship => {
+          ship.classList.add('formed');
+        });
+      }, 800); // After form-up animations complete
       
       const interval = setInterval(() => {
         count--;
@@ -9920,8 +10068,135 @@
         "00012222222210000",
         "00001222222100000",
         "00000111111000000"
+      ],
+      
+      // Mini-game specific sprites - smaller for arcade games
+      arcade_player: [
+        "00000011100000000",
+        "00001122211000000",
+        "00011222221100000",
+        "00112222222110000",
+        "01122223222211000",
+        "11222222222221100",
+        "11222222222221100",
+        "01122222222211000",
+        "00111111111110000",
+        "00010001000100000",
+        "00010001000100000"
+      ],
+      
+      arcade_enemy: [
+        "00100000000010000",
+        "00010000000100000",
+        "00111111111110000",
+        "01111222221111000",
+        "11112222222111100",
+        "11112232322111100",
+        "11112222222111100",
+        "01111111111111000",
+        "00011000001100000",
+        "00110000000110000",
+        "01100000000011000"
+      ],
+      
+      arcade_elite: [
+        "00100111110010000",
+        "00011222221100000",
+        "00111222222111000",
+        "01112222222211100",
+        "01112223222211100",
+        "11122222222221110",
+        "01112222222211100",
+        "00111222222111000",
+        "00011122211100000",
+        "00010100010100000",
+        "00100100010010000"
       ]
     };
+    
+    /**
+     * Draw a PIXEL_SHIPS pattern on a canvas context.
+     * @param {CanvasRenderingContext2D} ctx - Canvas context
+     * @param {string} patternKey - Key from PIXEL_SHIPS
+     * @param {number} x - Center X position
+     * @param {number} y - Center Y position  
+     * @param {number} scale - Pixel scale (1 = 1px per cell)
+     * @param {string} baseColor - Base color in hex (e.g., '#33ff99')
+     * @param {object} opts - Options: { glow: boolean, glowBlur: number }
+     */
+    function drawPixelShipOnCanvas(ctx, patternKey, x, y, scale, baseColor, opts = {}) {
+      const pattern = PIXEL_SHIPS[patternKey] || PIXEL_SHIPS.drone;
+      const rows = pattern.length;
+      const cols = pattern[0].length;
+      
+      // Calculate pixel dimensions
+      const cellSize = scale;
+      const totalWidth = cols * cellSize;
+      const totalHeight = rows * cellSize;
+      
+      // Calculate top-left corner (centered on x,y)
+      const startX = x - totalWidth / 2;
+      const startY = y - totalHeight / 2;
+      
+      // Parse base color to HSL for shading
+      const hex = baseColor.replace('#', '');
+      const r = parseInt(hex.substr(0, 2), 16) / 255;
+      const g = parseInt(hex.substr(2, 2), 16) / 255;
+      const b = parseInt(hex.substr(4, 2), 16) / 255;
+      
+      const max = Math.max(r, g, b);
+      const min = Math.min(r, g, b);
+      let h = 0, s = 0, l = (max + min) / 2;
+      
+      if (max !== min) {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        switch (max) {
+          case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+          case g: h = ((b - r) / d + 2) / 6; break;
+          case b: h = ((r - g) / d + 4) / 6; break;
+        }
+      }
+      const baseHue = Math.round(h * 360);
+      const baseSat = Math.round(s * 100);
+      
+      // Apply glow if requested
+      if (opts.glow) {
+        ctx.shadowColor = baseColor;
+        ctx.shadowBlur = opts.glowBlur || 6;
+      }
+      
+      // Draw each pixel
+      for (let row = 0; row < rows; row++) {
+        const rowData = pattern[row];
+        for (let col = 0; col < cols; col++) {
+          const digit = rowData[col];
+          if (digit === '0') continue;
+          
+          let fill;
+          if (digit === '1') {
+            fill = `hsl(${baseHue}, ${Math.max(20, baseSat - 20)}%, 20%)`; // Dark edge
+          } else if (digit === '2') {
+            fill = `hsl(${baseHue}, ${baseSat}%, 40%)`; // Mid tone
+          } else {
+            fill = `hsl(${baseHue}, ${Math.min(100, baseSat + 20)}%, 60%)`; // Cockpit highlight
+          }
+          
+          ctx.fillStyle = fill;
+          ctx.fillRect(
+            startX + col * cellSize,
+            startY + row * cellSize,
+            cellSize,
+            cellSize
+          );
+        }
+      }
+      
+      // Reset shadow
+      if (opts.glow) {
+        ctx.shadowBlur = 0;
+      }
+    }
     
     // Pixel ship lore for HUD display
     const PIXEL_SHIP_LORE = {
@@ -10917,18 +11192,53 @@
     
     // Render the pixel ship in the side console
     function renderConsoleShip(ticker, pnlPercent) {
-      const svg = document.getElementById('console-ship-svg');
+      const container = document.getElementById('console-ship-display');
       const labelEl = document.getElementById('console-ship-class');
-      if (!svg) return;
+      if (!container) return;
       
       const sector = tickerThemes[ticker] || 'UNKNOWN';
       const meta = mapTickerToPixelShip(ticker, sector, pnlPercent);
       const lore = PIXEL_SHIP_LORE[meta.pattern] || PIXEL_SHIP_LORE.drone;
       const color = tickerColors[ticker] || '#33ff99';
       
-      // Generate SVG content
-      const svgContent = generateShipSvgString(meta.pattern, color, pnlPercent);
-      svg.innerHTML = svgContent;
+      // Check if PNG sprite exists for this ticker
+      const spritePath = SHIP_SPRITES[ticker];
+      
+      if (spritePath) {
+        // Use PNG sprite
+        let img = container.querySelector('img.console-ship-img');
+        let svg = container.querySelector('svg#console-ship-svg');
+        
+        if (!img) {
+          img = document.createElement('img');
+          img.className = 'console-ship-img';
+          img.style.cssText = 'width: 80px; height: 50px; object-fit: contain; filter: drop-shadow(0 0 8px var(--phosphor));';
+          container.insertBefore(img, container.firstChild);
+        }
+        
+        img.src = spritePath;
+        img.alt = `${ticker} vessel`;
+        img.style.display = 'block';
+        
+        if (svg) svg.style.display = 'none';
+      } else {
+        // Use procedural SVG
+        let svg = container.querySelector('svg#console-ship-svg');
+        let img = container.querySelector('img.console-ship-img');
+        
+        if (!svg) {
+          svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+          svg.id = 'console-ship-svg';
+          svg.setAttribute('viewBox', '0 0 120 80');
+          container.insertBefore(svg, container.firstChild);
+        }
+        
+        const svgContent = generateShipSvgString(meta.pattern, color, pnlPercent);
+        svg.innerHTML = svgContent;
+        svg.style.display = 'block';
+        
+        if (img) img.style.display = 'none';
+      }
       
       if (labelEl) labelEl.textContent = lore.label;
     }
@@ -13999,16 +14309,16 @@
             ctx.fillRect(star.x, star.y, star.size, star.size);
           });
           
-          // Draw player ship (pixel art style)
-          ctx.fillStyle = '#33ff99';
-          ctx.shadowColor = '#33ff99';
-          ctx.shadowBlur = 8;
-          // Ship body
-          ctx.fillRect(this.player.x + 10, this.player.y, 6, 4);
-          ctx.fillRect(this.player.x + 6, this.player.y + 4, 14, 4);
-          ctx.fillRect(this.player.x + 2, this.player.y + 8, 22, 4);
-          ctx.fillRect(this.player.x, this.player.y + 12, 26, 4);
-          ctx.shadowBlur = 0;
+          // Draw player ship (SNES mecha style)
+          drawPixelShipOnCanvas(
+            ctx, 
+            'arcade_player', 
+            this.player.x + this.player.width / 2, 
+            this.player.y + this.player.height / 2, 
+            1.8, 
+            '#33ff99',
+            { glow: true, glowBlur: 8 }
+          );
           
           // Draw bullets
           ctx.fillStyle = '#33ff99';
@@ -14019,19 +14329,19 @@
           });
           ctx.shadowBlur = 0;
           
-          // Draw enemies
+          // Draw enemies (SNES mecha style)
           this.enemies.forEach(e => {
-            ctx.fillStyle = e.type === 'elite' ? '#ffb347' : '#33ff99';
-            ctx.shadowColor = ctx.fillStyle;
-            ctx.shadowBlur = 4;
-            // Invader shape
-            ctx.fillRect(e.x + 4, e.y, 4, 4);
-            ctx.fillRect(e.x + 14, e.y, 4, 4);
-            ctx.fillRect(e.x + 2, e.y + 4, 18, 4);
-            ctx.fillRect(e.x, e.y + 8, 22, 4);
-            ctx.fillRect(e.x + 2, e.y + 12, 4, 4);
-            ctx.fillRect(e.x + 16, e.y + 12, 4, 4);
-            ctx.shadowBlur = 0;
+            const enemyPattern = e.type === 'elite' ? 'arcade_elite' : 'arcade_enemy';
+            const enemyColor = e.type === 'elite' ? '#ffb347' : '#33ff99';
+            drawPixelShipOnCanvas(
+              ctx,
+              enemyPattern,
+              e.x + e.width / 2,
+              e.y + e.height / 2,
+              1.4,
+              enemyColor,
+              { glow: true, glowBlur: 4 }
+            );
           });
           
           // Draw enemy bullets
@@ -14667,23 +14977,18 @@
               );
             }
           } else {
-            // Ship body (pixel style)
-            ctx.fillStyle = '#33ff99';
-            ctx.shadowColor = '#33ff99';
-            ctx.shadowBlur = 10;
-            ctx.fillRect(-3, -8, 6, 4);
-            ctx.fillRect(-6, -4, 12, 4);
-            ctx.fillRect(-8, 0, 16, 4);
-            ctx.fillRect(-10, 4, 6, 3);
-            ctx.fillRect(4, 4, 6, 3);
-            ctx.shadowBlur = 0;
+            // Ship body (SNES mecha lander style)
+            drawPixelShipOnCanvas(ctx, 'lander', 0, 0, 1.4, '#33ff99', { glow: true, glowBlur: 10 });
             
             // Thrust flame
             if (this.keys['ArrowUp'] && ship.fuel > 0) {
               ctx.fillStyle = '#ffb347';
-              ctx.fillRect(-4, 7, 8, 4 + Math.random() * 6);
+              ctx.shadowColor = '#ffb347';
+              ctx.shadowBlur = 8;
+              ctx.fillRect(-4, 10, 8, 4 + Math.random() * 6);
               ctx.fillStyle = '#ff6b6b';
-              ctx.fillRect(-2, 11, 4, 3 + Math.random() * 4);
+              ctx.fillRect(-2, 14, 4, 3 + Math.random() * 4);
+              ctx.shadowBlur = 0;
             }
           }
           
