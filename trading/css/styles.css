@@ -870,19 +870,68 @@
       position: relative;
       z-index: 3;
       padding: 0.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
     }
     
     .telemetry-chart-area .price-chart-wrapper {
       height: 280px;
+      flex-shrink: 0;
       border: none;
       background: transparent;
     }
     
     .telemetry-chart-area .macd-chart-wrapper {
       height: 100px;
+      flex-shrink: 0;
       border: none;
       border-top: 1px solid var(--border);
       background: transparent;
+    }
+    
+    /* Captain's Log Bay - fills dead zone under MACD */
+    .telemetry-logbay {
+      flex: 1;
+      min-height: 180px;
+      margin-top: 8px;
+      border: 1px solid var(--border);
+      background: rgba(0, 0, 0, 0.30);
+      border-radius: 4px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .telemetry-logbay .logbay-title {
+      padding: 8px 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+      font-size: 0.6rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--phosphor-dim);
+      font-family: var(--font-mono);
+      flex-shrink: 0;
+    }
+    
+    .telemetry-logbay .captains-log-list {
+      flex: 1;
+      padding: 8px 12px;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+    
+    .telemetry-logbay .captains-log-list::-webkit-scrollbar {
+      width: 5px;
+    }
+    
+    .telemetry-logbay .captains-log-list::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 999px;
+    }
+    
+    .telemetry-logbay .captains-log-list::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.14);
     }
     
     /* Side console */
@@ -1122,6 +1171,10 @@
       
       .telemetry-chart-area .macd-chart-wrapper {
         height: 80px;
+      }
+      
+      .telemetry-logbay {
+        min-height: 140px;
       }
       
       .telemetry-footer-strip {
@@ -8554,46 +8607,9 @@
 
     /* ═══════════════════════════════════════════════════════════════════════════
        CAPTAIN'S LOG (truth-rooted MACD events)
+       Note: Container styling is in .telemetry-logbay (telemetry-chart-area section)
+       These are the shared row/tag/message styles
        ═══════════════════════════════════════════════════════════════════════════ */
-    
-    .captains-log {
-      margin-top: 12px;
-      border: 1px solid var(--border);
-      background: rgba(0, 0, 0, 0.30);
-      border-radius: 4px;
-      overflow: hidden;
-    }
-    
-    .captains-log .panel-title {
-      padding: 10px 12px;
-      border-bottom: 1px solid var(--border);
-      font-size: 0.65rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      font-family: var(--font-mono);
-    }
-    
-    .captains-log-list {
-      padding: 10px 12px 12px;
-      max-height: 200px;
-      overflow-y: auto;
-      overflow-x: hidden;
-    }
-    
-    .captains-log-list::-webkit-scrollbar {
-      height: 6px;
-      width: 6px;
-    }
-    
-    .captains-log-list::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.08);
-      border-radius: 999px;
-    }
-    
-    .captains-log-list::-webkit-scrollbar-thumb:hover {
-      background: rgba(255, 255, 255, 0.14);
-    }
     
     .log-row {
       display: grid;
@@ -8664,19 +8680,13 @@
     
     /* Mobile adjustments for Captain's Log */
     @media (max-width: 768px) {
-      .captains-log {
-        margin-top: 10px;
-        border-radius: 8px;
+      .telemetry-logbay {
+        min-height: 140px;
       }
       
-      .captains-log .panel-title {
-        padding: 8px 10px;
-        font-size: 0.62rem;
-      }
-      
-      .captains-log-list {
-        padding: 8px 10px;
-        max-height: 160px;
+      .telemetry-logbay .logbay-title {
+        padding: 6px 10px;
+        font-size: 0.56rem;
       }
       
       .log-row {

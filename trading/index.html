@@ -703,6 +703,14 @@
                   <!-- Charts -->
                   <div class="price-chart-wrapper"><canvas id="price-chart"></canvas></div>
                   <div class="macd-chart-wrapper"><canvas id="macd-chart"></canvas></div>
+                  
+                  <!-- Captain's Log (fills dead zone under MACD) -->
+                  <section class="telemetry-logbay">
+                    <div class="logbay-title">// CAPTAIN'S LOG</div>
+                    <div id="captains-log-list" class="captains-log-list">
+                      <div class="log-empty">AWAITING SIGNAL EVENTS…</div>
+                    </div>
+                  </section>
                 </div>
               </div>
               
@@ -776,14 +784,6 @@
               <span class="status-chip" id="tm-mode-chip"><span class="dot"></span>MODE · TELEMETRY</span>
               <span class="status-chip" id="tm-range-chip"><span class="dot"></span>RANGE · 3M</span>
             </div>
-            
-            <!-- CAPTAIN'S LOG (truth-rooted from MACD events) -->
-            <section class="captains-log">
-              <div class="panel-title">// CAPTAIN'S LOG</div>
-              <div id="captains-log-list" class="captains-log-list">
-                <div class="log-empty">AWAITING SIGNAL EVENTS…</div>
-              </div>
-            </section>
             
             <!-- TELEMETRY CONTEXT BAY (responsive) -->
             <section id="telemetry-context-bay" class="context-bay collapsed" aria-label="Telemetry Context Bay">
