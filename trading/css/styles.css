@@ -2040,6 +2040,80 @@
       51%, 100% { opacity: 0; }
     }
     
+    /* ═══════════════════════════════════════════════════════════════════
+       STEP 5: FULLSCREEN FLIGHT LOADING OVERLAY
+       ═══════════════════════════════════════════════════════════════════ */
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 25000;
+      background: var(--bg-void);
+      transition: opacity 0.5s ease, visibility 0.5s ease;
+    }
+    
+    .loading-overlay.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    
+    .loading-overlay #loading-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+    
+    .loading-vignette {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: radial-gradient(ellipse at center, transparent 40%, rgba(10, 14, 20, 0.7) 100%);
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════════
+       STEP 5.1: FLEET PAGE BACKGROUND FLIGHT LAYER
+       ═══════════════════════════════════════════════════════════════════ */
+    .fleet-scene-container {
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .fleet-bg-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0.45;
+      filter: blur(0.3px);
+    }
+    
+    .fleet-ui-layer {
+      position: relative;
+      z-index: 2;
+    }
+    
+    /* Glass panel effect for fleet cards over background */
+    .fleet-scene-container .fleet-grid {
+      position: relative;
+      z-index: 2;
+    }
+    
+    .fleet-scene-container .fleet-ship {
+      background: rgba(18, 22, 28, 0.85);
+      backdrop-filter: blur(2px);
+    }
+    
+    /* Reduced motion: freeze flight animations */
+    @media (prefers-reduced-motion: reduce) {
+      .loading-overlay,
+      .fleet-bg-canvas {
+        animation: none !important;
+      }
+    }
+    
     /* APP CONTAINER */
     .app {
       display: none;

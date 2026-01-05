@@ -209,45 +209,73 @@
     }
 
     async function runCountdown() {
-      const countdown = document.getElementById('countdown');
-      const status = document.getElementById('loading-status');
-      const beam = document.getElementById('pixel-beam');
-      const ground = document.getElementById('pixel-ground');
-      const loadingScreen = document.getElementById('loading-screen');
+      const loadingOverlay = document.getElementById('loading-overlay');
+      const loadingCanvas = document.getElementById('loading-canvas');
       const app = document.getElementById('app');
+      
+      // Also handle old loading-screen if still in DOM
+      const oldLoadingScreen = document.getElementById('loading-screen');
 
-      let count = 3;
-
-      const arcadeMessages = [
-        'ESTABLISHING UPLINK...',
-        'SYNCHING FLEET TELEMETRY...',
-        'CALIBRATING THRUST VECTORS...'
-      ];
-
-      // Start the animated, data-driven fleet
-      createLoadingFleet();
-
-      const interval = setInterval(() => {
-        count--;
-        if (count > 0) {
-          countdown.textContent = count;
-          status.textContent = arcadeMessages[3 - count - 1] || 'INITIALIZING...';
-        } else if (count === 0) {
-          countdown.textContent = 'GO';
-          countdown.classList.add('go');
-          if (beam) beam.classList.add('active');
-          if (ground) ground.classList.add('active');
-          status.textContent = 'COCKPIT ONLINE — CLEAR FOR LAUNCH';
-        } else {
-          clearInterval(interval);
-          loadingScreen.classList.add('hidden');
+      // Step 5: Start canvas flight scene
+      let flightController = null;
+      
+      if (loadingCanvas && window.FlightScene) {
+        try {
+          // Build ship roster from mission/manifest data
+          const ships = await FlightScene.buildShipRoster();
+          
+          flightController = FlightScene.create({
+            canvas: loadingCanvas,
+            ships: ships,
+            mode: 'loading',
+            intensity: 1.0,
+            minDisplayTime: 2000, // 2 second minimum display
+            onReady: () => {
+              // Fade out loading overlay
+              if (loadingOverlay) loadingOverlay.classList.add('hidden');
+              if (oldLoadingScreen) oldLoadingScreen.classList.add('hidden');
+              app.classList.add('visible');
+              
+              // Stop flight scene after fade
+              setTimeout(() => {
+                if (flightController) flightController.stop();
+                // Remove overlay from DOM after animation
+                if (loadingOverlay) loadingOverlay.remove();
+              }, 600);
+              
+              // Initialize app
+              init();
+            }
+          });
+          
+          // Signal ready after init tasks complete (data loads, etc.)
+          // For now, trigger after a short delay to allow basic setup
+          setTimeout(() => {
+            if (flightController) flightController.signalReady();
+          }, 800);
+          
+        } catch (e) {
+          console.warn('[Loading] Flight scene failed, falling back:', e);
+          // Fallback: just show app after delay
+          setTimeout(() => {
+            if (loadingOverlay) loadingOverlay.classList.add('hidden');
+            if (oldLoadingScreen) oldLoadingScreen.classList.add('hidden');
+            app.classList.add('visible');
+            init();
+          }, 1500);
+        }
+      } else {
+        // No FlightScene available, fallback to simple timer
+        setTimeout(() => {
+          if (loadingOverlay) loadingOverlay.classList.add('hidden');
+          if (oldLoadingScreen) oldLoadingScreen.classList.add('hidden');
           app.classList.add('visible');
           init();
-        }
-      }, 1000);
+        }, 1500);
+      }
     }
 
-    // Start countdown on load
+    // Start loading on DOM ready
 
     window.addEventListener('DOMContentLoaded', () => {
       setTimeout(runCountdown, 500);
@@ -1893,6 +1921,9 @@
       document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tabName));
       document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === tabName + '-panel'));
       
+      // Step 5.1: Start/stop fleet background animation
+      handleFleetBackground(tabName);
+      
       // Refresh arcade previews when switching to arcade tab
       if (tabName === 'arcade' && window.SpriteCache && SpriteCache.loaded) {
         setTimeout(() => SpriteCache.renderGamePreviews(), 100);
@@ -1901,6 +1932,38 @@
       // Re-initialize trajectory canvas when switching to holdings/options tab
       if (tabName === 'options' && window.initTrajectoryCanvas) {
         setTimeout(() => window.initTrajectoryCanvas(), 100);
+      }
+    }
+    
+    // Step 5.1: Fleet background controller
+    let arcadeFlightController = null;
+    
+    async function handleFleetBackground(tabName) {
+      if (!window.FlightScene) return;
+      
+      const arcadeCanvas = document.getElementById('arcade-bg-canvas');
+      
+      if (tabName === 'arcade' && arcadeCanvas) {
+        // Start fleet background for arcade
+        if (!arcadeFlightController) {
+          try {
+            const ships = await FlightScene.buildShipRoster();
+            arcadeFlightController = FlightScene.create({
+              canvas: arcadeCanvas,
+              ships: ships,
+              mode: 'fleet', // Reduced intensity
+              intensity: 0.6
+            });
+          } catch (e) {
+            console.warn('[FleetBg] Failed to start arcade background:', e);
+          }
+        }
+      } else {
+        // Stop fleet background when leaving arcade
+        if (arcadeFlightController) {
+          arcadeFlightController.stop();
+          arcadeFlightController = null;
+        }
       }
     }
     
@@ -1941,6 +2004,9 @@
       document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === tabName + '-panel'));
       // Play sound
       if (window.SoundFX) SoundFX.play('click');
+      
+      // Step 5.1: Start/stop fleet background animation
+      handleFleetBackground(tabName);
       
       // Re-initialize trajectory canvas when switching to holdings/options tab
       if (tabName === 'options' && window.initTrajectoryCanvas) {

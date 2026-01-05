@@ -402,139 +402,11 @@
   <div class="grid-bg"></div>
   <div class="ambient-particles" id="ambient-particles"></div>
   
-  <!-- LOADING SCREEN -->
-  <div class="loading-screen" id="loading-screen">
-    <!-- Background marching army -->
-    <div class="invader-army" id="invader-army" aria-hidden="true">
-      <!-- Rows will be filled via JS -->
-    </div>
-    
-    <div class="stars"></div>
-    <div class="horizon"></div>
-    
-    <!-- Flying fleet layer (data-driven) - NOW AT SCREEN LEVEL -->
-    <div class="loading-fleet" id="loading-fleet"></div>
-    
-    <div class="loading-inner">
-      <div class="launch-scene">
-        <!-- Pixel Invader Scene -->
-        <div class="pixel-invader-scene">
-          <!-- Background fleet -->
-          <div class="invader-fleet">
-            <svg class="fleet-invader" viewBox="0 0 11 8" fill="var(--phosphor)">
-              <rect x="2" y="0" width="1" height="1"/><rect x="8" y="0" width="1" height="1"/>
-              <rect x="3" y="1" width="1" height="1"/><rect x="7" y="1" width="1" height="1"/>
-              <rect x="2" y="2" width="7" height="1"/>
-              <rect x="1" y="3" width="2" height="1"/><rect x="4" y="3" width="3" height="1"/><rect x="8" y="3" width="2" height="1"/>
-              <rect x="0" y="4" width="11" height="1"/>
-              <rect x="0" y="5" width="1" height="1"/><rect x="2" y="5" width="7" height="1"/><rect x="10" y="5" width="1" height="1"/>
-              <rect x="0" y="6" width="1" height="1"/><rect x="2" y="6" width="1" height="1"/><rect x="8" y="6" width="1" height="1"/><rect x="10" y="6" width="1" height="1"/>
-              <rect x="3" y="7" width="2" height="1"/><rect x="6" y="7" width="2" height="1"/>
-            </svg>
-            <svg class="fleet-invader" viewBox="0 0 11 8" fill="var(--phosphor)">
-              <rect x="2" y="0" width="1" height="1"/><rect x="8" y="0" width="1" height="1"/>
-              <rect x="3" y="1" width="1" height="1"/><rect x="7" y="1" width="1" height="1"/>
-              <rect x="2" y="2" width="7" height="1"/>
-              <rect x="1" y="3" width="2" height="1"/><rect x="4" y="3" width="3" height="1"/><rect x="8" y="3" width="2" height="1"/>
-              <rect x="0" y="4" width="11" height="1"/>
-              <rect x="0" y="5" width="1" height="1"/><rect x="2" y="5" width="7" height="1"/><rect x="10" y="5" width="1" height="1"/>
-              <rect x="0" y="6" width="1" height="1"/><rect x="2" y="6" width="1" height="1"/><rect x="8" y="6" width="1" height="1"/><rect x="10" y="6" width="1" height="1"/>
-              <rect x="3" y="7" width="2" height="1"/><rect x="6" y="7" width="2" height="1"/>
-            </svg>
-            <svg class="fleet-invader" viewBox="0 0 11 8" fill="var(--phosphor)">
-              <rect x="2" y="0" width="1" height="1"/><rect x="8" y="0" width="1" height="1"/>
-              <rect x="3" y="1" width="1" height="1"/><rect x="7" y="1" width="1" height="1"/>
-              <rect x="2" y="2" width="7" height="1"/>
-              <rect x="1" y="3" width="2" height="1"/><rect x="4" y="3" width="3" height="1"/><rect x="8" y="3" width="2" height="1"/>
-              <rect x="0" y="4" width="11" height="1"/>
-              <rect x="0" y="5" width="1" height="1"/><rect x="2" y="5" width="7" height="1"/><rect x="10" y="5" width="1" height="1"/>
-              <rect x="0" y="6" width="1" height="1"/><rect x="2" y="6" width="1" height="1"/><rect x="8" y="6" width="1" height="1"/><rect x="10" y="6" width="1" height="1"/>
-              <rect x="3" y="7" width="2" height="1"/><rect x="6" y="7" width="2" height="1"/>
-            </svg>
-            <svg class="fleet-invader" viewBox="0 0 11 8" fill="var(--phosphor)">
-              <rect x="2" y="0" width="1" height="1"/><rect x="8" y="0" width="1" height="1"/>
-              <rect x="3" y="1" width="1" height="1"/><rect x="7" y="1" width="1" height="1"/>
-              <rect x="2" y="2" width="7" height="1"/>
-              <rect x="1" y="3" width="2" height="1"/><rect x="4" y="3" width="3" height="1"/><rect x="8" y="3" width="2" height="1"/>
-              <rect x="0" y="4" width="11" height="1"/>
-              <rect x="0" y="5" width="1" height="1"/><rect x="2" y="5" width="7" height="1"/><rect x="10" y="5" width="1" height="1"/>
-              <rect x="0" y="6" width="1" height="1"/><rect x="2" y="6" width="1" height="1"/><rect x="8" y="6" width="1" height="1"/><rect x="10" y="6" width="1" height="1"/>
-              <rect x="3" y="7" width="2" height="1"/><rect x="6" y="7" width="2" height="1"/>
-            </svg>
-            <svg class="fleet-invader" viewBox="0 0 11 8" fill="var(--phosphor)">
-              <rect x="2" y="0" width="1" height="1"/><rect x="8" y="0" width="1" height="1"/>
-              <rect x="3" y="1" width="1" height="1"/><rect x="7" y="1" width="1" height="1"/>
-              <rect x="2" y="2" width="7" height="1"/>
-              <rect x="1" y="3" width="2" height="1"/><rect x="4" y="3" width="3" height="1"/><rect x="8" y="3" width="2" height="1"/>
-              <rect x="0" y="4" width="11" height="1"/>
-              <rect x="0" y="5" width="1" height="1"/><rect x="2" y="5" width="7" height="1"/><rect x="10" y="5" width="1" height="1"/>
-              <rect x="0" y="6" width="1" height="1"/><rect x="2" y="6" width="1" height="1"/><rect x="8" y="6" width="1" height="1"/><rect x="10" y="6" width="1" height="1"/>
-              <rect x="3" y="7" width="2" height="1"/><rect x="6" y="7" width="2" height="1"/>
-            </svg>
-          </div>
-          
-          <!-- Ship Formation - Wedge (4-3-2-1) using PNG sprites -->
-          <div class="ship-formation" id="ship-formation">
-            <!-- Row 1: 4 ships (back row) -->
-            <div class="formation-row">
-              <img class="formation-ship" src="assets/ships/BKSY-recon-ship.png" alt="BKSY" title="BKSY - Recon">
-              <img class="formation-ship" src="assets/ships/PL-scout-ship.png" alt="PL" title="PL - Scout">
-              <img class="formation-ship" src="assets/ships/RDW-Hauler-ship.png" alt="RDW" title="RDW - Hauler">
-              <img class="formation-ship" src="assets/ships/EVEX-Transport-Ship.png" alt="EVEX" title="EVEX - Transport">
-            </div>
-            <!-- Row 2: 3 ships -->
-            <div class="formation-row">
-              <img class="formation-ship" src="assets/ships/ACHR-eVTOL-ship.png" alt="ACHR" title="ACHR - eVTOL">
-              <img class="formation-ship" src="assets/ships/JOBY-eVTOL-light-class-ship.png" alt="JOBY" title="JOBY - Light eVTOL">
-              <img class="formation-ship" src="assets/ships/GME-moonshot-ship.png" alt="GME" title="GME - Moonshot">
-            </div>
-            <!-- Row 3: 2 ships -->
-            <div class="formation-row">
-              <img class="formation-ship" src="assets/ships/LUNR-lander-ship.png" alt="LUNR" title="LUNR - Lander">
-              <img class="formation-ship" src="assets/ships/ASTS-Communications-Relay-Ship.png" alt="ASTS" title="ASTS - Comms">
-            </div>
-            <!-- Row 4: 1 ship (leader/flagship) -->
-            <div class="formation-row">
-              <img class="formation-ship" src="assets/ships/RKLB-flagship-ship.png" alt="RKLB" title="RKLB - Flagship">
-            </div>
-          </div>
-          
-          <!-- Legacy pixel-invader (hidden, kept for compatibility) -->
-          <svg class="pixel-invader" viewBox="0 0 11 8" fill="var(--phosphor)" style="display:none;">
-            <rect x="2" y="0" width="1" height="1"/>
-            <rect x="8" y="0" width="1" height="1"/>
-            <rect x="3" y="1" width="1" height="1"/>
-            <rect x="7" y="1" width="1" height="1"/>
-            <rect x="2" y="2" width="7" height="1"/>
-            <rect x="1" y="3" width="2" height="1"/>
-            <rect x="4" y="3" width="3" height="1"/>
-            <rect x="8" y="3" width="2" height="1"/>
-            <rect x="0" y="4" width="11" height="1"/>
-            <rect x="0" y="5" width="1" height="1"/>
-            <rect x="2" y="5" width="7" height="1"/>
-            <rect x="10" y="5" width="1" height="1"/>
-            <rect x="0" y="6" width="1" height="1"/>
-            <rect x="2" y="6" width="1" height="1"/>
-            <rect x="8" y="6" width="1" height="1"/>
-            <rect x="10" y="6" width="1" height="1"/>
-            <rect x="3" y="7" width="2" height="1"/>
-            <rect x="6" y="7" width="2" height="1"/>
-          </svg>
-          
-          <!-- Pixel beam -->
-          <div class="pixel-beam" id="pixel-beam"></div>
-          
-          <!-- Ground reflection -->
-          <div class="pixel-ground" id="pixel-ground"></div>
-        </div>
-      </div>
-      <div class="loading-content">
-        <div class="loading-brand">HASLUN-BOT</div>
-        <div class="loading-sub">Pilot's Cockpit</div>
-        <div class="countdown" id="countdown">3</div>
-        <div class="loading-status" id="loading-status">ESTABLISHING UPLINK...</div>
-      </div>
-    </div>
+  <!-- STEP 5: FULLSCREEN FLIGHT LOADING OVERLAY -->
+  <div class="loading-overlay" id="loading-overlay">
+    <canvas id="loading-canvas"></canvas>
+    <!-- Subtle vignette for depth -->
+    <div class="loading-vignette"></div>
   </div>
   
   <!-- APP -->
@@ -1175,8 +1047,11 @@
         </div>
         
         <!-- ARCADE PANEL -->
-        <div class="tab-panel" id="arcade-panel">
-          <div class="arcade-lobby">
+        <div class="tab-panel fleet-scene-container" id="arcade-panel">
+          <!-- Step 5.1: Fleet background canvas -->
+          <canvas class="fleet-bg-canvas" id="arcade-bg-canvas"></canvas>
+          
+          <div class="arcade-lobby fleet-ui-layer">
             <div class="arcade-lobby-header">
               <div class="arcade-lobby-title">
                 <span class="arcade-icon">🕹️</span>
@@ -1904,6 +1779,9 @@
   
   <!-- Step 4: Mission Bridge (read-only adapter for dashboard) -->
   <script src="js/mission-bridge.js"></script>
+  
+  <!-- Step 5: Flight Scene Engine (loading + fleet backgrounds) -->
+  <script src="js/flight-scene.js"></script>
   
   <!-- Main application -->
   <script src="js/app.js"></script>
