@@ -1169,7 +1169,7 @@
         const change = stats.return_1d || 0;
         const theme = tickerThemes[t] || '';
         const color = tickerColors[t] || '#33ff99';
-        return '<div class="watchlist-item ' + (t === currentTicker ? 'active' : '') + '" onclick="selectTicker(\'' + t + '\'); if(window.innerWidth <= 768) toggleMobileDrawer();">' +
+        return '<div class="watchlist-item ' + (t === currentTicker ? 'active' : '') + '" data-ticker="' + t + '" onclick="selectTicker(\'' + t + '\'); if(window.innerWidth <= 768) toggleMobileDrawer();">' +
           '<div class="watchlist-info"><div class="watchlist-ticker" style="color: ' + color + '">' + t + '</div>' +
           '<div class="watchlist-meta">' + theme + '</div></div>' +
           '<div class="watchlist-data"><div class="watchlist-price">$' + (stats.current || 0).toFixed(2) + '</div>' +
@@ -2476,7 +2476,7 @@
         const shipVisualMarkup = `<img src="${spritePath}" alt="${pos.ticker} ship" loading="lazy" decoding="async">`;
         
         return `
-          <div class="ship-card ${isOperational ? '' : 'negative'}" style="--ship-color: ${color}" onclick="openVesselDossier('${pos.ticker}');">
+          <div class="ship-card ${isOperational ? '' : 'negative'}" data-ticker="${pos.ticker}" style="--ship-color: ${color}" onclick="openVesselDossier('${pos.ticker}');">
             <div class="ship-card-inner">
               <div class="ship-visual">
                 ${shipVisualMarkup}

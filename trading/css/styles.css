@@ -8549,3 +8549,53 @@
       }
     }
 
+    /* ═══════════════════════════════════════════════════════════════════════════
+       CONTEXT FOCUS — Page-Behind Awareness
+       Subtle emphasis when ShipBrief is open
+       ═══════════════════════════════════════════════════════════════════════════ */
+    
+    .has-context-focus .context-dim {
+      opacity: 0.55;
+      filter: saturate(0.85);
+      transition: opacity 180ms ease, filter 180ms ease;
+    }
+    
+    .context-focus {
+      position: relative;
+      box-shadow: 0 0 0 1px rgba(51, 255, 153, 0.35), 0 0 16px rgba(51, 255, 153, 0.15);
+      border-radius: 4px;
+      transition: box-shadow 180ms ease, transform 180ms ease;
+      transform: translateY(-1px);
+      z-index: 2;
+    }
+    
+    /* Watchlist-specific overrides */
+    .has-context-focus .watchlist-item.context-dim {
+      opacity: 0.6;
+    }
+    
+    .has-context-focus .watchlist-item.context-focus {
+      opacity: 1;
+    }
+    
+    /* Ship card overrides */
+    .has-context-focus .ship-card.context-dim {
+      opacity: 0.5;
+    }
+    
+    .has-context-focus .ship-card.context-focus {
+      opacity: 1;
+      border-color: var(--phosphor);
+    }
+    
+    /* Fleet ship overrides (Mission Command) */
+    .has-context-focus .fleet-ship.context-dim {
+      opacity: 0.5;
+    }
+    
+    .has-context-focus .fleet-ship.context-focus {
+      opacity: 1;
+      border-color: var(--phosphor);
+      background: rgba(51, 255, 153, 0.08);
+    }
+
