@@ -240,6 +240,34 @@ window.FlightScene = (function() {
       this.trail = [];
       this.maxTrail = Math.floor(config.trailLength * this.trailMultiplier);
       
+      // Step 8: Apply progression modifiers
+      const prog = window.Progression?.computeEffects(ticker);
+      if (prog && prog.effects) {
+        const thrustBoost = 1 + (prog.effects.thrust || 0);
+        const trailBoost = 1 + (prog.effects.trail || 0);
+        
+        // Apply speed boost
+        this.baseSpeed *= thrustBoost;
+        this.vx *= thrustBoost;
+        this.vy *= thrustBoost;
+        
+        // Apply trail boost
+        this.maxTrail = Math.floor(this.maxTrail * trailBoost);
+        
+        // Apply visual modifiers
+        if (prog.visuals) {
+          this.progGlow = prog.visuals.glow || 1;
+          this.progScale = prog.visuals.scale || 1;
+          this.progRing = prog.visuals.ring || null;
+          this.progAura = prog.visuals.aura || 0;
+        }
+      } else {
+        this.progGlow = 1;
+        this.progScale = 1;
+        this.progRing = null;
+        this.progAura = 0;
+      }
+      
       // Formation state
       this.inFormation = false;
       this.formationTarget = null;
@@ -331,9 +359,10 @@ window.FlightScene = (function() {
         ctx.stroke();
       }
       
-      // Draw glow (enhanced if focused)
+      // Draw glow (enhanced if focused + progression boost)
       const focusGlowBoost = isFocused ? 1.4 : 1.0;
-      const finalGlowRadius = glowRadius * focusGlowBoost;
+      const progGlowBoost = this.progGlow || 1.0;
+      const finalGlowRadius = glowRadius * focusGlowBoost * progGlowBoost;
       if (finalGlowRadius > 3) {
         const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, finalGlowRadius);
         gradient.addColorStop(0, this.style.glowColor);
@@ -353,11 +382,12 @@ window.FlightScene = (function() {
       // Keep pixel crisp
       ctx.imageSmoothingEnabled = false;
       
-      // Size tuned for aesthetic (scale with depth + elite emphasis)
+      // Size tuned for aesthetic (scale with depth + elite emphasis + progression)
       // Step 5E: reduce base size on mobile
       const isMobile = (window.innerWidth < 768 || 'ontouchstart' in window);
       const base = isMobile ? 34 : 44;
-      const spriteSize = base * this.depth * (this.style?.size || 1);
+      const progScaleBoost = this.progScale || 1.0;
+      const spriteSize = base * this.depth * (this.style?.size || 1) * progScaleBoost;
       
       // Slightly boost focused ship
       const focusBoost = isFocused ? 1.15 : 1.0;
@@ -385,6 +415,28 @@ window.FlightScene = (function() {
         ctx.beginPath();
         ctx.arc(0, 0, spriteSize * 0.6, 0, Math.PI * 2);
         ctx.stroke();
+      }
+      
+      // Step 8: Progression upgrade ring (if has equipped upgrade with ring)
+      if (this.progRing && intensity > 0.4 && !this.stats.hasMission) {
+        ctx.strokeStyle = this.progRing;
+        ctx.globalAlpha = 0.25;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(0, 0, spriteSize * 0.62, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.globalAlpha = effectiveOpacity;
+      }
+      
+      // Step 8: Progression aura (for high-level ships with core upgrades)
+      if (this.progAura > 0 && intensity > 0.5) {
+        ctx.strokeStyle = '#9933ff';
+        ctx.globalAlpha = 0.12;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(0, 0, spriteSize * 0.85, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.globalAlpha = effectiveOpacity;
       }
       
       // Support chevron (if escorting)
@@ -798,7 +850,47 @@ window.FlightScene = (function() {
       }
     }
     
+    // Step 8: Preload sprites for roster tickers (fixes "triangles" on loading screen)
+    const tickerList = ships.map(s => s.ticker);
+    await preloadSpritesForTickers(tickerList);
+    
     return ships;
+  }
+  
+  /**
+   * Step 8: Preload ship sprites for given tickers
+   * Ensures images are fully decoded before flight scene starts
+   * @param {Array<string>} tickers - Array of ticker symbols
+   */
+  async function preloadSpritesForTickers(tickers) {
+    const sprites = window.SHIP_SPRITES || {};
+    const fallback = window.DEFAULT_SHIP_SPRITE || 'assets/ships/Unclaimed-Drone-ship.png';
+    
+    // Get unique sprite URLs
+    const srcs = [...new Set(tickers.map(t => sprites[t] || fallback))];
+    
+    // Preload all in parallel
+    await Promise.all(srcs.map(src => new Promise((resolve) => {
+      // Check if already in cache and loaded
+      if (SPRITE_CACHE.has(src)) {
+        const cached = SPRITE_CACHE.get(src);
+        if (cached.complete && cached.naturalWidth > 0) {
+          resolve();
+          return;
+        }
+      }
+      
+      const img = new Image();
+      img.src = src;
+      img.onload = () => {
+        SPRITE_CACHE.set(src, img);
+        resolve();
+      };
+      img.onerror = () => {
+        // Don't block on failure, fallback will handle it
+        resolve();
+      };
+    })));
   }
   
   /**

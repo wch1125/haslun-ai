@@ -3181,11 +3181,18 @@
         grid.innerHTML = tickers.map(ticker => {
           const color = tickerColors[ticker] || '#33ff99';
           const isSelected = ticker === this.selectedPlayerShip;
+          
+          // Step 8: Get ship level for display
+          const summary = window.Progression?.getShipSummary(ticker);
+          const level = summary?.level || 1;
+          const levelColor = level >= 5 ? '#ffd700' : level >= 3 ? '#47d4ff' : '#33ff99';
+          
           return `
             <div class="ship-select-item ${isSelected ? 'selected' : ''}" 
                  style="--ship-color: ${color}"
                  onclick="SpriteCache.selectShip('${ticker}')"
                  data-ticker="${ticker}">
+              <div class="ship-select-level" style="color: ${levelColor}">LVL ${level}</div>
               <img src="${SHIP_SPRITES[ticker]}" alt="${ticker}">
               <span class="ship-ticker">${ticker}</span>
             </div>
@@ -3302,6 +3309,104 @@
     
     // Initialize sprite cache on load
     SpriteCache.preload();
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // Step 8: Progression System Event Listeners
+    // ═══════════════════════════════════════════════════════════════════════════
+    
+    if (window.HASLUN_BUS) {
+      // Training game results → XP
+      window.HASLUN_BUS.on('training:result', (e) => {
+        const t = e?.ticker;
+        if (!t || !window.Progression) return;
+        
+        // Base XP: WIN = 80, LOSS = 30
+        // Bonus: up to 120 based on score (10 XP per 100 points, capped at 1200 score)
+        const base = e.outcome === 'WIN' ? 80 : 30;
+        const bonus = Math.min(120, Math.floor((e.score || 0) / 10));
+        const totalXP = base + bonus;
+        
+        window.Progression.awardXP(t, totalXP, 'Training Simulation', {
+          gameId: e.gameId,
+          score: e.score,
+          outcome: e.outcome
+        });
+        
+        // Feedback
+        if (typeof logTerminal === 'function') {
+          logTerminal(`[PROGRESS] ${t} earned ${totalXP} XP from training`);
+        }
+      });
+      
+      // Mission completions → XP + random upgrade drop
+      window.HASLUN_BUS.on('mission:complete', (e) => {
+        const t = e?.ticker;
+        if (!t || !window.Progression) return;
+        
+        // Base: 120 + difficulty * 40
+        const difficulty = e.difficulty || 1;
+        const amt = 120 + Math.floor(difficulty * 40);
+        
+        window.Progression.awardXP(t, amt, 'Mission Complete', {
+          missionType: e.missionType,
+          difficulty: difficulty,
+          duration: e.duration
+        });
+        
+        // 20% chance to drop an upgrade
+        if (Math.random() < 0.20 && window.ShipUpgrades?.getAllUpgrades) {
+          const shipEffects = window.Progression.computeEffects(t);
+          const shipLevel = shipEffects?.level || 1;
+          
+          // Pool = upgrades available at level + 1 (gives something to grow into)
+          const pool = window.ShipUpgrades.getAllUpgrades().filter(u => u.reqLevel <= shipLevel + 1);
+          if (pool.length > 0) {
+            const pick = pool[Math.floor(Math.random() * pool.length)];
+            const result = window.Progression.equipUpgrade(t, pick.id);
+            if (result.ok) {
+              if (typeof showToast === 'function') {
+                showToast(`🎁 ${t} acquired: ${pick.name}!`, 'alert');
+              }
+              if (typeof logTerminal === 'function') {
+                logTerminal(`[LOOT] ${t} received ${pick.name} upgrade`);
+              }
+            }
+          }
+        }
+        
+        // Feedback
+        if (typeof logTerminal === 'function') {
+          logTerminal(`[PROGRESS] ${t} earned ${amt} XP from mission`);
+        }
+      });
+      
+      // Mission damaged/aborted → small XP for participation
+      window.HASLUN_BUS.on('mission:damaged', (e) => {
+        const t = e?.ticker;
+        if (!t || !window.Progression) return;
+        
+        // Small consolation XP (20)
+        window.Progression.awardXP(t, 20, 'Mission Aborted', {
+          missionType: e.missionType
+        });
+        
+        if (typeof logTerminal === 'function') {
+          logTerminal(`[PROGRESS] ${t} earned 20 XP (mission aborted)`);
+        }
+      });
+      
+      // Level up notifications
+      window.HASLUN_BUS.on('progress:level', (e) => {
+        if (typeof showToast === 'function') {
+          showToast(`🎖️ ${e.ticker} reached Level ${e.to}!`, 'alert');
+        }
+        if (window.MechSFX) {
+          MechSFX.success();
+        }
+      });
+      
+      console.log('[App] Progression event listeners registered');
+    }
     
     function renderFleetGrid() {
       const fleetGrid = document.getElementById('fleet-grid');

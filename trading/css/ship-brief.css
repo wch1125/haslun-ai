@@ -512,3 +512,106 @@ body.ship-brief-open {
     width: 100%;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Step 8: Pilot Progression Section
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.ship-brief-progression {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.ship-brief-level-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.ship-brief-level-badge {
+  font-family: var(--font-mono, 'IBM Plex Mono', monospace);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #33ff99;
+  background: rgba(51, 255, 153, 0.1);
+  border: 1px solid rgba(51, 255, 153, 0.3);
+  padding: 0.25rem 0.5rem;
+  border-radius: 3px;
+  text-shadow: 0 0 8px rgba(51, 255, 153, 0.5);
+  min-width: 52px;
+  text-align: center;
+}
+
+.ship-brief-xp-bar {
+  flex: 1;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.ship-brief-xp-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #33ff99, #47d4ff);
+  box-shadow: 0 0 8px rgba(51, 255, 153, 0.5);
+  transition: width 0.4s ease;
+  width: 0%;
+}
+
+.ship-brief-xp-text {
+  font-family: var(--font-mono, 'IBM Plex Mono', monospace);
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.5);
+  min-width: 80px;
+  text-align: right;
+}
+
+.ship-brief-upgrades {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.ship-brief-upgrade-slot {
+  font-family: var(--font-mono, 'IBM Plex Mono', monospace);
+  font-size: 0.6rem;
+  color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.2rem 0.4rem;
+  border-radius: 2px;
+  cursor: default;
+  transition: all 0.2s ease;
+}
+
+.ship-brief-upgrade-slot.equipped {
+  color: #ffb347;
+  background: rgba(255, 179, 71, 0.1);
+  border-color: rgba(255, 179, 71, 0.3);
+}
+
+.ship-brief-upgrade-slot:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Mobile adjustments for progression */
+@media (max-width: 600px) {
+  .ship-brief-level-row {
+    flex-wrap: wrap;
+  }
+  
+  .ship-brief-xp-bar {
+    flex: 0 0 100%;
+    order: 3;
+    margin-top: 0.3rem;
+  }
+  
+  .ship-brief-xp-text {
+    min-width: auto;
+  }
+  
+  .ship-brief-upgrades {
+    justify-content: flex-start;
+  }
+}

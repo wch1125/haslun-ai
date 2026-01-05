@@ -1836,6 +1836,12 @@
     // Set to true to enable Ship Brief and other UI sounds
     window.UI_SOUND_ENABLED = false;
   </script>
+  
+  <!-- Step 8: Progression Architecture (must load early) -->
+  <script src="js/core/bus.js"></script>
+  <script src="js/state/upgrades.js"></script>
+  <script src="js/state/progression.js"></script>
+  
   <script src="js/data/ticker-profiles.js"></script>
   <script src="js/data/glossary.js"></script>
   <script src="js/data/ship-data.js"></script>

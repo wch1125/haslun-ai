@@ -5,6 +5,29 @@
 // =========================================================================
 
 (function() {
+      
+      // ═══════════════════════════════════════════════════════════════════
+      // Step 8: Training Result Reporter (Progression Integration)
+      // ═══════════════════════════════════════════════════════════════════
+      
+      /**
+       * Report training game results to the progression system
+       * @param {string} ticker - Ship ticker that played
+       * @param {string} gameId - Game identifier ('signal_invaders', 'terrain_lander')
+       * @param {number} score - Score achieved
+       * @param {string} outcome - 'WIN' or 'LOSS'
+       */
+      function reportTrainingResult(ticker, gameId, score, outcome) {
+        if (window.HASLUN_BUS) {
+          window.HASLUN_BUS.emit('training:result', {
+            ticker: ticker,
+            gameId: gameId,
+            score: score,
+            outcome: outcome
+          });
+        }
+      }
+      
       // =========================================================================
       // SIGNAL INVADERS - PLAYABLE ARCADE GAME
       // =========================================================================
@@ -395,6 +418,14 @@
           if (typeof showToast === 'function') {
             showToast(`Signal Invaders: ${this.score} points!`, 'info');
           }
+          
+          // Step 8: Report training result for progression
+          reportTrainingResult(
+            (window.SpriteCache && SpriteCache.selectedPlayerShip) || 'RKLB',
+            'signal_invaders',
+            this.score,
+            this.score >= 500 ? 'WIN' : 'LOSS'
+          );
           
           // Complete arcade mission for high score
           if (this.score >= 500 && typeof completeMission === 'function') {
@@ -1043,6 +1074,20 @@
         
         onLand(success) {
           const msgEl = document.getElementById('landing-message');
+          const landerTicker = (window.SpriteCache && SpriteCache.selectedPlayerShip) || 'LUNR';
+          
+          // Step 8: Report training result for progression
+          // Score is fuel remaining (0-100) + speed bonus
+          const fuelScore = Math.floor(this.ship.fuel);
+          const speedBonus = success ? Math.floor((this.maxLandingSpeed - Math.abs(this.ship.vy)) * 20) : 0;
+          const totalScore = fuelScore + speedBonus;
+          
+          reportTrainingResult(
+            landerTicker,
+            'terrain_lander',
+            totalScore,
+            success ? 'WIN' : 'LOSS'
+          );
           
           if (success) {
             if (msgEl) {

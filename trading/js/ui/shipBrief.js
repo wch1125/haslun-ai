@@ -143,6 +143,30 @@ window.ShipBrief = (function() {
               </div>
             </div>
             
+            <!-- Step 8: Pilot Progression -->
+            <div class="ship-brief-section" id="ship-brief-progression-section">
+              <div class="ship-brief-section-header">
+                <span class="ship-brief-marker">▸</span>
+                <span>PILOT PROGRESSION</span>
+              </div>
+              <div class="ship-brief-progression">
+                <div class="ship-brief-level-row">
+                  <span class="ship-brief-level-badge" id="ship-brief-level">LVL 1</span>
+                  <div class="ship-brief-xp-bar">
+                    <div class="ship-brief-xp-fill" id="ship-brief-xp-bar"></div>
+                  </div>
+                  <span class="ship-brief-xp-text" id="ship-brief-xp-text">0 / 100 XP</span>
+                </div>
+                <div class="ship-brief-upgrades" id="ship-brief-upgrades">
+                  <span class="ship-brief-upgrade-slot" title="Thrusters" data-slot="thrusters">THR: —</span>
+                  <span class="ship-brief-upgrade-slot" title="Hull" data-slot="hull">HUL: —</span>
+                  <span class="ship-brief-upgrade-slot" title="Sensors" data-slot="sensors">SEN: —</span>
+                  <span class="ship-brief-upgrade-slot" title="Weapons" data-slot="weapons">WPN: —</span>
+                  <span class="ship-brief-upgrade-slot" title="Core" data-slot="core">COR: —</span>
+                </div>
+              </div>
+            </div>
+            
             <!-- Operations Data -->
             <div class="ship-brief-section">
               <div class="ship-brief-section-header">
@@ -412,6 +436,9 @@ window.ShipBrief = (function() {
     dialogEl.querySelector('#ship-brief-cargo-val').textContent = data.hasPosition ? data.shares + ' UNITS' : '—';
     dialogEl.querySelector('#ship-brief-fuel-val').textContent = data.hasPosition ? data.fuel.toFixed(0) + '%' : '—';
     
+    // Step 8: Pilot Progression
+    updateProgressionSection(data.ticker);
+    
     // Operations data
     if (data.hasPosition) {
       dialogEl.querySelector('#ship-brief-value').textContent = '$' + data.value.toLocaleString(undefined, { maximumFractionDigits: 0 });
@@ -440,6 +467,70 @@ window.ShipBrief = (function() {
       dialogEl.querySelector('#ship-brief-mission').className = 'ship-brief-ops-value status-standby';
       
       dialogEl.querySelector('#ship-brief-notice').style.display = '';
+    }
+  }
+  
+  /**
+   * Step 8: Update progression section in dialog
+   */
+  function updateProgressionSection(ticker) {
+    const levelEl = dialogEl.querySelector('#ship-brief-level');
+    const xpBarEl = dialogEl.querySelector('#ship-brief-xp-bar');
+    const xpTextEl = dialogEl.querySelector('#ship-brief-xp-text');
+    const upgradesEl = dialogEl.querySelector('#ship-brief-upgrades');
+    
+    // Get progression data
+    const summary = window.Progression?.getShipSummary(ticker);
+    const effects = window.Progression?.computeEffects(ticker);
+    
+    if (summary && effects) {
+      // Level badge
+      levelEl.textContent = 'LVL ' + summary.level;
+      levelEl.style.color = summary.level >= 5 ? '#ffd700' : summary.level >= 3 ? '#47d4ff' : '#33ff99';
+      
+      // XP bar
+      const xpProgress = Math.min(100, summary.progress * 100);
+      xpBarEl.style.width = xpProgress + '%';
+      xpTextEl.textContent = summary.xpIntoLevel + ' / ' + summary.nextXP + ' XP';
+      
+      // Upgrade slots
+      const slotLabels = { thrusters: 'THR', hull: 'HUL', sensors: 'SEN', weapons: 'WPN', core: 'COR' };
+      const slots = upgradesEl.querySelectorAll('.ship-brief-upgrade-slot');
+      
+      slots.forEach(slotEl => {
+        const slotName = slotEl.dataset.slot;
+        const upgradeId = effects.upgrades[slotName];
+        const label = slotLabels[slotName] || slotName.toUpperCase().slice(0, 3);
+        
+        if (upgradeId) {
+          const upgrade = window.ShipUpgrades?.getUpgrade(upgradeId);
+          if (upgrade) {
+            slotEl.textContent = label + ': T' + upgrade.tier;
+            slotEl.title = upgrade.name;
+            slotEl.classList.add('equipped');
+          } else {
+            slotEl.textContent = label + ': —';
+            slotEl.classList.remove('equipped');
+          }
+        } else {
+          slotEl.textContent = label + ': —';
+          slotEl.classList.remove('equipped');
+        }
+      });
+    } else {
+      // No progression data
+      levelEl.textContent = 'LVL 1';
+      levelEl.style.color = '#33ff99';
+      xpBarEl.style.width = '0%';
+      xpTextEl.textContent = '0 / 100 XP';
+      
+      const slots = upgradesEl.querySelectorAll('.ship-brief-upgrade-slot');
+      slots.forEach(slotEl => {
+        const slotName = slotEl.dataset.slot;
+        const slotLabels = { thrusters: 'THR', hull: 'HUL', sensors: 'SEN', weapons: 'WPN', core: 'COR' };
+        slotEl.textContent = (slotLabels[slotName] || slotName.toUpperCase().slice(0, 3)) + ': —';
+        slotEl.classList.remove('equipped');
+      });
     }
   }
   

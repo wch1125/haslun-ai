@@ -969,6 +969,10 @@ const MissionSystem = (function() {
     
     if (!mission) return null;
     
+    // Store ticker before changing status for event
+    const missionTicker = mission.ticker;
+    const missionType = mission.type;
+    
     mission.status = 'DAMAGED';
     mission.outcome = {
       grade: 'D',
@@ -985,6 +989,15 @@ const MissionSystem = (function() {
     });
     
     saveMissions(missions);
+    
+    // Step 8: Emit mission:damaged event for progression system
+    if (window.HASLUN_BUS) {
+      window.HASLUN_BUS.emit('mission:damaged', {
+        ticker: missionTicker,
+        missionType: missionType
+      });
+    }
+    
     return mission;
   }
   
@@ -1583,6 +1596,19 @@ const MissionSystem = (function() {
     });
     
     saveMissions(missions);
+    
+    // Step 8: Emit mission:complete event for progression system
+    if (window.HASLUN_BUS) {
+      window.HASLUN_BUS.emit('mission:complete', {
+        ticker: mission.ticker,
+        missionType: mission.type,
+        difficulty: mission.difficulty || 1,
+        duration: mission.duration?.label || null,
+        grade: scoreResult.grade,
+        score: scoreResult.score
+      });
+    }
+    
     return mission;
   }
   
