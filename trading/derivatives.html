@@ -450,7 +450,7 @@
   <!-- Navigation (matches index.html) -->
   <nav class="page-nav">
     <a href="index.html#chart" class="nav-link">TELEMETRY</a>
-    <a href="index.html#options" class="nav-link active">OPERATIONS</a>
+    <a href="index.html#positions" class="nav-link active">OPERATIONS</a>
     <a href="index.html#arcade" class="nav-link">TRAINING</a>
   </nav>
   
@@ -458,7 +458,7 @@
   <div class="page-path">
     <span class="path-group">OPERATIONS</span>
     <span class="path-sep">›</span>
-    <span class="path-leaf">DERIVATIVES</span>
+    <span class="path-leaf">MISSIONS</span>
   </div>
   
   <div class="container">
@@ -466,9 +466,9 @@
     <header class="header">
       <div class="header-title">
         <h1>[MISSION COMMAND]</h1>
-        <div class="subtitle">Derivatives Training Sandbox</div>
+        <div class="subtitle">DERIVATIVES TRAINING SANDBOX</div>
       </div>
-      <button class="back-btn" onclick="returnToDashboard()">‹ Dashboard</button>
+      <button class="back-btn" onclick="returnToDashboard()">‹ DASHBOARD</button>
     </header>
     
     <!-- Controls -->
@@ -1450,7 +1450,7 @@
      * Return to main dashboard, optionally preserving ticker context (Step 2.2)
      */
     function returnToDashboard() {
-      let url = 'index.html';
+      let url = 'index.html#positions';
       // Optionally pass current ticker back (uncomment if index.html reads URL params)
       // if (UI.currentTicker) {
       //   url += `?ticker=${encodeURIComponent(UI.currentTicker)}`;

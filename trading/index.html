@@ -443,14 +443,13 @@
       <!-- Secondary subtabs for OPERATIONS -->
       <div class="nav-subtabs" id="ops-subtabs" style="display:none;">
         <button class="subtab active" data-tab="positions" onclick="switchTab('positions')">HOLDINGS</button>
-        <button class="subtab" data-tab="options" onclick="switchTab('options')">DERIVATIVES</button>
+        <button class="subtab" onclick="launchMissionCommand()">MISSIONS</button>
         <button class="subtab" data-tab="catalysts" onclick="switchTab('catalysts')">EVENTS</button>
       </div>
       
       <!-- Secondary subtabs for TRAINING -->
       <div class="nav-subtabs" id="training-subtabs" style="display:none;">
         <button class="subtab active" data-tab="arcade" onclick="switchTab('arcade')">ARCADE</button>
-        <button class="subtab" onclick="launchMissionCommand()">MISSIONS</button>
       </div>
       
       <div class="header-right">
@@ -486,7 +485,7 @@
         </div>
         <div style="padding: 0 0.5rem 0.5rem;">
           <button class="push-btn" style="width: 100%; margin-bottom: 0.5rem;" onclick="toggleMobileDrawer(); switchTab('positions');">› Holdings</button>
-          <button class="push-btn" style="width: 100%; margin-bottom: 0.5rem;" onclick="toggleMobileDrawer(); switchTab('options');">› Derivatives</button>
+          <button class="push-btn primary" style="width: 100%; margin-bottom: 0.5rem;" onclick="toggleMobileDrawer(); launchMissionCommand();">› Missions</button>
           <button class="push-btn" style="width: 100%; margin-bottom: 0.5rem;" onclick="toggleMobileDrawer(); switchTab('catalysts');">› Events</button>
         </div>
         <div class="sidebar-section" style="padding-bottom: 0.5rem;">
@@ -494,7 +493,6 @@
         </div>
         <div style="padding: 0 0.5rem 0.5rem;">
           <button class="push-btn" style="width: 100%; margin-bottom: 0.5rem;" onclick="toggleMobileDrawer(); switchTab('arcade');">› Arcade</button>
-          <button class="push-btn primary" style="width: 100%; margin-bottom: 0.5rem;" onclick="toggleMobileDrawer(); launchMissionCommand();">› Mission Command</button>
         </div>
         <div class="sidebar-section" style="padding-bottom: 0.5rem;">
           <div class="sidebar-title">Tracking</div>
