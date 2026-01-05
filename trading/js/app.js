@@ -307,13 +307,21 @@
     // EMA RIBBON CONFIGURATION (Step 3A - Telemetry Upgrade)
     // =========================================================================
     
-    const RIBBON_PERIODS = [8, 13, 21, 34, 55, 89];
+    // Doubled EMA ribbon for pronounced effect (12 bands)
+    const RIBBON_PERIODS = [5, 8, 10, 13, 16, 21, 26, 34, 42, 55, 70, 89];
     const RIBBON_COLORS = [
-      '#33ff99', // phosphor
+      '#33ff99', // phosphor green (fast)
+      '#2de8a0', // mint
       '#47d4ff', // cyan
+      '#5ac8ff', // light cyan
+      '#8cb4ff', // periwinkle
       '#b388ff', // violet
+      '#d070ff', // orchid
       '#ff4fd8', // magenta
+      '#ff6b9d', // rose
       '#ffb347', // amber
+      '#ffd447', // gold
+      '#e8ff47', // lime (slow)
     ];
     
     /**
@@ -353,6 +361,7 @@
     
     /**
      * Chart.js plugin for arcade CRT glow + scanlines
+     * ENHANCED: Stronger glow for EM frequency aesthetic
      */
     const arcadeCRTPlugin = {
       id: 'arcadeCRTPlugin',
@@ -368,9 +377,18 @@
         ds.__glowSaved = true;
         const ctx = chart.ctx;
         ctx.save();
-        ctx.shadowBlur = 8;
-        ctx.shadowColor = ds.borderColor;
-        ctx.globalCompositeOperation = 'lighter';
+        
+        // Enhanced glow for ribbon lines
+        if (ds.isRibbon) {
+          ctx.shadowBlur = 12;
+          ctx.shadowColor = ds.borderColor;
+          ctx.globalCompositeOperation = 'lighter';
+        } else {
+          // Main price line gets stronger glow
+          ctx.shadowBlur = 10;
+          ctx.shadowColor = ds.borderColor;
+          ctx.globalCompositeOperation = 'lighter';
+        }
       },
       afterDatasetDraw(chart, args) {
         const ds = chart.data.datasets[args.index];
@@ -383,11 +401,11 @@
         const { ctx, chartArea } = chart;
         if (!chartArea) return;
         
-        // Very subtle scanlines inside chart area
+        // Subtle scanlines inside chart area
         ctx.save();
-        ctx.globalAlpha = 0.04;
+        ctx.globalAlpha = 0.035;
         ctx.fillStyle = '#000';
-        for (let y = chartArea.top; y < chartArea.bottom; y += 3) {
+        for (let y = chartArea.top; y < chartArea.bottom; y += 2) {
           ctx.fillRect(chartArea.left, y, chartArea.right - chartArea.left, 1);
         }
         ctx.restore();
@@ -396,42 +414,83 @@
     
     /**
      * Step 6B: CRT interference jitter plugin for EMA ribbon
-     * Adds subtle horizontal jitter to ribbon datasets (isRibbon: true)
-     * Low-frequency updates to avoid performance impact
+     * ENHANCED: Heavy EM frequency stabilization effect
+     * Each band jitters independently like unstable radio frequencies
      */
     const ribbonJitterPlugin = {
       id: 'ribbonJitterPlugin',
       
-      // Jitter state - updated at low frequency
-      _jitterState: {
-        offset: 0,
-        lastUpdate: 0,
-        updateInterval: 180, // ms between jitter updates
-        maxJitter: 0.6       // max pixel offset
-      },
+      // Per-band jitter state for independent movement
+      _bandStates: {},
+      _globalPhase: 0,
+      _lastGlobalUpdate: 0,
+      _spikeActive: false,
+      _spikeStart: 0,
       
       beforeDatasetDraw(chart, args) {
         const ds = chart.data.datasets[args.index];
         if (!ds || !ds.isRibbon) return;
         
-        const state = this._jitterState;
         const now = performance.now();
+        const bandId = args.index;
         
-        // Low-frequency jitter update
-        if (now - state.lastUpdate > state.updateInterval) {
-          // Smooth noise-like jitter using sin waves at different frequencies
-          const t = now * 0.001;
-          state.offset = Math.sin(t * 2.1) * 0.3 + 
-                         Math.sin(t * 5.7) * 0.2 + 
-                         Math.sin(t * 11.3) * 0.1;
-          state.offset *= state.maxJitter;
-          state.lastUpdate = now;
+        // Initialize per-band state
+        if (!this._bandStates[bandId]) {
+          this._bandStates[bandId] = {
+            offsetX: 0,
+            offsetY: 0,
+            phase: Math.random() * Math.PI * 2,
+            freq: 0.8 + Math.random() * 0.6, // Each band has different frequency
+            amplitude: 1.5 + Math.random() * 1.5 // Each band has different amplitude
+          };
         }
         
-        // Apply horizontal translate to ribbon datasets
+        const state = this._bandStates[bandId];
+        const t = now * 0.001;
+        
+        // Update global phase for coordinated interference bursts
+        if (now - this._lastGlobalUpdate > 50) { // 20fps jitter updates
+          this._globalPhase = t;
+          this._lastGlobalUpdate = now;
+          
+          // Random interference spikes (every ~3-8 seconds)
+          if (!this._spikeActive && Math.random() < 0.008) {
+            this._spikeActive = true;
+            this._spikeStart = now;
+          }
+          if (this._spikeActive && now - this._spikeStart > 150) {
+            this._spikeActive = false;
+          }
+        }
+        
+        // Complex multi-frequency jitter (like unstable EM frequencies)
+        const baseJitter = 
+          Math.sin(t * state.freq * 3.1 + state.phase) * 1.2 +
+          Math.sin(t * state.freq * 7.3 + state.phase * 1.5) * 0.8 +
+          Math.sin(t * state.freq * 13.7 + state.phase * 2.1) * 0.5 +
+          Math.sin(t * state.freq * 23.1) * 0.3; // High freq shimmer
+        
+        // Vertical wobble (different per band)
+        const verticalWobble = 
+          Math.sin(t * state.freq * 2.7 + state.phase * 0.7) * 0.6 +
+          Math.sin(t * state.freq * 8.9) * 0.4;
+        
+        // Spike interference (occasional sharp glitch)
+        let spikeOffset = 0;
+        if (this._spikeActive) {
+          const spikeProgress = (now - this._spikeStart) / 150;
+          spikeOffset = Math.sin(spikeProgress * Math.PI) * 
+                        (Math.random() - 0.5) * 8 * state.amplitude;
+        }
+        
+        // Final offsets scaled by band's amplitude
+        state.offsetX = baseJitter * state.amplitude + spikeOffset;
+        state.offsetY = verticalWobble * state.amplitude * 0.4;
+        
+        // Apply transform
         const ctx = chart.ctx;
         ctx.save();
-        ctx.translate(state.offset, 0);
+        ctx.translate(state.offsetX, state.offsetY);
         ds.__jitterApplied = true;
       },
       
@@ -1921,19 +1980,21 @@
       });
       
       if (showMA) {
-        // 1) EMA lines (thin) - track indices for band fill targets
+        // 1) EMA lines (thin, glowing) - track indices for band fill targets
         const emaLineIdx = [];
-        emaSeries.forEach((s) => {
+        emaSeries.forEach((s, idx) => {
           emaLineIdx.push(datasets.length);
           datasets.push({
             label: `EMA ${s.period}`,
             data: s.data,
             borderColor: s.color,
-            borderWidth: 1,
+            borderWidth: 0.8, // Thin lines for EM frequency effect
             fill: false,
-            tension: 0.12,
+            tension: 0.15, // Slightly more curve
             pointRadius: 0,
-            isRibbon: true  // Step 6B: Tag for CRT jitter plugin
+            isRibbon: true,  // Step 6B: Tag for CRT jitter plugin
+            // Faster EMAs = more reactive jitter
+            jitterAmplitude: 1 + (1 - idx / emaSeries.length) * 0.5
           });
         });
         
@@ -1947,16 +2008,17 @@
             data: emaSeries[i].data,
             borderColor: 'rgba(0,0,0,0)',
             pointRadius: 0,
-            tension: 0.12,
+            tension: 0.15,
             fill: { target: slowIdx },
             isRibbon: true,  // Step 6B: Tag for CRT jitter plugin
             backgroundColor: (ctx) => {
               const chart = ctx.chart;
               const { ctx: c2, chartArea } = chart;
-              if (!chartArea) return hexToRgba(c, 0.08);
+              if (!chartArea) return hexToRgba(c, 0.06);
               const g = c2.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-              g.addColorStop(0, hexToRgba(c, 0.14));
-              g.addColorStop(0.6, hexToRgba(c, 0.07));
+              // Slightly more transparent with more bands
+              g.addColorStop(0, hexToRgba(c, 0.10));
+              g.addColorStop(0.6, hexToRgba(c, 0.05));
               g.addColorStop(1, hexToRgba(c, 0.00));
               return g;
             }
