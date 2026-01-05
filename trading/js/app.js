@@ -3433,9 +3433,16 @@
       }
       
       // =========================================================================
-      // VESSEL DOSSIER CONTROLLER — Cinematic Ship Information Card
+      // VESSEL DOSSIER CONTROLLER — (DEPRECATED: Now uses unified ShipBrief)
       // =========================================================================
       function initVesselDossier() {
+        // If ShipBrief module is loaded, skip legacy vessel dossier
+        // ShipBrief provides a unified dialog component across all pages
+        if (window.ShipBrief) {
+          logTerminal('vessel dossier → using unified ShipBrief module');
+          return;
+        }
+        
         const overlay = document.getElementById('vessel-dossier');
         const closeBtn = document.getElementById('vessel-close-btn');
         const bootOverlay = document.getElementById('vessel-boot');
