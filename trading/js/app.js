@@ -4037,8 +4037,116 @@
       if (dmgCount) dmgCount.textContent = damaged;
       if (winRate) winRate.textContent = Math.round((operational / DEMO_STOCK_POSITIONS.length) * 100) + '%';
       
+      // Update Command Brief
+      updateCommandBrief(totalPnl, operational, damaged, DEMO_STOCK_POSITIONS);
+      
       // Step 5: Add hover handlers for hangar focus
       bindFleetCardHoverHandlers();
+    }
+    
+    /**
+     * Update Command Brief panel with fleet intelligence
+     */
+    function updateCommandBrief(totalPnl, operational, damaged, positions) {
+      const statusEl = document.getElementById('brief-status');
+      const postureEl = document.getElementById('brief-posture');
+      const concentrationEl = document.getElementById('brief-concentration');
+      const riskEl = document.getElementById('brief-risk');
+      const outcomeEl = document.getElementById('brief-outcome');
+      const notesEl = document.getElementById('brief-notes');
+      
+      if (!statusEl) return;
+      
+      // Determine overall status
+      const winRate = operational / (operational + damaged);
+      const pnlPositive = totalPnl >= 0;
+      
+      let status = 'NOMINAL';
+      let statusClass = '';
+      if (winRate < 0.6 || totalPnl < -500) {
+        status = 'CAUTION';
+        statusClass = 'warning';
+      }
+      if (winRate < 0.4 || totalPnl < -2000) {
+        status = 'ALERT';
+        statusClass = 'alert';
+      }
+      statusEl.textContent = status;
+      statusEl.className = 'command-brief-status ' + statusClass;
+      
+      // Determine posture
+      const postures = [
+        { threshold: 0.9, label: 'Aggressive Expansion' },
+        { threshold: 0.75, label: 'Controlled Expansion' },
+        { threshold: 0.5, label: 'Defensive Positioning' },
+        { threshold: 0, label: 'Damage Control' }
+      ];
+      const posture = postures.find(p => winRate >= p.threshold)?.label || 'Unknown';
+      if (postureEl) postureEl.textContent = posture;
+      
+      // Analyze sector concentration
+      const sectors = {};
+      positions.forEach(p => {
+        const sector = p.sector || 'Unknown';
+        sectors[sector] = (sectors[sector] || 0) + 1;
+      });
+      const topSectors = Object.entries(sectors)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 2)
+        .map(([s]) => s);
+      if (concentrationEl) concentrationEl.textContent = topSectors.join(' & ') || 'Diversified';
+      
+      // Risk assessment
+      const riskLevels = [
+        { threshold: 0.85, label: 'Minimal', cls: 'positive' },
+        { threshold: 0.7, label: 'Acceptable', cls: '' },
+        { threshold: 0.5, label: 'Elevated', cls: 'warning' },
+        { threshold: 0, label: 'Critical', cls: 'negative' }
+      ];
+      const risk = riskLevels.find(r => winRate >= r.threshold);
+      if (riskEl) {
+        riskEl.textContent = risk?.label || 'Unknown';
+        riskEl.className = 'brief-value ' + (risk?.cls || '');
+      }
+      
+      // Expected outcome
+      const outcomes = [
+        { pnl: 1000, rate: 0.8, label: 'Strong Favorable Drift', cls: 'positive' },
+        { pnl: 0, rate: 0.6, label: 'Favorable Drift', cls: 'positive' },
+        { pnl: -500, rate: 0.4, label: 'Uncertain Trajectory', cls: 'warning' },
+        { pnl: -Infinity, rate: 0, label: 'Recovery Mode', cls: 'negative' }
+      ];
+      const outcome = outcomes.find(o => totalPnl >= o.pnl && winRate >= o.rate);
+      if (outcomeEl) {
+        outcomeEl.textContent = outcome?.label || 'Uncertain';
+        outcomeEl.className = 'brief-value ' + (outcome?.cls || '');
+      }
+      
+      // Generate dynamic notes
+      const notes = [];
+      if (pnlPositive && winRate > 0.7) {
+        notes.push('• Fleet momentum aligned with sector trends');
+      } else if (!pnlPositive) {
+        notes.push('• Temporary headwinds affecting fleet performance');
+      }
+      
+      if (operational > damaged * 3) {
+        notes.push('• Primary vessels showing hull integrity');
+      } else if (damaged > 0) {
+        notes.push('• ' + damaged + ' vessel(s) require attention');
+      }
+      
+      if (winRate > 0.8) {
+        notes.push('• Recommend maintaining current trajectory');
+      } else if (winRate > 0.5) {
+        notes.push('• Consider rebalancing underperformers');
+      } else {
+        notes.push('• Strategic review recommended');
+      }
+      
+      if (notesEl) {
+        notesEl.innerHTML = notes.map(n => `<div class="brief-note">${n}</div>`).join('');
+      }
     }
     
     // Step 5: Bind hover handlers to fleet cards for hangar focus

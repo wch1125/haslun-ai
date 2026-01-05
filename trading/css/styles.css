@@ -581,6 +581,266 @@
       }
     }
     
+    /* =========================================================================
+       COMMAND BRIEF PANEL
+       Narrative intelligence summary for fleet operations
+       ========================================================================= */
+    
+    .command-brief {
+      margin-top: 1rem;
+      background: linear-gradient(135deg, rgba(10, 14, 20, 0.95), rgba(15, 20, 28, 0.9));
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--phosphor);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .command-brief::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: 
+        repeating-linear-gradient(
+          0deg,
+          transparent,
+          transparent 2px,
+          rgba(51, 255, 153, 0.02) 2px,
+          rgba(51, 255, 153, 0.02) 4px
+        );
+      pointer-events: none;
+      animation: brief-scanline 8s linear infinite;
+    }
+    
+    @keyframes brief-scanline {
+      0% { background-position: 0 0; }
+      100% { background-position: 0 100px; }
+    }
+    
+    .command-brief-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      background: rgba(51, 255, 153, 0.08);
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .command-brief-icon {
+      color: var(--phosphor);
+      font-size: 1rem;
+      animation: brief-icon-pulse 3s ease-in-out infinite;
+    }
+    
+    @keyframes brief-icon-pulse {
+      0%, 100% { opacity: 0.7; text-shadow: 0 0 4px var(--phosphor); }
+      50% { opacity: 1; text-shadow: 0 0 12px var(--phosphor); }
+    }
+    
+    .command-brief-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      color: var(--phosphor);
+      flex: 1;
+    }
+    
+    .command-brief-status {
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      padding: 0.2rem 0.6rem;
+      background: rgba(51, 255, 153, 0.15);
+      color: var(--phosphor);
+      border: 1px solid var(--phosphor-dim);
+    }
+    
+    .command-brief-status.warning {
+      background: rgba(255, 170, 51, 0.15);
+      color: var(--amber);
+      border-color: var(--amber-dim);
+    }
+    
+    .command-brief-status.alert {
+      background: rgba(255, 68, 68, 0.15);
+      color: var(--red);
+      border-color: var(--red-dim);
+    }
+    
+    .command-brief-body {
+      padding: 1rem;
+    }
+    
+    .brief-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.4rem 0;
+      border-bottom: 1px solid rgba(51, 255, 153, 0.08);
+    }
+    
+    .brief-row:last-of-type {
+      border-bottom: none;
+    }
+    
+    .brief-label {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      letter-spacing: 0.05em;
+    }
+    
+    .brief-value {
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--text);
+      text-align: right;
+    }
+    
+    .brief-value.positive {
+      color: var(--phosphor);
+    }
+    
+    .brief-value.negative {
+      color: var(--red);
+    }
+    
+    .brief-value.warning {
+      color: var(--amber);
+    }
+    
+    .brief-notes {
+      margin-top: 0.75rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid var(--border);
+    }
+    
+    .brief-note {
+      font-size: 0.68rem;
+      color: var(--text-dim);
+      padding: 0.25rem 0;
+      opacity: 0.85;
+      line-height: 1.4;
+    }
+    
+    .brief-note::before {
+      color: var(--phosphor);
+      opacity: 0.6;
+    }
+    
+    .command-brief-footer {
+      padding: 0.6rem 1rem;
+      background: rgba(0, 0, 0, 0.3);
+      border-top: 1px solid var(--border);
+      text-align: right;
+    }
+    
+    .brief-link {
+      font-size: 0.7rem;
+      color: var(--phosphor);
+      cursor: pointer;
+      letter-spacing: 0.05em;
+      transition: all 0.2s;
+    }
+    
+    .brief-link:hover {
+      text-shadow: 0 0 8px var(--phosphor);
+    }
+    
+    /* Command brief mobile */
+    @media (max-width: 768px) {
+      .command-brief {
+        margin: 0.75rem 0;
+      }
+      
+      .brief-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.2rem;
+      }
+      
+      .brief-value {
+        text-align: left;
+      }
+    }
+    
+    /* =========================================================================
+       ANIMATED ENERGY BARS
+       For position sizing visualization with power flow effect
+       ========================================================================= */
+    
+    .energy-bar {
+      position: relative;
+      height: 20px;
+      background: rgba(51, 255, 153, 0.1);
+      overflow: hidden;
+    }
+    
+    .energy-bar-fill {
+      height: 100%;
+      position: relative;
+      background: linear-gradient(
+        90deg,
+        rgba(51, 255, 153, 0.3),
+        rgba(51, 255, 153, 0.6),
+        rgba(51, 255, 153, 0.3)
+      );
+      background-size: 200% 100%;
+      animation: energy-flow 4s linear infinite;
+      transition: width 0.6s ease-out;
+    }
+    
+    @keyframes energy-flow {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    
+    .energy-bar-fill.dominant {
+      background: linear-gradient(
+        90deg,
+        rgba(51, 255, 153, 0.4),
+        rgba(100, 255, 180, 0.8),
+        rgba(51, 255, 153, 0.4)
+      );
+      box-shadow: 
+        0 0 12px rgba(51, 255, 153, 0.5),
+        inset 0 0 8px rgba(51, 255, 153, 0.3);
+      animation: energy-flow 6s linear infinite, dominant-pulse 2s ease-in-out infinite;
+    }
+    
+    @keyframes dominant-pulse {
+      0%, 100% { filter: brightness(1); }
+      50% { filter: brightness(1.2); }
+    }
+    
+    .energy-bar-fill.negative {
+      background: linear-gradient(
+        90deg,
+        rgba(255, 68, 68, 0.3),
+        rgba(255, 100, 100, 0.5),
+        rgba(255, 68, 68, 0.3)
+      );
+      animation: energy-flow 3s linear infinite, flicker 0.5s ease-in-out infinite;
+    }
+    
+    @keyframes flicker {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.85; }
+    }
+    
+    .energy-bar-label {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: var(--bg-dark);
+      text-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+      z-index: 1;
+    }
+    
     /* === SIDEBAR: Streamlined sections === */
     .sidebar-section {
       padding: 0.75rem 1rem !important;
@@ -2336,6 +2596,50 @@
       /* Vignette edges */
       box-shadow: inset 0 0 120px rgba(0, 0, 0, 0.4);
       mix-blend-mode: multiply;
+      /* Ambient breathing animation */
+      animation: ambient-breathe 10s ease-in-out infinite;
+    }
+    
+    @keyframes ambient-breathe {
+      0%, 100% { 
+        opacity: 1; 
+        box-shadow: inset 0 0 120px rgba(0, 0, 0, 0.4);
+      }
+      50% { 
+        opacity: 0.92; 
+        box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.35);
+      }
+    }
+    
+    /* Subtle horizontal scan line that sweeps occasionally */
+    .hangar-glass-overlay::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, 
+        transparent, 
+        rgba(51, 255, 153, 0.15), 
+        transparent
+      );
+      animation: hangar-scan 12s ease-in-out infinite;
+      opacity: 0;
+    }
+    
+    @keyframes hangar-scan {
+      0%, 90%, 100% { 
+        top: -2px; 
+        opacity: 0; 
+      }
+      92% { 
+        top: 0%; 
+        opacity: 0.6; 
+      }
+      98% { 
+        top: 100%; 
+        opacity: 0.6; 
+      }
     }
     
     /* Glass panel effect for fleet cards over background */

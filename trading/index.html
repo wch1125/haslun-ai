@@ -1063,6 +1063,41 @@
                 <button class="fleet-view-btn" onclick="setFleetView('table')" title="Table View">☰ TABLE</button>
               </div>
             </div>
+            
+            <!-- Command Brief Panel -->
+            <div class="command-brief" id="command-brief">
+              <div class="command-brief-header">
+                <span class="command-brief-icon">◈</span>
+                <span class="command-brief-title">COMMAND BRIEF</span>
+                <span class="command-brief-status" id="brief-status">NOMINAL</span>
+              </div>
+              <div class="command-brief-body">
+                <div class="brief-row">
+                  <span class="brief-label">Fleet Posture</span>
+                  <span class="brief-value" id="brief-posture">Controlled Expansion</span>
+                </div>
+                <div class="brief-row">
+                  <span class="brief-label">Sector Concentration</span>
+                  <span class="brief-value" id="brief-concentration">Space & Defense</span>
+                </div>
+                <div class="brief-row">
+                  <span class="brief-label">Risk Assessment</span>
+                  <span class="brief-value" id="brief-risk">Acceptable</span>
+                </div>
+                <div class="brief-row">
+                  <span class="brief-label">Expected Outcome</span>
+                  <span class="brief-value positive" id="brief-outcome">Favorable Drift</span>
+                </div>
+                <div class="brief-notes" id="brief-notes">
+                  <div class="brief-note">• Fleet momentum aligned with sector trends</div>
+                  <div class="brief-note">• Primary vessels showing hull integrity</div>
+                  <div class="brief-note">• Recommend maintaining current trajectory</div>
+                </div>
+              </div>
+              <div class="command-brief-footer">
+                <span class="brief-link" onclick="launchMissionCommand()">› Launch Mission Command</span>
+              </div>
+            </div>
           </div>
         </div>
         
