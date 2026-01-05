@@ -394,6 +394,56 @@
       }
     };
     
+    /**
+     * Step 6B: CRT interference jitter plugin for EMA ribbon
+     * Adds subtle horizontal jitter to ribbon datasets (isRibbon: true)
+     * Low-frequency updates to avoid performance impact
+     */
+    const ribbonJitterPlugin = {
+      id: 'ribbonJitterPlugin',
+      
+      // Jitter state - updated at low frequency
+      _jitterState: {
+        offset: 0,
+        lastUpdate: 0,
+        updateInterval: 180, // ms between jitter updates
+        maxJitter: 0.6       // max pixel offset
+      },
+      
+      beforeDatasetDraw(chart, args) {
+        const ds = chart.data.datasets[args.index];
+        if (!ds || !ds.isRibbon) return;
+        
+        const state = this._jitterState;
+        const now = performance.now();
+        
+        // Low-frequency jitter update
+        if (now - state.lastUpdate > state.updateInterval) {
+          // Smooth noise-like jitter using sin waves at different frequencies
+          const t = now * 0.001;
+          state.offset = Math.sin(t * 2.1) * 0.3 + 
+                         Math.sin(t * 5.7) * 0.2 + 
+                         Math.sin(t * 11.3) * 0.1;
+          state.offset *= state.maxJitter;
+          state.lastUpdate = now;
+        }
+        
+        // Apply horizontal translate to ribbon datasets
+        const ctx = chart.ctx;
+        ctx.save();
+        ctx.translate(state.offset, 0);
+        ds.__jitterApplied = true;
+      },
+      
+      afterDatasetDraw(chart, args) {
+        const ds = chart.data.datasets[args.index];
+        if (ds && ds.__jitterApplied) {
+          ds.__jitterApplied = false;
+          chart.ctx.restore();
+        }
+      }
+    };
+    
     // =========================================================================
     // TICKER_PROFILES — Loaded from js/data/ticker-profiles.js
     // Access via: window.TICKER_PROFILES
@@ -1022,14 +1072,15 @@
       }
     }
     
-    // Telemetry HUD ship – uses the same pixel mech system
+    // Telemetry HUD ship – uses actual ship sprite (Step 6A)
     function updateTelemetryShipSprite(ticker) {
       const svgEl      = document.getElementById("telemetry-ship-svg");
+      const spriteEl   = document.getElementById("primary-viewport-sprite");
       const labelEl    = document.getElementById("telemetry-ship-label");
       const captionEl  = document.getElementById("telemetry-ship-caption");
       const headerName = document.getElementById("telemetry-ship-name"); // existing title text
 
-      if (!svgEl) return;
+      if (!svgEl && !spriteEl) return;
 
       const upper = (ticker || "").toUpperCase();
 
@@ -1045,12 +1096,21 @@
         typeof stats.return_3m    === "number" ? stats.return_3m    :
         0);
 
-      // Map into a sprite pattern
+      // Step 6A: Use actual ship sprite from SHIP_SPRITES
+      const spriteSrc = SHIP_SPRITES[upper] || DEFAULT_SHIP_SPRITE;
+      if (spriteEl) {
+        spriteEl.src = spriteSrc;
+        spriteEl.alt = `${upper} vessel`;
+      }
+      
+      // Fallback: render pixel ship to SVG if sprite fails
       const meta = mapTickerToPixelShip(upper, sector, pnl);
-      renderPixelShip(svgEl, meta.pattern, {
-        hero: meta.hero,
-        pnlPercent: pnl
-      });
+      if (svgEl) {
+        renderPixelShip(svgEl, meta.pattern, {
+          hero: meta.hero,
+          pnlPercent: pnl
+        });
+      }
 
       const lore = getPixelShipLore(meta.pattern);
       const shipName = `${upper} · ${lore.label}`;
@@ -1779,7 +1839,8 @@
             borderWidth: 1,
             fill: false,
             tension: 0.12,
-            pointRadius: 0
+            pointRadius: 0,
+            isRibbon: true  // Step 6B: Tag for CRT jitter plugin
           });
         });
         
@@ -1795,6 +1856,7 @@
             pointRadius: 0,
             tension: 0.12,
             fill: { target: slowIdx },
+            isRibbon: true,  // Step 6B: Tag for CRT jitter plugin
             backgroundColor: (ctx) => {
               const chart = ctx.chart;
               const { ctx: c2, chartArea } = chart;
@@ -1861,7 +1923,7 @@
             }
           }
         },
-        plugins: [arcadeCRTPlugin]
+        plugins: [arcadeCRTPlugin, ribbonJitterPlugin]
       });
       
       if (macdChart) macdChart.destroy();

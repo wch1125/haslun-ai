@@ -644,9 +644,17 @@
                 <div class="telemetry-ship-hud">
                   <div class="telemetry-ship-frame">
                     <div class="telemetry-ship-grid"></div>
+                    <!-- Step 6A: Primary viewport uses actual ship sprite -->
+                    <img 
+                      id="primary-viewport-sprite"
+                      class="telemetry-ship-sprite"
+                      src="assets/ships/RKLB-flagship-ship.png"
+                      alt="Active vessel"
+                      loading="eager">
+                    <!-- Fallback SVG (hidden when sprite loads) -->
                     <svg
                       id="telemetry-ship-svg"
-                      class="telemetry-ship-svg"
+                      class="telemetry-ship-svg hidden"
                       viewBox="0 0 120 80"
                       aria-hidden="true">
                       <!-- renderPixelShip() will paint into here -->

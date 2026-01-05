@@ -95,6 +95,62 @@ window.FlightScene = (function() {
   let focusTimeout = null;      // Auto-clear focus timeout
   
   // ═══════════════════════════════════════════════════════════════════
+  // SPRITE CACHE (Step 5C) — replaces chevron rendering
+  // ═══════════════════════════════════════════════════════════════════
+  
+  const SPRITE_CACHE = new Map();
+  
+  function getShipSprite(ticker) {
+    const sprites = window.SHIP_SPRITES || {};
+    const fallback = window.DEFAULT_SHIP_SPRITE || 'assets/ships/Unclaimed-Drone-ship.png';
+    const src = sprites[ticker] || fallback;
+    
+    if (!SPRITE_CACHE.has(src)) {
+      const img = new Image();
+      img.src = src;
+      SPRITE_CACHE.set(src, img);
+    }
+    return SPRITE_CACHE.get(src);
+  }
+  
+  // ═══════════════════════════════════════════════════════════════════
+  // PERFORMANCE STATS CACHE (Step 5D fix) — avoid repeated fetches
+  // ═══════════════════════════════════════════════════════════════════
+  
+  let cachedPerfStats = null;
+  let perfStatsFetchPromise = null;
+  
+  async function getPerfStats() {
+    // Return cached stats if available
+    if (cachedPerfStats !== null) {
+      return cachedPerfStats;
+    }
+    
+    // If already fetching, wait for that promise
+    if (perfStatsFetchPromise) {
+      return perfStatsFetchPromise;
+    }
+    
+    // Fetch and cache
+    perfStatsFetchPromise = (async () => {
+      try {
+        const res = await fetch('data/stats.json');
+        if (res.ok) {
+          cachedPerfStats = await res.json();
+        } else {
+          cachedPerfStats = {};
+        }
+      } catch (e) {
+        cachedPerfStats = {};
+      }
+      perfStatsFetchPromise = null;
+      return cachedPerfStats;
+    })();
+    
+    return perfStatsFetchPromise;
+  }
+  
+  // ═══════════════════════════════════════════════════════════════════
   // SHIP CLASS
   // ═══════════════════════════════════════════════════════════════════
   
@@ -288,25 +344,46 @@ window.FlightScene = (function() {
         ctx.fill();
       }
       
-      // Draw ship body (simple arrow/chevron)
+      // Draw ship sprite (Step 5C: pixel art instead of chevron)
+      const img = getShipSprite(this.ticker);
+      
       ctx.translate(this.x, this.y);
       ctx.rotate(this.rotation);
       
-      ctx.fillStyle = this.style.color;
-      ctx.beginPath();
-      ctx.moveTo(size, 0);
-      ctx.lineTo(-size * 0.6, -size * 0.5);
-      ctx.lineTo(-size * 0.3, 0);
-      ctx.lineTo(-size * 0.6, size * 0.5);
-      ctx.closePath();
-      ctx.fill();
+      // Keep pixel crisp
+      ctx.imageSmoothingEnabled = false;
+      
+      // Size tuned for aesthetic (scale with depth + elite emphasis)
+      // Step 5E: reduce base size on mobile
+      const isMobile = (window.innerWidth < 768 || 'ontouchstart' in window);
+      const base = isMobile ? 34 : 44;
+      const spriteSize = base * this.depth * (this.style?.size || 1);
+      
+      // Slightly boost focused ship
+      const focusBoost = isFocused ? 1.15 : 1.0;
+      
+      if (img && img.complete && img.naturalWidth > 0) {
+        ctx.drawImage(
+          img,
+          -spriteSize * focusBoost / 2,
+          -spriteSize * focusBoost / 2,
+          spriteSize * focusBoost,
+          spriteSize * focusBoost
+        );
+      } else {
+        // Fallback: tiny dot if image not ready (should be rare)
+        ctx.fillStyle = this.style.color;
+        ctx.beginPath();
+        ctx.arc(0, 0, 3 * this.depth, 0, Math.PI * 2);
+        ctx.fill();
+      }
       
       // Mission ring (if has active mission)
       if (this.stats.hasMission && intensity > 0.5) {
         ctx.strokeStyle = '#00d4ff';
         ctx.lineWidth = 1.5;
         ctx.beginPath();
-        ctx.arc(0, 0, size * 1.8, 0, Math.PI * 2);
+        ctx.arc(0, 0, spriteSize * 0.6, 0, Math.PI * 2);
         ctx.stroke();
       }
       
@@ -314,10 +391,11 @@ window.FlightScene = (function() {
       if (this.stats.isSupport && intensity > 0.5) {
         ctx.strokeStyle = '#ffaa33';
         ctx.lineWidth = 1.5;
+        const chevSize = spriteSize * 0.35;
         ctx.beginPath();
-        ctx.moveTo(-size * 1.5, -size * 0.8);
-        ctx.lineTo(-size * 2.2, 0);
-        ctx.lineTo(-size * 1.5, size * 0.8);
+        ctx.moveTo(-chevSize * 1.5, -chevSize * 0.8);
+        ctx.lineTo(-chevSize * 2.2, 0);
+        ctx.lineTo(-chevSize * 1.5, chevSize * 0.8);
         ctx.stroke();
       }
       
@@ -378,6 +456,8 @@ window.FlightScene = (function() {
       this.canvas.style.width = this.width + 'px';
       this.canvas.style.height = this.height + 'px';
       
+      // Reset transform before scaling to prevent cumulative scaling on resize
+      this.ctx.setTransform(1, 0, 0, 1, 0, 0);
       this.ctx.scale(dpr, dpr);
     }
     
@@ -634,6 +714,21 @@ window.FlightScene = (function() {
   async function buildShipRoster() {
     const ships = [];
     
+    // Step 5D: Get cached performance stats to determine elites
+    const perfStats = await getPerfStats();
+    let eliteTickers = new Set();
+    
+    // Determine top performers by return_1d
+    if (perfStats && perfStats.stats) {
+      const ranked = Object.entries(perfStats.stats)
+        .map(([t, s]) => ({ ticker: t, r1d: Number(s.return_1d) }))
+        .filter(o => Number.isFinite(o.r1d))
+        .sort((a, b) => b.r1d - a.r1d);
+      
+      // Top 4 = elite (winners fly like winners)
+      ranked.slice(0, 4).forEach(o => eliteTickers.add(o.ticker));
+    }
+    
     try {
       // Try to get manifest data
       if (window.IndicatorLoader) {
@@ -656,22 +751,19 @@ window.FlightScene = (function() {
           }
         }
         
-        // Get recent elite performers (S/A grades)
-        const recentCompleted = window.MissionBridge?.getRecentCompleted(5) || [];
-        const eliteTickers = new Set(
-          recentCompleted
-            .filter(m => m.outcome?.grade === 'S' || m.outcome?.grade === 'A')
-            .map(m => m.ticker)
-        );
-        
         // Build roster
         for (const t of tickers) {
           if (t.status === 'LOCKED') continue; // Don't show locked tickers
           
           const ticker = t.ticker;
+          
+          // Step 5D: Use return_1d to bias speed (winners fly faster)
+          const r = perfStats?.stats?.[ticker]?.return_1d;
+          const perfBoost = Number.isFinite(r) ? Math.max(0.7, Math.min(1.4, 1 + r / 20)) : 1.0;
+          
           ships.push({
             ticker,
-            fit: 50 + Math.random() * 30, // Would be real data in production
+            fit: (50 + Math.random() * 30) * perfBoost,
             threat: 20 + Math.random() * 60,
             firepower: 30 + Math.random() * 50,
             hasMission: missionTickers.has(ticker),
@@ -689,14 +781,18 @@ window.FlightScene = (function() {
     if (ships.length === 0) {
       const defaultTickers = ['RKLB', 'LUNR', 'JOBY', 'ACHR', 'ASTS', 'GME', 'PL', 'BKSY'];
       for (const ticker of defaultTickers) {
+        // Step 5D: Use return_1d even for fallback
+        const r = perfStats?.stats?.[ticker]?.return_1d;
+        const perfBoost = Number.isFinite(r) ? Math.max(0.7, Math.min(1.4, 1 + r / 20)) : 1.0;
+        
         ships.push({
           ticker,
-          fit: 50 + Math.random() * 30,
+          fit: (50 + Math.random() * 30) * perfBoost,
           threat: 20 + Math.random() * 60,
           firepower: 30 + Math.random() * 50,
           hasMission: false,
           isSupport: false,
-          isElite: false,
+          isElite: eliteTickers.has(ticker),
           isBenchmark: false
         });
       }
