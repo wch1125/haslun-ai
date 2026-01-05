@@ -228,6 +228,20 @@
       position: relative;
       z-index: 1;
       filter: drop-shadow(0 0 8px var(--ship-color, var(--phosphor)));
+      animation: hover-ship 3.25s ease-in-out infinite;
+    }
+
+    /* Ship sprite support (per-ticker PNGs) */
+    .ship-visual img {
+      width: 80px;
+      height: 60px;
+      position: relative;
+      z-index: 1;
+      object-fit: contain;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: pixelated;
+      filter: drop-shadow(0 0 8px var(--ship-color, var(--phosphor)));
+      animation: hover-ship 3.25s ease-in-out infinite;
     }
     
     .ship-visual .ship-class-badge {
@@ -11219,6 +11233,20 @@
       CACI: { name: "SENTINEL", designation: "DEF-016" },
       LOAR: { name: "PHOENIX", designation: "AER-017" }
     };
+
+    // Per-ticker ship sprites (PNG). If a ticker isn't listed here, we fall back to the procedural SVG.
+    const SHIP_SPRITES = {
+      ACHR: 'assets/ships/ACHR-eVTOL-ship.png',
+      ASTS: 'assets/ships/ASTS-Communications-Relay-Ship.png',
+      BKSY: 'assets/ships/BKSY-recon-ship.png',
+      EVEX: 'assets/ships/EVEX-Transport-Ship.png',
+      GME: 'assets/ships/GME-moonshot-ship.png',
+      JOBY: 'assets/ships/JOBY-eVTOL-light-class-ship.png',
+      LUNR: 'assets/ships/LUNR-lander-ship.png',
+      PL: 'assets/ships/PL-scout-ship.png',
+      RDW: 'assets/ships/RDW-Hauler-ship.png',
+      RKLB: 'assets/ships/RKLB-flagship-ship.png'
+    };
     
     function renderFleetGrid() {
       const fleetGrid = document.getElementById('fleet-grid');
@@ -11258,16 +11286,18 @@
         if (isOperational) operational++;
         else damaged++;
         
-        // Generate pixel ship SVG
-        const shipSvg = generateShipSvgString(shipMeta.pattern, color, pnlPct);
+        // Sprite if available; otherwise fall back to procedural SVG
+        const spritePath = SHIP_SPRITES[pos.ticker];
+        const shipSvg = spritePath ? '' : generateShipSvgString(shipMeta.pattern, color, pnlPct);
+        const shipVisualMarkup = spritePath
+          ? `<img src="${spritePath}" alt="${pos.ticker} ship" loading="lazy" decoding="async">`
+          : `<svg viewBox="0 0 120 80" aria-hidden="true">${shipSvg}</svg>`;
         
         return `
           <div class="ship-card ${isOperational ? '' : 'negative'}" style="--ship-color: ${color}" onclick="selectTicker('${pos.ticker}'); switchTab('chart');">
             <div class="ship-card-inner">
               <div class="ship-visual">
-                <svg viewBox="0 0 120 80" aria-hidden="true">
-                  ${shipSvg}
-                </svg>
+                ${shipVisualMarkup}
                 <span class="ship-class-badge">${shipLore.label}</span>
               </div>
               <div class="ship-info">
