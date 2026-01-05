@@ -1495,8 +1495,7 @@
     .arcade-game-backdrop {
       position: absolute;
       inset: 0;
-      background: rgba(0, 0, 0, 0.95);
-      backdrop-filter: blur(8px);
+      background: #050608;
     }
 
     .arcade-game-container {
@@ -4241,14 +4240,32 @@
       
       .chart-header {
         padding: 0.75rem;
+        flex-wrap: wrap;
+        gap: 0.5rem;
       }
       
-      .chart-ticker {
+      .chart-header-left {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+      
+      .ticker-display {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+      
+      .ticker-symbol {
         font-size: 1.5rem;
       }
       
-      .chart-price {
+      .ticker-price {
         font-size: 1.1rem;
+      }
+      
+      .chart-tools {
+        width: 100%;
+        flex-wrap: wrap;
+        gap: 0.25rem;
       }
       
       /* Control panel */
@@ -4296,6 +4313,7 @@
         display: block;
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
+        max-width: 100%;
       }
       
       .data-table th,
@@ -4303,6 +4321,28 @@
         padding: 0.6rem 0.5rem;
         font-size: 0.7rem;
         white-space: nowrap;
+      }
+      
+      /* Table wrapper for scroll */
+      .data-table-wrapper,
+      .card-body {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        max-width: 100%;
+      }
+      
+      /* Make scroll bar visible on mobile for table */
+      .data-table::-webkit-scrollbar {
+        height: 4px;
+      }
+      
+      .data-table::-webkit-scrollbar-track {
+        background: var(--bg-panel);
+      }
+      
+      .data-table::-webkit-scrollbar-thumb {
+        background: var(--phosphor-dim);
+        border-radius: 2px;
       }
       
       /* Cargo bay */
@@ -4392,12 +4432,59 @@
         font-size: 0.55rem;
       }
       
-      .chart-ticker {
+      /* Chart header mobile fixes */
+      .chart-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+        padding: 0.5rem 0.75rem;
+      }
+      
+      .chart-header-left {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+        width: 100%;
+      }
+      
+      .ticker-display {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        width: 100%;
+      }
+      
+      .ticker-symbol {
         font-size: 1.2rem;
       }
       
-      .chart-price {
-        font-size: 0.95rem;
+      .ticker-price {
+        font-size: 1rem;
+      }
+      
+      .ticker-change {
+        font-size: 0.85rem;
+      }
+      
+      .volume-badge {
+        font-size: 0.6rem;
+        padding: 0.15rem 0.35rem;
+      }
+      
+      .chart-tools {
+        width: 100%;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+        gap: 0.25rem;
+      }
+      
+      .control-group {
+        flex-wrap: wrap;
+        gap: 0.25rem;
+      }
+      
+      .ctrl-btn {
+        padding: 0.35rem 0.5rem;
+        font-size: 0.6rem;
       }
       
       .control-grid {
@@ -4446,6 +4533,30 @@
       
       .bar-ticker {
         font-size: 0.65rem;
+      }
+      
+      /* Fix header stats on mobile */
+      .header-right {
+        flex-wrap: wrap;
+        gap: 0.35rem;
+      }
+      
+      .demo-badge {
+        font-size: 0.5rem;
+        padding: 0.2rem 0.35rem;
+      }
+      
+      .status-indicator {
+        font-size: 0.55rem;
+      }
+      
+      .time-display {
+        font-size: 0.8rem;
+      }
+      
+      /* Mobile navigation path simulator fix */
+      .path-chart-container {
+        min-height: 120px;
       }
     }
     
@@ -5131,7 +5242,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: rgba(0, 0, 0, 0.95);
+      background: #050608;
       opacity: 0;
       visibility: hidden;
       transition: opacity 0.3s ease, visibility 0.3s ease;
@@ -11948,20 +12059,23 @@
           const velEl = document.getElementById('landing-velocity');
           const altEl = document.getElementById('landing-alt');
           
-          if (fuelEl) fuelEl.textContent = Math.round(this.ship.fuel);
-          if (velEl) velEl.textContent = Math.abs(this.ship.vy).toFixed(1);
-          if (altEl) {
+          if (fuelEl && this.ship) fuelEl.textContent = Math.round(this.ship.fuel || 0);
+          if (velEl && this.ship) velEl.textContent = Math.abs(this.ship.vy || 0).toFixed(1);
+          if (altEl && this.ship && this.canvas && this.terrain && this.terrain.length > 0) {
             const groundY = this.getTerrainY(this.ship.x);
-            const alt = Math.max(0, Math.round(groundY - this.ship.y - 10));
-            altEl.textContent = alt;
+            const alt = Math.max(0, Math.round((groundY || 0) - (this.ship.y || 0) - 10));
+            altEl.textContent = isNaN(alt) ? '0' : alt;
+          } else if (altEl) {
+            altEl.textContent = '0';
           }
         },
         
         getTerrainY(x) {
-          if (this.terrain.length < 2) return this.canvas.height * 0.7;
+          if (!this.terrain || this.terrain.length < 2 || !this.canvas) return 100;
           
-          const w = this.canvas.width;
-          const idx = (x / w) * (this.terrain.length - 1);
+          const w = this.canvas.width || 400;
+          if (w === 0) return 100;
+          const idx = ((x || 0) / w) * (this.terrain.length - 1);
           const i = Math.floor(idx);
           const t = idx - i;
           
