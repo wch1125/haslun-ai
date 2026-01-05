@@ -178,6 +178,77 @@ trading/
 
 ---
 
+## Phase 2: Audio & Games Extraction
+
+### Step 2.1: Extract Audio System ✅
+**Date:** 2025-01-05  
+**Status:** Complete
+
+1. **Created:** `js/audio/audio-system.js` (498 lines)
+   - `getAudioContext()` — Lazy audio context initialization
+   - `MechSFX` — Procedural sound effects (bassHit, synthStab, alert, powerUp, weaponFire, impact, tick, success, error)
+   - `MechaBGM` — Background music generator (synth pads, bass, arpeggios)
+   - `window.beep` — Silent placeholder function
+
+2. **Modified:** `index.html`
+   - Added script tag for `js/audio/audio-system.js`
+
+3. **Modified:** `js/app.js`
+   - Removed audio code (lines 2890-3377, ~488 lines)
+   - Audio functions accessed via window object
+
+### Step 2.2: Extract Mini-Games ✅
+**Date:** 2025-01-05  
+**Status:** Complete
+
+1. **Created:** `js/games/mini-games.js` (1,206 lines)
+   - `SignalInvaders` — Space Invaders arcade game (~550 lines)
+   - `AdminConsole` — Easter egg snoop trap (~200 lines)
+   - `LandingGame` — Terrain landing mini-game (~430 lines)
+   - Cheat code system (INVADE, LAND, ADMIN)
+
+2. **Modified:** `index.html`
+   - Added script tag for `js/games/mini-games.js`
+
+3. **Modified:** `js/app.js`
+   - Removed games code (lines 4190-5389, ~1200 lines)
+   - Game init calls remain in app.js
+   - Games accessed via window object
+
+### File Sizes After Phase 2:
+- `js/app.js`: 5,510 → 4,314 lines (-1,196 lines)
+- `js/audio/audio-system.js`: 498 lines (new)
+- `js/games/mini-games.js`: 1,206 lines (new)
+
+---
+
+## Current Structure
+
+```
+trading/
+├── index.html              (1,714 lines)
+├── css/styles.css          (7,503 lines)
+├── js/
+│   ├── app.js              (4,314 lines)
+│   ├── data/
+│   │   ├── ticker-profiles.js (515 lines)
+│   │   ├── glossary.js        (295 lines)
+│   │   └── ship-data.js       (342 lines)
+│   ├── audio/
+│   │   └── audio-system.js    (498 lines)
+│   └── games/
+│       └── mini-games.js      (1,206 lines)
+├── assets/ships/           (16 PNG files)
+├── data/                   (18 JSON files)
+├── HASLUN-BOT-README.md
+└── MODULARIZATION-LOG.md   (this file)
+```
+
+**Total JS lines:** 7,170 (was 7,061 original + ChatGPT adds)
+**app.js reduction:** 7,061 → 4,314 = -2,747 lines (38.9% smaller!)
+
+---
+
 ## Verification Checklist
 After each step, verify:
 - [ ] Page loads without console errors
@@ -188,25 +259,41 @@ After each step, verify:
 - [ ] Charts render correctly
 - [ ] Market Snapshot panel shows OHLC/VWAP/ATR data
 - [ ] Range + Returns panel shows 52W and return data
+- [ ] Sound effects work when enabled
+- [ ] BGM plays when toggled
+- [ ] Signal Invaders game launches (type "INVADE")
+- [ ] Landing Game launches (type "LAND")
+- [ ] Admin Console trap works (type "ADMIN")
 
 ---
 
-## Next Steps (Phase 2)
+## Rollback Instructions
 
-### Step 2.1: Extract Audio System (~550 lines)
-- `MechSFX` object — procedural sound effects
-- `MechaBGM` object — background music generator
-- Create `js/audio/sfx.js` and `js/audio/bgm.js`
+### To Rollback Phase 2:
+1. Delete `js/audio/audio-system.js` and `js/games/mini-games.js`
+2. Remove their script tags from `index.html`
+3. Restore audio code at line 2890 and games code at line 4190 in `app.js`
 
-### Step 2.2: Extract Games (~1,000 lines)
-- `SignalInvaders` — Space Invaders game
-- `LandingGame` — Terrain landing game
-- `AdminConsole` — Easter egg console
-- Create `js/games/` directory
+### To Rollback Phase 1:
+1. Delete all files in `js/data/` directory
+2. Remove their script tags from `index.html`
+3. Restore data objects to their original locations in `app.js`
 
-### Step 2.3: Extract HOLO_SHIPS (~200 lines)
-- Holographic ship SVG paths
+---
+
+## Next Steps (Phase 3 - Optional)
+
+### Step 3.1: Extract HOLO_SHIPS (~200 lines)
+- Holographic ship SVG paths and rendering functions
 - Create `js/data/holo-ships.js`
+
+### Step 3.2: CSS @import Split (Optional)
+- Split `styles.css` into theme, layout, components files
+- Use @import for organization
+
+### Step 3.3: ES Modules Migration (Future)
+- Convert to proper ES modules with import/export
+- Requires build step or module-enabled server
 
 ---
 
