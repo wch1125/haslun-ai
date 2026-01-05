@@ -2854,6 +2854,259 @@
     }
 
     /* =========================================================================
+       FLEET HOLOBAY
+       ========================================================================= */
+
+    .fleet-holobay {
+      margin-bottom: 20px;
+      padding: 16px 18px;
+      border-radius: 18px;
+      border: 1px solid hsla(var(--accent-hue), 100%, 60%, 0.18);
+      background:
+        radial-gradient(circle at 0% 0%, hsla(var(--accent-hue), 100%, 60%, 0.08), transparent 60%),
+        radial-gradient(circle at 100% 100%, hsla(200, 100%, 60%, 0.08), transparent 60%),
+        #02070c;
+      box-shadow: 0 0 30px rgba(0,0,0,.9);
+    }
+
+    .fleet-holo-main {
+      display: grid;
+      grid-template-columns: minmax(260px, 1.1fr) minmax(260px, 1fr);
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .fleet-holo-title {
+      font-family: var(--font-mono);
+      font-size: .8rem;
+      letter-spacing: .25em;
+      color: var(--phosphor);
+      margin-bottom: 8px;
+      text-shadow: 0 0 8px var(--phosphor-glow);
+    }
+
+    /* Hologram stage */
+    .fleet-holo-stage {
+      position: relative;
+      height: 220px;
+      border-radius: 16px;
+      border: 1px solid hsla(var(--accent-hue), 100%, 60%, 0.35);
+      background: radial-gradient(circle at 50% 0%, hsla(var(--accent-hue), 100%, 60%, 0.2), #000915);
+      overflow: hidden;
+      transform: perspective(900px) rotateX(14deg);
+      transform-origin: center bottom;
+      box-shadow:
+        0 0 40px hsla(var(--accent-hue), 100%, 60%, 0.35),
+        inset 0 0 40px rgba(0,0,0,.9);
+    }
+
+    .fleet-holo-grid {
+      position: absolute;
+      inset: 40% -10% -15%;
+      background-image: linear-gradient(hsla(var(--accent-hue), 100%, 60%, 0.16) 1px, transparent 1px),
+                        linear-gradient(90deg, hsla(var(--accent-hue), 100%, 60%, 0.18) 1px, transparent 1px);
+      background-size: 24px 12px;
+      opacity: .75;
+      transform: perspective(900px) rotateX(60deg);
+      transform-origin: top center;
+      filter: blur(.2px);
+    }
+
+    .fleet-ship-svg {
+      position: absolute;
+      inset: 12px 14px 70px;
+      margin: auto;
+      filter:
+        drop-shadow(0 0 8px hsla(var(--accent-hue), 100%, 60%, 0.8))
+        drop-shadow(0 0 16px hsla(var(--accent-hue), 100%, 65%, 0.5));
+      animation: hover-ship 4s ease-in-out infinite;
+    }
+
+    .fleet-ship-svg .ship-line {
+      fill: none;
+      stroke: var(--phosphor);
+      stroke-width: 1.5;
+      stroke-linejoin: round;
+      stroke-linecap: round;
+    }
+
+    .fleet-scanlines {
+      position: absolute;
+      inset: 0;
+      background-image: linear-gradient(
+        rgba(0,0,0,0.2) 1px,
+        transparent 1px
+      );
+      background-size: 100% 3px;
+      mix-blend-mode: soft-light;
+      opacity: .6;
+      pointer-events: none;
+    }
+
+    /* Info panel */
+    .fleet-holo-info {
+      display: flex;
+      gap: 22px;
+      padding-top: 10px;
+    }
+
+    .fleet-holo-info .label {
+      font-family: var(--font-mono);
+      font-size: .68rem;
+      letter-spacing: .22em;
+      color: var(--phosphor-dim);
+      margin-top: 4px;
+    }
+
+    .fleet-holo-info .value {
+      font-family: var(--font-mono);
+      font-size: .85rem;
+      letter-spacing: .15em;
+      color: var(--text-bright);
+      margin-bottom: 4px;
+    }
+
+    .info-left, .info-right {
+      flex: 1;
+    }
+
+    .info-right .stat {
+      margin-bottom: 10px;
+    }
+
+    .info-right .stat span {
+      font-family: var(--font-mono);
+      font-size: .68rem;
+      letter-spacing: .22em;
+      color: var(--phosphor-dim);
+    }
+
+    .info-right .bar {
+      margin-top: 3px;
+      width: 100%;
+      height: 6px;
+      border-radius: 999px;
+      background: hsla(var(--accent-hue), 100%, 60%, 0.18);
+      overflow: hidden;
+    }
+
+    .info-right .bar div {
+      height: 100%;
+      width: 20%;
+      background: linear-gradient(90deg, var(--phosphor-dim), var(--phosphor));
+      box-shadow: 0 0 10px hsla(var(--accent-hue), 100%, 60%, 0.6);
+      transition: width .4s ease, background .2s ease;
+    }
+
+    .stat-text {
+      font-family: var(--font-mono);
+      font-size: .7rem;
+      margin-top: 2px;
+      color: var(--text-muted);
+    }
+
+    /* risk colors */
+    .fleet-danger {
+      background: linear-gradient(90deg, #ff5c5c, #ffb69f) !important;
+      box-shadow: 0 0 10px rgba(255,90,90,.7) !important;
+    }
+
+    /* bottom strip */
+    .fleet-holo-strip {
+      margin-top: 16px;
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--phosphor-dim) transparent;
+    }
+
+    .fleet-holo-strip::-webkit-scrollbar {
+      height: 4px;
+    }
+
+    .fleet-holo-strip::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .fleet-holo-strip::-webkit-scrollbar-thumb {
+      background: var(--phosphor-dim);
+      border-radius: 4px;
+    }
+
+    .fleet-thumb {
+      min-width: 140px;
+      max-width: 180px;
+      border-radius: 10px;
+      padding: 8px 9px;
+      border: 1px solid hsla(var(--accent-hue), 100%, 60%, 0.2);
+      background: radial-gradient(circle at 50% 0%, hsla(var(--accent-hue), 100%, 60%, 0.2), #02090c);
+      cursor: pointer;
+      transition: .15s ease;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 4px 8px;
+      flex-shrink: 0;
+    }
+
+    .fleet-thumb .ticker {
+      grid-column: 1 / span 2;
+      font-family: var(--font-mono);
+      font-size: .8rem;
+      letter-spacing: .18em;
+      color: var(--text-bright);
+    }
+
+    .fleet-thumb .tag {
+      font-family: var(--font-mono);
+      font-size: .6rem;
+      color: var(--phosphor-dim);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .fleet-thumb .pnl {
+      text-align: right;
+      font-family: var(--font-mono);
+      font-size: .7rem;
+    }
+
+    .fleet-thumb.loss .pnl {
+      color: var(--signal-down);
+    }
+    .fleet-thumb.gain .pnl {
+      color: var(--signal-up);
+    }
+
+    .fleet-thumb.active {
+      border-color: var(--phosphor);
+      box-shadow: 0 0 16px hsla(var(--accent-hue), 100%, 60%, 0.5);
+      transform: translateY(-2px);
+    }
+
+    .fleet-thumb:hover:not(.active) {
+      border-color: var(--phosphor-dim);
+      background: radial-gradient(circle at 50% 0%, hsla(var(--accent-hue), 100%, 60%, 0.3), #02090c);
+    }
+
+    @media (max-width: 768px) {
+      .fleet-holo-main {
+        grid-template-columns: 1fr;
+      }
+
+      .fleet-holo-stage {
+        height: 180px;
+      }
+
+      .fleet-holo-info {
+        flex-direction: column;
+        gap: 12px;
+      }
+    }
+
+    /* =========================================================================
        TRAJECTORY NAVIGATOR (Derivatives)
        ========================================================================= */
     .trajectory-section {
@@ -4655,6 +4908,58 @@
             <div class="card">
               <div class="card-header"><div><div class="card-label">// Active</div><div class="card-title">Stock Positions</div></div></div>
               <div class="card-body">
+                <!-- FLEET HOLOBAY -->
+                <div id="fleet-holobay" class="fleet-holobay">
+                  <div class="fleet-holo-main">
+                    <div class="fleet-holo-stage-wrapper">
+                      <div class="fleet-holo-title">// FLEET HOLOBAY</div>
+
+                      <div class="fleet-holo-stage">
+                        <div class="fleet-holo-grid"></div>
+                        <svg id="fleet-ship-svg" class="fleet-ship-svg" viewBox="0 0 120 80" aria-hidden="true"></svg>
+                        <div class="fleet-scanlines"></div>
+                      </div>
+                    </div>
+
+                    <div class="fleet-holo-info">
+                      <div class="info-left">
+                        <div class="label">SHIP:</div>
+                        <div id="fleet-ship-name" class="value">—</div>
+
+                        <div class="label">CLASS:</div>
+                        <div id="fleet-ship-class" class="value">—</div>
+
+                        <div class="label">SECTOR:</div>
+                        <div id="fleet-ship-sector" class="value">—</div>
+                      </div>
+
+                      <div class="info-right">
+                        <div class="stat">
+                          <span>HULL INTEGRITY</span>
+                          <div class="bar"><div id="fleet-hull-bar"></div></div>
+                          <div id="fleet-hull-text" class="stat-text">—</div>
+                        </div>
+
+                        <div class="stat">
+                          <span>CARGO LOAD</span>
+                          <div class="bar"><div id="fleet-cargo-bar"></div></div>
+                          <div id="fleet-cargo-text" class="stat-text">—</div>
+                        </div>
+
+                        <div class="stat">
+                          <span>VELOCITY INDEX</span>
+                          <div class="bar"><div id="fleet-vel-bar"></div></div>
+                          <div id="fleet-vel-text" class="stat-text">—</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="fleet-holo-strip" id="fleet-holo-strip">
+                    <!-- thumbnails auto-populated via JS -->
+                  </div>
+                </div>
+
                 <!-- CARGO BAY MANIFEST -->
                 <div class="cargo-bay" id="cargo-bay">
                   <div class="cargo-item" data-ticker="RKLB">
@@ -6260,6 +6565,208 @@
       }
     }
     
+    // =========================================================================
+    // FLEET HOLOBAY SYSTEM
+    // =========================================================================
+    function initFleetHolobay() {
+      const strip = document.getElementById("fleet-holo-strip");
+      const svg = document.getElementById("fleet-ship-svg");
+      const nameEl = document.getElementById("fleet-ship-name");
+      const classEl = document.getElementById("fleet-ship-class");
+      const sectorEl = document.getElementById("fleet-ship-sector");
+      const hullBar = document.getElementById("fleet-hull-bar");
+      const hullText = document.getElementById("fleet-hull-text");
+      const cargoBar = document.getElementById("fleet-cargo-bar");
+      const cargoText = document.getElementById("fleet-cargo-text");
+      const velBar = document.getElementById("fleet-vel-bar");
+      const velText = document.getElementById("fleet-vel-text");
+
+      if (!strip || !svg) return;
+
+      // Wireframe ship shapes per ticker
+      const SHIPS = {
+        default: `
+          <polygon class="ship-line" points="10,40 40,15 80,15 110,40 80,65 40,65" />
+          <line class="ship-line" x1="40" y1="15" x2="40" y2="65" />
+          <line class="ship-line" x1="80" y1="15" x2="80" y2="65" />
+          <line class="ship-line" x1="25" y1="40" x2="95" y2="40" />
+        `,
+        RKLB: `
+          <polygon class="ship-line" points="10,40 35,20 60,12 85,20 110,40 85,60 60,68 35,60" />
+          <line class="ship-line" x1="60" y1="12" x2="60" y2="68" />
+          <polyline class="ship-line" points="25,48 60,55 95,48" />
+          <circle class="ship-line" cx="60" cy="40" r="8" />
+        `,
+        LUNR: `
+          <polygon class="ship-line" points="20,40 40,20 80,20 100,40 80,60 40,60" />
+          <circle class="ship-line" cx="60" cy="40" r="12" />
+          <line class="ship-line" x1="60" y1="28" x2="60" y2="52" />
+          <line class="ship-line" x1="48" y1="40" x2="72" y2="40" />
+        `,
+        JOBY: `
+          <polygon class="ship-line" points="18,40 35,28 85,28 102,40 85,52 35,52" />
+          <circle class="ship-line" cx="35" cy="24" r="7" />
+          <circle class="ship-line" cx="85" cy="24" r="7" />
+          <circle class="ship-line" cx="35" cy="56" r="7" />
+          <circle class="ship-line" cx="85" cy="56" r="7" />
+        `,
+        ACHR: `
+          <polygon class="ship-line" points="60,10 100,35 100,55 60,70 20,55 20,35" />
+          <line class="ship-line" x1="60" y1="10" x2="60" y2="70" />
+          <line class="ship-line" x1="20" y1="45" x2="100" y2="45" />
+          <circle class="ship-line" cx="60" cy="45" r="6" />
+        `,
+        ASTS: `
+          <rect class="ship-line" x="40" y="30" width="40" height="20" />
+          <line class="ship-line" x1="10" y1="40" x2="40" y2="40" />
+          <line class="ship-line" x1="80" y1="40" x2="110" y2="40" />
+          <rect class="ship-line" x="5" y="32" width="12" height="16" />
+          <rect class="ship-line" x="103" y="32" width="12" height="16" />
+        `,
+        GME: `
+          <polygon class="ship-line" points="60,10 90,25 90,55 60,70 30,55 30,25" />
+          <text class="ship-line" x="60" y="45" text-anchor="middle" font-size="14" fill="none" stroke="var(--phosphor)" stroke-width="1">?</text>
+        `,
+        BKSY: `
+          <ellipse class="ship-line" cx="60" cy="40" rx="35" ry="20" />
+          <line class="ship-line" x1="60" y1="20" x2="60" y2="60" />
+          <circle class="ship-line" cx="60" cy="40" r="8" />
+        `,
+        RDW: `
+          <polygon class="ship-line" points="60,15 95,30 95,50 60,65 25,50 25,30" />
+          <polygon class="ship-line" points="60,25 80,35 80,45 60,55 40,45 40,35" />
+        `,
+        PL: `
+          <rect class="ship-line" x="30" y="25" width="60" height="30" rx="3" />
+          <circle class="ship-line" cx="50" cy="40" r="8" />
+          <circle class="ship-line" cx="70" cy="40" r="5" />
+        `,
+        EVEX: `
+          <polygon class="ship-line" points="60,15 100,40 60,65 20,40" />
+          <circle class="ship-line" cx="60" cy="40" r="10" />
+          <line class="ship-line" x1="40" y1="28" x2="80" y2="52" />
+          <line class="ship-line" x1="80" y1="28" x2="40" y2="52" />
+        `
+      };
+
+      function pickShipShape(ticker) {
+        return SHIPS[ticker] || SHIPS.default;
+      }
+
+      function makeShipClass(sector) {
+        if (/space|launch|satellite/i.test(sector)) return "ORBITAL FRIGATE";
+        if (/lunar/i.test(sector)) return "LUNAR LANDER";
+        if (/cellular|comms/i.test(sector)) return "COMM RELAY";
+        if (/evtol|vtol|air/i.test(sector)) return "LIFT DECK";
+        if (/defense/i.test(sector)) return "PATROL CORVETTE";
+        if (/materials|industrial/i.test(sector)) return "CARGO HAULER";
+        if (/meme|retail/i.test(sector)) return "UNKNOWN OBJECT";
+        if (/earth|geo/i.test(sector)) return "RECON DRONE";
+        return "MULTI-ROLE VESSEL";
+      }
+
+      function pnlToHealth(pnl) {
+        // map P&L percentage to 0–100
+        const raw = Math.max(-50, Math.min(150, pnl));
+        return Math.round(((raw + 50) / 200) * 100);
+      }
+
+      function healthLabel(h) {
+        if (h >= 85) return "OPTIMAL";
+        if (h >= 65) return "NOMINAL";
+        if (h >= 45) return "STRESSED";
+        return "CRITICAL";
+      }
+
+      const fleet = [];
+
+      // Build fleet from DEMO_STOCK_POSITIONS with TICKER_PROFILES data
+      if (typeof DEMO_STOCK_POSITIONS !== 'undefined') {
+        DEMO_STOCK_POSITIONS.forEach(pos => {
+          const profile = TICKER_PROFILES[pos.ticker] || {};
+          const value = pos.shares * pos.current_price;
+          const pnlNum = ((pos.current_price - pos.entry_price) / pos.entry_price) * 100;
+          const pnlText = (pnlNum >= 0 ? '+' : '') + pnlNum.toFixed(1) + '%';
+          const sector = profile.sector || 'Unknown';
+
+          fleet.push({
+            ticker: pos.ticker,
+            sector: sector,
+            value: value,
+            pnlText: pnlText,
+            pnlNum: pnlNum,
+            shipClass: makeShipClass(sector),
+            shape: pickShipShape(pos.ticker),
+            codename: profile.codename || pos.ticker
+          });
+        });
+      }
+
+      if (!fleet.length) return;
+
+      // Create thumbnails
+      fleet.forEach(ship => {
+        const thumb = document.createElement("div");
+        thumb.className = "fleet-thumb " + (ship.pnlNum >= 0 ? "gain" : "loss");
+        thumb.dataset.ticker = ship.ticker;
+
+        thumb.innerHTML = `
+          <div class="ticker">${ship.ticker}</div>
+          <div class="tag">${ship.shipClass}</div>
+          <div class="pnl">${ship.pnlText}</div>
+        `;
+
+        thumb.addEventListener("click", () => {
+          selectShip(ship.ticker);
+        });
+
+        strip.appendChild(thumb);
+      });
+
+      function selectShip(ticker) {
+        const ship = fleet.find(s => s.ticker === ticker);
+        if (!ship) return;
+
+        svg.innerHTML = ship.shape;
+
+        nameEl.textContent = `${ship.ticker} · ${ship.codename}`;
+        classEl.textContent = ship.shipClass;
+        sectorEl.textContent = ship.sector;
+
+        const health = pnlToHealth(ship.pnlNum);
+        hullBar.style.width = `${Math.max(5, health)}%`;
+        hullText.textContent = healthLabel(health);
+
+        const cargoRatio = ship.value / fleet.reduce((s,x)=>s+x.value,0);
+        const cargoPct = Math.round(cargoRatio * 100);
+        cargoBar.style.width = `${Math.max(5, cargoPct)}%`;
+        cargoText.textContent = `${cargoPct}% of fleet cargo`;
+
+        const vel = Math.min(100, Math.abs(ship.pnlNum) * 2.5);
+        velBar.style.width = `${Math.max(5, vel)}%`;
+        velText.textContent = `${vel.toFixed(0)} · risk velocity`;
+
+        if (health < 45) {
+          hullBar.classList.add("fleet-danger");
+        } else {
+          hullBar.classList.remove("fleet-danger");
+        }
+
+        strip.querySelectorAll(".fleet-thumb").forEach(t => {
+          t.classList.toggle("active", t.dataset.ticker === ticker);
+        });
+
+        // Also trigger main chart update if the function exists
+        if (typeof loadTicker === 'function') {
+          loadTicker(ticker);
+        }
+      }
+
+      // Initial selection = biggest position
+      const primary = fleet.slice().sort((a,b)=>b.value-a.value)[0];
+      if (primary) selectShip(primary.ticker);
+    }
+    
     async function init() {
       updateTime();
       setInterval(updateTime, 1000);
@@ -6277,6 +6784,9 @@
       renderCatalysts();
       renderActivity();
       renderPositionCharts();
+      
+      // Initialize Fleet HoloBay
+      initFleetHolobay();
       
       // Initialize glossary tooltips
       attachGlossaryTooltips();
