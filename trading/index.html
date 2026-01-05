@@ -4838,6 +4838,612 @@
         padding-top: env(safe-area-inset-top);
         padding-bottom: env(safe-area-inset-bottom);
       }
+      
+      .mobile-bottom-nav {
+        padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+      }
+    }
+
+    /* =========================================================================
+       MOBILE BOTTOM NAVIGATION BAR
+       Thumb-friendly tab switching - the command center's portable bridge
+       ========================================================================= */
+    .mobile-bottom-nav {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 64px;
+      background: linear-gradient(180deg, var(--bg-panel) 0%, var(--bg-deep) 100%);
+      border-top: 1px solid var(--border);
+      z-index: 15000;
+      padding: 0 0.25rem;
+    }
+    
+    .mobile-bottom-nav::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent 0%, var(--phosphor-dim) 50%, transparent 100%);
+    }
+    
+    .mobile-nav-items {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      height: 100%;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+    
+    .mobile-nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.2rem;
+      padding: 0.4rem 0.75rem;
+      border: none;
+      background: transparent;
+      color: var(--text-dim);
+      font-family: var(--font-mono);
+      font-size: 0.5rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      min-width: 60px;
+      border-radius: 8px;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    .mobile-nav-item .nav-icon {
+      font-size: 1.3rem;
+      line-height: 1;
+      transition: transform 0.2s ease;
+    }
+    
+    .mobile-nav-item.active {
+      color: var(--phosphor);
+      background: var(--phosphor-ghost);
+    }
+    
+    .mobile-nav-item.active .nav-icon {
+      transform: scale(1.1);
+      filter: drop-shadow(0 0 6px var(--phosphor));
+    }
+    
+    .mobile-nav-item:active {
+      transform: scale(0.95);
+      background: var(--phosphor-ghost);
+    }
+    
+    @media (max-width: 768px) {
+      .mobile-bottom-nav {
+        display: block;
+      }
+      
+      /* Hide header nav tabs on mobile */
+      .nav-tabs {
+        display: none !important;
+      }
+      
+      /* Adjust main content for bottom nav */
+      .main {
+        height: calc(100vh - 56px - 64px) !important;
+        height: calc(100dvh - 56px - 64px) !important;
+      }
+      
+      /* Hide desktop status strip on mobile */
+      .status-strip {
+        display: none !important;
+      }
+    }
+    
+    /* =========================================================================
+       MOBILE TICKER CAROUSEL
+       Quick stock selection with horizontal scroll
+       ========================================================================= */
+    .mobile-ticker-carousel {
+      display: none;
+      padding: 0.5rem;
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    
+    .mobile-ticker-carousel::-webkit-scrollbar {
+      display: none;
+    }
+    
+    .ticker-carousel-inner {
+      display: flex;
+      gap: 0.5rem;
+      padding: 0 0.25rem;
+    }
+    
+    .carousel-ticker {
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0.5rem 0.75rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      min-width: 72px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    .carousel-ticker.active {
+      border-color: var(--phosphor);
+      background: var(--phosphor-ghost);
+    }
+    
+    .carousel-ticker:active {
+      transform: scale(0.95);
+    }
+    
+    .carousel-ticker-symbol {
+      font-family: var(--font-display);
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-bright);
+      letter-spacing: 0.05em;
+    }
+    
+    .carousel-ticker-price {
+      font-size: 0.6rem;
+      color: var(--text-muted);
+      margin-top: 0.15rem;
+    }
+    
+    .carousel-ticker-change {
+      font-size: 0.55rem;
+      font-weight: 500;
+      margin-top: 0.1rem;
+    }
+    
+    .carousel-ticker-change.positive { color: var(--signal-up); }
+    .carousel-ticker-change.negative { color: var(--signal-down); }
+    
+    @media (max-width: 768px) {
+      .mobile-ticker-carousel {
+        display: block;
+      }
+    }
+    
+    /* =========================================================================
+       FLOATING ACTION BUTTON (FAB)
+       Quick access to audio and settings
+       ========================================================================= */
+    .mobile-fab {
+      display: none;
+      position: fixed;
+      bottom: 80px;
+      right: 1rem;
+      z-index: 14000;
+    }
+    
+    .fab-main {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-panel) 100%);
+      border: 1px solid var(--border);
+      color: var(--phosphor);
+      font-size: 1.4rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 20px var(--phosphor-ghost);
+      transition: all 0.2s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    .fab-main:active {
+      transform: scale(0.92);
+    }
+    
+    .fab-main.open {
+      transform: rotate(45deg);
+      background: var(--phosphor-ghost);
+    }
+    
+    .fab-menu {
+      position: absolute;
+      bottom: 60px;
+      right: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(10px);
+      transition: all 0.2s ease;
+    }
+    
+    .fab-menu.open {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+    
+    .fab-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.05em;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    
+    .fab-item:active {
+      transform: scale(0.95);
+      background: var(--phosphor-ghost);
+    }
+    
+    .fab-item .fab-icon {
+      font-size: 1.1rem;
+    }
+    
+    .fab-item.active {
+      border-color: var(--phosphor);
+      color: var(--phosphor);
+    }
+    
+    @media (max-width: 768px) {
+      .mobile-fab {
+        display: block;
+      }
+    }
+    
+    @supports (padding: max(0px)) {
+      @media (max-width: 768px) {
+        .mobile-fab {
+          bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+          right: max(1rem, env(safe-area-inset-right));
+        }
+      }
+    }
+    
+    /* =========================================================================
+       MOBILE QUICK STATS BAR
+       Replaces status strip with portfolio-focused info
+       ========================================================================= */
+    .mobile-quick-stats {
+      display: none;
+      position: fixed;
+      bottom: 64px;
+      left: 0;
+      right: 0;
+      height: 36px;
+      background: var(--bg-deep);
+      border-top: 1px solid var(--border);
+      z-index: 14500;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    
+    .mobile-quick-stats::-webkit-scrollbar {
+      display: none;
+    }
+    
+    .quick-stats-inner {
+      display: flex;
+      align-items: center;
+      height: 100%;
+      gap: 1rem;
+      padding: 0 0.75rem;
+      min-width: max-content;
+    }
+    
+    .quick-stat {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.55rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    
+    .quick-stat-label {
+      color: var(--text-dim);
+    }
+    
+    .quick-stat-value {
+      color: var(--text);
+      font-family: var(--font-display);
+      font-weight: 500;
+    }
+    
+    .quick-stat-value.positive { color: var(--signal-up); }
+    .quick-stat-value.negative { color: var(--signal-down); }
+    
+    .quick-stat-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--signal-up);
+      box-shadow: 0 0 6px var(--signal-up);
+    }
+    
+    .quick-stat-dot.amber {
+      background: var(--signal-warn);
+      box-shadow: 0 0 6px var(--signal-warn);
+    }
+    
+    @media (max-width: 768px) {
+      .mobile-quick-stats {
+        display: block;
+      }
+      
+      /* Adjust main and bottom nav for quick stats */
+      .main {
+        height: calc(100vh - 56px - 64px - 36px) !important;
+        height: calc(100dvh - 56px - 64px - 36px) !important;
+      }
+      
+      .mobile-fab {
+        bottom: calc(100px + 36px);
+      }
+    }
+    
+    @supports (padding: max(0px)) {
+      @media (max-width: 768px) {
+        .mobile-quick-stats {
+          bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+        }
+        
+        .mobile-fab {
+          bottom: calc(116px + env(safe-area-inset-bottom, 0px));
+        }
+        
+        .main {
+          height: calc(100dvh - 56px - 64px - 36px - env(safe-area-inset-bottom, 0px)) !important;
+        }
+      }
+    }
+    
+    /* =========================================================================
+       MOBILE DRAWER ENHANCEMENTS
+       Better organization and visual hierarchy
+       ========================================================================= */
+    @media (max-width: 768px) {
+      .mobile-drawer {
+        width: 300px;
+        max-width: 88vw;
+      }
+      
+      .mobile-drawer-header {
+        background: linear-gradient(180deg, var(--bg-card) 0%, var(--bg-panel) 100%);
+        padding: 1.25rem 1rem;
+        border-bottom: 2px solid var(--phosphor-dim);
+      }
+      
+      .mobile-drawer-title {
+        font-size: 1rem;
+      }
+      
+      .mobile-drawer-close {
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: var(--bg-input);
+        border: 1px solid var(--border);
+      }
+      
+      .mobile-drawer-content {
+        padding: 0;
+      }
+      
+      .mobile-drawer .sidebar-section {
+        padding: 1rem !important;
+        border-bottom: 1px solid var(--border);
+      }
+      
+      .mobile-drawer .sidebar-title {
+        font-size: 0.6rem !important;
+        color: var(--phosphor-dim) !important;
+        margin-bottom: 0.75rem !important;
+      }
+      
+      .mobile-drawer .push-btn {
+        min-height: 52px;
+        font-size: 0.75rem;
+        border-radius: 8px;
+      }
+      
+      .mobile-drawer .stats-grid {
+        gap: 0.75rem !important;
+      }
+      
+      .mobile-drawer .stat-box {
+        padding: 0.75rem !important;
+        border-radius: 8px;
+      }
+      
+      .mobile-drawer .stat-value {
+        font-size: 1.1rem !important;
+      }
+    }
+    
+    /* =========================================================================
+       IMPROVED MOBILE CHART DISPLAY
+       Better use of limited screen real estate
+       ========================================================================= */
+    @media (max-width: 768px) {
+      .chart-header {
+        padding: 0.75rem !important;
+        gap: 0.75rem !important;
+      }
+      
+      .ticker-display {
+        width: 100%;
+        justify-content: space-between;
+      }
+      
+      .ticker-symbol {
+        font-size: 1.4rem !important;
+      }
+      
+      .ticker-price {
+        font-size: 1.1rem !important;
+      }
+      
+      .ticker-change {
+        font-size: 0.9rem !important;
+      }
+      
+      /* Period buttons as pills */
+      .chart-tools {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 0.25rem;
+      }
+      
+      .control-group {
+        flex-shrink: 0;
+      }
+      
+      .period-btn {
+        min-height: 36px;
+        padding: 0.4rem 0.6rem !important;
+        border-radius: 18px;
+      }
+      
+      .price-chart-wrapper {
+        min-height: 280px !important;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .price-chart-wrapper {
+        min-height: 240px !important;
+      }
+      
+      .ticker-symbol {
+        font-size: 1.2rem !important;
+      }
+    }
+    
+    /* =========================================================================
+       MOBILE POSITIONS GRID
+       Swipeable cards with better touch targets
+       ========================================================================= */
+    @media (max-width: 768px) {
+      .positions-grid {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 0.5rem !important;
+        padding: 0.5rem !important;
+      }
+      
+      .metric-card {
+        padding: 0.75rem !important;
+        border-radius: 10px !important;
+        border: 1px solid var(--border) !important;
+        background: var(--bg-card) !important;
+      }
+      
+      .metric-value {
+        font-size: 1.1rem !important;
+      }
+      
+      .metric-label {
+        font-size: 0.55rem !important;
+      }
+    }
+    
+    /* =========================================================================
+       PULL TO REFRESH INDICATOR (Visual only)
+       ========================================================================= */
+    .pull-indicator {
+      display: none;
+      position: fixed;
+      top: 56px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-100%);
+      padding: 0.5rem 1rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      font-size: 0.6rem;
+      color: var(--text-muted);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      z-index: 13000;
+      transition: transform 0.2s ease;
+    }
+    
+    .pull-indicator.visible {
+      transform: translateX(-50%) translateY(0.5rem);
+    }
+    
+    @media (max-width: 768px) {
+      .pull-indicator {
+        display: block;
+      }
+    }
+    
+    /* =========================================================================
+       GESTURE HINTS
+       Subtle visual cues for swipe interactions
+       ========================================================================= */
+    .swipe-hint {
+      display: none;
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 4px;
+      height: 40px;
+      background: var(--phosphor-ghost);
+      border-radius: 2px;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+    }
+    
+    .swipe-hint.left { left: 4px; }
+    .swipe-hint.right { right: 4px; }
+    
+    .swipe-hint.visible {
+      opacity: 1;
+      animation: swipe-pulse 1.5s ease-in-out infinite;
+    }
+    
+    @keyframes swipe-pulse {
+      0%, 100% { opacity: 0.3; transform: translateY(-50%) scaleY(1); }
+      50% { opacity: 0.7; transform: translateY(-50%) scaleY(1.2); }
+    }
+    
+    @media (max-width: 768px) {
+      .swipe-hint {
+        display: block;
+      }
     }
 
     /* =========================================================================
@@ -6060,6 +6666,13 @@
       
       <div class="content">
         <div class="tab-panel active" id="chart-panel">
+          <!-- Mobile Ticker Carousel -->
+          <div class="mobile-ticker-carousel" id="mobile-ticker-carousel">
+            <div class="ticker-carousel-inner" id="ticker-carousel-inner">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+          
           <div class="chart-header">
             <div class="chart-header-left">
               <div class="ticker-display">
@@ -6562,6 +7175,94 @@
           <div id="color-hue-preview" style="width: 12px; height: 12px; border-radius: 50%; background: hsl(150, 100%, 60%); border: 1px solid var(--border);"></div>
         </div>
       </div>
+    </div>
+    
+    <!-- ============================================================
+         MOBILE BOTTOM NAVIGATION
+         ============================================================ -->
+    <nav class="mobile-bottom-nav" id="mobile-bottom-nav">
+      <div class="mobile-nav-items">
+        <button class="mobile-nav-item active" data-tab="chart" onclick="switchTabMobile('chart')">
+          <span class="nav-icon">📡</span>
+          <span>Telemetry</span>
+        </button>
+        <button class="mobile-nav-item" data-tab="positions" onclick="switchTabMobile('positions')">
+          <span class="nav-icon">🚀</span>
+          <span>Holdings</span>
+        </button>
+        <button class="mobile-nav-item" data-tab="options" onclick="switchTabMobile('options')">
+          <span class="nav-icon">📈</span>
+          <span>Derivatives</span>
+        </button>
+        <button class="mobile-nav-item" data-tab="catalysts" onclick="switchTabMobile('catalysts')">
+          <span class="nav-icon">📅</span>
+          <span>Events</span>
+        </button>
+        <button class="mobile-nav-item" onclick="toggleMobileDrawer()">
+          <span class="nav-icon">⚙️</span>
+          <span>More</span>
+        </button>
+      </div>
+    </nav>
+    
+    <!-- ============================================================
+         MOBILE QUICK STATS BAR
+         ============================================================ -->
+    <div class="mobile-quick-stats" id="mobile-quick-stats">
+      <div class="quick-stats-inner">
+        <div class="quick-stat">
+          <span class="quick-stat-dot"></span>
+          <span class="quick-stat-label">SYS</span>
+          <span class="quick-stat-value">NOMINAL</span>
+        </div>
+        <div class="quick-stat">
+          <span class="quick-stat-label">P&L</span>
+          <span class="quick-stat-value positive" id="mobile-pnl-value">+$1,172</span>
+        </div>
+        <div class="quick-stat">
+          <span class="quick-stat-label">POS</span>
+          <span class="quick-stat-value" id="mobile-positions-count">10</span>
+        </div>
+        <div class="quick-stat">
+          <span class="quick-stat-dot amber"></span>
+          <span class="quick-stat-label">MKT</span>
+          <span class="quick-stat-value">CLOSED</span>
+        </div>
+        <div class="quick-stat">
+          <span class="quick-stat-label">⏱</span>
+          <span class="quick-stat-value" id="mobile-uptime">00:00</span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- ============================================================
+         MOBILE FLOATING ACTION BUTTON
+         ============================================================ -->
+    <div class="mobile-fab" id="mobile-fab">
+      <div class="fab-menu" id="fab-menu">
+        <button class="fab-item" id="fab-sfx" onclick="toggleFabSFX()">
+          <span class="fab-icon">🔊</span>
+          <span>SFX ON</span>
+        </button>
+        <button class="fab-item" id="fab-bgm" onclick="toggleFabBGM()">
+          <span class="fab-icon">🎵</span>
+          <span>BGM OFF</span>
+        </button>
+        <button class="fab-item" onclick="showAboutOverlay()">
+          <span class="fab-icon">❓</span>
+          <span>ABOUT</span>
+        </button>
+      </div>
+      <button class="fab-main" id="fab-main" onclick="toggleFabMenu()">
+        <span>⚡</span>
+      </button>
+    </div>
+    
+    <!-- ============================================================
+         PULL TO REFRESH INDICATOR
+         ============================================================ -->
+    <div class="pull-indicator" id="pull-indicator">
+      ↓ PULL TO REFRESH DATA
     </div>
     
     <div class="dev-console" id="dev-console">
@@ -8646,6 +9347,9 @@
       if (mobileWatchlist) {
         mobileWatchlist.innerHTML = watchlistHTML;
       }
+      
+      // Also populate mobile ticker carousel
+      populateMobileTickerCarousel();
     }
     
     // Mobile drawer toggle
@@ -9026,6 +9730,206 @@
     function switchTab(tabName) {
       document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tabName));
       document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === tabName + '-panel'));
+    }
+    
+    // =========================================================================
+    // MOBILE UI FUNCTIONS
+    // =========================================================================
+    
+    function switchTabMobile(tabName) {
+      // Update mobile bottom nav
+      document.querySelectorAll('.mobile-nav-item').forEach(t => {
+        t.classList.toggle('active', t.dataset.tab === tabName);
+      });
+      // Update desktop nav tabs (keep in sync)
+      document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tabName));
+      // Update panels
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === tabName + '-panel'));
+      // Play sound
+      if (window.SoundFX) SoundFX.play('click');
+    }
+    
+    function toggleFabMenu() {
+      const fabMain = document.getElementById('fab-main');
+      const fabMenu = document.getElementById('fab-menu');
+      if (fabMain && fabMenu) {
+        fabMain.classList.toggle('open');
+        fabMenu.classList.toggle('open');
+        if (window.SoundFX) SoundFX.play('click');
+      }
+    }
+    
+    function toggleFabSFX() {
+      const sfxToggle = document.getElementById('sfx-toggle');
+      const fabSfx = document.getElementById('fab-sfx');
+      if (sfxToggle) {
+        sfxToggle.checked = !sfxToggle.checked;
+        sfxToggle.dispatchEvent(new Event('change'));
+        if (fabSfx) {
+          fabSfx.innerHTML = '<span class="fab-icon">🔊</span><span>SFX ' + (sfxToggle.checked ? 'ON' : 'OFF') + '</span>';
+          fabSfx.classList.toggle('active', sfxToggle.checked);
+        }
+      }
+    }
+    
+    function toggleFabBGM() {
+      const bgmToggle = document.getElementById('bgm-toggle');
+      const fabBgm = document.getElementById('fab-bgm');
+      if (bgmToggle) {
+        bgmToggle.checked = !bgmToggle.checked;
+        bgmToggle.dispatchEvent(new Event('change'));
+        if (fabBgm) {
+          fabBgm.innerHTML = '<span class="fab-icon">🎵</span><span>BGM ' + (bgmToggle.checked ? 'ON' : 'OFF') + '</span>';
+          fabBgm.classList.toggle('active', bgmToggle.checked);
+        }
+      }
+    }
+    
+    function showAboutOverlay() {
+      const aboutTrigger = document.getElementById('about-trigger-btn');
+      if (aboutTrigger) {
+        aboutTrigger.click();
+      }
+      toggleFabMenu();
+    }
+    
+    function populateMobileTickerCarousel() {
+      const carouselInner = document.getElementById('ticker-carousel-inner');
+      if (!carouselInner) return;
+      
+      const tickers = Object.keys(statsData).filter(t => t && statsData[t]);
+      if (tickers.length === 0) return;
+      
+      carouselInner.innerHTML = tickers.map(ticker => {
+        const stats = statsData[ticker] || {};
+        const price = stats.current || 0;
+        const change = stats.return_1d || 0;
+        const changeClass = change >= 0 ? 'positive' : 'negative';
+        const isActive = ticker === currentTicker;
+        const color = tickerColors[ticker] || '#33ff99';
+        
+        return '<div class="carousel-ticker ' + (isActive ? 'active' : '') + '" data-ticker="' + ticker + '" onclick="selectTickerFromCarousel(\'' + ticker + '\')" style="--ticker-color: ' + color + '">' +
+          '<div class="carousel-ticker-symbol" style="color: ' + color + '">' + ticker + '</div>' +
+          '<div class="carousel-ticker-price">$' + price.toFixed(2) + '</div>' +
+          '<div class="carousel-ticker-change ' + changeClass + '">' + (change >= 0 ? '+' : '') + change.toFixed(1) + '%</div>' +
+        '</div>';
+      }).join('');
+    }
+    
+    function selectTickerFromCarousel(ticker) {
+      selectTicker(ticker);
+      // Update carousel active state
+      document.querySelectorAll('.carousel-ticker').forEach(t => {
+        t.classList.toggle('active', t.dataset.ticker === ticker);
+      });
+      if (window.SoundFX) SoundFX.play('click');
+    }
+    
+    function updateMobileUptime() {
+      const uptimeEl = document.getElementById('mobile-uptime');
+      const desktopUptimeEl = document.getElementById('uptime');
+      if (uptimeEl && desktopUptimeEl) {
+        const uptimeText = desktopUptimeEl.textContent.replace('UPTIME: ', '');
+        // Shorten for mobile: "00:12:34" -> "12:34"
+        const parts = uptimeText.split(':');
+        if (parts.length === 3 && parts[0] === '00') {
+          uptimeEl.textContent = parts[1] + ':' + parts[2];
+        } else {
+          uptimeEl.textContent = uptimeText;
+        }
+      }
+    }
+    
+    // Initialize mobile-specific features
+    function initMobileUI() {
+      // Populate ticker carousel after data loads
+      setTimeout(populateMobileTickerCarousel, 1500);
+      
+      // Update mobile uptime periodically
+      setInterval(updateMobileUptime, 1000);
+      
+      // Close FAB menu when clicking outside
+      document.addEventListener('click', (e) => {
+        const fab = document.getElementById('mobile-fab');
+        const fabMain = document.getElementById('fab-main');
+        const fabMenu = document.getElementById('fab-menu');
+        if (fab && fabMain && fabMenu && fabMenu.classList.contains('open')) {
+          if (!fab.contains(e.target)) {
+            fabMain.classList.remove('open');
+            fabMenu.classList.remove('open');
+          }
+        }
+      });
+      
+      // Swipe gesture for mobile drawer
+      let touchStartX = 0;
+      let touchEndX = 0;
+      
+      document.addEventListener('touchstart', (e) => {
+        touchStartX = e.changedTouches[0].screenX;
+      }, { passive: true });
+      
+      document.addEventListener('touchend', (e) => {
+        touchEndX = e.changedTouches[0].screenX;
+        handleSwipeGesture();
+      }, { passive: true });
+      
+      function handleSwipeGesture() {
+        const swipeDistance = touchEndX - touchStartX;
+        const minSwipeDistance = 80;
+        const drawer = document.getElementById('mobile-drawer');
+        const isDrawerOpen = drawer && drawer.classList.contains('open');
+        
+        // Swipe right from left edge to open drawer
+        if (touchStartX < 30 && swipeDistance > minSwipeDistance && !isDrawerOpen) {
+          toggleMobileDrawer();
+        }
+        // Swipe left to close drawer
+        if (isDrawerOpen && swipeDistance < -minSwipeDistance) {
+          toggleMobileDrawer();
+        }
+      }
+      
+      // Pull to refresh visual (doesn't actually refresh, just visual feedback)
+      let pullStartY = 0;
+      const pullIndicator = document.getElementById('pull-indicator');
+      
+      document.addEventListener('touchstart', (e) => {
+        if (window.scrollY === 0) {
+          pullStartY = e.changedTouches[0].screenY;
+        }
+      }, { passive: true });
+      
+      document.addEventListener('touchmove', (e) => {
+        if (pullStartY > 0 && window.scrollY === 0) {
+          const pullDistance = e.changedTouches[0].screenY - pullStartY;
+          if (pullDistance > 60 && pullIndicator) {
+            pullIndicator.classList.add('visible');
+          }
+        }
+      }, { passive: true });
+      
+      document.addEventListener('touchend', () => {
+        pullStartY = 0;
+        if (pullIndicator) {
+          pullIndicator.classList.remove('visible');
+        }
+      }, { passive: true });
+      
+      // Sync FAB toggle states on load
+      const sfxToggle = document.getElementById('sfx-toggle');
+      const fabSfx = document.getElementById('fab-sfx');
+      if (sfxToggle && fabSfx) {
+        fabSfx.innerHTML = '<span class="fab-icon">🔊</span><span>SFX ' + (sfxToggle.checked ? 'ON' : 'OFF') + '</span>';
+        fabSfx.classList.toggle('active', sfxToggle.checked);
+      }
+    }
+    
+    // Call initMobileUI when DOM is ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initMobileUI);
+    } else {
+      initMobileUI();
     }
     
     function switchChartTab(chartName) {
