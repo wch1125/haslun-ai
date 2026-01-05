@@ -1838,6 +1838,93 @@
       z-index: 2;
     }
     
+    /* =========================================================================
+       LOADING FLEET — Ships flying through the cockpit
+       ========================================================================= */
+    
+    .loading-fleet {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 3; /* above background, under HUD text */
+    }
+    
+    /* One flying ship sprite */
+    .loading-ship {
+      position: absolute;
+      bottom: -96px;              /* start off-screen */
+      left: var(--x, 50%);
+      width: 64px;
+      height: 64px;
+      transform: translateX(-50%) scale(var(--scale, 1));
+      object-fit: contain;
+      image-rendering: pixelated;
+      filter: drop-shadow(0 0 10px var(--ship-color, rgba(51,255,153,0.7)));
+      opacity: 0;
+      animation: loading-ship-fly var(--duration, 7s) linear infinite;
+      animation-delay: var(--delay, 0s);
+    }
+    
+    /* Vertical fly-by with fade in/out */
+    @keyframes loading-ship-fly {
+      0%   { bottom: -96px;  opacity: 0; }
+      8%   { opacity: 0.9; }
+      92%  { opacity: 0.9; }
+      100% { bottom: 110%;   opacity: 0; }
+    }
+    
+    /* Elite ships = top daily winners */
+    .loading-ship.elite {
+      filter:
+        drop-shadow(0 0 16px rgba(255, 215, 80, 0.9))
+        drop-shadow(0 0 28px rgba(51, 255, 153, 0.5));
+      transform: translateX(-50%) scale(calc(var(--scale, 1) * 1.15));
+    }
+    
+    /* Optional afterburner trail for elite ships */
+    .loading-ship.elite::after {
+      content: '';
+      position: absolute;
+      bottom: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 8px;
+      height: 30px;
+      background: linear-gradient(180deg, 
+        rgba(255, 215, 80, 0.8) 0%,
+        rgba(255, 179, 71, 0.5) 40%,
+        transparent 100%
+      );
+      filter: blur(3px);
+      animation: afterburner-flicker 0.15s steps(2) infinite;
+    }
+    
+    @keyframes afterburner-flicker {
+      0%, 100% { opacity: 1; height: 30px; }
+      50% { opacity: 0.7; height: 24px; }
+    }
+    
+    /* Hide the static formations during loading */
+    .loading-screen .invader-army,
+    .loading-screen .ship-formation,
+    .loading-screen .invader-fleet {
+      display: none !important;
+    }
+    
+    /* Mobile adjustments for loading ships */
+    @media (max-width: 480px) {
+      .loading-ship {
+        width: 48px;
+        height: 48px;
+      }
+      
+      .loading-ship.elite::after {
+        height: 20px;
+        width: 6px;
+      }
+    }
+    
     /* Pixel beam beneath invader */
     .pixel-beam {
       position: absolute;
@@ -7868,6 +7955,9 @@
             </svg>
           </div>
           
+          <!-- Flying fleet layer - dynamic ships streaming through cockpit -->
+          <div class="loading-fleet" id="loading-fleet"></div>
+          
           <!-- Ship Formation - Wedge (4-3-2-1) using PNG sprites -->
           <div class="ship-formation" id="ship-formation">
             <!-- Row 1: 4 ships (back row) -->
@@ -9063,47 +9153,171 @@
   </div>
 
   <script>
-    // Loading screen countdown
-    function runCountdown() {
+    // =========================================================================
+    // LOADING FLEET — Dynamic ships flying through cockpit based on daily returns
+    // =========================================================================
+    
+    function clamp(n, a, b) { return Math.max(a, Math.min(b, n)); }
+    
+    async function getDailyReturns() {
+      try {
+        const res = await fetch('data/stats.json?v=' + Date.now());
+        const data = await res.json();
+        const stats = data?.stats || {};
+        const out = {};
+        for (const [t, s] of Object.entries(stats)) {
+          const v = Number(s?.return_1d);
+          if (Number.isFinite(v)) out[String(t).toUpperCase()] = v;
+        }
+        return out;
+      } catch (e) {
+        console.warn('[LoadingFleet] Could not load stats:', e);
+        return null;
+      }
+    }
+    
+    async function createLoadingFleet() {
+      const fleetLayer = document.getElementById('loading-fleet');
+      
+      // Wait for SHIP_SPRITES to be defined (it's later in the script)
+      // This function is called after a delay, so it should exist
+      if (!fleetLayer || typeof SHIP_SPRITES === 'undefined') {
+        console.warn('[LoadingFleet] Missing fleet layer or SHIP_SPRITES');
+        return;
+      }
+      
+      fleetLayer.innerHTML = '';
+      
+      const tickers = Object.keys(SHIP_SPRITES);
+      const returns = await getDailyReturns();
+      
+      // Build return list for ships we have sprites for
+      const scored = tickers.map(t => ({
+        t,
+        r: returns && Number.isFinite(returns[t]) ? returns[t] : null
+      }));
+      
+      // Compute min/max for normalization
+      const validReturns = scored.map(x => x.r).filter(v => v !== null);
+      const hasReturns = validReturns.length >= 3;
+      
+      const minR = hasReturns ? Math.min(...validReturns) : -2;
+      const maxR = hasReturns ? Math.max(...validReturns) : 2;
+      const range = Math.max(0.0001, maxR - minR);
+      
+      // Elite winners = top 3 daily returns
+      const eliteSet = new Set(
+        (hasReturns ? scored.slice().sort((a, b) => (b.r ?? -Infinity) - (a.r ?? -Infinity)) : scored)
+          .slice(0, Math.min(3, tickers.length))
+          .map(x => x.t)
+      );
+      
+      // How many sprites flying at once
+      const shipCount = Math.max(20, tickers.length * 2);
+      
+      for (let i = 0; i < shipCount; i++) {
+        const ticker = tickers[i % tickers.length];
+        const isElite = eliteSet.has(ticker);
+        
+        const img = document.createElement('img');
+        img.src = SHIP_SPRITES[ticker];
+        img.alt = ticker + ' ship';
+        img.className = 'loading-ship' + (isElite ? ' elite' : '');
+        
+        // Random horizontal lane - elites closer to center
+        const x = isElite
+          ? 30 + Math.random() * 40   // 30%-70%
+          : Math.random() * 100;
+        img.style.setProperty('--x', x + '%');
+        
+        // Scale: elites slightly bigger
+        const baseScale = 0.65 + Math.random() * 0.7; // 0.65-1.35
+        const scale = isElite ? baseScale * 1.2 : baseScale;
+        img.style.setProperty('--scale', scale.toFixed(2));
+        
+        // Speed: map return_1d → duration (lower = faster)
+        let duration;
+        if (hasReturns && returns && Number.isFinite(returns[ticker])) {
+          const r = returns[ticker];
+          const norm = (r - minR) / range;            // 0..1
+          const fast = 3.5;                            // elite-ish fastest
+          const slow = 10;                             // slowest
+          duration = slow - (slow - fast) * clamp(norm, 0, 1);
+          
+          // Extra boost for elites
+          if (isElite) duration *= 0.75;
+        } else {
+          // Fallback if no stats
+          duration = 5 + Math.random() * 4; // 5-9s
+          if (isElite) duration *= 0.8;
+        }
+        
+        // Spread starts so stream feels continuous
+        const delay = -Math.random() * duration;
+        img.style.setProperty('--duration', duration.toFixed(2) + 's');
+        img.style.setProperty('--delay', delay.toFixed(2) + 's');
+        
+        // Per-ticker glow color
+        if (typeof tickerColors !== 'undefined' && tickerColors[ticker]) {
+          img.style.setProperty('--ship-color', tickerColors[ticker]);
+        }
+        
+        fleetLayer.appendChild(img);
+      }
+      
+      console.log('[LoadingFleet] Created', shipCount, 'flying ships. Elites:', [...eliteSet].join(', '));
+    }
+    
+    // Loading screen countdown with flying fleet
+    async function runCountdown() {
       const countdown = document.getElementById('countdown');
       const status = document.getElementById('loading-status');
       const beam = document.getElementById('pixel-beam');
       const ground = document.getElementById('pixel-ground');
       const loadingScreen = document.getElementById('loading-screen');
       const app = document.getElementById('app');
-      const formationShips = document.querySelectorAll('.formation-ship');
+      
+      if (!loadingScreen || !app || !countdown || !status) {
+        // Failsafe: if something is missing, just boot the app
+        init();
+        return;
+      }
+      
+      // Create the animated flying fleet
+      await createLoadingFleet();
       
       let count = 3;
       
       const arcadeMessages = [
-        'ESTABLISHING UPLINK...',
-        'DEFENSIVE GRID ONLINE...',
-        'SIGNAL LOCK ACQUIRED...'
+        'ESTABLISHING UPLINK…',
+        'SYNCHING FLEET TELEMETRY…',
+        'CALIBRATING TARGETING ARRAYS…',
+        'LOCKING NAV SOLUTION…'
       ];
-      
-      // Transition formation ships to hover animation after form-up completes
-      setTimeout(() => {
-        formationShips.forEach(ship => {
-          ship.classList.add('formed');
-        });
-      }, 800); // After form-up animations complete
+      let statusIndex = 0;
+      status.textContent = arcadeMessages[statusIndex];
       
       const interval = setInterval(() => {
         count--;
         if (count > 0) {
           countdown.textContent = count;
-          status.textContent = arcadeMessages[3 - count - 1] || 'INITIALIZING...';
+          statusIndex = (statusIndex + 1) % arcadeMessages.length;
+          status.textContent = arcadeMessages[statusIndex];
         } else if (count === 0) {
           countdown.textContent = 'GO';
           countdown.classList.add('go');
           if (beam) beam.classList.add('active');
           if (ground) ground.classList.add('active');
-          status.textContent = 'READY — PRESS ANY KEY';
+          status.textContent = 'COCKPIT ONLINE — CLEAR FOR LAUNCH';
         } else {
           clearInterval(interval);
-          loadingScreen.classList.add('hidden');
-          app.classList.add('visible');
-          init();
+          
+          // Brief pause to see "GO" while ships keep flying
+          setTimeout(() => {
+            loadingScreen.classList.add('hidden');
+            app.classList.add('visible');
+            init();
+          }, 400);
         }
       }, 1000);
     }
