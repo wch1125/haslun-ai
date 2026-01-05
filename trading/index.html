@@ -962,8 +962,12 @@
           </div>
         </div>
         
-        <div class="tab-panel" id="positions-panel">
-          <div class="positions-content">
+        <div class="tab-panel fleet-scene-container" id="positions-panel">
+          <!-- Step 5: Fleet Hangar background canvas -->
+          <canvas class="fleet-bg-canvas" id="fleet-hangar-canvas"></canvas>
+          <div class="hangar-glass-overlay"></div>
+          
+          <div class="fleet-ui-layer positions-content">
             <!-- Fleet Command Header -->
             <div class="fleet-command-header">
               <div class="fleet-command-title">
@@ -1050,7 +1054,7 @@
                 <!-- TRAJECTORY NAVIGATOR -->
                 <div class="trajectory-section">
                   <div class="trajectory-header">
-                    <div class="trajectory-title">🛰 NAVIGATION PATH SIMULATOR</div>
+                    <div class="trajectory-title">◈ NAVIGATION PATH SIMULATOR</div>
                     <div class="trajectory-legend">
                       <span><div class="dot bullish"></div> Bullish</span>
                       <span><div class="dot neutral"></div> Neutral</span>
@@ -1100,7 +1104,7 @@
           <div class="arcade-lobby fleet-ui-layer">
             <div class="arcade-lobby-header">
               <div class="arcade-lobby-title">
-                <span class="arcade-icon">🕹️</span>
+                <span class="arcade-icon">◇</span>
                 <div>
                   <h2>HASLUN ARCADE</h2>
                   <span class="arcade-subtitle">FLEET COMMAND TRAINING SIMULATIONS</span>

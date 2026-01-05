@@ -2234,11 +2234,37 @@
     
     // Step 5.1: Fleet background controller
     let arcadeFlightController = null;
+    let hangarFlightController = null; // Step 5: Fleet Hangar
     
     async function handleFleetBackground(tabName) {
       if (!window.FlightScene) return;
       
       const arcadeCanvas = document.getElementById('arcade-bg-canvas');
+      const hangarCanvas = document.getElementById('fleet-hangar-canvas');
+      
+      // Step 5: Fleet Hangar background for positions panel
+      if (tabName === 'positions' && hangarCanvas) {
+        if (!hangarFlightController) {
+          try {
+            const ships = await FlightScene.buildShipRoster();
+            hangarFlightController = FlightScene.create({
+              canvas: hangarCanvas,
+              ships: ships,
+              mode: 'hangar', // Step 5: depth bands mode
+              intensity: 0.55
+            });
+          } catch (e) {
+            console.warn('[FleetBg] Failed to start hangar background:', e);
+          }
+        }
+      } else {
+        // Stop hangar background when leaving positions
+        if (hangarFlightController) {
+          hangarFlightController.stop();
+          hangarFlightController = null;
+          FlightScene.clearFocus();
+        }
+      }
       
       if (tabName === 'arcade' && arcadeCanvas) {
         // Start fleet background for arcade
@@ -2822,6 +2848,27 @@
       if (opCount) opCount.textContent = operational;
       if (dmgCount) dmgCount.textContent = damaged;
       if (winRate) winRate.textContent = Math.round((operational / DEMO_STOCK_POSITIONS.length) * 100) + '%';
+      
+      // Step 5: Add hover handlers for hangar focus
+      bindFleetCardHoverHandlers();
+    }
+    
+    // Step 5: Bind hover handlers to fleet cards for hangar focus
+    function bindFleetCardHoverHandlers() {
+      if (!window.FlightScene) return;
+      
+      const cards = document.querySelectorAll('.ship-card[data-ticker]');
+      cards.forEach(card => {
+        const ticker = card.dataset.ticker;
+        
+        card.addEventListener('mouseenter', () => {
+          FlightScene.setFocus(ticker, 1500); // Focus for 1.5s after hover ends
+        });
+        
+        card.addEventListener('mouseleave', () => {
+          // Focus will auto-clear after 1.5s via setFocus duration
+        });
+      });
     }
     
     // Generate SVG string for a pixel ship
@@ -4682,6 +4729,7 @@
         document.addEventListener('DOMContentLoaded', () => window.LandingGame && window.LandingGame.init());
         document.addEventListener('DOMContentLoaded', initConsoleShip);
         document.addEventListener('DOMContentLoaded', initMissionPanel); // Step 4
+        document.addEventListener('DOMContentLoaded', initHangarFocusEvents); // Step 5
       } else {
         initArcade();
         initTubeOverload();
@@ -4695,8 +4743,30 @@
         window.LandingGame && window.LandingGame.init();
         initConsoleShip();
         initMissionPanel(); // Step 4
+        initHangarFocusEvents(); // Step 5
       }
     })();
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // STEP 5: HANGAR FOCUS EVENTS (ShipBrief ↔ Fleet Highlight)
+    // ═══════════════════════════════════════════════════════════════════
+    
+    function initHangarFocusEvents() {
+      if (!window.FlightScene) return;
+      
+      // ShipBrief opens → focus that ticker in hangar
+      window.addEventListener('shipbrief:open', (e) => {
+        const ticker = e.detail?.ticker;
+        if (ticker) {
+          FlightScene.setFocus(ticker, 0); // Focus until close
+        }
+      });
+      
+      // ShipBrief closes → clear focus
+      window.addEventListener('shipbrief:close', () => {
+        FlightScene.clearFocus();
+      });
+    }
     
     // ═══════════════════════════════════════════════════════════════════
     // STEP 4: MISSION PANEL (Dashboard Mission Awareness)

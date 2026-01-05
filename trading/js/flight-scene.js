@@ -36,6 +36,44 @@ window.FlightScene = (function() {
       formationInterval: 8000,
       baseSpeed: 0.4,
       showHUD: false
+    },
+    // Step 5: Hangar mode with 3 depth bands
+    hangar: {
+      maxShips: 18,
+      mobileMaxShips: 10,
+      trailLength: 8,
+      mobileTrailLength: 3,
+      glowIntensity: 0.55,
+      formationInterval: 10000,
+      baseSpeed: 0.35,
+      showHUD: false,
+      useDepthBands: true
+    }
+  };
+  
+  // Depth band configurations (Step 5)
+  const DEPTH_BANDS = {
+    far: {
+      scale: [0.35, 0.55],
+      opacity: [0.12, 0.20],
+      speedMult: 0.5,
+      blur: 0.5,
+      spawnWeight: 0.45  // 45% of ships
+    },
+    mid: {
+      scale: [0.70, 0.95],
+      opacity: [0.22, 0.35],
+      speedMult: 0.85,
+      blur: 0,
+      spawnWeight: 0.45  // 45% of ships
+    },
+    near: {
+      scale: [1.15, 1.6],
+      opacity: [0.18, 0.28],
+      speedMult: 0.7,
+      blur: 0,
+      spawnWeight: 0.10,  // 10% of ships (rare)
+      spawnInterval: 14000 // 14 seconds between near ships
     }
   };
   
@@ -53,16 +91,19 @@ window.FlightScene = (function() {
   // ═══════════════════════════════════════════════════════════════════
   
   let activeScenes = new Map(); // canvas -> scene state
+  let focusedTicker = null;     // Currently focused ticker (Step 5)
+  let focusTimeout = null;      // Auto-clear focus timeout
   
   // ═══════════════════════════════════════════════════════════════════
   // SHIP CLASS
   // ═══════════════════════════════════════════════════════════════════
   
   class Ship {
-    constructor(ticker, stats, canvasW, canvasH, config) {
+    constructor(ticker, stats, canvasW, canvasH, config, depthBand = null) {
       this.ticker = ticker;
       this.stats = stats || {};
       this.config = config;
+      this.depthBand = depthBand; // Step 5: assigned depth band
       
       // Position (spawn from edge)
       const edge = Math.floor(Math.random() * 4);
@@ -111,8 +152,24 @@ window.FlightScene = (function() {
       this.vx = Math.cos(angle) * this.baseSpeed + (Math.random() - 0.5) * 0.3;
       this.vy = Math.sin(angle) * this.baseSpeed + (Math.random() - 0.5) * 0.3;
       
-      // Depth for parallax (0.6 to 1.3)
-      this.depth = 0.6 + Math.random() * 0.7;
+      // Step 5: Apply depth band properties if assigned
+      if (this.depthBand && DEPTH_BANDS[this.depthBand]) {
+        const band = DEPTH_BANDS[this.depthBand];
+        const [minScale, maxScale] = band.scale;
+        const [minOpacity, maxOpacity] = band.opacity;
+        
+        this.bandScale = minScale + Math.random() * (maxScale - minScale);
+        this.bandOpacity = minOpacity + Math.random() * (maxOpacity - minOpacity);
+        this.depth = this.bandScale;
+        this.baseSpeed *= band.speedMult;
+        this.bandBlur = band.blur || 0;
+      } else {
+        // Default depth for parallax (0.6 to 1.3)
+        this.depth = 0.6 + Math.random() * 0.7;
+        this.bandScale = this.depth;
+        this.bandOpacity = null;
+        this.bandBlur = 0;
+      }
       
       // Rotation
       this.rotation = Math.atan2(this.vy, this.vx);
@@ -130,6 +187,11 @@ window.FlightScene = (function() {
       // Formation state
       this.inFormation = false;
       this.formationTarget = null;
+    }
+    
+    // Step 5: Check if this ship is focused
+    get isFocused() {
+      return focusedTicker && this.ticker === focusedTicker;
     }
     
     determineType() {
@@ -183,7 +245,23 @@ window.FlightScene = (function() {
       const size = 8 * this.style.size * this.depth;
       const glowRadius = 15 * this.glowMultiplier * intensity * this.depth;
       
+      // Step 5: Calculate effective opacity (bandOpacity or default)
+      let effectiveOpacity = this.bandOpacity !== null ? this.bandOpacity : intensity;
+      
+      // Step 5: Focus effects
+      const isFocused = this.isFocused;
+      if (focusedTicker) {
+        if (isFocused) {
+          // Boost focused ship
+          effectiveOpacity = Math.min(1, effectiveOpacity * 1.5);
+        } else {
+          // Dim non-focused ships slightly
+          effectiveOpacity *= 0.85;
+        }
+      }
+      
       ctx.save();
+      ctx.globalAlpha = effectiveOpacity;
       
       // Draw trail
       if (this.trail.length > 1 && intensity > 0.3) {
@@ -197,14 +275,16 @@ window.FlightScene = (function() {
         ctx.stroke();
       }
       
-      // Draw glow
-      if (glowRadius > 3) {
-        const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, glowRadius);
+      // Draw glow (enhanced if focused)
+      const focusGlowBoost = isFocused ? 1.4 : 1.0;
+      const finalGlowRadius = glowRadius * focusGlowBoost;
+      if (finalGlowRadius > 3) {
+        const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, finalGlowRadius);
         gradient.addColorStop(0, this.style.glowColor);
         gradient.addColorStop(1, 'transparent');
         ctx.fillStyle = gradient;
         ctx.beginPath();
-        ctx.arc(this.x, this.y, glowRadius, 0, Math.PI * 2);
+        ctx.arc(this.x, this.y, finalGlowRadius, 0, Math.PI * 2);
         ctx.fill();
       }
       
@@ -311,25 +391,50 @@ window.FlightScene = (function() {
       // Build ship roster from data
       const roster = this.shipData.slice(0, maxShips);
       
-      for (const data of roster) {
+      // Step 5: Assign depth bands for hangar mode
+      const useDepthBands = this.config.useDepthBands || false;
+      
+      for (let i = 0; i < roster.length; i++) {
+        const data = roster[i];
+        let depthBand = null;
+        
+        if (useDepthBands) {
+          // Distribute ships across depth bands based on weights
+          const roll = Math.random();
+          if (roll < DEPTH_BANDS.far.spawnWeight) {
+            depthBand = 'far';
+          } else if (roll < DEPTH_BANDS.far.spawnWeight + DEPTH_BANDS.mid.spawnWeight) {
+            depthBand = 'mid';
+          } else {
+            depthBand = 'near';
+          }
+        }
+        
         const ship = new Ship(
           data.ticker,
           data,
           this.width,
           this.height,
-          adjustedConfig
+          adjustedConfig,
+          depthBand
         );
         this.ships.push(ship);
       }
       
       // If we need more ships, add generic ones
       while (this.ships.length < Math.min(maxShips, 6)) {
+        let depthBand = null;
+        if (useDepthBands) {
+          depthBand = Math.random() < 0.6 ? 'far' : 'mid';
+        }
+        
         const ship = new Ship(
           'UNKNOWN',
           { fit: 50 + Math.random() * 30 },
           this.width,
           this.height,
-          adjustedConfig
+          adjustedConfig,
+          depthBand
         );
         this.ships.push(ship);
       }
@@ -610,10 +715,54 @@ window.FlightScene = (function() {
     activeScenes.clear();
   }
   
+  /**
+   * Step 5: Set focus on a specific ticker's ship
+   * @param {string} ticker - Ticker symbol to focus
+   * @param {number} duration - Auto-clear after ms (0 = until manually cleared)
+   */
+  function setFocus(ticker, duration = 0) {
+    focusedTicker = ticker;
+    
+    // Clear any existing timeout
+    if (focusTimeout) {
+      clearTimeout(focusTimeout);
+      focusTimeout = null;
+    }
+    
+    // Auto-clear focus after duration
+    if (duration > 0) {
+      focusTimeout = setTimeout(() => {
+        focusedTicker = null;
+        focusTimeout = null;
+      }, duration);
+    }
+  }
+  
+  /**
+   * Step 5: Clear focus
+   */
+  function clearFocus() {
+    focusedTicker = null;
+    if (focusTimeout) {
+      clearTimeout(focusTimeout);
+      focusTimeout = null;
+    }
+  }
+  
+  /**
+   * Step 5: Get current focused ticker
+   */
+  function getFocusedTicker() {
+    return focusedTicker;
+  }
+  
   return {
     create,
     buildShipRoster,
     stopAll,
+    setFocus,
+    clearFocus,
+    getFocusedTicker,
     CONFIG
   };
   
