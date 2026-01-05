@@ -4283,8 +4283,7 @@
       initKonamiCode();
       initRippleEffects();
       
-      // Expose SignalInvaders to window for console access
-      window.SignalInvaders = SignalInvaders;
+      // SignalInvaders, AdminConsole, LandingGame loaded from js/games/mini-games.js
       
       if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initArcade);
@@ -4294,9 +4293,9 @@
         document.addEventListener('DOMContentLoaded', initTrajectoryCanvas);
         document.addEventListener('DOMContentLoaded', initLoreEngine);
         document.addEventListener('DOMContentLoaded', initEnhancedCatalysts);
-        document.addEventListener('DOMContentLoaded', () => SignalInvaders.init());
-        document.addEventListener('DOMContentLoaded', () => AdminConsole.init());
-        document.addEventListener('DOMContentLoaded', () => LandingGame.init());
+        document.addEventListener('DOMContentLoaded', () => window.SignalInvaders && window.SignalInvaders.init());
+        document.addEventListener('DOMContentLoaded', () => window.AdminConsole && window.AdminConsole.init());
+        document.addEventListener('DOMContentLoaded', () => window.LandingGame && window.LandingGame.init());
         document.addEventListener('DOMContentLoaded', initConsoleShip);
       } else {
         initArcade();
@@ -4306,9 +4305,9 @@
         initTrajectoryCanvas();
         initLoreEngine();
         initEnhancedCatalysts();
-        SignalInvaders.init();
-        AdminConsole.init();
-        LandingGame.init();
+        window.SignalInvaders && window.SignalInvaders.init();
+        window.AdminConsole && window.AdminConsole.init();
+        window.LandingGame && window.LandingGame.init();
         initConsoleShip();
       }
     })();

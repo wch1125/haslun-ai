@@ -4,6 +4,7 @@
 // Extracted from app.js for modularity
 // =========================================================================
 
+(function() {
       // =========================================================================
       // SIGNAL INVADERS - PLAYABLE ARCADE GAME
       // =========================================================================
@@ -767,6 +768,8 @@
       
       window.AdminConsole = AdminConsole;
 
+      window.SignalInvaders = SignalInvaders;
+
       // =========================================================================
       // TERRAIN LANDER - Chart Landing Mini-Game
       // =========================================================================
@@ -1204,3 +1207,4 @@
       };
       
       window.LandingGame = LandingGame;
+})();

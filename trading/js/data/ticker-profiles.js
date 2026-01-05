@@ -3,7 +3,8 @@
 // Extracted from app.js for modularity
 // =========================================================================
 
-const TICKER_PROFILES = {
+(function() {
+  const TICKER_PROFILES = {
   RKLB: {
     name: "Rocket Lab USA",
     codename: "ELECTRON",
@@ -512,4 +513,5 @@ const TICKER_PROFILES = {
 };
 
 // Expose globally for use by other modules
-window.TICKER_PROFILES = TICKER_PROFILES;
+  window.TICKER_PROFILES = TICKER_PROFILES;
+})();

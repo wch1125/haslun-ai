@@ -3,7 +3,8 @@
 // Extracted from app.js for modularity
 // =========================================================================
 
-const HASLUN_GLOSSARY = {
+(function() {
+  const HASLUN_GLOSSARY = {
   // ---------- CORE PORTFOLIO METRICS ----------
   today_pnl: {
     label: "Today's P&L",
@@ -290,6 +291,7 @@ const MACD_STATES = {
 };
 
 // Expose globally for use by other modules
-window.HASLUN_GLOSSARY = HASLUN_GLOSSARY;
-window.PORTFOLIO_MOODS = PORTFOLIO_MOODS;
-window.MACD_STATES = MACD_STATES;
+  window.HASLUN_GLOSSARY = HASLUN_GLOSSARY;
+  window.PORTFOLIO_MOODS = PORTFOLIO_MOODS;
+  window.MACD_STATES = MACD_STATES;
+})();

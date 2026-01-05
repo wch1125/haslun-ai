@@ -5,14 +5,15 @@
 // Extracted from app.js for modularity
 // =========================================================================
 
-// Audio context (lazy init)
-let audioCtx = null;
-function getAudioContext() {
-  if (!audioCtx) {
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    audioCtx = AudioCtx ? new AudioCtx() : null;
-  }
-  return audioCtx;
+(function() {
+  // Audio context (lazy init)
+  let audioCtx = null;
+  function getAudioContext() {
+    if (!audioCtx) {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      audioCtx = AudioCtx ? new AudioCtx() : null;
+    }
+    return audioCtx;
 }
 
 // =========================================================================
@@ -485,14 +486,15 @@ const MechaBGM = {
 };
 
 // =========================================================================
-// Global exports
-// =========================================================================
-window.getAudioContext = getAudioContext;
-window.MechSFX = MechSFX;
-window.MechaBGM = MechaBGM;
+  // Global exports
+  // =========================================================================
+  window.getAudioContext = getAudioContext;
+  window.MechSFX = MechSFX;
+  window.MechaBGM = MechaBGM;
 
-// Silent beep by default - no more annoying sounds!
-window.beep = function(freq = 520, duration = 0.08) {
-  // Silent - beeping disabled per user request
-  // Epic mecha music only!
-};
+  // Silent beep by default - no more annoying sounds!
+  window.beep = function(freq = 520, duration = 0.08) {
+    // Silent - beeping disabled per user request
+    // Epic mecha music only!
+  };
+})();

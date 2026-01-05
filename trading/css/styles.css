@@ -1875,11 +1875,11 @@
       );
       opacity: 0;
       transition: opacity 0.5s ease;
-      animation: pixel-beam-pulse 1.5s steps(3) infinite;
     }
     
     .pixel-beam.active {
       opacity: 1;
+      animation: pixel-beam-pulse 1.5s steps(3) infinite;
     }
     
     /* Pixel scan line effect */

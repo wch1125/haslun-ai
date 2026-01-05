@@ -3,10 +3,11 @@
 // Extracted from app.js for modularity
 // =========================================================================
 
-// =========================================================================
-// SHIP LORE — HUD tags and descriptions for SVG ships
-// =========================================================================
-const SHIP_LORE = {
+(function() {
+  // =========================================================================
+  // SHIP LORE — HUD tags and descriptions for SVG ships
+  // =========================================================================
+  const SHIP_LORE = {
   "#ship-flagship": {
     hud: "COMMAND AUTHORITY ACTIVE",
     lore: "Spearhead command carrier. Captains say it listens before it speaks."
@@ -332,11 +333,12 @@ const SHIP_SPRITES = {
 const DEFAULT_SHIP_SPRITE = 'assets/ships/Unclaimed-Drone-ship.png';
 
 // =========================================================================
-// Expose globally for use by other modules
-// =========================================================================
-window.SHIP_LORE = SHIP_LORE;
-window.PIXEL_SHIPS = PIXEL_SHIPS;
-window.PIXEL_SHIP_LORE = PIXEL_SHIP_LORE;
-window.SHIP_NAMES = SHIP_NAMES;
-window.SHIP_SPRITES = SHIP_SPRITES;
-window.DEFAULT_SHIP_SPRITE = DEFAULT_SHIP_SPRITE;
+  // Expose globally for use by other modules
+  // =========================================================================
+  window.SHIP_LORE = SHIP_LORE;
+  window.PIXEL_SHIPS = PIXEL_SHIPS;
+  window.PIXEL_SHIP_LORE = PIXEL_SHIP_LORE;
+  window.SHIP_NAMES = SHIP_NAMES;
+  window.SHIP_SPRITES = SHIP_SPRITES;
+  window.DEFAULT_SHIP_SPRITE = DEFAULT_SHIP_SPRITE;
+})();

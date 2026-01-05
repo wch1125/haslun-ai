@@ -215,6 +215,19 @@ trading/
    - Game init calls remain in app.js
    - Games accessed via window object
 
+### Bug Fix: Loading Screen Stuck ✅
+**Issue:** App stuck at loading countdown
+**Cause:** Multiple issues identified:
+1. `window.SignalInvaders` was not exported from mini-games.js
+2. `const` redeclaration error: Data modules declared top-level `const` (e.g., `const TICKER_PROFILES`), and app.js tried to redeclare them, causing `SyntaxError: Identifier has already been declared`
+3. Pixel beam CSS animation running even when invisible
+
+**Fixes Applied:** 
+- Added `window.SignalInvaders = SignalInvaders;` to mini-games.js
+- Changed app.js init calls to use `window.X &&` guard pattern
+- **Wrapped all data modules in IIFEs** to scope `const` declarations and prevent global conflicts
+- Fixed pixel-beam CSS: moved animation from base class to `.active` class only
+
 ### File Sizes After Phase 2:
 - `js/app.js`: 5,510 → 4,314 lines (-1,196 lines)
 - `js/audio/audio-system.js`: 498 lines (new)
