@@ -9567,6 +9567,101 @@
           products: "Aerospace Components"
         },
         lore: "Another picks-and-shovels play. While everyone argues about which plane is best, Loar sells parts to all of them."
+      },
+      KTOS: {
+        name: "Kratos Defense",
+        codename: "KRATOS",
+        sector: "Defense & Drones",
+        threat_level: "ELEVATED",
+        summary: "Defense contractor specializing in unmanned aerial drones, satellite communications, and microwave products. A leader in target drones and tactical UAVs.",
+        thesis: "As conflicts become increasingly drone-centric, Kratos is positioned as a pure-play on autonomous combat systems and affordable attritable aircraft.",
+        catalysts: [
+          { date: "2026", event: "Valkyrie Drone Program Expansion", impact: "HIGH" },
+          { date: "Ongoing", event: "DOD Budget Allocations", impact: "MEDIUM" }
+        ],
+        risks: [
+          "Government contract dependencies",
+          "Competition from larger primes",
+          "Drone technology commoditization"
+        ],
+        vitals: { founded: 1994, hq: "San Diego, CA", employees: "~3,500", products: "Drones & Defense Systems" },
+        lore: "Named after the Greek god of strength. Building the expendable combat drones that might define warfare's future."
+      },
+      COHR: {
+        name: "Coherent Corp",
+        codename: "PRISM",
+        sector: "Optics & Photonics",
+        threat_level: "MODERATE",
+        summary: "Global leader in laser technology, optical materials, and photonic components. Products enable everything from fiber optics to semiconductor manufacturing.",
+        thesis: "Lasers are the future of manufacturing, communications, and defense. Coherent owns key technologies across all three verticals.",
+        catalysts: [
+          { date: "2026", event: "AI Datacenter Optical Demand", impact: "HIGH" },
+          { date: "Ongoing", event: "EUV Lithography Components", impact: "MEDIUM" }
+        ],
+        risks: [
+          "Cyclical semiconductor demand",
+          "China exposure",
+          "Integration of II-VI acquisition"
+        ],
+        vitals: { founded: 1971, hq: "Saxonburg, PA", employees: "~28,000", products: "Lasers & Optical Components" },
+        lore: "When you need a laser for anything from eye surgery to chip manufacturing, odds are Coherent made a piece of it."
+      },
+      RTX: {
+        name: "RTX Corporation",
+        codename: "RAYTHEON",
+        sector: "Aerospace & Defense",
+        threat_level: "LOW",
+        summary: "Defense and aerospace giant formed from Raytheon and United Technologies merger. Makes everything from jet engines to missiles to avionics.",
+        thesis: "The defense prime thesis: geopolitical instability is the new normal, and Western militaries are rebuilding after decades of underinvestment.",
+        catalysts: [
+          { date: "Ongoing", event: "Global Defense Spending Increase", impact: "HIGH" },
+          { date: "2026", event: "GTF Engine Production Ramp", impact: "MEDIUM" }
+        ],
+        risks: [
+          "Pratt & Whitney engine issues",
+          "Supply chain constraints",
+          "Government budget politics"
+        ],
+        vitals: { founded: 2020, hq: "Arlington, VA", employees: "~180,000", products: "Defense Systems & Aircraft Engines" },
+        lore: "When the world gets dangerous, the phone rings in Arlington. The ultimate 'sleep at night' defense holding."
+      },
+      LHX: {
+        name: "L3Harris Technologies",
+        codename: "HELIX",
+        sector: "Defense Electronics",
+        threat_level: "LOW",
+        summary: "Defense electronics powerhouse specializing in communications, sensors, and space systems. A key supplier across all military branches.",
+        thesis: "Modern warfare is electronic warfare. L3Harris makes the eyes, ears, and nervous system of the US military.",
+        catalysts: [
+          { date: "2026", event: "Space Force Contract Awards", impact: "HIGH" },
+          { date: "Ongoing", event: "EW System Modernization", impact: "MEDIUM" }
+        ],
+        risks: [
+          "Integration complexity",
+          "Classified program dependencies",
+          "Defense budget volatility"
+        ],
+        vitals: { founded: 2019, hq: "Melbourne, FL", employees: "~47,000", products: "Defense Electronics & Communications" },
+        lore: "If it beeps, blinks, or broadcasts on a battlefield, L3Harris probably had a hand in it."
+      },
+      GE: {
+        name: "GE Aerospace",
+        codename: "SPECTRE",
+        sector: "Aerospace & Industrial",
+        threat_level: "MODERATE",
+        summary: "The jet engine division of the former conglomerate, now a pure-play aerospace company. Makes engines for Boeing, Airbus, and military aircraft.",
+        thesis: "Aviation is recovering post-pandemic, and GE makes the engines that power most of the world's commercial and military aircraft.",
+        catalysts: [
+          { date: "2026", event: "LEAP Engine Production Increase", impact: "HIGH" },
+          { date: "Ongoing", event: "Aftermarket Services Revenue", impact: "MEDIUM" }
+        ],
+        risks: [
+          "Boeing 737 MAX production issues",
+          "Supply chain constraints",
+          "New engine development costs"
+        ],
+        vitals: { founded: 1892, hq: "Evendale, OH", employees: "~52,000", products: "Aircraft Engines & Services" },
+        lore: "When you hear a jet overhead, there's a good chance GE built what's making that sound. Industrial aviation royalty."
       }
     };
     
@@ -10126,7 +10221,12 @@
       { ticker: 'ACHR', shares: 100, entry_price: 7.85, current_price: 8.13 },
       { ticker: 'JOBY', shares: 60, entry_price: 13.20, current_price: 14.36 },
       { ticker: 'EVEX', shares: 250, entry_price: 3.10, current_price: 2.80 },
-      { ticker: 'GME', shares: 40, entry_price: 25.80, current_price: 27.50 }
+      { ticker: 'GME', shares: 40, entry_price: 25.80, current_price: 27.50 },
+      { ticker: 'KTOS', shares: 120, entry_price: 22.50, current_price: 24.80 },
+      { ticker: 'COHR', shares: 30, entry_price: 85.20, current_price: 92.40 },
+      { ticker: 'RTX', shares: 25, entry_price: 118.50, current_price: 124.20 },
+      { ticker: 'LHX', shares: 20, entry_price: 215.00, current_price: 228.50 },
+      { ticker: 'GE', shares: 45, entry_price: 168.30, current_price: 175.60 }
     ];
     
     const DEMO_OPTIONS = [
@@ -10139,7 +10239,12 @@
       { ticker: 'ACHR', structure: 'Naked LEAP', strikes: '$5', entry: 1.65, current: 4.20, delta: 0.72, contracts: 3 },
       { ticker: 'JOBY', structure: 'Bull Spread', strikes: '$5/$10', entry: 1.80, current: 5.40, delta: 0.65, contracts: 3 },
       { ticker: 'EVEX', structure: 'Bull Spread', strikes: '$3/$6', entry: 0.85, current: 0.35, delta: 0.28, contracts: 4 },
-      { ticker: 'GME', structure: 'Bull Spread', strikes: '$12/$20', entry: 3.20, current: 7.80, delta: 0.72, contracts: 2 }
+      { ticker: 'GME', structure: 'Bull Spread', strikes: '$12/$20', entry: 3.20, current: 7.80, delta: 0.72, contracts: 2 },
+      { ticker: 'KTOS', structure: 'Bull Spread', strikes: '$18/$25', entry: 2.15, current: 5.40, delta: 0.68, contracts: 4 },
+      { ticker: 'COHR', structure: 'Naked LEAP', strikes: '$70', entry: 8.50, current: 24.20, delta: 0.88, contracts: 2 },
+      { ticker: 'RTX', structure: 'Bull Spread', strikes: '$100/$120', entry: 6.80, current: 18.50, delta: 0.75, contracts: 2 },
+      { ticker: 'LHX', structure: 'Naked LEAP', strikes: '$180', entry: 12.40, current: 42.80, delta: 0.82, contracts: 1 },
+      { ticker: 'GE', structure: 'Bull Spread', strikes: '$150/$180', entry: 8.20, current: 22.40, delta: 0.78, contracts: 2 }
     ];
     
     const DEMO_CATALYSTS = [
@@ -11582,6 +11687,9 @@
       const labelEl = document.getElementById('console-ship-class');
       if (!container) return;
       
+      ticker = ticker || 'RKLB';
+      pnlPercent = pnlPercent || 0;
+      
       const sector = tickerThemes[ticker] || 'UNKNOWN';
       const meta = mapTickerToPixelShip(ticker, sector, pnlPercent);
       const lore = PIXEL_SHIP_LORE[meta.pattern] || PIXEL_SHIP_LORE.drone;
@@ -11590,17 +11698,19 @@
       // Use PNG sprite (custom or fallback)
       const spritePath = SHIP_SPRITES[ticker] || DEFAULT_SHIP_SPRITE;
       
-      // Use PNG sprite
+      // Get or create image element
       let img = container.querySelector('img.console-ship-img');
       let svg = container.querySelector('svg#console-ship-svg');
       
       if (!img) {
         img = document.createElement('img');
         img.className = 'console-ship-img';
-        img.style.cssText = 'width: 80px; height: 50px; object-fit: contain; filter: drop-shadow(0 0 8px var(--phosphor));';
+        img.style.cssText = 'width: 80px; height: 60px; object-fit: contain; image-rendering: pixelated;';
         container.insertBefore(img, container.firstChild);
       }
       
+      // Apply ticker color glow
+      img.style.filter = `drop-shadow(0 0 8px ${color})`;
       img.src = spritePath;
       img.alt = `${ticker} vessel`;
       img.style.display = 'block';
@@ -11608,6 +11718,12 @@
       if (svg) svg.style.display = 'none';
       
       if (labelEl) labelEl.textContent = lore.label;
+    }
+    
+    // Initialize console ship on load
+    function initConsoleShip() {
+      const ticker = currentTicker || 'RKLB';
+      renderConsoleShip(ticker, 0);
     }
     
     // Add entry to bridge feed
@@ -12358,8 +12474,11 @@
         const color = tickerColors[pos.ticker] || '#33ff99';
         const hasDossier = TICKER_PROFILES[pos.ticker] ? true : false;
         const dossierBtn = hasDossier ? '<button class="dossier-btn" onclick="openTickerDossier(\'' + pos.ticker + '\')">◉</button>' : '';
+        const shipSrc = SHIP_SPRITES[pos.ticker] || DEFAULT_SHIP_SPRITE;
         return '<tr class="position-row" data-ticker="' + pos.ticker + '">' +
-          '<td><span class="ticker-tag">' + dossierBtn + '<span class="ticker-dot" style="background: ' + color + '"></span>' + pos.ticker + '</span></td>' +
+          '<td><span class="ticker-tag">' + dossierBtn + 
+          '<img src="' + shipSrc + '" class="option-ship-icon" style="width: 24px; height: 18px; object-fit: contain; image-rendering: pixelated; vertical-align: middle; margin-right: 6px; filter: drop-shadow(0 0 3px ' + color + ');">' +
+          '<span class="ticker-dot" style="background: ' + color + '"></span>' + pos.ticker + '</span></td>' +
           '<td><span class="structure-tag">' + pos.structure + '</span></td><td>' + pos.strikes + '</td>' +
           '<td>$' + pos.entry.toFixed(2) + '</td><td>$' + pos.current.toFixed(2) + '</td>' +
           '<td class="' + (pnl >= 0 ? 'pnl-positive' : 'pnl-negative') + '">' + (pnl >= 0 ? '+' : '') + '$' + pnl.toFixed(0) + ' (' + (pnlPct >= 0 ? '+' : '') + pnlPct.toFixed(0) + '%)</td>' +
@@ -14908,17 +15027,34 @@
             ctx.fillRect(star.x, star.y, star.size, star.size);
           });
           
-          // Draw player ship using selected sprite
-          const playerTicker = SpriteCache.selectedPlayerShip || 'RKLB';
+          // Draw player ship using selected sprite (with fallback)
+          const playerTicker = (window.SpriteCache && SpriteCache.selectedPlayerShip) || 'RKLB';
           const playerColor = tickerColors[playerTicker] || '#33ff99';
-          SpriteCache.drawOnCanvas(
-            ctx,
-            playerTicker,
-            this.player.x + this.player.width / 2,
-            this.player.y + this.player.height / 2,
-            1.0,
-            { glow: true, glowBlur: 10, glowColor: playerColor, width: 50, height: 38 }
-          );
+          
+          let playerDrawn = false;
+          if (window.SpriteCache && SpriteCache.loaded) {
+            playerDrawn = SpriteCache.drawOnCanvas(
+              ctx,
+              playerTicker,
+              this.player.x + this.player.width / 2,
+              this.player.y + this.player.height / 2,
+              1.0,
+              { glow: true, glowBlur: 10, glowColor: playerColor, width: 50, height: 38 }
+            );
+          }
+          
+          // Fallback to procedural ship
+          if (!playerDrawn) {
+            drawPixelShipOnCanvas(
+              ctx, 
+              'arcade_player', 
+              this.player.x + this.player.width / 2, 
+              this.player.y + this.player.height / 2, 
+              1.8, 
+              playerColor,
+              { glow: true, glowBlur: 8 }
+            );
+          }
           
           // Draw bullets with player color
           ctx.fillStyle = playerColor;
@@ -14929,24 +15065,42 @@
           });
           ctx.shadowBlur = 0;
           
-          // Draw enemies using their assigned fleet sprites (flipped to face down)
+          // Draw enemies using their assigned fleet sprites (with fallback)
           this.enemies.forEach(e => {
+            let enemyDrawn = false;
             const glowIntensity = e.type === 'elite' ? 8 : 4;
-            SpriteCache.drawOnCanvas(
-              ctx,
-              e.ticker,
-              e.x + e.width / 2,
-              e.y + e.height / 2,
-              0.65,
-              { 
-                glow: true, 
-                glowBlur: glowIntensity, 
-                glowColor: e.color,
-                flipY: true,
-                width: 50,
-                height: 38
-              }
-            );
+            
+            if (window.SpriteCache && SpriteCache.loaded && e.ticker) {
+              enemyDrawn = SpriteCache.drawOnCanvas(
+                ctx,
+                e.ticker,
+                e.x + e.width / 2,
+                e.y + e.height / 2,
+                0.65,
+                { 
+                  glow: true, 
+                  glowBlur: glowIntensity, 
+                  glowColor: e.color,
+                  flipY: true,
+                  width: 50,
+                  height: 38
+                }
+              );
+            }
+            
+            // Fallback to procedural
+            if (!enemyDrawn) {
+              const enemyPattern = e.type === 'elite' ? 'arcade_elite' : 'arcade_enemy';
+              drawPixelShipOnCanvas(
+                ctx,
+                enemyPattern,
+                e.x + e.width / 2,
+                e.y + e.height / 2,
+                1.4,
+                e.color || '#33ff99',
+                { glow: true, glowBlur: glowIntensity }
+              );
+            }
             
             // Elite indicator ring
             if (e.type === 'elite') {
@@ -15299,15 +15453,23 @@
         resizeCanvas() {
           if (!this.canvas) return;
           const container = this.canvas.parentElement;
-          this.canvas.width = container.clientWidth;
+          // Get actual container width, fallback to reasonable default
+          const containerWidth = container?.clientWidth || 800;
+          // Set canvas intrinsic dimensions to match CSS
+          this.canvas.width = Math.max(containerWidth, 400);
           this.canvas.height = 400;
+          // Regenerate terrain for new width
+          if (this.active && this.terrain.length > 0) {
+            this.generateTerrain();
+          }
         },
         
         generateStars() {
           this.stars = [];
+          const w = this.canvas?.width || 800;
           for (let i = 0; i < 80; i++) {
             this.stars.push({
-              x: Math.random() * 900,
+              x: Math.random() * w,
               y: Math.random() * 400,
               size: Math.random() * 1.5 + 0.5,
               alpha: Math.random() * 0.6 + 0.2,
@@ -15318,8 +15480,8 @@
         
         generateTerrain() {
           this.terrain = [];
-          const w = this.canvas.width;
-          const h = this.canvas.height;
+          const w = this.canvas?.width || 800;
+          const h = this.canvas?.height || 400;
           const segments = 60;
           
           // Generate mountainous terrain with flat landing zones
@@ -15343,6 +15505,10 @@
         
         start() {
           if (!this.canvas) this.init();
+          
+          // Ensure canvas is properly sized before starting
+          this.resizeCanvas();
+          this.generateStars();
           
           // Reset ship
           this.ship = {
@@ -15582,7 +15748,7 @@
           
           if (ship.crashed) {
             // Explosion particles
-            const crashColor = tickerColors[SpriteCache.selectedPlayerShip] || '#ff6b6b';
+            const crashColor = tickerColors[SpriteCache?.selectedPlayerShip] || '#ff6b6b';
             ctx.fillStyle = crashColor;
             for (let i = 0; i < 12; i++) {
               const angle = (i / 12) * Math.PI * 2;
@@ -15594,25 +15760,43 @@
               );
             }
           } else {
-            // Draw selected player ship using sprite
-            const landerTicker = SpriteCache.selectedPlayerShip || 'LUNR';
+            // Try to draw sprite, fallback to simple shape if not loaded
+            const landerTicker = (window.SpriteCache && SpriteCache.selectedPlayerShip) || 'LUNR';
             const landerColor = tickerColors[landerTicker] || '#33ff99';
-            SpriteCache.drawOnCanvas(ctx, landerTicker, 0, 0, 0.8, { 
-              glow: true, 
-              glowBlur: 12, 
-              glowColor: landerColor,
-              width: 50,
-              height: 38
-            });
+            
+            let spriteDrawn = false;
+            if (window.SpriteCache && SpriteCache.loaded) {
+              spriteDrawn = SpriteCache.drawOnCanvas(ctx, landerTicker, 0, 0, 0.8, { 
+                glow: true, 
+                glowBlur: 12, 
+                glowColor: landerColor,
+                width: 50,
+                height: 38
+              });
+            }
+            
+            // Fallback to simple triangle ship if sprite not available
+            if (!spriteDrawn) {
+              ctx.fillStyle = landerColor;
+              ctx.shadowColor = landerColor;
+              ctx.shadowBlur = 10;
+              ctx.beginPath();
+              ctx.moveTo(0, -15);
+              ctx.lineTo(-12, 12);
+              ctx.lineTo(12, 12);
+              ctx.closePath();
+              ctx.fill();
+              ctx.shadowBlur = 0;
+            }
             
             // Thrust flame
             if (this.keys['ArrowUp'] && ship.fuel > 0) {
               ctx.fillStyle = '#ffb347';
               ctx.shadowColor = '#ffb347';
               ctx.shadowBlur = 10;
-              ctx.fillRect(-5, 18, 10, 6 + Math.random() * 8);
+              ctx.fillRect(-5, 14, 10, 6 + Math.random() * 8);
               ctx.fillStyle = '#ff6b6b';
-              ctx.fillRect(-3, 24, 6, 4 + Math.random() * 6);
+              ctx.fillRect(-3, 20, 6, 4 + Math.random() * 6);
               ctx.shadowBlur = 0;
             }
           }
@@ -15735,6 +15919,7 @@
         document.addEventListener('DOMContentLoaded', () => SignalInvaders.init());
         document.addEventListener('DOMContentLoaded', () => AdminConsole.init());
         document.addEventListener('DOMContentLoaded', () => LandingGame.init());
+        document.addEventListener('DOMContentLoaded', initConsoleShip);
       } else {
         initArcade();
         initTubeOverload();
@@ -15746,6 +15931,7 @@
         SignalInvaders.init();
         AdminConsole.init();
         LandingGame.init();
+        initConsoleShip();
       }
     })();
   </script>
