@@ -798,6 +798,36 @@
                   <div class="console-row"><span>MA-200</span><span id="tm-ma200">--</span></div>
                   <div class="console-row"><span>PRICE</span><span id="tm-price">--</span></div>
                 </div>
+
+                <div class="console-section">
+                  <div class="console-title">// MARKET SNAPSHOT</div>
+                  <div class="console-grid">
+                    <div class="console-row"><span>OPEN</span><span id="tm-open">--</span></div>
+                    <div class="console-row"><span>HIGH</span><span id="tm-high">--</span></div>
+                    <div class="console-row"><span>LOW</span><span id="tm-low">--</span></div>
+                    <div class="console-row"><span>CLOSE</span><span id="tm-close">--</span></div>
+                    <div class="console-row"><span>RANGE</span><span id="tm-range">--</span></div>
+                    <div class="console-row"><span>VWAP</span><span id="tm-vwap">--</span></div>
+                    <div class="console-row"><span>ATR-14</span><span id="tm-atr">--</span></div>
+                    <div class="console-row"><span>VOL</span><span id="tm-vol">--</span></div>
+                    <div class="console-row"><span>AVG VOL</span><span id="tm-avgvol">--</span></div>
+                    <div class="console-row"><span>VOL SPIKE</span><span id="tm-volspike">--</span></div>
+                  </div>
+                </div>
+
+                <div class="console-section">
+                  <div class="console-title">// RANGE + RETURNS</div>
+                  <div class="console-row"><span>52W HIGH</span><span id="tm-52wh">--</span></div>
+                  <div class="console-row"><span>52W LOW</span><span id="tm-52wl">--</span></div>
+                  <div class="return-chip-row" id="tm-returns">
+                    <span class="return-chip">1D <b id="tm-r1d">--</b></span>
+                    <span class="return-chip">1W <b id="tm-r1w">--</b></span>
+                    <span class="return-chip">1M <b id="tm-r1m">--</b></span>
+                    <span class="return-chip">3M <b id="tm-r3m">--</b></span>
+                    <span class="return-chip">6M <b id="tm-r6m">--</b></span>
+                    <span class="return-chip">1Y <b id="tm-r1y">--</b></span>
+                  </div>
+                </div>
                 
                 <div class="console-section">
                   <div class="console-title">// THRUST VECTOR</div>
@@ -1667,6 +1697,12 @@
     <button class="about-trigger" id="about-trigger-btn">? ABOUT THIS SIMULATION</button>
   </div>
 
+  <!-- Data modules (load before app.js) -->
+  <script src="js/data/ticker-profiles.js"></script>
+  <script src="js/data/glossary.js"></script>
+  <script src="js/data/ship-data.js"></script>
+  
+  <!-- Main application -->
   <script src="js/app.js"></script>
 </body>
 </html>

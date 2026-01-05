@@ -1,3 +1,19 @@
+    // =========================================================================
+    // HASLUN-BOT :: Main Application
+    // External data modules loaded via separate scripts (see index.html)
+    // =========================================================================
+    
+    // Alias externally loaded data modules
+    const TICKER_PROFILES = window.TICKER_PROFILES || {};
+    const HASLUN_GLOSSARY = window.HASLUN_GLOSSARY || {};
+    const PORTFOLIO_MOODS = window.PORTFOLIO_MOODS || {};
+    const MACD_STATES = window.MACD_STATES || {};
+    const SHIP_LORE = window.SHIP_LORE || {};
+    const PIXEL_SHIPS = window.PIXEL_SHIPS || {};
+    const PIXEL_SHIP_LORE = window.PIXEL_SHIP_LORE || {};
+    const SHIP_NAMES = window.SHIP_NAMES || {};
+    const SHIP_SPRITES = window.SHIP_SPRITES || {};
+    const DEFAULT_SHIP_SPRITE = window.DEFAULT_SHIP_SPRITE || 'assets/ships/Unclaimed-Drone-ship.png';
     
     // Loading screen countdown (data-driven fleet)
     function clamp(n,a,b){ return Math.max(a, Math.min(b,n)); }
@@ -260,891 +276,14 @@
     const rangeDays = { '1W': 7, '1M': 30, '3M': 90, '6M': 180, '1Y': 365, 'ALL': 9999 };
     
     // =========================================================================
-    // TICKER PROFILES — Pip-Boy style dossiers for each position
+    // TICKER_PROFILES — Loaded from js/data/ticker-profiles.js
+    // Access via: window.TICKER_PROFILES
     // =========================================================================
-    const TICKER_PROFILES = {
-      RKLB: {
-        name: "Rocket Lab USA",
-        codename: "ELECTRON",
-        sector: "Space Launch & Satellites",
-        threat_level: "MODERATE",
-        summary: "Small-launch pioneer now building medium-lift Neutron rocket. Vertically integrated: they make the rocket, the satellite bus, and increasingly the payload itself.",
-        thesis: "Rocket Lab is betting that owning the entire stack — from launch to spacecraft to ground systems — creates compounding margin advantages as the space economy scales.",
-        catalysts: [
-          { date: "Q1 2026", event: "Neutron First Flight", impact: "HIGH" },
-          { date: "Ongoing", event: "Electron Launch Cadence", impact: "MEDIUM" },
-          { date: "2026", event: "Space Systems Revenue Growth", impact: "HIGH" }
-        ],
-        risks: [
-          "Neutron development delays or cost overruns",
-          "SpaceX pricing pressure on rideshare market",
-          "Customer concentration in government contracts"
-        ],
-        vitals: {
-          founded: 2006,
-          hq: "Long Beach, CA",
-          employees: "~1,800",
-          launches: "50+"
-        },
-        lore: "In the orbital logistics game, Electron is the reliable shuttle bus — small, frequent, precise. Neutron is the freight train they're building next. If it works, they'll own both lanes of the highway to space."
-      },
-      LUNR: {
-        name: "Intuitive Machines",
-        codename: "MOONSHOT",
-        sector: "Lunar Services",
-        threat_level: "HIGH",
-        summary: "Commercial lunar lander company. First private US company to soft-land on the Moon (IM-1, Feb 2024). NASA CLPS contractor building recurring lunar delivery business.",
-        thesis: "The Moon is becoming infrastructure. Intuitive Machines is positioning as the FedEx of cislunar space — delivering payloads, building navigation networks, and eventually operating surface systems.",
-        catalysts: [
-          { date: "Feb 2026", event: "IM-2 Lunar Landing", impact: "HIGH" },
-          { date: "2026", event: "Lunar Data Network Contracts", impact: "MEDIUM" },
-          { date: "2027", event: "IM-3 Mission", impact: "HIGH" }
-        ],
-        risks: [
-          "Mission failure risk (space is hard)",
-          "NASA budget dependency",
-          "Long timeline to profitability"
-        ],
-        vitals: {
-          founded: 2013,
-          hq: "Houston, TX",
-          employees: "~500",
-          landings: "1 (IM-1)"
-        },
-        lore: "They tipped over on landing and still counted it as a win. That's not copium — that's the reality of lunar exploration. Every data point is gold. They're learning faster than anyone else in the West."
-      },
-      ASTS: {
-        name: "AST SpaceMobile",
-        codename: "BLUEBIRD",
-        sector: "Space-Based Cellular",
-        threat_level: "EXTREME",
-        summary: "Building the first space-based cellular broadband network. Giant satellites (64m² arrays) connect directly to unmodified smartphones. If it works, it's the biggest addressable market in telecom history.",
-        thesis: "5 billion people have phones. 90% of Earth has no cellular coverage. AST is building orbital cell towers to close that gap — no new hardware required on the ground.",
-        catalysts: [
-          { date: "Q1 2026", event: "Commercial Service Launch", impact: "HIGH" },
-          { date: "2026", event: "Block 2 Satellite Deployment", impact: "HIGH" },
-          { date: "Ongoing", event: "MNO Partnership Expansion", impact: "MEDIUM" }
-        ],
-        risks: [
-          "Unproven technology at scale",
-          "Regulatory complexity across jurisdictions",
-          "Capital-intensive deployment phase",
-          "Competition from Starlink Direct-to-Cell"
-        ],
-        vitals: {
-          founded: 2017,
-          hq: "Midland, TX",
-          employees: "~500",
-          satellites: "5 (BlueBird test constellation)"
-        },
-        lore: "The satellites are the size of basketball courts. The engineering is borderline absurd. But if they pull it off, every phone on Earth becomes a satellite phone. That's not a product — that's a paradigm shift."
-      },
-      ACHR: {
-        name: "Archer Aviation",
-        codename: "MIDNIGHT",
-        sector: "eVTOL / Urban Air Mobility",
-        threat_level: "MODERATE",
-        summary: "Electric vertical takeoff and landing aircraft for urban air taxi service. Partnership with United Airlines. Manufacturing facility in Georgia.",
-        thesis: "Traffic is broken. Archer is betting that electric flight becomes cheap and quiet enough to create a new transportation layer above cities.",
-        catalysts: [
-          { date: "Q1 2026", event: "FAA Type Certification", impact: "HIGH" },
-          { date: "2026", event: "Commercial Launch (UAE)", impact: "HIGH" },
-          { date: "2027", event: "US Commercial Operations", impact: "HIGH" }
-        ],
-        risks: [
-          "FAA certification timeline uncertainty",
-          "Battery energy density limitations",
-          "Infrastructure buildout costs",
-          "Public acceptance of urban air traffic"
-        ],
-        vitals: {
-          founded: 2018,
-          hq: "San Jose, CA",
-          employees: "~900",
-          aircraft: "Midnight (4+1 passenger)"
-        },
-        lore: "The Jetsons promised us flying cars. Archer is delivering electric helicopters that don't sound like helicopters. Close enough."
-      },
-      JOBY: {
-        name: "Joby Aviation",
-        codename: "S4",
-        sector: "eVTOL / Urban Air Mobility",
-        threat_level: "MODERATE",
-        summary: "Furthest along in eVTOL certification. Toyota-backed. Building manufacturing at scale. Air taxi service planned for 2025.",
-        thesis: "First mover advantage in a winner-take-most market. Joby has more flight hours, more capital, and more regulatory progress than any competitor.",
-        catalysts: [
-          { date: "2025-2026", event: "FAA Type Certification", impact: "HIGH" },
-          { date: "2025", event: "Initial Commercial Ops (Dubai)", impact: "HIGH" },
-          { date: "2026", event: "US Market Launch", impact: "HIGH" }
-        ],
-        risks: [
-          "Certification delays",
-          "High cash burn pre-revenue",
-          "Competitive pressure from Archer, Lilium",
-          "Noise and safety perception issues"
-        ],
-        vitals: {
-          founded: 2009,
-          hq: "Santa Cruz, CA",
-          employees: "~1,500",
-          aircraft: "S4 (4+1 passenger)"
-        },
-        lore: "They've been at this longer than anyone. The Toyota money helps. But the real moat is the million+ miles of flight test data. That's not something you can buy."
-      },
-      GME: {
-        name: "GameStop Corp",
-        codename: "DIAMOND HANDS",
-        sector: "Retail / Meme",
-        threat_level: "CHAOTIC",
-        summary: "Video game retailer turned meme stock phenomenon. Now pivoting toward... something. Cash-rich balance sheet. Ryan Cohen steering the ship into uncharted waters.",
-        thesis: "This isn't a thesis. This is volatility exposure with a side of cultural commentary. The balance sheet is real; the business model is TBD.",
-        catalysts: [
-          { date: "Ongoing", event: "Social Media Sentiment Spikes", impact: "HIGH" },
-          { date: "Unknown", event: "Strategic Pivot Announcements", impact: "MEDIUM" },
-          { date: "Quarterly", event: "Earnings Surprises", impact: "MEDIUM" }
-        ],
-        risks: [
-          "Fundamental business decline in physical games",
-          "Meme momentum can reverse violently",
-          "No clear path to sustainable growth",
-          "Regulatory scrutiny on retail trading"
-        ],
-        vitals: {
-          founded: 1984,
-          hq: "Grapevine, TX",
-          employees: "~8,000",
-          stores: "~4,000"
-        },
-        lore: "The stock that broke the internet in 2021. Whether it's a movement, a trade, or a cautionary tale depends on your entry price and your exit strategy. We hold it because the volatility is useful. Not financial advice."
-      },
-      BKSY: {
-        name: "BlackSky Technology",
-        codename: "SPECTRA",
-        sector: "Geospatial Intelligence",
-        threat_level: "LOW",
-        summary: "Real-time Earth observation satellite constellation. AI-powered analytics platform. Defense and intelligence community customers.",
-        thesis: "Imagery is becoming a utility. BlackSky is building the always-on, AI-analyzed feed of what's happening on Earth — updated hourly, not daily.",
-        catalysts: [
-          { date: "Ongoing", event: "Constellation Expansion", impact: "MEDIUM" },
-          { date: "2026", event: "Gen-3 Satellite Deployment", impact: "MEDIUM" },
-          { date: "Ongoing", event: "Government Contract Wins", impact: "MEDIUM" }
-        ],
-        risks: [
-          "Competition from Planet, Maxar",
-          "Government budget cycles",
-          "Small constellation limits revisit rates"
-        ],
-        vitals: {
-          founded: 2014,
-          hq: "Herndon, VA",
-          employees: "~350",
-          satellites: "18"
-        },
-        lore: "They photograph the same spot on Earth multiple times per day. The value isn't in any single image — it's in the delta. What changed? When? That's intelligence."
-      },
-      RDW: {
-        name: "Redwire Corporation",
-        codename: "FORGE",
-        sector: "Space Infrastructure",
-        threat_level: "LOW",
-        summary: "Space infrastructure company. On-orbit manufacturing, solar arrays, sensors. Rolls up smaller space tech companies. Supplies components across the industry.",
-        thesis: "Every satellite needs stuff — solar panels, antennas, sensors, structures. Redwire is the Home Depot of space hardware.",
-        catalysts: [
-          { date: "Ongoing", event: "M&A Integration", impact: "MEDIUM" },
-          { date: "2026", event: "In-Space Manufacturing Demos", impact: "MEDIUM" },
-          { date: "Ongoing", event: "NASA/DoD Contracts", impact: "MEDIUM" }
-        ],
-        risks: [
-          "Integration risk from acquisitions",
-          "Customer concentration",
-          "Supply chain dependencies"
-        ],
-        vitals: {
-          founded: 2020,
-          hq: "Jacksonville, FL",
-          employees: "~700",
-          facilities: "20+"
-        },
-        lore: "While everyone argues about who gets to launch the rockets, Redwire quietly sells picks and shovels to all of them. Boring but effective."
-      },
-      PL: {
-        name: "Planet Labs",
-        codename: "DOVE",
-        sector: "Earth Observation",
-        threat_level: "LOW",
-        summary: "Largest Earth observation satellite constellation. Daily imaging of the entire planet. Commercial, government, and NGO customers.",
-        thesis: "A daily photo of every spot on Earth creates unprecedented visibility into human activity. Agriculture, supply chains, climate — it's all visible from orbit.",
-        catalysts: [
-          { date: "Ongoing", event: "Data Services Revenue Growth", impact: "MEDIUM" },
-          { date: "2026", event: "Pelican Constellation Launch", impact: "MEDIUM" },
-          { date: "Ongoing", event: "Government Contract Expansion", impact: "MEDIUM" }
-        ],
-        risks: [
-          "Path to profitability unclear",
-          "Competition from free/low-cost imagery",
-          "Data commoditization pressure"
-        ],
-        vitals: {
-          founded: 2010,
-          hq: "San Francisco, CA",
-          employees: "~800",
-          satellites: "200+"
-        },
-        lore: "They image the entire Earth every single day. Every field, every port, every construction site. The value is in what you can see changing over time."
-      },
-      EVEX: {
-        name: "Eve Holding",
-        codename: "VECTOR",
-        sector: "eVTOL / Urban Air Mobility",
-        threat_level: "MODERATE",
-        summary: "Embraer-backed eVTOL company. Leveraging decades of aerospace manufacturing experience. Urban air mobility focus with global ambitions.",
-        thesis: "Embraer knows how to build and certify aircraft at scale. Eve inherits that DNA for the electric age.",
-        catalysts: [
-          { date: "2026", event: "Prototype Flight Testing", impact: "MEDIUM" },
-          { date: "2027", event: "Certification Progress", impact: "HIGH" },
-          { date: "Ongoing", event: "Pre-order Conversions", impact: "MEDIUM" }
-        ],
-        risks: [
-          "Later to market than Joby/Archer",
-          "Brazil HQ complicates US certification",
-          "Competitive pressure in crowded market"
-        ],
-        vitals: {
-          founded: 2020,
-          hq: "Melbourne, FL / São Paulo",
-          employees: "~600",
-          aircraft: "eVTOL (4+1 passenger)"
-        },
-        lore: "The Embraer connection is the whole story. These are the people who built the E-Jets. They know certification, they know manufacturing, they know airlines."
-      },
-      KTOS: {
-        name: "Kratos Defense",
-        codename: "VALKYRIE",
-        sector: "Defense Technology",
-        threat_level: "LOW",
-        summary: "Unmanned systems and hypersonic tech. Affordable attritable drones for the DoD. Satellite ground systems. The affordable end of the defense contractor spectrum.",
-        thesis: "Future warfare is drone warfare. Kratos builds the cheap, expendable, AI-piloted aircraft that will fly alongside manned fighters.",
-        catalysts: [
-          { date: "Ongoing", event: "CCA Program Contracts", impact: "HIGH" },
-          { date: "2026", event: "Hypersonic Testing", impact: "MEDIUM" },
-          { date: "Ongoing", event: "DoD Budget Allocations", impact: "MEDIUM" }
-        ],
-        risks: [
-          "Defense budget politics",
-          "Program cancellation risk",
-          "Competition from larger primes"
-        ],
-        vitals: {
-          founded: 1994,
-          hq: "Colorado Springs, CO",
-          employees: "~3,500",
-          focus: "Drones, Missiles, Space"
-        },
-        lore: "While Lockheed builds the $100M jets, Kratos builds the $2M wingmen. In an era of attrition warfare, cheap and many beats expensive and few."
-      },
-      IRDM: {
-        name: "Iridium Communications",
-        codename: "CONSTELLATION",
-        sector: "Satellite Communications",
-        threat_level: "LOW",
-        summary: "Global satellite phone and IoT network. 66-satellite constellation provides pole-to-pole coverage. Government, maritime, aviation customers.",
-        thesis: "The original satellite phone network, now focused on IoT and specialty markets where Starlink can't compete on coverage or reliability.",
-        catalysts: [
-          { date: "Ongoing", event: "IoT Revenue Growth", impact: "MEDIUM" },
-          { date: "Ongoing", event: "Government Contract Renewals", impact: "MEDIUM" },
-          { date: "Long-term", event: "Next-Gen Constellation Planning", impact: "LOW" }
-        ],
-        risks: [
-          "Technology disruption from LEO constellations",
-          "Limited growth runway",
-          "Commodity pricing pressure"
-        ],
-        vitals: {
-          founded: 2000,
-          hq: "McLean, VA",
-          employees: "~600",
-          satellites: "66 active"
-        },
-        lore: "They went bankrupt once and came back. The constellation is paid for. The cash flows. It's not sexy, but it's the only network that works everywhere on Earth."
-      },
-      MP: {
-        name: "MP Materials",
-        codename: "RARE EARTH",
-        sector: "Critical Minerals",
-        threat_level: "LOW",
-        summary: "Largest rare earth mining and processing company in the Western Hemisphere. Mountain Pass mine in California. Essential materials for EVs, wind turbines, defense systems.",
-        thesis: "China controls 60%+ of rare earth processing. MP is the US answer to that dependency. National security meets clean energy transition.",
-        catalysts: [
-          { date: "Ongoing", event: "Magnetics Facility Ramp", impact: "HIGH" },
-          { date: "2026", event: "Downstream Processing Expansion", impact: "MEDIUM" },
-          { date: "Ongoing", event: "Auto OEM Supply Deals", impact: "MEDIUM" }
-        ],
-        risks: [
-          "Commodity price volatility",
-          "China supply chain disruption",
-          "Environmental/permitting challenges"
-        ],
-        vitals: {
-          founded: 2017,
-          hq: "Las Vegas, NV",
-          employees: "~800",
-          facility: "Mountain Pass Mine"
-        },
-        lore: "Every EV motor, every wind turbine, every F-35 needs rare earths. China has the market cornered. MP is the insurance policy."
-      },
-      HON: {
-        name: "Honeywell International",
-        codename: "INDUSTRIAL",
-        sector: "Aerospace & Industrial",
-        threat_level: "LOW",
-        summary: "Diversified industrial conglomerate. Aerospace systems, building technologies, performance materials. The boring backbone of global infrastructure.",
-        thesis: "When everyone else is chasing moonshots, sometimes you want the company that makes the avionics, the thermostats, and the jet engines.",
-        catalysts: [
-          { date: "Ongoing", event: "Aerospace Aftermarket Growth", impact: "MEDIUM" },
-          { date: "Ongoing", event: "Energy Transition Products", impact: "MEDIUM" },
-          { date: "Quarterly", event: "Earnings & Guidance", impact: "LOW" }
-        ],
-        risks: [
-          "Industrial cyclicality",
-          "Conglomerate discount",
-          "Spin-off execution risk"
-        ],
-        vitals: {
-          founded: 1906,
-          hq: "Charlotte, NC",
-          employees: "~95,000",
-          segments: "Aerospace, Building Tech, PMT, SPS"
-        },
-        lore: "Not every position needs to be a moonshot. Sometimes you hold the company that makes parts for everyone else's moonshots."
-      },
-      ATI: {
-        name: "ATI Inc",
-        codename: "ALLOY",
-        sector: "Specialty Materials",
-        threat_level: "LOW",
-        summary: "Specialty materials company. Titanium, nickel alloys, specialty steels. Aerospace, defense, energy markets. When you need metal that doesn't melt, bend, or corrode.",
-        thesis: "Next-gen aircraft and turbines require exotic alloys. ATI is one of the few Western suppliers who can make them at scale.",
-        catalysts: [
-          { date: "Ongoing", event: "Aerospace Production Ramp", impact: "MEDIUM" },
-          { date: "Ongoing", event: "Defense Spending Tailwinds", impact: "MEDIUM" },
-          { date: "Ongoing", event: "Titanium Supply Constraints", impact: "LOW" }
-        ],
-        risks: [
-          "Aerospace cycle sensitivity",
-          "Raw material cost volatility",
-          "Labor and energy costs"
-        ],
-        vitals: {
-          founded: 1996,
-          hq: "Dallas, TX",
-          employees: "~6,000",
-          materials: "Titanium, Nickel, Steel"
-        },
-        lore: "The materials science behind every jet engine. Unglamorous, essential, and very hard to replicate."
-      },
-      CACI: {
-        name: "CACI International",
-        codename: "INTEL",
-        sector: "Defense & Intelligence",
-        threat_level: "LOW",
-        summary: "Defense and intelligence IT services. Cybersecurity, signals intelligence, mission support. The quiet contractor that does the classified work.",
-        thesis: "Government never stops needing IT and intelligence services. CACI has the clearances and the contracts.",
-        catalysts: [
-          { date: "Ongoing", event: "Contract Wins", impact: "MEDIUM" },
-          { date: "Ongoing", event: "M&A Activity", impact: "MEDIUM" },
-          { date: "Ongoing", event: "Defense Budget Stability", impact: "LOW" }
-        ],
-        risks: [
-          "Contract recompete risk",
-          "Clearance/talent constraints",
-          "Budget uncertainty"
-        ],
-        vitals: {
-          founded: 1962,
-          hq: "Reston, VA",
-          employees: "~23,000",
-          clearances: "High"
-        },
-        lore: "When you need something done in the classified world, CACI picks up the phone. Boring to everyone except the people who need them."
-      },
-      LOAR: {
-        name: "Loar Holdings",
-        codename: "COMPONENT",
-        sector: "Aerospace Components",
-        threat_level: "LOW",
-        summary: "Aerospace and defense component manufacturer. Actuators, valves, and precision systems. The small parts that make the big machines work.",
-        thesis: "Aerospace OEMs are ramping production. Every aircraft needs thousands of precision components. Loar makes them.",
-        catalysts: [
-          { date: "Ongoing", event: "Aircraft Production Ramp", impact: "MEDIUM" },
-          { date: "Ongoing", event: "Aftermarket Growth", impact: "MEDIUM" },
-          { date: "Ongoing", event: "M&A Integration", impact: "LOW" }
-        ],
-        risks: [
-          "Customer concentration",
-          "Supply chain disruptions",
-          "Integration execution"
-        ],
-        vitals: {
-          founded: 2012,
-          hq: "White Plains, NY",
-          employees: "~2,500",
-          products: "Aerospace Components"
-        },
-        lore: "Another picks-and-shovels play. While everyone argues about which plane is best, Loar sells parts to all of them."
-      },
-      KTOS: {
-        name: "Kratos Defense",
-        codename: "KRATOS",
-        sector: "Defense & Drones",
-        threat_level: "ELEVATED",
-        summary: "Defense contractor specializing in unmanned aerial drones, satellite communications, and microwave products. A leader in target drones and tactical UAVs.",
-        thesis: "As conflicts become increasingly drone-centric, Kratos is positioned as a pure-play on autonomous combat systems and affordable attritable aircraft.",
-        catalysts: [
-          { date: "2026", event: "Valkyrie Drone Program Expansion", impact: "HIGH" },
-          { date: "Ongoing", event: "DOD Budget Allocations", impact: "MEDIUM" }
-        ],
-        risks: [
-          "Government contract dependencies",
-          "Competition from larger primes",
-          "Drone technology commoditization"
-        ],
-        vitals: { founded: 1994, hq: "San Diego, CA", employees: "~3,500", products: "Drones & Defense Systems" },
-        lore: "Named after the Greek god of strength. Building the expendable combat drones that might define warfare's future."
-      },
-      COHR: {
-        name: "Coherent Corp",
-        codename: "PRISM",
-        sector: "Optics & Photonics",
-        threat_level: "MODERATE",
-        summary: "Global leader in laser technology, optical materials, and photonic components. Products enable everything from fiber optics to semiconductor manufacturing.",
-        thesis: "Lasers are the future of manufacturing, communications, and defense. Coherent owns key technologies across all three verticals.",
-        catalysts: [
-          { date: "2026", event: "AI Datacenter Optical Demand", impact: "HIGH" },
-          { date: "Ongoing", event: "EUV Lithography Components", impact: "MEDIUM" }
-        ],
-        risks: [
-          "Cyclical semiconductor demand",
-          "China exposure",
-          "Integration of II-VI acquisition"
-        ],
-        vitals: { founded: 1971, hq: "Saxonburg, PA", employees: "~28,000", products: "Lasers & Optical Components" },
-        lore: "When you need a laser for anything from eye surgery to chip manufacturing, odds are Coherent made a piece of it."
-      },
-      RTX: {
-        name: "RTX Corporation",
-        codename: "RAYTHEON",
-        sector: "Aerospace & Defense",
-        threat_level: "LOW",
-        summary: "Defense and aerospace giant formed from Raytheon and United Technologies merger. Makes everything from jet engines to missiles to avionics.",
-        thesis: "The defense prime thesis: geopolitical instability is the new normal, and Western militaries are rebuilding after decades of underinvestment.",
-        catalysts: [
-          { date: "Ongoing", event: "Global Defense Spending Increase", impact: "HIGH" },
-          { date: "2026", event: "GTF Engine Production Ramp", impact: "MEDIUM" }
-        ],
-        risks: [
-          "Pratt & Whitney engine issues",
-          "Supply chain constraints",
-          "Government budget politics"
-        ],
-        vitals: { founded: 2020, hq: "Arlington, VA", employees: "~180,000", products: "Defense Systems & Aircraft Engines" },
-        lore: "When the world gets dangerous, the phone rings in Arlington. The ultimate 'sleep at night' defense holding."
-      },
-      LHX: {
-        name: "L3Harris Technologies",
-        codename: "HELIX",
-        sector: "Defense Electronics",
-        threat_level: "LOW",
-        summary: "Defense electronics powerhouse specializing in communications, sensors, and space systems. A key supplier across all military branches.",
-        thesis: "Modern warfare is electronic warfare. L3Harris makes the eyes, ears, and nervous system of the US military.",
-        catalysts: [
-          { date: "2026", event: "Space Force Contract Awards", impact: "HIGH" },
-          { date: "Ongoing", event: "EW System Modernization", impact: "MEDIUM" }
-        ],
-        risks: [
-          "Integration complexity",
-          "Classified program dependencies",
-          "Defense budget volatility"
-        ],
-        vitals: { founded: 2019, hq: "Melbourne, FL", employees: "~47,000", products: "Defense Electronics & Communications" },
-        lore: "If it beeps, blinks, or broadcasts on a battlefield, L3Harris probably had a hand in it."
-      },
-      GE: {
-        name: "GE Aerospace",
-        codename: "SPECTRE",
-        sector: "Aerospace & Industrial",
-        threat_level: "MODERATE",
-        summary: "The jet engine division of the former conglomerate, now a pure-play aerospace company. Makes engines for Boeing, Airbus, and military aircraft.",
-        thesis: "Aviation is recovering post-pandemic, and GE makes the engines that power most of the world's commercial and military aircraft.",
-        catalysts: [
-          { date: "2026", event: "LEAP Engine Production Increase", impact: "HIGH" },
-          { date: "Ongoing", event: "Aftermarket Services Revenue", impact: "MEDIUM" }
-        ],
-        risks: [
-          "Boeing 737 MAX production issues",
-          "Supply chain constraints",
-          "New engine development costs"
-        ],
-        vitals: { founded: 1892, hq: "Evendale, OH", employees: "~52,000", products: "Aircraft Engines & Services" },
-        lore: "When you hear a jet overhead, there's a good chance GE built what's making that sound. Industrial aviation royalty."
-      }
-    };
     
     // =========================================================================
-    // HASLUN GLOSSARY — Tooltips, flavor text, and lore system
+    // HASLUN_GLOSSARY, PORTFOLIO_MOODS, MACD_STATES — Loaded from js/data/glossary.js
+    // Access via: window.HASLUN_GLOSSARY, window.PORTFOLIO_MOODS, window.MACD_STATES
     // =========================================================================
-    const HASLUN_GLOSSARY = {
-      // ---------- CORE PORTFOLIO METRICS ----------
-      today_pnl: {
-        label: "Today's P&L",
-        category: "metric",
-        unit: "USD",
-        tooltip: "Profit or loss generated since the start of the current trading day.",
-        flavor: "How much the market liked you today, before feelings reset at the open."
-      },
-      total_pnl: {
-        label: "Total P&L",
-        category: "metric",
-        unit: "USD",
-        tooltip: "Cumulative profit or loss for this simulation since inception.",
-        flavor: "Lifetime score since the moment you pressed START on this universe."
-      },
-      positions_count: {
-        label: "Positions",
-        category: "metric",
-        tooltip: "Number of tickers currently held in the portfolio.",
-        flavor: "How many plates you're spinning in zero gravity."
-      },
-      win_rate: {
-        label: "Win Rate",
-        category: "metric",
-        unit: "%",
-        tooltip: "Percentage of closed trades that ended with positive P&L.",
-        flavor: "Hit rate. Accuracy stat. Bragging-rights fuel."
-      },
-      portfolio_value: {
-        label: "Portfolio Value",
-        category: "metric",
-        unit: "USD",
-        tooltip: "Current market value of all open positions plus cash.",
-        flavor: "What your empire is worth if you slammed the SELL ALL button."
-      },
-      total_delta: {
-        label: "Total Delta",
-        category: "metric",
-        tooltip: "Sensitivity of the options book to a $1 move in the underlying basket.",
-        flavor: "How violently the cockpit shakes when prices nudge."
-      },
-      days_to_expiry: {
-        label: "Days to Expiry",
-        category: "metric",
-        tooltip: "Time remaining until the primary options cycle expires.",
-        flavor: "How long until the clock runs out on this particular boss fight."
-      },
-      
-      // ---------- MACD & MOMENTUM ----------
-      macd: {
-        label: "MACD",
-        category: "metric",
-        tooltip: "Moving Average Convergence Divergence: fast EMA minus slow EMA of price.",
-        flavor: "Momentum gauge. Shows when rockets are over-fuelled or stalling out."
-      },
-      macd_signal: {
-        label: "Signal",
-        category: "metric",
-        tooltip: "EMA of the MACD line. Crossovers often signal trend shifts.",
-        flavor: "The grown-up in the room telling MACD to calm down (or speed up)."
-      },
-      macd_histogram: {
-        label: "Histogram",
-        category: "metric",
-        tooltip: "MACD minus Signal. Bars above/below zero show relative momentum.",
-        flavor: "The heartbeat monitor for trend strength. Flatline not recommended."
-      },
-      
-      // ---------- TREND STATUS STATES ----------
-      trend_analyzing: {
-        label: "ANALYZING…",
-        category: "state",
-        icon: "◌",
-        color: "var(--text-muted)",
-        tooltip: "System is ingesting data and calculating trend classification.",
-        flavor: "Coffee being poured into the machine. Please stand by.",
-        subtitle: "Awaiting data…",
-        body: "Scanning telemetry feed for recognizable patterns."
-      },
-      trend_full_thrust: {
-        label: "FULL THRUST",
-        category: "state",
-        icon: "▲",
-        color: "var(--phosphor)",
-        tooltip: "Price above long-term averages with bullish momentum.",
-        flavor: "Engines lit, nose up, telemetry green. Strap in.",
-        subtitle: "All systems green.",
-        body: "Price above 200-day line with positive momentum. Trend uptrend confirmed until proven otherwise."
-      },
-      trend_reversal_attempt: {
-        label: "REVERSAL ATTEMPT",
-        category: "state",
-        icon: "◈",
-        color: "var(--amber)",
-        tooltip: "Price recovering above short/mid MAs but below long-term baseline.",
-        flavor: "Ship has stopped crashing. Jury still out on actual flying.",
-        subtitle: "Course correction underway.",
-        body: "Price has climbed back above the short-term baseline but hasn't cleared the long-term ceiling. Reversal in progress; turbulence expected."
-      },
-      trend_drifting: {
-        label: "DRIFTING",
-        category: "state",
-        icon: "◇",
-        color: "#47d4ff",
-        tooltip: "Price oscillating around key averages with weak directional bias.",
-        flavor: "Coasting in orbit. Safe, but nothing cinematic.",
-        subtitle: "Stable orbit.",
-        body: "Price hugging moving averages with low momentum. No clear directional bias; good time for coffee or long emails."
-      },
-      trend_reentry_risk: {
-        label: "REENTRY RISK",
-        category: "state",
-        icon: "▼",
-        color: "#ff6b6b",
-        tooltip: "Price below major moving averages with bearish momentum.",
-        flavor: "Heat shield glowing. Consider which side of the planet you want to land on.",
-        subtitle: "Altitude loss detected.",
-        body: "Price below long-term trend with negative momentum. Downside pressure present; check heat shield and position sizing."
-      },
-      trend_nebula: {
-        label: "NEBULOUS",
-        category: "state",
-        icon: "※",
-        color: "#b388ff",
-        tooltip: "High volatility and conflicting signals; no clear trend.",
-        flavor: "In a cosmic dust cloud. Instruments insist everything is 'fine'.",
-        subtitle: "Signal degraded.",
-        body: "Choppy, sideways, mean-reverting mess. Indicators argue with each other; system recommends humility."
-      },
-      
-      // ---------- SIGNAL PROCESSING ARRAY ----------
-      sig_smoothing: {
-        label: "Signal Smoothing",
-        category: "control",
-        tooltip: "Adjusts how much short-term noise is filtered from price and MACD.",
-        flavor: "Turn right to make charts look wise and slow. Turn left for chaos TV."
-      },
-      sig_forecast_range: {
-        label: "Forecast Range",
-        category: "control",
-        tooltip: "How far into the future the simulation projects price paths.",
-        flavor: "How many days ahead you want to pretend you can see."
-      },
-      sig_risk_exposure: {
-        label: "Risk Exposure",
-        category: "control",
-        tooltip: "Scenario profile from defensive to aggressive. Scales drift and leverage in simulations.",
-        flavor: "How spicy you want the universe to feel right now."
-      },
-      sig_vol_index: {
-        label: "Volatility Index",
-        category: "metric",
-        tooltip: "Synthetic volatility score derived from recent price swings.",
-        flavor: "How much the market is wiggling while you try to act composed."
-      },
-      sig_display_momentum: {
-        label: "Momentum Overlay",
-        category: "control",
-        tooltip: "Toggle MACD / trend overlays on the main chart.",
-        flavor: "Draws the invisible wind the rockets are flying through."
-      },
-      sig_display_heatmap: {
-        label: "Volume Heatmap",
-        category: "control",
-        tooltip: "Show volume intensity as background shading on the chart.",
-        flavor: "Where the crowd actually showed up versus where they just talked big."
-      },
-      sig_display_alerts: {
-        label: "Alert Markers",
-        category: "control",
-        tooltip: "Display crossover events and custom triggers as icons on the chart.",
-        flavor: "Little neon post-its on the timeline saying 'something weird happened here'."
-      },
-      sig_alert_sensitivity: {
-        label: "Alert Sensitivity",
-        category: "control",
-        tooltip: "Controls how easily the system raises visual alerts.",
-        flavor: "Slide right to let the system panic for you. Slide left if you enjoy surprises."
-      },
-      sig_market_scanner: {
-        label: "Market Scanner",
-        category: "metric",
-        tooltip: "Compressed view of recent signals across the watchlist.",
-        flavor: "Radar sweep. Blips mean 'look here', not 'buy here'. Probably."
-      },
-      
-      // ---------- CORE PORTFOLIO METRICS ----------
-      today_pnl: {
-        label: "Today's P&L",
-        category: "metric",
-        unit: "USD",
-        tooltip: "Profit or loss generated since the start of the current trading day.",
-        flavor: "How much the market liked you today, before feelings reset at the open."
-      },
-      total_pnl: {
-        label: "Total P&L",
-        category: "metric",
-        unit: "USD",
-        tooltip: "Cumulative profit or loss for this simulation since inception.",
-        flavor: "Lifetime score since the moment you pressed START on this universe."
-      },
-      positions_count: {
-        label: "Positions",
-        category: "metric",
-        tooltip: "Number of tickers currently held in the portfolio.",
-        flavor: "How many plates you're spinning in zero gravity."
-      },
-      win_rate: {
-        label: "Win Rate",
-        category: "metric",
-        unit: "%",
-        tooltip: "Percentage of closed trades that ended with positive P&L.",
-        flavor: "Hit rate. Accuracy stat. Bragging-rights fuel."
-      },
-      portfolio_value: {
-        label: "Portfolio Value",
-        category: "metric",
-        unit: "USD",
-        tooltip: "Current market value of all open positions plus cash.",
-        flavor: "What your empire is worth if you slammed the SELL ALL button."
-      },
-      total_delta: {
-        label: "Total Delta",
-        category: "metric",
-        tooltip: "Sensitivity of the options book to a $1 move in the underlying basket.",
-        flavor: "How violently the cockpit shakes when prices nudge."
-      },
-      days_to_expiry: {
-        label: "Days to Expiry",
-        category: "metric",
-        tooltip: "Time remaining until the primary options cycle expires.",
-        flavor: "How long until the clock runs out on this particular boss fight."
-      },
-      
-      // ---------- MACD & MOMENTUM ----------
-      macd: {
-        label: "MACD",
-        category: "metric",
-        tooltip: "Moving Average Convergence Divergence: fast EMA minus slow EMA of price.",
-        flavor: "Momentum gauge. Shows when rockets are over-fuelled or stalling out."
-      },
-      macd_signal: {
-        label: "Signal",
-        category: "metric",
-        tooltip: "EMA of the MACD line. Crossovers often signal trend shifts.",
-        flavor: "The grown-up in the room telling MACD to calm down (or speed up)."
-      },
-      macd_histogram: {
-        label: "Histogram",
-        category: "metric",
-        tooltip: "MACD minus Signal. Bars above/below zero show relative momentum.",
-        flavor: "The heartbeat monitor for trend strength. Flatline not recommended."
-      },
-      
-      // ---------- DERIVATIVES / OPTIONS ----------
-      strat_naked_leap: {
-        label: "Naked LEAP",
-        category: "strategy",
-        tooltip: "Long-dated call with no offsetting hedge.",
-        flavor: "Maximum optimism. Minimum adult supervision."
-      },
-      strat_bull_spread: {
-        label: "Bull Spread",
-        category: "strategy",
-        tooltip: "Call spread benefitting from moderate price appreciation.",
-        flavor: "Not trying to reach Mars. Just happy to clear the atmosphere."
-      },
-      strat_bear_spread: {
-        label: "Bear Spread",
-        category: "strategy",
-        tooltip: "Put or call spread positioned for a controlled downside move.",
-        flavor: "You don't need a crash, just a dignified stumble."
-      },
-      derivatives_tab: {
-        label: "Derivatives",
-        category: "navigation",
-        tooltip: "Options and structured positions with defined risk profiles.",
-        flavor: "Levers, pulleys, and very opinionated probability curves."
-      },
-      greek_delta: {
-        label: "Delta",
-        category: "metric",
-        tooltip: "First derivative of option price with respect to underlying price.",
-        flavor: "How loudly this option screams when the stock twitches."
-      },
-      greek_theta: {
-        label: "Theta",
-        category: "metric",
-        tooltip: "Daily time decay of the option's value.",
-        flavor: "Rent you pay for living in the future."
-      },
-      greek_gamma: {
-        label: "Gamma",
-        category: "metric",
-        tooltip: "Rate of change of delta as the underlying moves.",
-        flavor: "How quickly a calm trade turns dramatic when price gets ideas."
-      },
-      greek_vega: {
-        label: "Vega",
-        category: "metric",
-        tooltip: "Sensitivity of option price to changes in volatility.",
-        flavor: "Mood swing multiplier. When volatility sulks, these feel it first."
-      },
-      
-      // ---------- GLOBAL STATES ----------
-      mode_simulation: {
-        label: "Simulation Mode",
-        category: "state",
-        tooltip: "All data and trades are running in sandbox mode.",
-        flavor: "Play money. Real feelings."
-      },
-      status_uplink_active: {
-        label: "Uplink Active",
-        category: "state",
-        tooltip: "Connection to data stream is healthy.",
-        flavor: "Someone, somewhere, is still sending numbers."
-      },
-      status_system_nominal: {
-        label: "System Nominal",
-        category: "state",
-        tooltip: "No major errors or warnings detected.",
-        flavor: "Everything is fine, which is statistically suspicious."
-      },
-      status_mkt_closed: {
-        label: "Market Closed",
-        category: "state",
-        tooltip: "Exchange session has ended; prices are static.",
-        flavor: "The casino lights are off, but the spreadsheets are still awake."
-      },
-      abort_all_trades: {
-        label: "Abort All Trades",
-        category: "control",
-        tooltip: "Emergency liquidation of all open positions.",
-        flavor: "Emergency exit. Does not apply to your feelings."
-      }
-    };
-    
-    // Portfolio mood states based on daily P&L percentage
-    const PORTFOLIO_MOODS = {
-      thruster_boost: { threshold: 2, label: "THRUSTER BOOST", color: "var(--phosphor)", copy: "Portfolio making energetic upward noises." },
-      steady_climb: { threshold: 0, label: "STEADY CLIMB", color: "var(--phosphor-dim)", copy: "Green enough to feel smug, not enough to tweet about." },
-      minor_turbulence: { threshold: -1, label: "MINOR TURBULENCE", color: "var(--amber)", copy: "Seatbelts on, beverage carts still operational." },
-      hull_rattle: { threshold: -999, label: "HULL RATTLE", color: "#ff6b6b", copy: "Today's lesson: gravity always wins eventually." }
-    };
-    
-    // MACD status messages
-    const MACD_STATES = {
-      bullish_cross: { label: "Bullish crossover", copy: "Engines pushing above baseline." },
-      bearish_cross: { label: "Bearish crossover", copy: "Thrust vector pointing down." },
-      weak_signal: { label: "Momentum quiet", copy: "Coasting on inertia." },
-      divergence: { label: "Divergence watch", copy: "Price and momentum disagree." }
-    };
     
     // Glossary helper functions
     function getGlossary(id) {
@@ -1422,83 +561,8 @@
     
     // =========================================================================
     // FLEET HOLOBAY SYSTEM (Pro Ship Library with Universe Lore)
+    // SHIP_LORE data object — Loaded from js/data/ship-data.js
     // =========================================================================
-    
-    // Ship lore database - HUD tags and descriptions
-    const SHIP_LORE = {
-      "#ship-flagship": {
-        hud: "COMMAND AUTHORITY ACTIVE",
-        lore: "Spearhead command carrier. Captains say it listens before it speaks."
-      },
-      "#ship-dreadnought": {
-        hud: "LEGACY COMBAT MEMORY ENABLED",
-        lore: "Heavy war machine. Refuses to die and logs its own kills without permission."
-      },
-      "#ship-archon": {
-        hud: "AUTHORITY PROTOCOL DETECTED",
-        lore: "Built to command fleets rather than win battles. Hull plating echoes cathedral geometry."
-      },
-      "#ship-tyrant": {
-        hud: "LEGACY COMBAT MEMORY ENABLED",
-        lore: "Technically illegal. Nobody remembers which war it survived."
-      },
-      "#ship-phantom": {
-        hud: "TOPOLOGY ANOMALY — TRACED BUT UNRESOLVED",
-        lore: "Appears on scans before it appears on the hull deck. Routes comms from ships that no longer exist."
-      },
-      "#ship-hauler": {
-        hud: "CARGO MANIFEST VERIFIED",
-        lore: "The Atlas doesn't have fans. It has people who quietly owe their lives to it."
-      },
-      "#ship-drone": {
-        hud: "PASSIVE CURIOSITY RISING...",
-        lore: "Buzzes. Watches. Reports. Occasionally expresses opinions in system logs."
-      },
-      "#ship-sojourn": {
-        hud: "DESCENT TRAJECTORY LOCKED",
-        lore: "Landers don't win wars. They bring people home."
-      },
-      "#ship-parallax": {
-        hud: "BLACK CHANNEL AUTHENTICATED",
-        lore: "Officially, this class does not exist. If you can see it — it chose to let you."
-      },
-      "#ship-gardener": {
-        hud: "LEGACY ECOLOGICAL ROUTINES ACTIVE",
-        lore: "Built for terraforming. Now escorts convoys because nobody funds ecosystems anymore."
-      },
-      "#ship-frigate": {
-        hud: "PATROL SYSTEMS NOMINAL",
-        lore: "Reliable, adaptable. The backbone of any fleet."
-      },
-      "#ship-lander": {
-        hud: "SURFACE APPROACH ENABLED",
-        lore: "Lunar descent specialist. Hope and precision in equal measure."
-      },
-      "#ship-evtol": {
-        hud: "VTOL SYSTEMS ONLINE",
-        lore: "Sky taxi of the future. Vertical freedom."
-      },
-      "#ship-cargo": {
-        hud: "CARGO SECURE",
-        lore: "The supply chain doesn't thank you. It just expects you to show up."
-      },
-      "#ship-meme": {
-        hud: "SIGNAL ANOMALY DETECTED",
-        lore: "Origin unknown. Trajectory chaotic. Somehow profitable."
-      },
-      "#ship-recon": {
-        hud: "SURVEILLANCE ACTIVE",
-        lore: "Eyes in the sky. Watching. Always watching."
-      },
-      "#ship-patrol": {
-        hud: "DEFENSE GRID LINKED",
-        lore: "First responder. Last line. No medals, just duty."
-      },
-      "#ship-relay": {
-        hud: "UPLINK ESTABLISHED",
-        lore: "Communication backbone. Every message passes through, trusted with all secrets."
-      }
-    };
     
     // Map tickers/sectors to SVG symbols - returns {symbol, label, isHero, lore}
     function mapTickerToShip(ticker, sector) {
@@ -1544,190 +608,8 @@
     
     // =========================================================================
     // PIXEL SHIP RENDERING SYSTEM (8-bit Space Invaders style)
+    // PIXEL_SHIPS data object — Loaded from js/data/ship-data.js
     // =========================================================================
-    
-    // 17 cols x 11 rows – enough detail to feel "sprite-like" / SNES mech HUD
-    // Each character: "0" = empty, "1" = outer hull, "2" = inner core, "3" = highlight accent
-
-    const PIXEL_SHIPS = {
-      // RKLB: long spear / command cruiser
-      flagship: [
-        "00000011100000000",
-        "00000122210000000",
-        "00001122221000000",
-        "00011222222100000",
-        "00112222222210000",
-        "01122222322221000",
-        "00112223222210000",
-        "00011222222100000",
-        "00001122221000000",
-        "00000123210000000",
-        "00000011100000000"
-      ],
-
-      // GME: chunky anime dreadnought / mech chest
-      dreadnought: [
-        "00000111111000000",
-        "00011222222110000",
-        "00122222222221000",
-        "01122222222221100",
-        "11222223222222110",
-        "11222222222222110",
-        "01122222222221100",
-        "00122222222221000",
-        "00011222222110000",
-        "00000111111000000",
-        "00000001000000000"
-      ],
-
-      // ASTS: twin-pod probe / sensor array
-      probe: [
-        "00001100110000000",
-        "00012221122200000",
-        "00122222222210000",
-        "01122222222211000",
-        "01222232232221000",
-        "01122222222211000",
-        "00122222222210000",
-        "00012221122200000",
-        "00001100110000000",
-        "00000100010000000",
-        "00000100010000000"
-      ],
-
-      // ACHR / EVEX / JOBY carriers – wide flight deck
-      carrier: [
-        "00000011111000000",
-        "00000122222100000",
-        "00001222222210000",
-        "00012222222221000",
-        "00122222222222100",
-        "01122223222322110",
-        "00122222222222100",
-        "00012222222221000",
-        "00001222222210000",
-        "00000122222100000",
-        "00000011111000000"
-      ],
-
-      // LUNR: lander / dropship
-      lander: [
-        "00000011100000000",
-        "00000122210000000",
-        "00001222221000000",
-        "00012222222100000",
-        "00122222222210000",
-        "01122223222211000",
-        "00122222222210000",
-        "00012222222100000",
-        "00001222221000000",
-        "00000123210000000",
-        "00000011100000000"
-      ],
-
-      // default drone frame – compact but still mech-y
-      drone: [
-        "00000011100000000",
-        "00000122210000000",
-        "00001222221000000",
-        "00001223221000000",
-        "00001222221000000",
-        "00000122210000000",
-        "00000122210000000",
-        "00000011100000000",
-        "00000001000000000",
-        "00000001000000000",
-        "00000000000000000"
-      ],
-      
-      // Cruiser - defense / patrol ship
-      cruiser: [
-        "00000111110000000",
-        "00001222221000000",
-        "00012222222100000",
-        "00122222222210000",
-        "01122223222211000",
-        "01222222222221000",
-        "00122222222210000",
-        "00012222222100000",
-        "00001222221000000",
-        "00000111110000000",
-        "00000010100000000"
-      ],
-      
-      // Station / relay - comms hub
-      station: [
-        "00001110111000000",
-        "00011221122110000",
-        "00012222222100000",
-        "00011222221100000",
-        "00122223222210000",
-        "00011222221100000",
-        "00012222222100000",
-        "00011221122110000",
-        "00001110111000000",
-        "00000100010000000",
-        "00000100010000000"
-      ],
-      
-      // Hauler - cargo / industrial transport
-      hauler: [
-        "00000111111000000",
-        "00001222222100000",
-        "00012222222210000",
-        "00122222222221000",
-        "00122222222221000",
-        "01122223222221100",
-        "00122222222221000",
-        "00122222222221000",
-        "00012222222210000",
-        "00001222222100000",
-        "00000111111000000"
-      ],
-      
-      // Mini-game specific sprites - smaller for arcade games
-      arcade_player: [
-        "00000011100000000",
-        "00001122211000000",
-        "00011222221100000",
-        "00112222222110000",
-        "01122223222211000",
-        "11222222222221100",
-        "11222222222221100",
-        "01122222222211000",
-        "00111111111110000",
-        "00010001000100000",
-        "00010001000100000"
-      ],
-      
-      arcade_enemy: [
-        "00100000000010000",
-        "00010000000100000",
-        "00111111111110000",
-        "01111222221111000",
-        "11112222222111100",
-        "11112232322111100",
-        "11112222222111100",
-        "01111111111111000",
-        "00011000001100000",
-        "00110000000110000",
-        "01100000000011000"
-      ],
-      
-      arcade_elite: [
-        "00100111110010000",
-        "00011222221100000",
-        "00111222222111000",
-        "01112222222211100",
-        "01112223222211100",
-        "11122222222221110",
-        "01112222222211100",
-        "00111222222111000",
-        "00011122211100000",
-        "00010100010100000",
-        "00100100010010000"
-      ]
-    };
     
     /**
      * Draw a PIXEL_SHIPS pattern on a canvas context.
@@ -1813,18 +695,7 @@
       }
     }
     
-    // Pixel ship lore for HUD display
-    const PIXEL_SHIP_LORE = {
-      flagship: { label: "FLAGSHIP", hud: "COMMAND AUTHORITY ACTIVE", lore: "Spearhead command ship. Victory follows in its wake." },
-      dreadnought: { label: "DREADNOUGHT", hud: "HEAVY ARMOR ENGAGED", lore: "Refuses to die. Logs its own kills without permission." },
-      lander: { label: "LANDER", hud: "DESCENT LOCKED", lore: "Landers don't win wars. They bring people home." },
-      carrier: { label: "CARRIER", hud: "FLIGHT OPS READY", lore: "Sky taxi of the future. Vertical freedom." },
-      drone: { label: "DRONE", hud: "PASSIVE SCAN ACTIVE", lore: "Buzzes. Watches. Reports. Occasionally has opinions." },
-      cruiser: { label: "CRUISER", hud: "PATROL SYSTEMS ONLINE", lore: "First responder. Last line. No medals, just duty." },
-      station: { label: "STATION", hud: "UPLINK ESTABLISHED", lore: "Every message passes through. Trusted with all secrets." },
-      probe: { label: "PROBE", hud: "ANOMALY DETECTED", lore: "Origin unknown. Trajectory chaotic. Somehow profitable." },
-      hauler: { label: "HAULER", hud: "CARGO MANIFEST VERIFIED", lore: "Doesn't have fans. Has people who owe their lives to it." }
-    };
+    // PIXEL_SHIP_LORE — Loaded from js/data/ship-data.js
     
     /**
      * Render HD mech sprite into an SVG.
@@ -2776,6 +1647,112 @@
       if (ma150El) ma150El.textContent = latest.g150 ? '$' + latest.g150.toFixed(2) : '--';
       if (ma200El) ma200El.textContent = latest.g200 ? '$' + latest.g200.toFixed(2) : '--';
       if (priceEl) priceEl.textContent = '$' + currentPrice.toFixed(2);
+
+      // --- Market snapshot (OHLC/VWAP/ATR/Volume) from current visible range ---
+      const fmtPrice = (v) => Number.isFinite(v) ? '$' + v.toFixed(2) : '--';
+      const fmtPct = (v) => Number.isFinite(v) ? (v >= 0 ? '+' : '') + v.toFixed(2) + '%' : '--';
+      const fmtNum = (n) => {
+        if (!Number.isFinite(n)) return '--';
+        if (n >= 1e9) return (n/1e9).toFixed(2) + 'B';
+        if (n >= 1e6) return (n/1e6).toFixed(2) + 'M';
+        if (n >= 1e3) return (n/1e3).toFixed(1) + 'K';
+        return String(Math.round(n));
+      };
+
+      const open = source[0]?.o;
+      const high = Math.max(...source.map(d => Number(d.h)).filter(Number.isFinite));
+      const low  = Math.min(...source.map(d => Number(d.l)).filter(Number.isFinite));
+      const close = latest?.c;
+
+      // VWAP over visible range using typical price
+      let vwap = NaN;
+      try {
+        let pv = 0, vv = 0;
+        for (const d of source) {
+          const h = Number(d.h), l = Number(d.l), c = Number(d.c), v = Number(d.v);
+          if (!Number.isFinite(h) || !Number.isFinite(l) || !Number.isFinite(c) || !Number.isFinite(v) || v <= 0) continue;
+          const tp = (h + l + c) / 3;
+          pv += tp * v;
+          vv += v;
+        }
+        if (vv > 0) vwap = pv / vv;
+      } catch(e) {}
+
+      // ATR-14 (true range average)
+      let atr = NaN;
+      const trs = [];
+      for (let i = 1; i < source.length; i++) {
+        const h = Number(source[i].h), l = Number(source[i].l), pc = Number(source[i-1].c);
+        if (!Number.isFinite(h) || !Number.isFinite(l) || !Number.isFinite(pc)) continue;
+        const tr = Math.max(h - l, Math.abs(h - pc), Math.abs(l - pc));
+        trs.push(tr);
+      }
+      if (trs.length >= 14) {
+        const window = trs.slice(-14);
+        atr = window.reduce((s,x)=>s+x,0) / window.length;
+      }
+
+      // Volume + spike vs avg(20)
+      const vols = source.map(d => Number(d.v)).filter(Number.isFinite);
+      const lastVol = vols.length ? vols[vols.length - 1] : NaN;
+      const volWindow = vols.slice(-20);
+      const avgVol = volWindow.length ? (volWindow.reduce((s,x)=>s+x,0) / volWindow.length) : NaN;
+      const volSpike = (Number.isFinite(lastVol) && Number.isFinite(avgVol) && avgVol > 0) ? (lastVol / avgVol) : NaN;
+
+      const rangeAbs = (Number.isFinite(high) && Number.isFinite(low)) ? (high - low) : NaN;
+      const rangePct = (Number.isFinite(rangeAbs) && Number.isFinite(close) && close) ? (rangeAbs / close) * 100 : NaN;
+
+      // Market snapshot fields
+      const openEl = document.getElementById('tm-open');
+      const highEl = document.getElementById('tm-high');
+      const lowEl = document.getElementById('tm-low');
+      const closeEl = document.getElementById('tm-close');
+      const rangeEl = document.getElementById('tm-range');
+      const vwapEl = document.getElementById('tm-vwap');
+      const atrEl = document.getElementById('tm-atr');
+      const volEl = document.getElementById('tm-vol');
+      const avgVolEl = document.getElementById('tm-avgvol');
+      const volSpikeEl = document.getElementById('tm-volspike');
+
+      if (openEl) openEl.textContent = fmtPrice(open);
+      if (highEl) highEl.textContent = fmtPrice(high);
+      if (lowEl) lowEl.textContent = fmtPrice(low);
+      if (closeEl) closeEl.textContent = fmtPrice(close);
+      if (rangeEl) rangeEl.textContent = Number.isFinite(rangeAbs) ? (fmtPrice(rangeAbs).replace('$','$') + ' · ' + fmtPct(rangePct)) : '--';
+      if (vwapEl) vwapEl.textContent = fmtPrice(vwap);
+      if (atrEl) atrEl.textContent = fmtPrice(atr);
+      if (volEl) volEl.textContent = fmtNum(lastVol);
+      if (avgVolEl) avgVolEl.textContent = fmtNum(avgVol);
+      if (volSpikeEl) {
+        volSpikeEl.textContent = Number.isFinite(volSpike) ? (volSpike.toFixed(2) + 'x') : '--';
+        const spikeClass = (Number.isFinite(volSpike) && volSpike >= 1.6) ? 'positive' : (Number.isFinite(volSpike) && volSpike <= 0.7 ? 'negative' : '');
+        volSpikeEl.parentElement && (volSpikeEl.parentElement.className = 'console-row ' + spikeClass);
+      }
+
+      // 52W + multi-horizon returns from stats.json (if present)
+      const s = (window.statsData && statsData[currentTicker]) || {};
+      const h52El = document.getElementById('tm-52wh');
+      const l52El = document.getElementById('tm-52wl');
+      if (h52El) h52El.textContent = fmtPrice(s.high_52w);
+      if (l52El) l52El.textContent = fmtPrice(s.low_52w);
+
+      const setRet = (id, val) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (!Number.isFinite(val)) { el.textContent = '--'; return; }
+        el.textContent = fmtPct(val);
+        const chip = el.closest('.return-chip');
+        if (chip) {
+          chip.classList.remove('positive','negative');
+          chip.classList.add(val >= 0 ? 'positive' : 'negative');
+        }
+      };
+      setRet('tm-r1d', Number(s.return_1d));
+      setRet('tm-r1w', Number(s.return_1w));
+      setRet('tm-r1m', Number(s.return_1m));
+      setRet('tm-r3m', Number(s.return_3m));
+      setRet('tm-r6m', Number(s.return_6m));
+      setRet('tm-r1y', Number(s.return_1y));
       
       // Update thrust vector (MACD)
       const macdEl = document.getElementById('tm-macd');
@@ -3135,52 +2112,9 @@
       renderFleetGrid();
     }
     
-    // Ship name generation based on ticker
-    const SHIP_NAMES = {
-      RKLB: { name: "ELECTRON", designation: "FSC-001" },
-      LUNR: { name: "ODYSSEY", designation: "LNR-002" },
-      ASTS: { name: "BLUEBIRD", designation: "COM-003" },
-      ACHR: { name: "MIDNIGHT", designation: "AAM-004" },
-      JOBY: { name: "SKYWARD", designation: "EVT-005" },
-      BKSY: { name: "BLACKSKY", designation: "RCN-006" },
-      RDW: { name: "REDWIRE", designation: "INF-007" },
-      PL: { name: "PLANET", designation: "SAT-008" },
-      EVEX: { name: "HORIZON", designation: "AAM-009" },
-      GME: { name: "DIAMOND", designation: "MEM-010" },
-      MP: { name: "MAGNETO", designation: "MAT-011" },
-      KTOS: { name: "KRATOS", designation: "DEF-012" },
-      IRDM: { name: "IRIDIUM", designation: "COM-013" },
-      HON: { name: "HONEYBEE", designation: "IND-014" },
-      ATI: { name: "TITANIUM", designation: "MAT-015" },
-      CACI: { name: "SENTINEL", designation: "DEF-016" },
-      LOAR: { name: "PHOENIX", designation: "AER-017" },
-      COHR: { name: "PRISM", designation: "OPT-018" },
-      GE: { name: "SPECTRE", designation: "IND-019" },
-      LHX: { name: "HELIX", designation: "AAM-020" },
-      RTX: { name: "RAYTHEON", designation: "DEF-021" }
-    };
-
-    // Per-ticker ship sprites (PNG). If a ticker isn't listed here, we fall back to the procedural SVG.
-    const SHIP_SPRITES = {
-      ACHR: 'assets/ships/ACHR-eVTOL-ship.png',
-      ASTS: 'assets/ships/ASTS-Communications-Relay-Ship.png',
-      BKSY: 'assets/ships/BKSY-recon-ship.png',
-      COHR: 'assets/ships/COHR-Glass-Reflector-ship.png',
-      EVEX: 'assets/ships/EVEX-Transport-Ship.png',
-      GE: 'assets/ships/GE-Stealth-Bomber-ship.png',
-      GME: 'assets/ships/GME-moonshot-ship.png',
-      JOBY: 'assets/ships/JOBY-eVTOL-light-class-ship.png',
-      KTOS: 'assets/ships/KTOS-Fighter-Ship.png',
-      LHX: 'assets/ships/LHX-Drone-ship.png',
-      LUNR: 'assets/ships/LUNR-lander-ship.png',
-      PL: 'assets/ships/PL-scout-ship.png',
-      RDW: 'assets/ships/RDW-Hauler-ship.png',
-      RKLB: 'assets/ships/RKLB-flagship-ship.png',
-      RTX: 'assets/ships/RTX-Officer-Class-Ship.png'
-    };
-    
-    // Default fallback sprite for tickers without custom ships
-    const DEFAULT_SHIP_SPRITE = 'assets/ships/Unclaimed-Drone-ship.png';
+    // =========================================================================
+    // SHIP_NAMES, SHIP_SPRITES, DEFAULT_SHIP_SPRITE — Loaded from js/data/ship-data.js
+    // =========================================================================
     
     // =========================================================================
     // SPRITE CACHE SYSTEM - Preload PNG sprites for canvas games

@@ -884,6 +884,41 @@
     
     .console-row.positive span:last-child { color: var(--signal-up); }
     .console-row.negative span:last-child { color: var(--signal-down); }
+
+    /* Dense grids + chips for richer telemetry (TradingView-ish density) */
+    .console-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      column-gap: 0.75rem;
+      row-gap: 0.15rem;
+    }
+    .console-grid .console-row { padding: 0.18rem 0; }
+
+    .return-chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      margin-top: 0.5rem;
+    }
+    .return-chip {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 0.35rem;
+      padding: 0.22rem 0.35rem;
+      border: 1px solid var(--border);
+      background: rgba(10, 12, 15, 0.55);
+      border-radius: 6px;
+      font-size: 0.55rem;
+      color: var(--text-dim);
+      user-select: none;
+    }
+    .return-chip b {
+      font-family: var(--font-display);
+      font-weight: 600;
+      color: var(--text-bright);
+    }
+    .return-chip.positive b { color: var(--signal-up); }
+    .return-chip.negative b { color: var(--signal-down); }
     
     /* Bridge feed / log */
     .console-log {

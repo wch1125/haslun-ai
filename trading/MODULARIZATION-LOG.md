@@ -1,0 +1,216 @@
+# HASLUN-BOT Modularization Progress Log
+
+## Overview
+This document tracks all changes made during the modularization of the HASLUN-BOT codebase. Use this as a reference for rollback if anything breaks.
+
+---
+
+## Starting State (Before Modularization)
+
+```
+trading/
+├── index.html              (1,672 lines)
+├── css/styles.css          (7,468 lines)
+├── js/app.js               (7,061 lines)
+├── assets/ships/           (16 PNG files)
+├── data/                   (18 JSON files)
+└── HASLUN-BOT-README.md
+```
+
+**Total JS lines:** 7,061
+
+---
+
+## Step 1.1: Extract TICKER_PROFILES ✅
+**Date:** 2025-01-05  
+**Status:** Complete
+
+### Changes Made:
+1. **Created:** `js/data/ticker-profiles.js` (515 lines)
+   - Contains the `TICKER_PROFILES` object with Pip-Boy style dossiers
+   - Exposes via `window.TICKER_PROFILES`
+
+2. **Modified:** `index.html`
+   - Added script tag to load `js/data/ticker-profiles.js` before `app.js`
+   ```html
+   <!-- Data modules (load before app.js) -->
+   <script src="js/data/ticker-profiles.js"></script>
+   
+   <!-- Main application -->
+   <script src="js/app.js"></script>
+   ```
+
+3. **Modified:** `js/app.js`
+   - Removed lines 262-790 (TICKER_PROFILES definition)
+   - Added alias at top: `const TICKER_PROFILES = window.TICKER_PROFILES || {};`
+   - Added reference comment at original location
+
+### File Sizes After:
+- `js/app.js`: 7,061 → 6,542 lines (-519 lines)
+- `js/data/ticker-profiles.js`: 515 lines (new)
+
+### Rollback Instructions:
+1. Delete `js/data/ticker-profiles.js`
+2. Remove the `<script src="js/data/ticker-profiles.js"></script>` line from `index.html`
+3. Restore TICKER_PROFILES object to `app.js` at line 262 (copy from `ticker-profiles.js`, remove the `window.TICKER_PROFILES = TICKER_PROFILES;` line at bottom)
+4. Remove the alias line at top of `app.js`
+
+---
+
+## Step 1.2: Extract HASLUN_GLOSSARY
+**Date:** 2025-01-05  
+**Status:** ✅ Complete
+
+### Changes Made:
+1. **Created:** `js/data/glossary.js` (295 lines)
+   - Contains `HASLUN_GLOSSARY` object (tooltips, flavor text, lore)
+   - Contains `PORTFOLIO_MOODS` object (mood states based on P&L)
+   - Contains `MACD_STATES` object (MACD status messages)
+   - Exposes via `window.HASLUN_GLOSSARY`, `window.PORTFOLIO_MOODS`, `window.MACD_STATES`
+
+2. **Modified:** `index.html`
+   - Added script tag to load `js/data/glossary.js` before `app.js`
+
+3. **Modified:** `js/app.js`
+   - Removed lines 274-629 (glossary data definitions)
+   - Added aliases at top for all three objects
+   - Added reference comment at original location
+   - Helper functions (getGlossary, getTooltip, getFlavor, etc.) remain in app.js
+
+### File Sizes After:
+- `js/app.js`: 6,542 → 6,193 lines (-349 lines)
+- `js/data/glossary.js`: 295 lines (new)
+
+### Rollback Instructions:
+1. Delete `js/data/glossary.js`
+2. Remove the `<script src="js/data/glossary.js"></script>` line from `index.html`
+3. Restore HASLUN_GLOSSARY, PORTFOLIO_MOODS, MACD_STATES to `app.js` at line 274
+4. Remove the aliases for these three objects at top of `app.js`
+
+---
+
+## Step 1.3: Extract SHIP_LORE and PIXEL_SHIPS
+**Date:** 2025-01-05  
+**Status:** ✅ Complete
+
+### Interim: ChatGPT Updates Merged ✅
+Before continuing with Step 1.3, merged new features from ChatGPT:
+
+**New Features Added:**
+- **MARKET SNAPSHOT panel** with OHLC, Range, VWAP, ATR-14, Volume stats
+- **RANGE + RETURNS panel** with 52W High/Low and 1D/1W/1M/3M/6M/1Y returns
+- New CSS for `.console-grid` and `.return-chip` components
+- New JS calculations for VWAP, ATR, volume spike detection
+
+**File Changes:**
+- `index.html`: +30 lines (new HTML sections)
+- `css/styles.css`: +35 lines (new styles)
+- `js/app.js`: +106 lines (market snapshot calculations)
+
+### Ship Data Extraction ✅
+
+1. **Created:** `js/data/ship-data.js` (342 lines)
+   - Contains `SHIP_LORE` — SVG ship HUD tags and descriptions
+   - Contains `PIXEL_SHIPS` — 17×11 pixel art patterns (12 ship types)
+   - Contains `PIXEL_SHIP_LORE` — Pixel ship labels and descriptions
+   - Contains `SHIP_NAMES` — Ticker codenames and designations
+   - Contains `SHIP_SPRITES` — PNG sprite paths per ticker
+   - Contains `DEFAULT_SHIP_SPRITE` — Fallback sprite path
+
+2. **Modified:** `index.html`
+   - Added script tag for `js/data/ship-data.js`
+
+3. **Modified:** `js/app.js`
+   - Removed all ship data objects (~400 lines)
+   - Added 6 new aliases at top of file
+   - Kept all ship-related functions (mapTickerToShip, getShipLore, drawPixelShipOnCanvas, etc.)
+
+### File Sizes After:
+- `js/app.js`: 6,299 → 5,994 lines (-305 lines from extraction, net with ChatGPT adds)
+- `js/data/ship-data.js`: 342 lines (new)
+
+### Rollback Instructions:
+1. Delete `js/data/ship-data.js`
+2. Remove the `<script src="js/data/ship-data.js"></script>` line from `index.html`
+3. Restore all ship data objects to their original locations in `app.js`
+4. Remove the 6 ship-related aliases at top of `app.js`
+
+---
+
+## Current Structure
+
+```
+trading/
+├── index.html              (1,708 lines)
+├── css/styles.css          (7,503 lines)
+├── js/
+│   ├── app.js              (5,994 lines)
+│   └── data/
+│       ├── ticker-profiles.js (515 lines)
+│       ├── glossary.js        (295 lines)
+│       └── ship-data.js       (342 lines)
+├── assets/ships/           (16 PNG files)
+├── data/                   (18 JSON files)
+├── HASLUN-BOT-README.md
+└── MODULARIZATION-LOG.md   (this file)
+```
+
+**Total JS lines:** 7,146 (was 7,061 original + ChatGPT adds)
+**app.js reduction:** 7,061 → 5,994 = -1,067 lines (15.1% smaller)
+
+```
+trading/
+├── index.html              (1,678 lines)
+├── css/styles.css          (7,468 lines)
+├── js/
+│   ├── app.js              (6,193 lines)
+│   └── data/
+│       ├── ticker-profiles.js (515 lines)
+│       └── glossary.js        (295 lines)
+├── assets/ships/           (16 PNG files)
+├── data/                   (18 JSON files)
+├── HASLUN-BOT-README.md
+└── MODULARIZATION-LOG.md   (this file)
+```
+
+**Total JS lines:** 7,003 (was 7,061)
+**app.js reduction:** 7,061 → 6,193 = -868 lines (12.3% smaller)
+
+---
+
+## Verification Checklist
+After each step, verify:
+- [ ] Page loads without console errors
+- [ ] Loading screen animation works
+- [ ] Ticker selection works
+- [ ] Fleet grid displays ships (PNG sprites + pixel fallbacks)
+- [ ] Pip-Boy dossier opens with ticker data
+- [ ] Charts render correctly
+- [ ] Market Snapshot panel shows OHLC/VWAP/ATR data
+- [ ] Range + Returns panel shows 52W and return data
+
+---
+
+## Next Steps (Phase 2)
+
+### Step 2.1: Extract Audio System (~550 lines)
+- `MechSFX` object — procedural sound effects
+- `MechaBGM` object — background music generator
+- Create `js/audio/sfx.js` and `js/audio/bgm.js`
+
+### Step 2.2: Extract Games (~1,000 lines)
+- `SignalInvaders` — Space Invaders game
+- `LandingGame` — Terrain landing game
+- `AdminConsole` — Easter egg console
+- Create `js/games/` directory
+
+### Step 2.3: Extract HOLO_SHIPS (~200 lines)
+- Holographic ship SVG paths
+- Create `js/data/holo-ships.js`
+
+---
+
+## Notes
+- All extracted modules use `window.X` pattern for global exposure
+- Main `app.js` creates local aliases for backwards compatibility
+- Load order in `index.html` is critical: data modules must load before `app.js`
