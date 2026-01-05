@@ -54,6 +54,401 @@
     @keyframes radar-sweep { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     @keyframes data-glow { from { box-shadow: 0 0 20px rgba(255, 179, 71, 0.5); } to { box-shadow: none; } }
     
+    /* =========================================================================
+       COMMAND CENTER MODE
+       Authentic 80s/90s mission control - NORAD / NASA / Nostromo aesthetic
+       Less widgets, more data density, unified visual language
+       ========================================================================= */
+    
+    /* === LAYOUT: Remove right sidebar entirely === */
+    .right-sidebar {
+      display: none !important;
+    }
+    
+    /* === LAYOUT: Narrower left sidebar === */
+    .sidebar {
+      width: 240px !important;
+      border-right: 2px solid var(--border) !important;
+    }
+    
+    /* === HIDE: Redundant/cluttery elements === */
+    #encounters-console,
+    .cargo-bay-container,
+    #cargo-bay,
+    .cargo-bay,
+    .arcade-hud,
+    .portfolio-mood,
+    .holo-card,
+    .control-panel,
+    .dossier-btn,
+    .fleet-holo-strip,
+    .position-charts-section,
+    .ship-profile {
+      display: none !important;
+    }
+    
+    /* === SIDEBAR: Streamlined sections === */
+    .sidebar-section {
+      padding: 0.75rem 1rem !important;
+      border-bottom: 1px solid var(--border) !important;
+    }
+    
+    .sidebar-title {
+      font-size: 0.55rem !important;
+      letter-spacing: 0.15em !important;
+      margin-bottom: 0.5rem !important;
+      color: var(--text-dim) !important;
+    }
+    
+    /* Stats grid - 2x2 compact */
+    .stats-grid {
+      grid-template-columns: 1fr 1fr !important;
+      gap: 0.5rem !important;
+    }
+    
+    .stat-box {
+      padding: 0.5rem !important;
+    }
+    
+    .stat-label {
+      font-size: 0.5rem !important;
+    }
+    
+    .stat-value {
+      font-size: 0.9rem !important;
+    }
+    
+    /* MACD section - more compact */
+    .macd-display {
+      gap: 0.25rem !important;
+    }
+    
+    .macd-row {
+      padding: 0.25rem 0 !important;
+    }
+    
+    .macd-status {
+      display: none !important;
+    }
+    
+    /* Trend section - minimal */
+    .trend-metrics {
+      display: none !important;
+    }
+    
+    .trend-detail {
+      font-size: 0.6rem !important;
+      margin-top: 0.25rem !important;
+    }
+    
+    /* Watchlist - the star of the sidebar */
+    .sidebar-section:has(.watchlist) {
+      flex: 1 !important;
+      min-height: 0 !important;
+      display: flex !important;
+      flex-direction: column !important;
+      padding-bottom: 0 !important;
+    }
+    
+    .watchlist {
+      flex: 1 !important;
+    }
+    
+    .watchlist-item {
+      padding: 0.5rem 0.75rem 0.5rem 0.5rem !important;
+    }
+    
+    .watchlist-ticker {
+      font-size: 0.75rem !important;
+    }
+    
+    .watchlist-price {
+      font-size: 0.75rem !important;
+    }
+    
+    .watchlist-info-btn {
+      display: none !important;
+    }
+    
+    /* Kill switch - bottom of sidebar */
+    .kill-switch-section {
+      padding: 0.5rem 0.75rem !important;
+      border-top: 1px solid var(--border) !important;
+      margin-top: auto !important;
+    }
+    
+    .kill-switch-btn {
+      font-size: 0.55rem !important;
+      padding: 0.4rem !important;
+    }
+    
+    .kill-switch-status {
+      font-size: 0.5rem !important;
+      margin-top: 0.25rem !important;
+    }
+    
+    /* === HEADER: Tighter === */
+    .header {
+      padding: 0.35rem 0.75rem !important;
+      border-bottom: 2px solid var(--border) !important;
+    }
+    
+    .logo {
+      font-size: 0.85rem !important;
+    }
+    
+    .logo-sub {
+      display: none !important;
+    }
+    
+    .nav-tab {
+      padding: 0.3rem 0.6rem !important;
+      font-size: 0.55rem !important;
+    }
+    
+    .demo-badge {
+      font-size: 0.5rem !important;
+      padding: 0.2rem 0.4rem !important;
+    }
+    
+    /* === MAIN CONTENT: Fleet Holobay simplified === */
+    .fleet-holobay {
+      margin: 0 !important;
+      padding: 0 !important;
+      border-radius: 0 !important;
+      border: none !important;
+      border-bottom: 1px solid var(--border) !important;
+      background: transparent !important;
+      box-shadow: none !important;
+    }
+    
+    .fleet-holo-main {
+      display: flex !important;
+      align-items: center !important;
+      gap: 1.5rem !important;
+      padding: 0.75rem 1rem !important;
+      background: var(--bg-panel) !important;
+    }
+    
+    .fleet-holo-stage-wrapper {
+      flex: 0 0 140px !important;
+    }
+    
+    .fleet-holo-title {
+      display: none !important;
+    }
+    
+    .fleet-holo-stage {
+      width: 140px !important;
+      height: 90px !important;
+    }
+    
+    .fleet-holo-info {
+      flex: 1 !important;
+      display: flex !important;
+      gap: 2rem !important;
+      padding: 0 !important;
+    }
+    
+    .fleet-holo-info .info-left,
+    .fleet-holo-info .info-right {
+      display: flex !important;
+      flex-direction: row !important;
+      gap: 1.5rem !important;
+      align-items: center !important;
+    }
+    
+    .fleet-holo-info .label {
+      font-size: 0.5rem !important;
+      margin-bottom: 0 !important;
+    }
+    
+    .fleet-holo-info .value {
+      font-size: 0.7rem !important;
+    }
+    
+    .fleet-holo-info .stat {
+      min-width: auto !important;
+    }
+    
+    .fleet-holo-info .stat-bar {
+      width: 60px !important;
+      height: 4px !important;
+    }
+    
+    .fleet-holo-info .stat-text {
+      font-size: 0.5rem !important;
+    }
+    
+    /* === METRICS GRID: Horizontal bar === */
+    .positions-grid {
+      display: flex !important;
+      gap: 0 !important;
+      border-bottom: 1px solid var(--border) !important;
+    }
+    
+    .metric-card {
+      flex: 1 !important;
+      padding: 0.6rem 1rem !important;
+      border-radius: 0 !important;
+      border: none !important;
+      border-right: 1px solid var(--border) !important;
+      background: var(--bg-panel) !important;
+    }
+    
+    .metric-card:last-child {
+      border-right: none !important;
+    }
+    
+    .metric-value {
+      font-size: 1rem !important;
+    }
+    
+    .metric-label {
+      font-size: 0.5rem !important;
+      margin-top: 0.15rem !important;
+    }
+    
+    /* === CARD: Cleaner headers === */
+    .card {
+      border: none !important;
+      border-radius: 0 !important;
+      background: transparent !important;
+    }
+    
+    .card-header {
+      padding: 0.5rem 1rem !important;
+      background: var(--bg-panel) !important;
+      border-bottom: 1px solid var(--border) !important;
+    }
+    
+    .card-label {
+      font-size: 0.5rem !important;
+    }
+    
+    .card-title {
+      font-size: 0.7rem !important;
+    }
+    
+    .card-body {
+      padding: 0 !important;
+    }
+    
+    /* === DATA TABLE: Terminal style === */
+    .table-wrapper {
+      padding: 0 !important;
+    }
+    
+    .data-table {
+      font-size: 0.7rem !important;
+    }
+    
+    .data-table th {
+      background: var(--bg-deep) !important;
+      padding: 0.5rem 0.75rem !important;
+      font-size: 0.55rem !important;
+      letter-spacing: 0.12em !important;
+      border-bottom: 2px solid var(--phosphor-dim) !important;
+      position: sticky !important;
+      top: 0 !important;
+      z-index: 10 !important;
+    }
+    
+    .data-table td {
+      padding: 0.4rem 0.75rem !important;
+      border-bottom: 1px solid var(--border) !important;
+    }
+    
+    .position-row:hover {
+      background: var(--phosphor-ghost) !important;
+    }
+    
+    .ticker-badge {
+      font-size: 0.6rem !important;
+      padding: 0.2rem 0.4rem !important;
+    }
+    
+    /* === CHART: Maximize space === */
+    .chart-header {
+      padding: 0.5rem 1rem !important;
+      border-bottom: 1px solid var(--border) !important;
+    }
+    
+    .chart-container {
+      padding: 0.5rem !important;
+    }
+    
+    .ticker-symbol {
+      font-size: 1.1rem !important;
+    }
+    
+    .ticker-price {
+      font-size: 0.9rem !important;
+    }
+    
+    .period-btn {
+      padding: 0.25rem 0.5rem !important;
+      font-size: 0.55rem !important;
+    }
+    
+    /* === STATUS STRIP: Simpler === */
+    .status-strip {
+      height: 22px !important;
+      padding: 0 0.75rem !important;
+      font-size: 0.5rem !important;
+      gap: 0.75rem !important;
+      border-top: 1px solid var(--border) !important;
+    }
+    
+    .status-item {
+      gap: 0.25rem !important;
+    }
+    
+    /* Hide some status items */
+    .status-item:has(.theme-select),
+    .status-item:has(#color-hue-slider) {
+      display: none !important;
+    }
+    
+    /* === TERMINAL LOG: Prominent bottom bar === */
+    .terminal-log {
+      position: fixed !important;
+      bottom: 22px !important;
+      left: 242px !important;
+      right: 0 !important;
+      height: 60px !important;
+      background: rgba(2, 4, 6, 0.96) !important;
+      border: none !important;
+      border-top: 1px solid var(--border) !important;
+      border-radius: 0 !important;
+      padding: 0.4rem 0.75rem !important;
+      font-size: 0.55rem !important;
+      z-index: 100 !important;
+      display: block !important;
+    }
+    
+    /* === CONTENT AREA: Account for terminal === */
+    .content {
+      padding-bottom: 60px !important;
+    }
+    
+    .positions-content {
+      padding: 0 !important;
+    }
+    
+    /* === MOBILE: Hide everything extra === */
+    @media (max-width: 900px) {
+      .terminal-log {
+        display: none !important;
+      }
+      .content {
+        padding-bottom: 0 !important;
+      }
+      .fleet-holobay {
+        display: none !important;
+      }
+    }
+    
     * { box-sizing: border-box; margin: 0; padding: 0; }
     
     body {
@@ -3716,7 +4111,14 @@
     
     @media (max-width: 1200px) { .right-sidebar { display: none; } }
     @media (max-width: 900px) { .sidebar { width: 240px; } .positions-grid { grid-template-columns: repeat(2, 1fr); } .arcade-hud { display: none; } }
-    @media (max-width: 768px) { .sidebar { display: none; } .positions-grid { grid-template-columns: 1fr 1fr; } .nav-tab { padding: 0.4rem 0.6rem; font-size: 0.6rem; } .terminal-log { display: none; } }
+    @media (max-width: 768px) { 
+      .sidebar { display: none; } 
+      .positions-grid { grid-template-columns: 1fr 1fr; } 
+      .nav-tab { padding: 0.4rem 0.6rem; font-size: 0.6rem; } 
+      .terminal-log { display: none !important; }
+      .fleet-holobay { display: none; }
+      .fleet-holo-main { grid-template-columns: 1fr !important; }
+    }
 
     /* =========================================================================
        COMPREHENSIVE MOBILE OPTIMIZATIONS
@@ -5714,59 +6116,55 @@
             <div class="card">
               <div class="card-header"><div><div class="card-label">// Active</div><div class="card-title">Stock Positions</div></div></div>
               <div class="card-body">
-                <!-- FLEET HOLOBAY -->
+                <!-- FLEET HOLOBAY - Simplified -->
                 <div id="fleet-holobay" class="fleet-holobay">
                   <div class="fleet-holo-main">
                     <div class="fleet-holo-stage-wrapper">
-                      <div class="fleet-holo-title">// FLEET HOLOBAY</div>
-
                       <div class="fleet-holo-stage">
-                        <div class="fleet-holo-stars"></div>
                         <div class="fleet-holo-grid"></div>
                         <svg id="fleet-ship-svg" class="fleet-ship-svg pixel-ship-glow" viewBox="0 0 120 80" aria-hidden="true">
                           <!-- Pixel ship rendered dynamically -->
                         </svg>
                         <div class="fleet-scanlines"></div>
-                        <div class="fleet-holo-glow"></div>
                       </div>
                     </div>
 
                     <div class="fleet-holo-info">
                       <div class="info-left">
-                        <div class="label">SHIP:</div>
-                        <div id="fleet-ship-name" class="value">—</div>
-
-                        <div class="label">CLASS:</div>
-                        <div id="fleet-ship-class" class="value">—</div>
-
-                        <div class="label">STATUS:</div>
-                        <div id="fleet-ship-sector" class="value">—</div>
+                        <div class="stat-group">
+                          <div class="label">SHIP:</div>
+                          <div id="fleet-ship-name" class="value">—</div>
+                        </div>
+                        <div class="stat-group">
+                          <div class="label">CLASS:</div>
+                          <div id="fleet-ship-class" class="value">—</div>
+                        </div>
+                        <div class="stat-group">
+                          <div class="label">STATUS:</div>
+                          <div id="fleet-ship-sector" class="value">—</div>
+                        </div>
                       </div>
 
                       <div class="info-right">
                         <div class="stat">
-                          <span>HULL INTEGRITY</span>
+                          <span>HULL</span>
                           <div class="bar"><div id="fleet-hull-bar"></div></div>
                           <div id="fleet-hull-text" class="stat-text">—</div>
                         </div>
 
                         <div class="stat">
-                          <span>CARGO LOAD</span>
+                          <span>CARGO</span>
                           <div class="bar"><div id="fleet-cargo-bar"></div></div>
                           <div id="fleet-cargo-text" class="stat-text">—</div>
                         </div>
 
                         <div class="stat">
-                          <span>VELOCITY INDEX</span>
+                          <span>VEL</span>
                           <div class="bar"><div id="fleet-vel-bar"></div></div>
                           <div id="fleet-vel-text" class="stat-text">—</div>
                         </div>
                       </div>
                     </div>
-                  </div>
-
-                  <div class="fleet-holo-strip" id="fleet-holo-strip">
-                    <!-- thumbnails auto-populated via JS -->
                   </div>
                 </div>
 
