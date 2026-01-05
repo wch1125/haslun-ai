@@ -137,47 +137,6 @@ Before continuing with Step 1.3, merged new features from ChatGPT:
 
 ---
 
-## Current Structure
-
-```
-trading/
-├── index.html              (1,708 lines)
-├── css/styles.css          (7,503 lines)
-├── js/
-│   ├── app.js              (5,994 lines)
-│   └── data/
-│       ├── ticker-profiles.js (515 lines)
-│       ├── glossary.js        (295 lines)
-│       └── ship-data.js       (342 lines)
-├── assets/ships/           (16 PNG files)
-├── data/                   (18 JSON files)
-├── HASLUN-BOT-README.md
-└── MODULARIZATION-LOG.md   (this file)
-```
-
-**Total JS lines:** 7,146 (was 7,061 original + ChatGPT adds)
-**app.js reduction:** 7,061 → 5,994 = -1,067 lines (15.1% smaller)
-
-```
-trading/
-├── index.html              (1,678 lines)
-├── css/styles.css          (7,468 lines)
-├── js/
-│   ├── app.js              (6,193 lines)
-│   └── data/
-│       ├── ticker-profiles.js (515 lines)
-│       └── glossary.js        (295 lines)
-├── assets/ships/           (16 PNG files)
-├── data/                   (18 JSON files)
-├── HASLUN-BOT-README.md
-└── MODULARIZATION-LOG.md   (this file)
-```
-
-**Total JS lines:** 7,003 (was 7,061)
-**app.js reduction:** 7,061 → 6,193 = -868 lines (12.3% smaller)
-
----
-
 ## Phase 2: Audio & Games Extraction
 
 ### Step 2.1: Extract Audio System ✅
@@ -235,30 +194,71 @@ trading/
 
 ---
 
+## Phase 3: Final Extractions
+
+### Step 3.1: Extract HOLO_SHIPS ✅
+**Date:** 2025-01-05  
+**Status:** Complete
+
+1. **Created:** `js/data/holo-ships.js` (261 lines)
+   - `HOLO_SHIPS` — SVG wireframe ship data for 21 tickers
+   - `updateHoloForTicker()` — Updates holographic display
+   - Auto-hooks into `window.selectTicker` for seamless integration
+
+2. **Modified:** `index.html`
+   - Added script tag for `js/data/holo-ships.js`
+
+3. **Modified:** `js/app.js`
+   - Removed HOLO_SHIPS code (lines 3453-3658, ~206 lines)
+
+---
+
+## Final Summary
+
+### Total Extraction Results:
+| Module | Lines | Contents |
+|--------|-------|----------|
+| `js/data/ticker-profiles.js` | 517 | Pip-Boy dossiers for 22 tickers |
+| `js/data/glossary.js` | 297 | Tooltips, flavor text, mood states |
+| `js/data/ship-data.js` | 344 | Ship lore, pixel art patterns, sprites |
+| `js/data/holo-ships.js` | 261 | Holographic SVG wireframes |
+| `js/audio/audio-system.js` | 500 | MechSFX, MechaBGM, procedural sound |
+| `js/games/mini-games.js` | 1,210 | Signal Invaders, Landing Game, Admin Console |
+| **Total extracted** | **3,129** | |
+
+### app.js Reduction:
+- **Original:** 7,061 lines
+- **Final:** 4,110 lines  
+- **Removed:** 2,951 lines
+- **Reduction:** **41.8%**
+
+---
+
 ## Current Structure
 
 ```
 trading/
-├── index.html              (1,714 lines)
-├── css/styles.css          (7,503 lines)
+├── index.html              (1,715 lines)
+├── css/styles.css          (7,504 lines)
 ├── js/
-│   ├── app.js              (4,314 lines)
+│   ├── app.js              (4,110 lines) ← 41.8% smaller!
 │   ├── data/
-│   │   ├── ticker-profiles.js (515 lines)
-│   │   ├── glossary.js        (295 lines)
-│   │   └── ship-data.js       (342 lines)
+│   │   ├── ticker-profiles.js (517 lines)
+│   │   ├── glossary.js        (297 lines)
+│   │   ├── ship-data.js       (344 lines)
+│   │   └── holo-ships.js      (261 lines)
 │   ├── audio/
-│   │   └── audio-system.js    (498 lines)
+│   │   └── audio-system.js    (500 lines)
 │   └── games/
-│       └── mini-games.js      (1,206 lines)
+│       └── mini-games.js      (1,210 lines)
 ├── assets/ships/           (16 PNG files)
 ├── data/                   (18 JSON files)
 ├── HASLUN-BOT-README.md
 └── MODULARIZATION-LOG.md   (this file)
 ```
 
-**Total JS lines:** 7,170 (was 7,061 original + ChatGPT adds)
-**app.js reduction:** 7,061 → 4,314 = -2,747 lines (38.9% smaller!)
+**Total JS lines:** 7,239
+**app.js reduction:** 7,061 → 4,110 = **-2,951 lines (41.8% smaller!)**
 
 ---
 
