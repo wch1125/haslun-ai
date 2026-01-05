@@ -419,9 +419,50 @@
      * Each band jitters independently like unstable radio frequencies
      */
     // =========================================================================
-    // EMA ELECTROMAGNETIC GLITCH PLUGIN — Post-process visual distortion
-    // Creates CRT/EM interference effect on ribbon (not price line)
+    // EMA ELECTROMAGNETIC GLITCH PLUGIN — True Signal Lock Effect
+    // Creates authentic 80s EM interference / signal stabilization on ribbon
+    // Price trace stays clean; ribbon looks like energy being wrangled
     // =========================================================================
+    
+    // Noise helpers for EM displacement
+    function hashNoise(n) {
+      // Deterministic pseudo-noise 0..1
+      return Math.abs((Math.sin(n * 999.123) * 43758.5453) % 1);
+    }
+    
+    function smoothNoise(y, t) {
+      // y in pixels, t in seconds — creates organic wave pattern
+      const a = Math.sin((y * 0.035) + (t * 2.4));
+      const b = Math.sin((y * 0.011) + (t * 7.2));
+      const c = Math.sin((y * 0.003) + (t * 16.0));
+      return (a * 0.55 + b * 0.30 + c * 0.15);
+    }
+    
+    // Compute Y bounds of ribbon datasets only
+    function getRibbonBounds(chart) {
+      let top = Infinity;
+      let bottom = -Infinity;
+      
+      chart.data.datasets.forEach((ds, i) => {
+        if (!ds || !ds.isRibbon) return;
+        const meta = chart.getDatasetMeta(i);
+        if (!meta || !meta.data) return;
+        meta.data.forEach(pt => {
+          if (!pt || !Number.isFinite(pt.y)) return;
+          top = Math.min(top, pt.y);
+          bottom = Math.max(bottom, pt.y);
+        });
+      });
+      
+      if (!Number.isFinite(top) || !Number.isFinite(bottom)) return null;
+      
+      // Pad so fills/bands are included
+      const pad = 12;
+      top -= pad;
+      bottom += pad;
+      
+      return { top, bottom };
+    }
     
     const ribbonEMGlitchPlugin = {
       id: 'ribbonEMGlitchPlugin',
@@ -450,8 +491,13 @@
         const w = chartArea.right - chartArea.left;
         const h = chartArea.bottom - chartArea.top;
         if (w < 240 || h < 160) return;
+        
+        // Get ribbon-only bounds (price line stays clean!)
+        const rb = getRibbonBounds(chart);
+        if (!rb) return;
 
         const now = performance.now();
+        const t = now * 0.001;
 
         // Mobile-friendly intensity
         const isMobile = window.innerWidth < 768 || ('ontouchstart' in window);
@@ -469,104 +515,138 @@
 
         const inBurst = now < st.burstUntil;
 
-        // Constant subtle shimmer (very light)
-        const baseShimmer = 0.18 * intensity;
-
-        // Glitch amount spikes during bursts
-        const burstAmt = inBurst ? (0.9 * intensity) : 0.0;
-
-        // Total effect amount
-        const amt = baseShimmer + burstAmt;
+        // Intensity: baseline + burst spike
+        const base = 0.10 * intensity;
+        const burst = inBurst ? (0.85 * intensity) : 0.0;
+        const amt = base + burst;
         if (amt <= 0) return;
+        
+        // Ribbon band dimensions
+        const bandTop = Math.max(chartArea.top, rb.top);
+        const bandBottom = Math.min(chartArea.bottom, rb.bottom);
+        const bandH = Math.max(1, bandBottom - bandTop);
 
-        // Restrict effect to the chart area
+        // ============================================================
+        // CLIP TO RIBBON BAND ONLY — Price line stays perfectly clean
+        // ============================================================
         ctx.save();
         ctx.beginPath();
-        ctx.rect(chartArea.left, chartArea.top, w, h);
+        ctx.rect(chartArea.left, bandTop, w, bandH);
         ctx.clip();
 
-        // ------------- A) HORIZONTAL TEAR STRIPS -------------
-        // Each strip: small slice of the chart area shifted horizontally
-        // Creates scan interference look
-        const strips = inBurst ? 6 : 2;
-        for (let i = 0; i < strips; i++) {
-          const t = (now * 0.001) + st.burstSeed + i * 1.7;
-          const y = chartArea.top + (Math.random() * h);
-          const stripH = (inBurst ? (6 + Math.random() * 16) : (3 + Math.random() * 6)) * intensity;
-
-          // Oscillatory + random horizontal shift
-          const shift = (Math.sin(t * 9.0) * 6 + (Math.random() - 0.5) * 10) * amt;
-
-          // Copy slice and draw shifted
-          ctx.globalAlpha = inBurst ? (0.22 * intensity) : (0.10 * intensity);
-          ctx.globalCompositeOperation = 'lighter';
+        // ============================================================
+        // A) SCANLINE DISPLACEMENT MAPPING — True analog warp
+        // Each scanline gets smoothly displaced based on EM wave noise
+        // ============================================================
+        ctx.globalCompositeOperation = 'lighter';
+        
+        const step = isMobile ? 4 : 2;              // Fewer ops on mobile
+        const maxShift = (isMobile ? 4 : 10) * amt; // Max px displacement
+        
+        for (let y = 0; y < bandH; y += step) {
+          const yy = bandTop + y;
+          
+          // Smooth EM wave displacement
+          let shift = smoothNoise(yy, t) * maxShift;
+          
+          // During bursts: occasional "packet jump" (relock attempt)
+          if (inBurst && Math.random() < 0.06) {
+            shift += (Math.random() - 0.5) * (maxShift * 3.5);
+          }
+          
+          // Copy thin slice and redraw shifted
+          const sliceH = step;
+          ctx.globalAlpha = inBurst ? (0.20 * intensity) : (0.08 * intensity);
+          
           try {
             ctx.drawImage(
               canvas,
-              chartArea.left, y, w, stripH,
-              chartArea.left + shift, y, w, stripH
+              chartArea.left, yy, w, sliceH,
+              chartArea.left + shift, yy, w, sliceH
             );
           } catch (e) {
-            // Ignore cross-origin or other canvas errors
+            // Ignore canvas errors
           }
         }
 
-        // ------------- B) PHOSPHOR "GHOST" AFTERIMAGE -------------
-        // Faint delayed echo creates unstable lock appearance
-        const echoShift = (inBurst ? 2.6 : 0.9) * amt;
-        ctx.globalAlpha = inBurst ? (0.10 * intensity) : (0.05 * intensity);
+        // ============================================================
+        // B) CHROMATIC PHOSPHOR SPLIT — Retro CRT color gun misalignment
+        // Cyan/magenta separation creates that analog video feel
+        // ============================================================
+        if (amt > 0.12) {
+          const cs = (inBurst ? 2.0 : 0.8) * amt; // Chroma shift in px
+          ctx.globalCompositeOperation = 'screen';
+          
+          try {
+            // Cyan offset (shifted right)
+            ctx.globalAlpha = inBurst ? 0.10 : 0.05;
+            ctx.filter = 'hue-rotate(25deg) saturate(1.2)';
+            ctx.drawImage(canvas, chartArea.left, bandTop, w, bandH, 
+                          chartArea.left + cs, bandTop, w, bandH);
+            
+            // Magenta offset (shifted left)
+            ctx.filter = 'hue-rotate(-25deg) saturate(1.2)';
+            ctx.drawImage(canvas, chartArea.left, bandTop, w, bandH,
+                          chartArea.left - cs, bandTop, w, bandH);
+            
+            ctx.filter = 'none';
+          } catch (e) {
+            ctx.filter = 'none';
+            // Ignore canvas errors
+          }
+        }
+
+        // ============================================================
+        // C) FIELD LOCK LINE SWEEP — System trying to regain lock
+        // A bright horizontal line that sweeps during bursts
+        // ============================================================
+        if (inBurst) {
+          const sweepY = bandTop + (hashNoise(t * 3.0) * bandH);
+          ctx.globalCompositeOperation = 'screen';
+          ctx.globalAlpha = 0.12 * intensity;
+          ctx.fillStyle = '#33ff99';
+          ctx.fillRect(chartArea.left, sweepY, w, 1);
+          
+          // Secondary fainter sweep line
+          if (Math.random() < 0.3) {
+            const sweepY2 = bandTop + (hashNoise(t * 7.0 + 100) * bandH);
+            ctx.globalAlpha = 0.06 * intensity;
+            ctx.fillStyle = '#47d4ff';
+            ctx.fillRect(chartArea.left, sweepY2, w, 1);
+          }
+        }
+
+        // ============================================================
+        // D) PHOSPHOR PERSISTENCE — Faint ghost echo
+        // Creates unstable lock / afterimage appearance
+        // ============================================================
+        const echoShift = (inBurst ? 1.8 : 0.6) * amt;
+        ctx.globalAlpha = inBurst ? (0.08 * intensity) : (0.04 * intensity);
         ctx.globalCompositeOperation = 'screen';
         try {
           ctx.drawImage(
             canvas,
-            chartArea.left, chartArea.top, w, h,
-            chartArea.left + echoShift, chartArea.top + (inBurst ? 0.6 : 0.2) * amt, w, h
+            chartArea.left, bandTop, w, bandH,
+            chartArea.left + echoShift, bandTop + (0.3 * amt), w, bandH
           );
         } catch (e) {
           // Ignore canvas errors
         }
 
-        // ------------- C) MICRO QUANTIZATION (pixel snap) -------------
-        // Creates "digitized" look during bursts
-        if (inBurst) {
-          const snap = Math.max(1, Math.round(1.5 * intensity));
-          ctx.globalAlpha = 0.08 * intensity;
-          ctx.globalCompositeOperation = 'lighter';
-
-          // Nearest-neighbor by scaling down then up
-          ctx.imageSmoothingEnabled = false;
-          try {
-            const scaledW = Math.floor(w / snap);
-            const scaledH = Math.floor(h / snap);
-            if (scaledW > 0 && scaledH > 0) {
-              ctx.drawImage(
-                canvas,
-                chartArea.left, chartArea.top, w, h,
-                chartArea.left, chartArea.top, scaledW, scaledH
-              );
-              ctx.drawImage(
-                canvas,
-                chartArea.left, chartArea.top, scaledW, scaledH,
-                chartArea.left, chartArea.top, w, h
-              );
-            }
-          } catch (e) {
-            // Ignore canvas errors
-          }
-          ctx.imageSmoothingEnabled = true;
-        }
-
-        // ------------- D) OCCASIONAL "LOCK SNAP" LINE -------------
-        // Thin bright line that sweeps during burst (system re-locking)
-        if (inBurst && Math.random() < 0.18) {
-          const y = chartArea.top + Math.random() * h;
-          ctx.globalAlpha = 0.10 * intensity;
-          ctx.globalCompositeOperation = 'screen';
+        // ============================================================
+        // E) MICRO STATIC — Noise grain during intense bursts
+        // ============================================================
+        if (inBurst && intensity > 0.5) {
+          ctx.globalAlpha = 0.03 * intensity;
           ctx.fillStyle = '#33ff99';
-          ctx.fillRect(chartArea.left, y, w, 1);
+          for (let i = 0; i < 12; i++) {
+            const sx = chartArea.left + Math.random() * w;
+            const sy = bandTop + Math.random() * bandH;
+            ctx.fillRect(sx, sy, 1, 1);
+          }
         }
 
-        ctx.restore();
+        ctx.restore(); // End ribbon clip
       }
     };
     
