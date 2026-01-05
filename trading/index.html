@@ -3740,6 +3740,450 @@
         transform: scale(0.65);
       }
     }
+
+    /* =========================================================================
+       ADMIN CONSOLE OVERLAY (Snoop Trap)
+       ========================================================================= */
+    .admin-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 26000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+
+    .admin-overlay.visible {
+      pointer-events: auto;
+      opacity: 1;
+    }
+
+    .admin-overlay.hidden {
+      display: none;
+    }
+
+    .admin-backdrop {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 10% 0%, rgba(51, 255, 153, 0.15), transparent 55%),
+        radial-gradient(circle at 90% 100%, rgba(255, 179, 71, 0.12), transparent 55%),
+        rgba(0, 0, 0, 0.9);
+      backdrop-filter: blur(12px);
+    }
+
+    .admin-backdrop::before,
+    .admin-backdrop::after {
+      content: '';
+      position: absolute;
+      width: 400px;
+      height: 400px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(51, 255, 153, 0.12), transparent 60%);
+      opacity: 0.3;
+      pointer-events: none;
+    }
+
+    .admin-backdrop::before {
+      top: -100px;
+      left: -80px;
+    }
+
+    .admin-backdrop::after {
+      bottom: -100px;
+      right: -80px;
+      background: radial-gradient(circle, rgba(255, 179, 71, 0.1), transparent 60%);
+    }
+
+    .admin-window {
+      position: relative;
+      z-index: 1;
+      max-width: 600px;
+      width: 92vw;
+    }
+
+    .admin-frame {
+      position: relative;
+      background: var(--bg-void);
+      border-radius: 12px;
+      border: 2px solid var(--phosphor);
+      box-shadow:
+        0 0 30px var(--phosphor-glow),
+        0 0 60px rgba(0, 0, 0, 0.8),
+        inset 0 0 40px rgba(0, 0, 0, 0.5);
+      padding: 1rem;
+      overflow: hidden;
+    }
+
+    .admin-frame::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, var(--phosphor), transparent);
+    }
+
+    .admin-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-bottom: 0.75rem;
+      color: var(--phosphor-dim);
+    }
+
+    .admin-title {
+      color: var(--text-bright);
+      font-family: var(--font-display);
+      font-size: 0.85rem;
+    }
+
+    .admin-screen {
+      position: relative;
+      background: #020a08;
+      border-radius: 8px;
+      padding: 1rem;
+      border: 1px solid var(--phosphor-dim);
+      min-height: 180px;
+    }
+
+    .admin-screen::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: linear-gradient(rgba(0, 0, 0, 0.12) 1px, transparent 1px);
+      background-size: 100% 3px;
+      pointer-events: none;
+      border-radius: 8px;
+    }
+
+    .admin-line {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--phosphor-dim);
+      margin-bottom: 0.25rem;
+      letter-spacing: 0.08em;
+    }
+
+    .admin-divider {
+      margin: 0.75rem 0;
+      border-top: 1px solid var(--phosphor-ghost);
+    }
+
+    .admin-text {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      line-height: 1.6;
+      color: var(--phosphor);
+      text-shadow: 0 0 8px var(--phosphor-glow);
+      margin-bottom: 0.75rem;
+    }
+
+    .admin-text .error {
+      color: #ff6b6b;
+    }
+
+    .admin-text .warning {
+      color: var(--amber);
+    }
+
+    .admin-login-grid {
+      display: grid;
+      grid-template-columns: 80px 1fr;
+      gap: 0.5rem 0.75rem;
+      align-items: center;
+      margin-top: 1rem;
+    }
+
+    .admin-label {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.15em;
+      color: var(--text-muted);
+    }
+
+    .admin-input {
+      background: #030f0a;
+      border: 1px solid var(--phosphor-dim);
+      color: var(--phosphor);
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      padding: 0.4rem 0.6rem;
+      border-radius: 4px;
+      outline: none;
+      width: 100%;
+    }
+
+    .admin-input:focus {
+      border-color: var(--phosphor);
+      box-shadow: 0 0 10px var(--phosphor-glow);
+    }
+
+    .admin-input::placeholder {
+      color: var(--text-dim);
+    }
+
+    .admin-btn {
+      grid-column: 2;
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      border: 1px solid var(--phosphor);
+      background: var(--phosphor-ghost);
+      color: var(--phosphor);
+      cursor: pointer;
+      transition: all 0.15s;
+      margin-top: 0.5rem;
+    }
+
+    .admin-btn:hover {
+      background: var(--phosphor);
+      color: var(--bg-void);
+    }
+
+    .admin-footnote {
+      margin-top: 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      color: var(--text-dim);
+      letter-spacing: 0.1em;
+    }
+
+    .admin-close {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 1rem;
+      padding: 0.25rem;
+      transition: color 0.15s;
+      z-index: 10;
+    }
+
+    .admin-close:hover {
+      color: var(--phosphor);
+    }
+
+    .admin-window.shake {
+      animation: admin-shake 0.3s ease;
+    }
+
+    @keyframes admin-shake {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-6px); }
+      40% { transform: translateX(6px); }
+      60% { transform: translateX(-4px); }
+      80% { transform: translateX(4px); }
+    }
+
+    /* Dummy control styling */
+    .dummy-control {
+      position: relative;
+      cursor: pointer;
+    }
+
+    .dummy-control::after {
+      content: '🔒';
+      position: absolute;
+      top: 2px;
+      right: 4px;
+      font-size: 0.5rem;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+
+    .dummy-control:hover::after {
+      opacity: 0.5;
+    }
+
+    /* =========================================================================
+       CHART LANDING GAME
+       ========================================================================= */
+    .landing-game-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 24000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.95);
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+
+    .landing-game-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .landing-game-container {
+      position: relative;
+      max-width: 900px;
+      width: 95%;
+    }
+
+    .landing-game-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+    }
+
+    .landing-game-title {
+      font-family: var(--font-display);
+      font-size: 1rem;
+      letter-spacing: 0.15em;
+      color: var(--phosphor);
+    }
+
+    .landing-game-stats {
+      display: flex;
+      gap: 1.5rem;
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--text);
+    }
+
+    #landing-canvas {
+      width: 100%;
+      height: 400px;
+      background: radial-gradient(ellipse at 50% 100%, #041a22 0%, #01060a 70%);
+      border: 1px solid var(--phosphor-dim);
+      border-radius: 8px;
+    }
+
+    .landing-controls {
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      margin-top: 0.75rem;
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: var(--text-dim);
+      letter-spacing: 0.1em;
+    }
+
+    .landing-message {
+      text-align: center;
+      margin-top: 0.5rem;
+      font-family: var(--font-display);
+      font-size: 1rem;
+      letter-spacing: 0.1em;
+      min-height: 1.5em;
+    }
+
+    .landing-message.success {
+      color: var(--phosphor);
+      text-shadow: 0 0 15px var(--phosphor-glow);
+    }
+
+    .landing-message.failure {
+      color: #ff6b6b;
+    }
+
+    .landing-close {
+      position: absolute;
+      top: -2rem;
+      right: 0;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      padding: 0.3rem 0.6rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .landing-close:hover {
+      border-color: var(--phosphor);
+      color: var(--phosphor);
+    }
+
+    /* Mobile touch controls for landing game */
+    .landing-touch-controls {
+      display: none;
+      justify-content: center;
+      gap: 0.75rem;
+      margin-top: 0.75rem;
+    }
+
+    @media (hover: none) and (pointer: coarse) {
+      .landing-touch-controls {
+        display: flex;
+      }
+      .landing-controls {
+        display: none;
+      }
+    }
+
+    .landing-touch-btn {
+      width: 70px;
+      height: 50px;
+      background: var(--phosphor-ghost);
+      border: 1px solid var(--phosphor-dim);
+      color: var(--phosphor);
+      font-family: var(--font-display);
+      font-size: 1.2rem;
+      border-radius: 8px;
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .landing-touch-btn.thrust {
+      width: 120px;
+      background: rgba(255, 179, 71, 0.15);
+      border-color: var(--amber);
+      color: var(--amber);
+    }
+
+    .landing-touch-btn:active {
+      transform: scale(0.95);
+    }
+
+    @media (max-width: 768px) {
+      #landing-canvas {
+        height: 280px;
+      }
+      
+      .landing-game-title {
+        font-size: 0.85rem;
+      }
+    }
+
+    /* Screen glitch effect for snoop trap */
+    @keyframes screen-glitch {
+      0% { transform: translate(0); filter: hue-rotate(0deg); }
+      20% { transform: translate(-2px, 1px); filter: hue-rotate(90deg); }
+      40% { transform: translate(2px, -1px); filter: hue-rotate(180deg); }
+      60% { transform: translate(-1px, 2px); filter: hue-rotate(270deg); }
+      80% { transform: translate(1px, -2px); filter: hue-rotate(360deg); }
+      100% { transform: translate(0); filter: hue-rotate(0deg); }
+    }
+
+    .screen-glitch {
+      animation: screen-glitch 0.2s ease;
+    }
+
+    .screen-glitch * {
+      animation: screen-glitch 0.15s ease reverse;
+    }
   </style>
 </head>
 <body>
@@ -3925,7 +4369,13 @@
           <button class="push-btn" style="width: 100%; margin-bottom: 0.5rem;" onclick="toggleMobileDrawer(); switchTab('positions');">📊 Holdings</button>
           <button class="push-btn" style="width: 100%; margin-bottom: 0.5rem;" onclick="toggleMobileDrawer(); switchTab('options');">📈 Derivatives</button>
           <button class="push-btn" style="width: 100%; margin-bottom: 0.5rem;" onclick="toggleMobileDrawer(); switchTab('catalysts');">📅 Events</button>
-          <button class="push-btn primary" style="width: 100%;" onclick="toggleMobileDrawer(); if(window.SignalInvaders) SignalInvaders.start();">👾 Signal Invaders</button>
+        </div>
+        <div class="sidebar-section" style="padding-bottom: 0.5rem;">
+          <div class="sidebar-title">🎮 Arcade</div>
+        </div>
+        <div style="padding: 0 0.5rem 0.5rem;">
+          <button class="push-btn primary" style="width: 100%; margin-bottom: 0.5rem;" onclick="toggleMobileDrawer(); if(window.SignalInvaders) SignalInvaders.start();">👾 Signal Invaders</button>
+          <button class="push-btn" style="width: 100%; margin-bottom: 0.5rem;" onclick="toggleMobileDrawer(); if(window.LandingGame) LandingGame.start();">🚀 Terrain Lander</button>
         </div>
         <div class="sidebar-section" style="padding-bottom: 0.5rem;">
           <div class="sidebar-title">Tracking</div>
@@ -4336,6 +4786,17 @@
           <button class="kill-switch-btn stop" data-glossary-id="abort_all_trades" onclick="toggleKillSwitch()">ABORT ALL TRADES</button>
           <div class="kill-switch-status">System operational</div>
         </div>
+        
+        <!-- SNOOP TRAP: Fake Trading Controls -->
+        <div class="sidebar-section" style="border-bottom: 1px solid var(--border);">
+          <div class="sidebar-title">Quick Actions</div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+            <button class="push-btn dummy-control" data-dummy-action="buy" style="background: rgba(51, 255, 153, 0.1); border-color: var(--phosphor);">BUY</button>
+            <button class="push-btn dummy-control" data-dummy-action="sell" style="background: rgba(255, 107, 107, 0.1); border-color: #ff6b6b; color: #ff6b6b;">SELL</button>
+          </div>
+          <button class="push-btn dummy-control" data-dummy-action="leverage" style="width: 100%; margin-top: 0.5rem;">⚡ 10X LEVERAGE</button>
+        </div>
+        
         <div class="sidebar-section">
           <div class="sidebar-title">Risk Parameters</div>
           <div class="safety-list">
@@ -4363,6 +4824,18 @@
             </div>
           </div>
         </div>
+        
+        <!-- SNOOP TRAP: Fake Admin Access -->
+        <div class="sidebar-section" style="border-bottom: 1px solid var(--border);">
+          <div class="sidebar-title" style="color: var(--amber);">⚠ Admin Access</div>
+          <button class="push-btn dummy-control" data-dummy-action="admin" style="width: 100%; border-color: var(--amber); color: var(--amber);">
+            🔐 MISSION CONTROL LOGIN
+          </button>
+          <button class="push-btn dummy-control" data-dummy-action="withdraw" style="width: 100%; margin-top: 0.5rem;">
+            💰 WITHDRAW FUNDS
+          </button>
+        </div>
+        
         <div class="sidebar-section" style="padding-bottom: 0.5rem;"><div class="sidebar-title">Activity Log</div></div>
         <div class="activity-feed" id="activity-feed"></div>
       </aside>
@@ -4424,9 +4897,17 @@
     <div id="arcade-hud" class="arcade-hud hidden">
       <div class="hud-title">👾 ARCADE MODE</div>
       <ul id="mission-list"></ul>
-      <button class="arcade-launch-btn" onclick="window.SignalInvaders && SignalInvaders.start()">
-        ▶ LAUNCH SIGNAL INVADERS
-      </button>
+      <div style="display: flex; flex-direction: column; gap: 0.4rem; margin-top: 0.5rem;">
+        <button class="arcade-launch-btn" onclick="window.SignalInvaders && SignalInvaders.start()">
+          👾 SIGNAL INVADERS
+        </button>
+        <button class="arcade-launch-btn" onclick="window.LandingGame && LandingGame.start()">
+          🚀 TERRAIN LANDER
+        </button>
+        <button class="arcade-launch-btn" onclick="window.AdminConsole && AdminConsole.open()" style="border-color: var(--amber); color: var(--amber);">
+          🔐 ADMIN CONSOLE
+        </button>
+      </div>
     </div>
     
     <!-- Tiny uplink terminal -->
@@ -4438,6 +4919,67 @@
     <!-- KONAMI CODE EASTER EGG - INVADER ATTACK -->
     <div id="invader-attack-overlay" class="invader-attack-overlay"></div>
     <div id="attack-flash" class="attack-flash"></div>
+    
+    <!-- ADMIN CONSOLE OVERLAY (Snoop Trap) -->
+    <div id="admin-overlay" class="admin-overlay hidden">
+      <div class="admin-backdrop"></div>
+      <div class="admin-window">
+        <div class="admin-frame">
+          <button class="admin-close" id="admin-close">✕</button>
+          <div class="admin-header">
+            <span>// ACCESS NODE</span>
+            <span class="admin-title">HASLUN MISSION CONTROL</span>
+          </div>
+          <div class="admin-screen">
+            <div class="admin-line">SECURITY SUBSYSTEM v3.1</div>
+            <div class="admin-line">CHANNEL: LOCAL COCKPIT</div>
+            <div class="admin-line">MODE: STORY ONLY</div>
+            <div class="admin-divider"></div>
+            <div class="admin-text" id="admin-text">
+              Unauthorized console access attempt detected.<br>
+              Please authenticate to continue ruining the narrative.
+            </div>
+            <div class="admin-login-grid" id="admin-login-grid">
+              <label class="admin-label">USER:</label>
+              <input id="admin-user" class="admin-input" type="text" placeholder="GUEST">
+              <label class="admin-label">PASSCODE:</label>
+              <input id="admin-pass" class="admin-input" type="password" placeholder="••••••">
+              <button id="admin-submit" class="admin-btn">▶ AUTHENTICATE</button>
+            </div>
+            <div class="admin-footnote">
+              TIP: There is no correct password. This is a museum piece.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- CHART LANDING GAME -->
+    <div id="landing-game-overlay" class="landing-game-overlay">
+      <div class="landing-game-container">
+        <button class="landing-close" id="landing-close">✕ ESC</button>
+        <div class="landing-game-header">
+          <div class="landing-game-title">🚀 TERRAIN LANDER</div>
+          <div class="landing-game-stats">
+            <span>FUEL: <span id="landing-fuel">100</span>%</span>
+            <span>VELOCITY: <span id="landing-velocity">0.0</span></span>
+            <span>ALT: <span id="landing-alt">100</span></span>
+          </div>
+        </div>
+        <canvas id="landing-canvas"></canvas>
+        <div class="landing-controls">
+          <span>← → STEER</span>
+          <span>↑ THRUST</span>
+          <span>ESC EXIT</span>
+        </div>
+        <div class="landing-touch-controls">
+          <button class="landing-touch-btn" id="land-touch-left">◀</button>
+          <button class="landing-touch-btn thrust" id="land-touch-thrust">▲ THRUST</button>
+          <button class="landing-touch-btn" id="land-touch-right">▶</button>
+        </div>
+        <div class="landing-message" id="landing-message"></div>
+      </div>
+    </div>
     
     <!-- SIGNAL INVADERS ARCADE GAME -->
     <div id="signal-invaders-overlay" class="arcade-game-overlay hidden">
@@ -6515,7 +7057,9 @@
         { id:'analysis',  text:'Run analysis once', done:false },
         { id:'simulation', text:'Run P&L simulation', done:false },
         { id:'find_invader', text:'Find the hidden invader', done:false },
-        { id:'arcade_score', text:'Score 500+ in Signal Invaders', done:false }
+        { id:'arcade_score', text:'Score 500+ in Signal Invaders', done:false },
+        { id:'terrain_lander', text:'Soft land on the terrain', done:false },
+        { id:'snoop_master', text:'Trigger 5 access denials', done:false }
       ];
       
       const THEMES = {
@@ -8177,19 +8721,635 @@
         }
       };
 
-      // Cheat code listener for "INVADER" text
+      // Cheat code listener for multiple codes
       let cheatBuffer = '';
       document.addEventListener('keydown', (e) => {
         if (e.key.length === 1) {
           cheatBuffer += e.key.toUpperCase();
-          cheatBuffer = cheatBuffer.slice(-10);
+          cheatBuffer = cheatBuffer.slice(-12);
           
           if (cheatBuffer.includes('INVADER')) {
             cheatBuffer = '';
             SignalInvaders.start();
           }
+          
+          if (cheatBuffer.includes('LAND')) {
+            cheatBuffer = '';
+            LandingGame.start();
+          }
+          
+          if (cheatBuffer.includes('ADMIN')) {
+            cheatBuffer = '';
+            AdminConsole.open();
+          }
         }
       });
+
+      // =========================================================================
+      // ADMIN CONSOLE - Snoop Trap System
+      // =========================================================================
+      const AdminConsole = {
+        overlay: null,
+        attempts: 0,
+        snoopCounts: {},
+        
+        RESPONSES: [
+          "ACCESS DENIED: This cockpit runs on story mode only.",
+          "AUTH CORE: Incorrect. Impressively committed, but still incorrect.",
+          "SYSTEM: We cross-checked that password against seven parallel universes. No luck.",
+          "NOTE: If this actually logged in, several lawyers would materialize instantly.",
+          "SECURITY: At this point we're evaluating *you*, not the password.",
+          "FOURTH WALL: There is no version of reality where guessing this works.",
+          "CONCLUSION: The only winning move is to appreciate the UI and move on.",
+          "SYSTEM: We admire your persistence. It changes nothing.",
+          "AUTH: Even the raccoons running this server are impressed. Still no.",
+          "FINAL: This field has rejected credentials from 47 dimensions. Yours included."
+        ],
+        
+        SNOOP_MESSAGES: {
+          buy: [
+            "TRADE BLOCKED: This cockpit runs on vibes, not orders.",
+            "SYSTEM: You don't actually think this connects to a broker, right?",
+            "RISK ENGINE: Nice enthusiasm. Still can't buy anything here.",
+            "ALERT: Excessive button pressing detected. Consider a demo account."
+          ],
+          sell: [
+            "LIQUIDATION ERROR: Emotional damage cannot be realized as gains.",
+            "SYSTEM: Nothing to sell. This is a diorama, not a brokerage.",
+            "RISK ENGINE: Imagine if this worked. SEC shows up, everyone cries.",
+            "NOTE: The 'SELL' button is legally ornamental."
+          ],
+          withdraw: [
+            "WITHDRAWAL FAILED: Funds are imaginary. The attachment is real.",
+            "BANK: We regret to inform you this ATM dispenses only vibes.",
+            "SYSTEM: Request forwarded to the Department of Wishful Thinking."
+          ],
+          leverage: [
+            "MARGIN CALL: You can't lever up on pretend positions.",
+            "RISK CORE: The only thing getting leveraged here is your curiosity.",
+            "SYSTEM: 10x leverage on zero is still zero. Math is brutal."
+          ],
+          override: [
+            "OVERRIDE REJECTED: You are Mission Guest, not Mission Control.",
+            "SYSTEM: Override codes are stored in a vault made of pure fiction.",
+            "AUTH: The override button is connected to a very convincing LED."
+          ],
+          default: [
+            "INPUT IGNORED: This section is for narrative purposes only.",
+            "SYSTEM: You've discovered a prop. Congratulations, stagehand.",
+            "FOURTH WALL: Hi, yes, I can see you clicking that."
+          ]
+        },
+        
+        init() {
+          this.overlay = document.getElementById('admin-overlay');
+          if (!this.overlay) return;
+          
+          const closeBtn = document.getElementById('admin-close');
+          const submitBtn = document.getElementById('admin-submit');
+          const passInput = document.getElementById('admin-pass');
+          const userInput = document.getElementById('admin-user');
+          
+          if (closeBtn) closeBtn.onclick = () => this.close();
+          if (submitBtn) submitBtn.onclick = () => this.attemptLogin();
+          if (passInput) passInput.onkeydown = (e) => { if (e.key === 'Enter') this.attemptLogin(); };
+          if (userInput) userInput.onkeydown = (e) => { if (e.key === 'Enter') passInput.focus(); };
+          
+          this.overlay.onclick = (e) => {
+            if (e.target === this.overlay || e.target.classList.contains('admin-backdrop')) {
+              this.close();
+            }
+          };
+          
+          document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && this.overlay.classList.contains('visible')) {
+              this.close();
+            }
+          });
+          
+          // Hook dummy controls
+          this.initSnoopTraps();
+        },
+        
+        initSnoopTraps() {
+          document.querySelectorAll('.dummy-control').forEach(el => {
+            el.addEventListener('click', (e) => {
+              e.preventDefault();
+              const action = el.dataset.dummyAction || 'default';
+              
+              if (action === 'admin' || action === 'override') {
+                this.open();
+              } else {
+                this.showSnoopMessage(action);
+              }
+            });
+          });
+        },
+        
+        showSnoopMessage(action) {
+          const messages = this.SNOOP_MESSAGES[action] || this.SNOOP_MESSAGES.default;
+          const count = this.snoopCounts[action] || 0;
+          this.snoopCounts[action] = count + 1;
+          
+          const msg = count < messages.length ? messages[count] : messages[Math.floor(Math.random() * messages.length)];
+          
+          if (typeof showToast === 'function') {
+            showToast(msg, 'warn');
+          }
+          if (typeof logTerminal === 'function') {
+            logTerminal('snoop trap • ' + action.toUpperCase());
+          }
+          if (typeof beep === 'function') {
+            beep(200, 0.1);
+          }
+          
+          // Glitch effect on repeated attempts
+          if (count >= 3) {
+            document.body.classList.add('screen-glitch');
+            setTimeout(() => document.body.classList.remove('screen-glitch'), 200);
+          }
+        },
+        
+        open() {
+          if (!this.overlay) return;
+          this.attempts = 0;
+          
+          this.overlay.classList.remove('hidden');
+          setTimeout(() => this.overlay.classList.add('visible'), 10);
+          
+          const textEl = document.getElementById('admin-text');
+          if (textEl) {
+            textEl.innerHTML = 'Unauthorized console access attempt detected.<br>Please authenticate to continue ruining the narrative.';
+          }
+          
+          const userInput = document.getElementById('admin-user');
+          const passInput = document.getElementById('admin-pass');
+          if (userInput) userInput.value = '';
+          if (passInput) passInput.value = '';
+          
+          setTimeout(() => userInput?.focus(), 100);
+          
+          if (typeof logTerminal === 'function') {
+            logTerminal('security: admin console probe detected');
+          }
+        },
+        
+        close() {
+          if (!this.overlay) return;
+          this.overlay.classList.remove('visible');
+          setTimeout(() => this.overlay.classList.add('hidden'), 250);
+        },
+        
+        attemptLogin() {
+          const userInput = document.getElementById('admin-user');
+          const passInput = document.getElementById('admin-pass');
+          const textEl = document.getElementById('admin-text');
+          const windowEl = this.overlay.querySelector('.admin-window');
+          
+          const user = userInput?.value.trim() || 'GUEST';
+          const pass = passInput?.value.trim() || '••••••';
+          
+          const response = this.attempts < this.RESPONSES.length 
+            ? this.RESPONSES[this.attempts] 
+            : this.RESPONSES[Math.floor(Math.random() * this.RESPONSES.length)];
+          
+          this.attempts++;
+          
+          if (textEl) {
+            textEl.innerHTML = `
+              <span class="warning">USER:</span> ${user}<br>
+              <span class="warning">INPUT:</span> "${pass}"<br><br>
+              <span class="error">${response}</span>
+            `;
+          }
+          
+          // Shake effect
+          if (windowEl) {
+            windowEl.classList.add('shake');
+            setTimeout(() => windowEl.classList.remove('shake'), 300);
+          }
+          
+          if (typeof showToast === 'function') {
+            showToast(response, 'alert');
+          }
+          if (typeof logTerminal === 'function') {
+            logTerminal(`auth attempt #${this.attempts} • user=${user}`);
+          }
+          if (typeof beep === 'function') {
+            beep(150, 0.15);
+          }
+          
+          // Easter egg at attempt 5
+          if (this.attempts === 5 && typeof completeMission === 'function') {
+            completeMission('snoop_master');
+          }
+        }
+      };
+      
+      window.AdminConsole = AdminConsole;
+
+      // =========================================================================
+      // TERRAIN LANDER - Chart Landing Mini-Game
+      // =========================================================================
+      const LandingGame = {
+        canvas: null,
+        ctx: null,
+        active: false,
+        animationId: null,
+        
+        // Ship state
+        ship: { x: 100, y: 50, vx: 0, vy: 0, fuel: 100, landed: false, crashed: false },
+        
+        // Physics
+        gravity: 0.02,
+        thrust: 0.08,
+        maxLandingSpeed: 1.5,
+        
+        // Terrain (generated from "price data")
+        terrain: [],
+        stars: [],
+        
+        // Controls
+        keys: {},
+        
+        init() {
+          this.canvas = document.getElementById('landing-canvas');
+          if (!this.canvas) return;
+          
+          this.ctx = this.canvas.getContext('2d');
+          this.resizeCanvas();
+          
+          window.addEventListener('resize', () => this.resizeCanvas());
+          
+          // Keyboard controls
+          document.addEventListener('keydown', (e) => {
+            if (!this.active) return;
+            this.keys[e.key] = true;
+            if (e.key === 'Escape') this.close();
+          });
+          
+          document.addEventListener('keyup', (e) => {
+            this.keys[e.key] = false;
+          });
+          
+          // Close button
+          const closeBtn = document.getElementById('landing-close');
+          if (closeBtn) closeBtn.onclick = () => this.close();
+          
+          // Touch controls
+          this.initTouchControls();
+          
+          // Generate starfield
+          this.generateStars();
+        },
+        
+        initTouchControls() {
+          const leftBtn = document.getElementById('land-touch-left');
+          const rightBtn = document.getElementById('land-touch-right');
+          const thrustBtn = document.getElementById('land-touch-thrust');
+          
+          if (leftBtn) {
+            leftBtn.ontouchstart = (e) => { e.preventDefault(); this.keys['ArrowLeft'] = true; };
+            leftBtn.ontouchend = () => { this.keys['ArrowLeft'] = false; };
+          }
+          if (rightBtn) {
+            rightBtn.ontouchstart = (e) => { e.preventDefault(); this.keys['ArrowRight'] = true; };
+            rightBtn.ontouchend = () => { this.keys['ArrowRight'] = false; };
+          }
+          if (thrustBtn) {
+            thrustBtn.ontouchstart = (e) => { e.preventDefault(); this.keys['ArrowUp'] = true; };
+            thrustBtn.ontouchend = () => { this.keys['ArrowUp'] = false; };
+          }
+        },
+        
+        resizeCanvas() {
+          if (!this.canvas) return;
+          const container = this.canvas.parentElement;
+          this.canvas.width = container.clientWidth;
+          this.canvas.height = 400;
+        },
+        
+        generateStars() {
+          this.stars = [];
+          for (let i = 0; i < 80; i++) {
+            this.stars.push({
+              x: Math.random() * 900,
+              y: Math.random() * 400,
+              size: Math.random() * 1.5 + 0.5,
+              alpha: Math.random() * 0.6 + 0.2,
+              twinkle: Math.random() * 0.02
+            });
+          }
+        },
+        
+        generateTerrain() {
+          this.terrain = [];
+          const w = this.canvas.width;
+          const h = this.canvas.height;
+          const segments = 60;
+          
+          // Generate mountainous terrain with flat landing zones
+          let y = h * 0.6;
+          for (let i = 0; i <= segments; i++) {
+            const x = (i / segments) * w;
+            
+            // Add some randomness but keep landing zones flat
+            const isLandingZone = (i > 15 && i < 20) || (i > 35 && i < 42) || (i > 50 && i < 55);
+            
+            if (isLandingZone) {
+              y = y; // Keep flat
+            } else {
+              y += (Math.random() - 0.5) * 40;
+              y = Math.max(h * 0.4, Math.min(h * 0.85, y));
+            }
+            
+            this.terrain.push({ x, y, isLanding: isLandingZone });
+          }
+        },
+        
+        start() {
+          if (!this.canvas) this.init();
+          
+          // Reset ship
+          this.ship = {
+            x: 80,
+            y: 40,
+            vx: 0.5,
+            vy: 0,
+            fuel: 100,
+            landed: false,
+            crashed: false
+          };
+          
+          this.generateTerrain();
+          this.updateUI();
+          
+          // Show overlay
+          const overlay = document.getElementById('landing-game-overlay');
+          if (overlay) overlay.classList.add('active');
+          
+          const msgEl = document.getElementById('landing-message');
+          if (msgEl) {
+            msgEl.textContent = 'Land gently on flat terrain zones!';
+            msgEl.className = 'landing-message';
+          }
+          
+          this.active = true;
+          this.gameLoop();
+          
+          if (typeof logTerminal === 'function') {
+            logTerminal('TERRAIN LANDER initialized. Good luck, pilot.');
+          }
+          if (typeof beep === 'function') {
+            beep(440, 0.1);
+            setTimeout(() => beep(550, 0.1), 100);
+          }
+        },
+        
+        close() {
+          this.active = false;
+          if (this.animationId) cancelAnimationFrame(this.animationId);
+          
+          const overlay = document.getElementById('landing-game-overlay');
+          if (overlay) overlay.classList.remove('active');
+        },
+        
+        updateUI() {
+          const fuelEl = document.getElementById('landing-fuel');
+          const velEl = document.getElementById('landing-velocity');
+          const altEl = document.getElementById('landing-alt');
+          
+          if (fuelEl) fuelEl.textContent = Math.round(this.ship.fuel);
+          if (velEl) velEl.textContent = Math.abs(this.ship.vy).toFixed(1);
+          if (altEl) {
+            const groundY = this.getTerrainY(this.ship.x);
+            const alt = Math.max(0, Math.round(groundY - this.ship.y - 10));
+            altEl.textContent = alt;
+          }
+        },
+        
+        getTerrainY(x) {
+          if (this.terrain.length < 2) return this.canvas.height * 0.7;
+          
+          const w = this.canvas.width;
+          const idx = (x / w) * (this.terrain.length - 1);
+          const i = Math.floor(idx);
+          const t = idx - i;
+          
+          const p1 = this.terrain[Math.max(0, Math.min(i, this.terrain.length - 1))];
+          const p2 = this.terrain[Math.max(0, Math.min(i + 1, this.terrain.length - 1))];
+          
+          return p1.y + (p2.y - p1.y) * t;
+        },
+        
+        isLandingZone(x) {
+          const w = this.canvas.width;
+          const idx = Math.floor((x / w) * (this.terrain.length - 1));
+          const point = this.terrain[Math.max(0, Math.min(idx, this.terrain.length - 1))];
+          return point?.isLanding || false;
+        },
+        
+        gameLoop() {
+          if (!this.active) return;
+          
+          this.update();
+          this.render();
+          this.updateUI();
+          
+          this.animationId = requestAnimationFrame(() => this.gameLoop());
+        },
+        
+        update() {
+          if (this.ship.landed || this.ship.crashed) return;
+          
+          const ship = this.ship;
+          
+          // Apply gravity
+          ship.vy += this.gravity;
+          
+          // Controls
+          if (this.keys['ArrowUp'] && ship.fuel > 0) {
+            ship.vy -= this.thrust;
+            ship.fuel -= 0.3;
+          }
+          if (this.keys['ArrowLeft']) ship.vx -= 0.03;
+          if (this.keys['ArrowRight']) ship.vx += 0.03;
+          
+          // Apply velocity
+          ship.x += ship.vx;
+          ship.y += ship.vy;
+          
+          // Bounds
+          ship.x = Math.max(10, Math.min(this.canvas.width - 10, ship.x));
+          if (ship.y < 5) {
+            ship.y = 5;
+            ship.vy = 0;
+          }
+          
+          // Terrain collision
+          const groundY = this.getTerrainY(ship.x);
+          if (ship.y + 12 >= groundY) {
+            const speed = Math.abs(ship.vy);
+            const isFlat = this.isLandingZone(ship.x);
+            
+            if (speed < this.maxLandingSpeed && isFlat) {
+              // Successful landing!
+              ship.landed = true;
+              ship.y = groundY - 12;
+              this.onLand(true);
+            } else {
+              // Crash!
+              ship.crashed = true;
+              this.onLand(false);
+            }
+          }
+        },
+        
+        onLand(success) {
+          const msgEl = document.getElementById('landing-message');
+          
+          if (success) {
+            if (msgEl) {
+              msgEl.textContent = '✓ SOFT LANDING — DATA SECURED';
+              msgEl.className = 'landing-message success';
+            }
+            if (typeof showToast === 'function') {
+              showToast('Perfect landing! The terrain is yours.', 'alert');
+            }
+            if (typeof completeMission === 'function') {
+              completeMission('terrain_lander');
+            }
+            if (typeof beep === 'function') {
+              beep(660, 0.1);
+              setTimeout(() => beep(880, 0.15), 100);
+            }
+          } else {
+            if (msgEl) {
+              msgEl.textContent = '✗ CRASH — VOLATILITY TOO HIGH';
+              msgEl.className = 'landing-message failure';
+            }
+            if (typeof beep === 'function') {
+              beep(150, 0.3);
+            }
+          }
+          
+          if (typeof logTerminal === 'function') {
+            logTerminal(success ? 'Terrain Lander: successful touchdown!' : 'Terrain Lander: impact detected');
+          }
+          
+          // Restart after delay
+          setTimeout(() => {
+            if (this.active) this.start();
+          }, 2500);
+        },
+        
+        render() {
+          const ctx = this.ctx;
+          const w = this.canvas.width;
+          const h = this.canvas.height;
+          
+          ctx.clearRect(0, 0, w, h);
+          
+          // Draw stars with twinkle
+          this.stars.forEach(star => {
+            star.alpha += star.twinkle;
+            if (star.alpha > 0.8 || star.alpha < 0.2) star.twinkle *= -1;
+            ctx.fillStyle = `rgba(51, 255, 153, ${star.alpha})`;
+            ctx.fillRect(star.x % w, star.y, star.size, star.size);
+          });
+          
+          // Draw terrain
+          ctx.beginPath();
+          ctx.moveTo(0, h);
+          this.terrain.forEach((p, i) => {
+            if (i === 0) ctx.lineTo(p.x, p.y);
+            else ctx.lineTo(p.x, p.y);
+          });
+          ctx.lineTo(w, h);
+          ctx.closePath();
+          
+          // Terrain gradient
+          const terrainGrad = ctx.createLinearGradient(0, h * 0.5, 0, h);
+          terrainGrad.addColorStop(0, 'rgba(51, 255, 153, 0.3)');
+          terrainGrad.addColorStop(1, 'rgba(51, 255, 153, 0.1)');
+          ctx.fillStyle = terrainGrad;
+          ctx.fill();
+          
+          // Terrain line
+          ctx.beginPath();
+          this.terrain.forEach((p, i) => {
+            if (i === 0) ctx.moveTo(p.x, p.y);
+            else ctx.lineTo(p.x, p.y);
+          });
+          ctx.strokeStyle = '#33ff99';
+          ctx.lineWidth = 2;
+          ctx.shadowColor = '#33ff99';
+          ctx.shadowBlur = 8;
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+          
+          // Highlight landing zones
+          this.terrain.forEach((p, i) => {
+            if (p.isLanding && i > 0) {
+              ctx.beginPath();
+              ctx.moveTo(this.terrain[i-1].x, this.terrain[i-1].y);
+              ctx.lineTo(p.x, p.y);
+              ctx.strokeStyle = '#ffb347';
+              ctx.lineWidth = 3;
+              ctx.stroke();
+            }
+          });
+          
+          // Draw ship
+          const ship = this.ship;
+          ctx.save();
+          ctx.translate(ship.x, ship.y);
+          
+          if (ship.crashed) {
+            // Explosion particles
+            ctx.fillStyle = '#ff6b6b';
+            for (let i = 0; i < 8; i++) {
+              const angle = (i / 8) * Math.PI * 2;
+              const dist = 10 + Math.random() * 15;
+              ctx.fillRect(
+                Math.cos(angle) * dist - 2,
+                Math.sin(angle) * dist - 2,
+                4, 4
+              );
+            }
+          } else {
+            // Ship body (pixel style)
+            ctx.fillStyle = '#33ff99';
+            ctx.shadowColor = '#33ff99';
+            ctx.shadowBlur = 10;
+            ctx.fillRect(-3, -8, 6, 4);
+            ctx.fillRect(-6, -4, 12, 4);
+            ctx.fillRect(-8, 0, 16, 4);
+            ctx.fillRect(-10, 4, 6, 3);
+            ctx.fillRect(4, 4, 6, 3);
+            ctx.shadowBlur = 0;
+            
+            // Thrust flame
+            if (this.keys['ArrowUp'] && ship.fuel > 0) {
+              ctx.fillStyle = '#ffb347';
+              ctx.fillRect(-4, 7, 8, 4 + Math.random() * 6);
+              ctx.fillStyle = '#ff6b6b';
+              ctx.fillRect(-2, 11, 4, 3 + Math.random() * 4);
+            }
+          }
+          
+          ctx.restore();
+          
+          // HUD overlay
+          ctx.fillStyle = 'rgba(51, 255, 153, 0.6)';
+          ctx.font = '10px "IBM Plex Mono", monospace';
+          ctx.fillText('LANDING ZONES', 10, 20);
+          ctx.fillStyle = '#ffb347';
+          ctx.fillRect(100, 14, 30, 3);
+        }
+      };
+      
+      window.LandingGame = LandingGame;
 
       // =========================================================================
       // ENHANCED EVENTS TIMELINE RENDERING
@@ -8294,6 +9454,8 @@
         document.addEventListener('DOMContentLoaded', initLoreEngine);
         document.addEventListener('DOMContentLoaded', initEnhancedCatalysts);
         document.addEventListener('DOMContentLoaded', () => SignalInvaders.init());
+        document.addEventListener('DOMContentLoaded', () => AdminConsole.init());
+        document.addEventListener('DOMContentLoaded', () => LandingGame.init());
       } else {
         initArcade();
         initTubeOverload();
@@ -8303,6 +9465,8 @@
         initLoreEngine();
         initEnhancedCatalysts();
         SignalInvaders.init();
+        AdminConsole.init();
+        LandingGame.init();
       }
     })();
   </script>
