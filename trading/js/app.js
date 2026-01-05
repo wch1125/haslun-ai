@@ -283,6 +283,7 @@
     
     let currentTicker = 'RKLB', currentTimeframe = '1D', currentRange = '3M', showMA = true;
     let priceChart = null, macdChart = null, tickerData = {}, statsData = {};
+    let macdOrbitMode = true; // MACD orbital visualization mode (default: ORBIT)
     
     const tickerColors = {
       'RKLB': '#33ff99', 'LUNR': '#47d4ff', 'ASTS': '#ffb347', 'ACHR': '#ff6b9d',
@@ -2179,7 +2180,364 @@
       } catch (e) {
         console.warn('Ship Systems update failed:', e);
       }
+      
+      // Update MACD Orbit Visualization
+      const macdWrapper = document.querySelector('.macd-chart-wrapper');
+      if (macdWrapper) {
+        macdWrapper.classList.toggle('orbit-mode', macdOrbitMode);
+      }
+      if (macdOrbitMode) {
+        renderMacdOrbit({ macd: macdData, signal: signalData, hist: histData, labels });
+      }
     }
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // MACD ORBITAL VISUALIZATION — Star/Planet/Moon system from MACD data
+    // ═══════════════════════════════════════════════════════════════════════════
+    
+    // Animation state for smooth orbital motion
+    let macdOrbitAnimFrame = null;
+    let macdOrbitData = null;
+    
+    /**
+     * Clamp value between min and max
+     */
+    function orbitClamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+    
+    /**
+     * Normalize value to 0-1 range
+     */
+    function normFromRange(v, min, max) {
+      if (max - min === 0) return 0;
+      return (v - min) / (max - min);
+    }
+    
+    /**
+     * Get min/max from array
+     */
+    function getMinMax(arr) {
+      let min = Infinity, max = -Infinity;
+      for (const v of arr) {
+        if (v == null || !Number.isFinite(v)) continue;
+        if (v < min) min = v;
+        if (v > max) max = v;
+      }
+      if (min === Infinity) return { min: 0, max: 1 };
+      return { min, max };
+    }
+    
+    /**
+     * Toggle MACD display mode (ORBIT / LINES)
+     */
+    function toggleMacdMode() {
+      macdOrbitMode = !macdOrbitMode;
+      const btn = document.getElementById('macd-mode-toggle');
+      if (btn) {
+        btn.classList.toggle('active', macdOrbitMode);
+        btn.textContent = macdOrbitMode ? 'ORBIT' : 'LINES';
+      }
+      
+      const macdWrapper = document.querySelector('.macd-chart-wrapper');
+      if (macdWrapper) {
+        macdWrapper.classList.toggle('orbit-mode', macdOrbitMode);
+      }
+      
+      // If switching to orbit mode and we have cached data, start animation
+      if (macdOrbitMode && macdOrbitData) {
+        startMacdOrbitAnimation();
+      } else {
+        stopMacdOrbitAnimation();
+      }
+      
+      // Play UI sound
+      if (typeof playSound === 'function') playSound('click');
+    }
+    window.toggleMacdMode = toggleMacdMode;
+    
+    /**
+     * Render MACD Orbital Visualization
+     * Star = market center (zero line)
+     * Planet = MACD line (orbit radius)
+     * Moon = Signal line (sub-orbit)
+     * Histogram = thrust flare intensity
+     */
+    function renderMacdOrbit({ macd, signal, hist, labels }) {
+      // Cache data for animation loop
+      macdOrbitData = { macd, signal, hist, labels };
+      
+      // Start animation if in orbit mode
+      if (macdOrbitMode) {
+        startMacdOrbitAnimation();
+      }
+    }
+    
+    /**
+     * Start continuous animation loop for orbit
+     */
+    function startMacdOrbitAnimation() {
+      if (macdOrbitAnimFrame) return; // Already running
+      
+      function animate() {
+        drawMacdOrbitFrame();
+        macdOrbitAnimFrame = requestAnimationFrame(animate);
+      }
+      animate();
+    }
+    
+    /**
+     * Stop animation loop
+     */
+    function stopMacdOrbitAnimation() {
+      if (macdOrbitAnimFrame) {
+        cancelAnimationFrame(macdOrbitAnimFrame);
+        macdOrbitAnimFrame = null;
+      }
+    }
+    
+    /**
+     * Draw a single frame of the orbital visualization
+     */
+    function drawMacdOrbitFrame() {
+      if (!macdOrbitData) return;
+      
+      const { macd, signal, hist, labels } = macdOrbitData;
+      
+      const wrapper = document.querySelector('.macd-chart-wrapper');
+      const canvas = document.getElementById('macd-orbit-canvas');
+      if (!wrapper || !canvas) return;
+      
+      const rect = wrapper.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      
+      // Resize canvas if needed
+      const targetW = Math.max(1, Math.floor(rect.width * dpr));
+      const targetH = Math.max(1, Math.floor(rect.height * dpr));
+      if (canvas.width !== targetW || canvas.height !== targetH) {
+        canvas.width = targetW;
+        canvas.height = targetH;
+      }
+      
+      const ctx = canvas.getContext('2d');
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.scale(dpr, dpr);
+      ctx.clearRect(0, 0, rect.width, rect.height);
+      
+      // If no data, bail
+      if (!macd?.length || !signal?.length) return;
+      
+      // Use last N points for "recent orbit"
+      const N = Math.min(120, macd.length);
+      const start = macd.length - N;
+      
+      const macdSlice = macd.slice(start);
+      const sigSlice = signal.slice(start);
+      const histSlice = (hist || []).slice(start);
+      
+      const mmM = getMinMax(macdSlice);
+      const mmS = getMinMax(sigSlice);
+      const mmH = getMinMax(histSlice);
+      
+      // Center + radii
+      const cx = rect.width * 0.5;
+      const cy = rect.height * 0.52;
+      const baseR = Math.min(rect.width, rect.height) * 0.16;
+      const maxR = Math.min(rect.width, rect.height) * 0.40;
+      
+      // Current time for animation
+      const t = performance.now() * 0.001;
+      
+      // Pick the "current" point (latest)
+      const i = N - 1;
+      const m = macdSlice[i] ?? 0;
+      const s = sigSlice[i] ?? 0;
+      const h = histSlice[i] ?? 0;
+      
+      // Normalize into [-1..1] style signals
+      const mN = normFromRange(m, mmM.min, mmM.max) * 2 - 1;
+      const sN = normFromRange(s, mmS.min, mmS.max) * 2 - 1;
+      const hN = normFromRange(h, mmH.min, mmH.max) * 2 - 1;
+      
+      // Planet radius responds to |MACD| (more divergence = wider orbit)
+      const planetR = baseR + (maxR - baseR) * orbitClamp(Math.abs(mN), 0, 1);
+      
+      // Moon radius responds to |Signal| but smaller
+      const moonR = planetR * (0.22 + 0.18 * orbitClamp(Math.abs(sN), 0, 1));
+      
+      // Angle progression: time drives orbit, data affects speed
+      const orbitSpeed = 0.12 + Math.abs(hN) * 0.08; // Faster when momentum is high
+      const angle = t * orbitSpeed;
+      
+      // Signal "phase" offset - moon orbits planet
+      const moonOrbitSpeed = 1.85;
+      const moonAngle = angle * moonOrbitSpeed + sN * 0.9;
+      
+      // Histogram controls "thrust" flare + eccentricity
+      const thrust = orbitClamp(Math.abs(hN), 0, 1);
+      
+      // Eccentricity: slightly squash orbit during high thrust
+      const ecc = 1 - thrust * 0.18;
+      
+      // Planet position
+      const px = cx + Math.cos(angle) * planetR;
+      const py = cy + Math.sin(angle) * (planetR * ecc);
+      
+      // Moon position around planet
+      const mx = px + Math.cos(moonAngle) * moonR;
+      const my = py + Math.sin(moonAngle) * (moonR * 0.92);
+      
+      // --- DRAW ---
+      ctx.save();
+      
+      // Background starfield (subtle, static per frame)
+      ctx.globalAlpha = 0.04;
+      const starSeed = Math.floor(t * 0.5); // Changes slowly
+      for (let k = 0; k < 24; k++) {
+        // Pseudo-random based on seed
+        const sx = ((k * 137.5 + starSeed * 0.3) % rect.width);
+        const sy = ((k * 173.3 + starSeed * 0.7) % rect.height);
+        ctx.fillStyle = k % 3 === 0 ? '#47d4ff' : '#33ff99';
+        ctx.fillRect(sx, sy, 1, 1);
+      }
+      ctx.globalAlpha = 1;
+      
+      // STAR (center) - pulsing core
+      const starPulse = 1 + Math.sin(t * 2.5) * 0.08;
+      const starGlow = ctx.createRadialGradient(cx, cy, 0, cx, cy, baseR * 1.3 * starPulse);
+      starGlow.addColorStop(0, 'rgba(255, 255, 255, 0.25)');
+      starGlow.addColorStop(0.15, 'rgba(51, 255, 153, 0.45)');
+      starGlow.addColorStop(0.45, 'rgba(71, 212, 255, 0.15)');
+      starGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = starGlow;
+      ctx.beginPath();
+      ctx.arc(cx, cy, baseR * 1.3 * starPulse, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Star core
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.18)';
+      ctx.beginPath();
+      ctx.arc(cx, cy, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // ORBIT RING (dotted ellipse)
+      ctx.strokeStyle = `rgba(51, 255, 153, ${0.08 + thrust * 0.12})`;
+      ctx.lineWidth = 1;
+      ctx.setLineDash([4, 6]);
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, planetR, planetR * ecc, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      
+      // ORBIT TRAIL (historical path)
+      ctx.globalCompositeOperation = 'screen';
+      for (let j = 0; j < N; j++) {
+        const mj = macdSlice[j] ?? 0;
+        const hj = histSlice[j] ?? 0;
+        
+        const mjN = normFromRange(mj, mmM.min, mmM.max) * 2 - 1;
+        const hjN = normFromRange(hj, mmH.min, mmH.max) * 2 - 1;
+        
+        const rj = baseR + (maxR - baseR) * orbitClamp(Math.abs(mjN), 0, 1);
+        const aj = (j / Math.max(1, N - 1)) * Math.PI * 2 + t * orbitSpeed;
+        const eccJ = 1 - orbitClamp(Math.abs(hjN), 0, 1) * 0.18;
+        
+        const xj = cx + Math.cos(aj) * rj;
+        const yj = cy + Math.sin(aj) * (rj * eccJ);
+        
+        const age = j / (N - 1);
+        ctx.fillStyle = `rgba(71, 212, 255, ${0.015 + age * 0.12})`;
+        ctx.fillRect(xj, yj, 1.5, 1.5);
+      }
+      ctx.globalCompositeOperation = 'source-over';
+      
+      // PLANET (MACD)
+      ctx.save();
+      ctx.shadowBlur = 14;
+      ctx.shadowColor = thrust > 0.5 ? 'rgba(51, 255, 153, 0.9)' : 'rgba(71, 212, 255, 0.7)';
+      ctx.fillStyle = thrust > 0.5 ? 'rgba(51, 255, 153, 0.9)' : 'rgba(71, 212, 255, 0.8)';
+      ctx.beginPath();
+      ctx.arc(px, py, 4.5 + thrust * 3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+      
+      // THRUST FLARE (histogram direction)
+      if (thrust > 0.08) {
+        const dir = h >= 0 ? 1 : -1; // positive momentum vs negative
+        const flareColor = dir > 0 ? 'rgba(51, 255, 153, 0.6)' : 'rgba(255, 107, 107, 0.5)';
+        ctx.globalAlpha = 0.55;
+        ctx.strokeStyle = flareColor;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(px, py);
+        const flareLen = 12 + thrust * 28;
+        ctx.lineTo(px - Math.cos(angle) * flareLen, py - Math.sin(angle) * flareLen * ecc);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+      
+      // MOON (Signal)
+      ctx.save();
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = 'rgba(255, 179, 71, 0.7)';
+      ctx.fillStyle = 'rgba(255, 179, 71, 0.7)';
+      ctx.beginPath();
+      ctx.arc(mx, my, 2.5 + thrust * 1.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+      
+      // Tether line (very faint)
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(px, py);
+      ctx.lineTo(mx, my);
+      ctx.stroke();
+      
+      // STATUS LABEL (bottom)
+      ctx.font = "9px 'IBM Plex Mono', monospace";
+      ctx.fillStyle = 'rgba(90, 112, 104, 0.7)';
+      ctx.textAlign = 'center';
+      const statusText = `MACD: ${m.toFixed(2)} | SIG: ${s.toFixed(2)} | HIST: ${h.toFixed(2)}`;
+      ctx.fillText(statusText, cx, rect.height - 6);
+      
+      // DIVERGENCE INDICATOR (when MACD and Signal are far apart)
+      const divergence = Math.abs(m - s);
+      const maxDiv = Math.max(Math.abs(mmM.max - mmS.min), Math.abs(mmM.min - mmS.max)) || 1;
+      const divNorm = orbitClamp(divergence / maxDiv, 0, 1);
+      if (divNorm > 0.5) {
+        ctx.globalAlpha = (divNorm - 0.5) * 0.4;
+        ctx.strokeStyle = m > s ? 'rgba(51, 255, 153, 0.6)' : 'rgba(255, 107, 107, 0.6)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        // Draw arc showing divergence
+        ctx.arc(cx, cy, planetR + 10, angle - 0.3, angle + 0.3);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+      
+      ctx.restore();
+    }
+    
+    // Resize handler for MACD orbit canvas
+    window.addEventListener('resize', () => {
+      // Canvas will auto-resize on next frame draw
+      // Just trigger a redraw if we're in orbit mode
+      if (macdOrbitMode && macdOrbitData) {
+        drawMacdOrbitFrame();
+      }
+    });
+    
+    // Initialize MACD mode button state on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      const btn = document.getElementById('macd-mode-toggle');
+      if (btn) {
+        btn.classList.toggle('active', macdOrbitMode);
+        btn.textContent = macdOrbitMode ? 'ORBIT' : 'LINES';
+      }
+      const wrapper = document.querySelector('.macd-chart-wrapper');
+      if (wrapper) {
+        wrapper.classList.toggle('orbit-mode', macdOrbitMode);
+      }
+    });
     
     // ═══════════════════════════════════════════════════════════════════════════
     // CAPTAIN'S LOG — Truth-rooted event generation from MACD data

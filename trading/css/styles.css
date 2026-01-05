@@ -2915,6 +2915,29 @@
     .price-chart-wrapper { flex: 3; position: relative; min-height: 200px; background: radial-gradient(ellipse at 50% 50%, rgba(51, 255, 153, 0.04), transparent 70%) var(--bg-panel); border: 1px solid var(--border); padding: 0.5rem; z-index: 3; overflow: hidden; }
     .macd-chart-wrapper { flex: 1; position: relative; min-height: 100px; background: var(--bg-panel); border: 1px solid var(--border); border-top: none; padding: 0.5rem; z-index: 3; overflow: hidden; }
     
+    /* MACD Orbit Visualization Canvas */
+    .macd-orbit-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      image-rendering: pixelated;
+      opacity: 1;
+      z-index: 7;
+      transition: opacity 0.3s ease;
+    }
+    
+    /* Orbit mode: hide the line chart, show orbit viz */
+    .macd-chart-wrapper.orbit-mode #macd-chart {
+      opacity: 0;
+    }
+    
+    /* Lines mode: hide orbit viz, show line chart */
+    .macd-chart-wrapper:not(.orbit-mode) .macd-orbit-canvas {
+      opacity: 0;
+    }
+    
     /* CRT Scanlines overlay */
     .price-chart-wrapper::before,
     .macd-chart-wrapper::before {

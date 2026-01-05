@@ -688,6 +688,7 @@
                     </div>
                     <div class="chart-tools">
                       <button class="ctrl-btn active" id="ma-toggle" onclick="toggleMA()" title="EMA Ribbon Overlay">RIBBON</button>
+                      <button class="ctrl-btn active" id="macd-mode-toggle" onclick="toggleMacdMode()" title="MACD Display Mode">ORBIT</button>
                       <div class="tool-divider"></div>
                       <div class="control-group">
                         <button class="ctrl-btn" data-range="1W" onclick="setRange('1W')">1W</button>
@@ -702,7 +703,10 @@
                   
                   <!-- Charts -->
                   <div class="price-chart-wrapper"><canvas id="price-chart"></canvas></div>
-                  <div class="macd-chart-wrapper"><canvas id="macd-chart"></canvas></div>
+                  <div class="macd-chart-wrapper">
+                    <canvas id="macd-chart"></canvas>
+                    <canvas id="macd-orbit-canvas" class="macd-orbit-canvas"></canvas>
+                  </div>
                   
                   <!-- Captain's Log (fills dead zone under MACD) -->
                   <section class="telemetry-logbay">
