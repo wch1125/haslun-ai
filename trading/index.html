@@ -3071,6 +3071,76 @@
       animation: none;
     }
 
+    /* =========================================================================
+       PIXEL SHIP RENDERING (8-bit Space Invaders style)
+       ========================================================================= */
+    .pixel-ship-square {
+      fill: #b6ffe7;
+      stroke: #00ffbf;
+      stroke-width: 0.2;
+    }
+
+    .pixel-ship-square--hero {
+      fill: #e4fff5;
+      stroke-width: 0.35;
+    }
+
+    .pixel-ship-glow {
+      filter:
+        drop-shadow(0 0 6px rgba(0,255,190,.8))
+        drop-shadow(0 0 16px rgba(0,255,220,.6));
+    }
+
+    /* idle wobble for main holobay */
+    .fleet-ship-svg.pixel-mode {
+      animation: pixel-holo-rock 7s ease-in-out infinite alternate;
+      transform-origin: 50% 55%;
+    }
+
+    @keyframes pixel-holo-rock {
+      0%   { transform: perspective(700px) rotateX(16deg) rotateY(-6deg); }
+      50%  { transform: perspective(700px) rotateX(18deg) rotateY(6deg); }
+      100% { transform: perspective(700px) rotateX(16deg) rotateY(-3deg); }
+    }
+
+    /* damage flicker for big losers */
+    .ship-damaged {
+      position: relative;
+    }
+
+    .ship-damaged::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 50% 50%, rgba(255,80,80,.4), transparent 65%);
+      mix-blend-mode: screen;
+      opacity: 0;
+      animation: pixel-damage 1.4s infinite;
+    }
+
+    @keyframes pixel-damage {
+      0%,30%,100% { opacity: 0; }
+      35%         { opacity: 0.9; }
+      40%         { opacity: 0.2; }
+      50%         { opacity: 0.5; }
+    }
+
+    /* Pixel ship winning state - bright pulse */
+    .pixel-ship-winning .pixel-ship-square {
+      animation: pixel-win-pulse 1.2s ease-in-out infinite;
+    }
+
+    @keyframes pixel-win-pulse {
+      0%, 100% { fill: #b6ffe7; }
+      50% { fill: #e4fff5; }
+    }
+
+    /* Pixel ship losing state - red tint */
+    .pixel-ship-losing .pixel-ship-square {
+      fill: #ffb0b0;
+      stroke: #ff6060;
+    }
+
     .fleet-holobay {
       margin-bottom: 20px;
       padding: 16px 18px;
@@ -5653,7 +5723,9 @@
                       <div class="fleet-holo-stage">
                         <div class="fleet-holo-stars"></div>
                         <div class="fleet-holo-grid"></div>
-                        <svg id="fleet-ship-svg" class="fleet-ship-svg" viewBox="0 0 120 80" aria-hidden="true"></svg>
+                        <svg id="fleet-ship-svg" class="fleet-ship-svg pixel-ship-glow" viewBox="0 0 120 80" aria-hidden="true">
+                          <!-- Pixel ship rendered dynamically -->
+                        </svg>
                         <div class="fleet-scanlines"></div>
                         <div class="fleet-holo-glow"></div>
                       </div>
@@ -5667,7 +5739,7 @@
                         <div class="label">CLASS:</div>
                         <div id="fleet-ship-class" class="value">—</div>
 
-                        <div class="label">SECTOR:</div>
+                        <div class="label">STATUS:</div>
                         <div id="fleet-ship-sector" class="value">—</div>
                       </div>
 
@@ -5830,13 +5902,13 @@
           <div class="ship-profile">
             <div class="ship-screen">
               <div class="ship-grid-bg"></div>
-              <svg class="ship-svg" viewBox="0 0 120 80">
-                <use id="sidebar-ship-use" href="#ship-orbital"></use>
+              <svg class="ship-svg pixel-ship-glow" viewBox="0 0 120 80" id="sidebar-ship-svg">
+                <!-- Pixel ship will be rendered here dynamically -->
               </svg>
               <div class="ship-sweep"></div>
               <div class="ship-pulse-ring"></div>
             </div>
-            <div class="ship-caption" id="ship-caption">RKLB · ORBITAL FRIGATE</div>
+            <div class="ship-caption" id="ship-caption">RKLB · FLAGSHIP</div>
             <div class="ship-vitals">
               <div class="vital"><span class="vital-label">STATUS</span><span class="vital-value" id="ship-status">TRACKING</span></div>
               <div class="vital"><span class="vital-label">SIGNAL</span><span class="vital-value positive" id="ship-signal">STRONG</span></div>
@@ -7454,6 +7526,262 @@
       return SHIP_LORE[symbol] || { hud: "SYSTEMS NOMINAL", lore: "Standard issue vessel." };
     }
     
+    // =========================================================================
+    // PIXEL SHIP RENDERING SYSTEM (8-bit Space Invaders style)
+    // =========================================================================
+    
+    // Each row is a string of "0"/"1" for the LEFT HALF.
+    // Code will mirror them horizontally, so total columns = row.length * 2.
+    // Grid is dense enough that each design has >= 50 squares.
+    const PIXEL_SHIPS = {
+      // Hero flagship – spear / eye / command ship (RKLB)
+      flagship: [
+        "00110",
+        "01111",
+        "11111",
+        "11111",
+        "11111",
+        "01111",
+        "00110",
+        "00010"
+      ],
+      // Chunky mech / dreadnought (GME, volatile stocks)
+      dreadnought: [
+        "01110",
+        "11111",
+        "11111",
+        "11111",
+        "11111",
+        "11111",
+        "01110",
+        "00100"
+      ],
+      // Lander / shuttle style (LUNR)
+      lander: [
+        "00100",
+        "01110",
+        "11111",
+        "11111",
+        "11111",
+        "01110",
+        "01110",
+        "00100"
+      ],
+      // Carrier (wide, flat) - EVTOL / Aviation
+      carrier: [
+        "01111",
+        "11111",
+        "11111",
+        "11111",
+        "11111",
+        "11111",
+        "01111",
+        "00111"
+      ],
+      // Recon drone (compact) - surveillance
+      drone: [
+        "00110",
+        "01111",
+        "11111",
+        "11111",
+        "11111",
+        "01111",
+        "00110",
+        "00000"
+      ],
+      // Cruiser - defense / patrol
+      cruiser: [
+        "00111",
+        "01111",
+        "11111",
+        "11111",
+        "11111",
+        "11111",
+        "01111",
+        "00110"
+      ],
+      // Station / relay - comms
+      station: [
+        "01110",
+        "11111",
+        "01110",
+        "11111",
+        "11111",
+        "01110",
+        "11111",
+        "01110"
+      ],
+      // Probe - experimental / meme
+      probe: [
+        "00100",
+        "01110",
+        "01110",
+        "11111",
+        "11111",
+        "01110",
+        "01110",
+        "00100"
+      ],
+      // Hauler - cargo / industrial
+      hauler: [
+        "01111",
+        "11111",
+        "11111",
+        "11111",
+        "11111",
+        "11111",
+        "11111",
+        "01110"
+      ]
+    };
+    
+    // Pixel ship lore for HUD display
+    const PIXEL_SHIP_LORE = {
+      flagship: { label: "FLAGSHIP", hud: "COMMAND AUTHORITY ACTIVE", lore: "Spearhead command ship. Victory follows in its wake." },
+      dreadnought: { label: "DREADNOUGHT", hud: "HEAVY ARMOR ENGAGED", lore: "Refuses to die. Logs its own kills without permission." },
+      lander: { label: "LANDER", hud: "DESCENT LOCKED", lore: "Landers don't win wars. They bring people home." },
+      carrier: { label: "CARRIER", hud: "FLIGHT OPS READY", lore: "Sky taxi of the future. Vertical freedom." },
+      drone: { label: "DRONE", hud: "PASSIVE SCAN ACTIVE", lore: "Buzzes. Watches. Reports. Occasionally has opinions." },
+      cruiser: { label: "CRUISER", hud: "PATROL SYSTEMS ONLINE", lore: "First responder. Last line. No medals, just duty." },
+      station: { label: "STATION", hud: "UPLINK ESTABLISHED", lore: "Every message passes through. Trusted with all secrets." },
+      probe: { label: "PROBE", hud: "ANOMALY DETECTED", lore: "Origin unknown. Trajectory chaotic. Somehow profitable." },
+      hauler: { label: "HAULER", hud: "CARGO MANIFEST VERIFIED", lore: "Doesn't have fans. Has people who owe their lives to it." }
+    };
+    
+    /**
+     * Render a symmetric pixel ship into an SVG element.
+     * @param {SVGElement} svgEl
+     * @param {string} patternKey - key in PIXEL_SHIPS
+     * @param {Object} opts
+     *   opts.hero {boolean}
+     *   opts.pnlPercent {number} - to mark damaged on big losers
+     */
+    function renderPixelShip(svgEl, patternKey, opts = {}) {
+      if (!svgEl) return;
+
+      const pattern = PIXEL_SHIPS[patternKey] || PIXEL_SHIPS.flagship;
+      const hero    = !!opts.hero;
+      const pnl     = typeof opts.pnlPercent === "number" ? opts.pnlPercent : null;
+
+      // Clear previous content
+      while (svgEl.firstChild) svgEl.removeChild(svgEl.firstChild);
+
+      // Basic grid metrics
+      const rows      = pattern.length;
+      const colsHalf  = pattern[0].length;
+      const colsTotal = colsHalf * 2;
+      const cell      = 4;             // size of a square in viewBox units
+      const width     = colsTotal * cell;
+      const height    = rows * cell;
+      const viewW     = 120;
+      const viewH     = 80;
+
+      const offsetX = (viewW - width) / 2;
+      const offsetY = (viewH - height) / 2;
+
+      const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      svgEl.appendChild(g);
+
+      for (let r = 0; r < rows; r++) {
+        const rowBits = pattern[r];
+        for (let c = 0; c < colsHalf; c++) {
+          if (rowBits[c] !== "1") continue;
+
+          // Left square
+          const leftX = offsetX + c * cell;
+          const y     = offsetY + r * cell;
+
+          const rectL = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+          rectL.setAttribute("x", leftX);
+          rectL.setAttribute("y", y);
+          rectL.setAttribute("width", cell);
+          rectL.setAttribute("height", cell);
+          rectL.setAttribute("class", hero ? "pixel-ship-square pixel-ship-square--hero" : "pixel-ship-square");
+          g.appendChild(rectL);
+
+          // Mirrored square
+          const mirrorC = colsTotal - 1 - c;
+          const rightX  = offsetX + mirrorC * cell;
+
+          const rectR = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+          rectR.setAttribute("x", rightX);
+          rectR.setAttribute("y", y);
+          rectR.setAttribute("width", cell);
+          rectR.setAttribute("height", cell);
+          rectR.setAttribute("class", hero ? "pixel-ship-square pixel-ship-square--hero" : "pixel-ship-square");
+          g.appendChild(rectR);
+        }
+      }
+
+      // Add pixel-mode class for animations
+      svgEl.classList.add("pixel-mode", "pixel-ship-glow");
+      
+      // Damage overlay on big losers / winning state
+      svgEl.classList.remove("ship-damaged", "pixel-ship-winning", "pixel-ship-losing");
+      if (pnl !== null) {
+        if (pnl < -5) {
+          svgEl.classList.add("ship-damaged", "pixel-ship-losing");
+        } else if (pnl >= 5) {
+          svgEl.classList.add("pixel-ship-winning");
+        }
+      }
+    }
+    
+    // Maps ticker/sector into { pattern, hero, label }
+    function mapTickerToPixelShip(ticker, sector, pnlPercent) {
+      ticker = (ticker || "").toUpperCase();
+      sector = sector || "";
+
+      // Heroes
+      if (ticker === "RKLB") return { pattern: "flagship", hero: true };
+      if (ticker === "GME")  return { pattern: "dreadnought", hero: true };
+      if (ticker === "TSLA") return { pattern: "flagship", hero: true };
+      if (ticker === "NVDA") return { pattern: "dreadnought", hero: true };
+
+      // Specific tickers
+      if (ticker === "LUNR") return { pattern: "lander", hero: false };
+      if (/JOBY|ACHR|EVEX/.test(ticker)) return { pattern: "carrier", hero: false };
+      if (/ASTS/.test(ticker)) return { pattern: "probe", hero: false };
+      if (/IRDM/.test(ticker)) return { pattern: "station", hero: false };
+      if (/BKSY|PL/.test(ticker)) return { pattern: "drone", hero: false };
+      if (/KTOS|RDW/.test(ticker)) return { pattern: "cruiser", hero: false };
+      if (/ATI|MP|LOAR/.test(ticker)) return { pattern: "hauler", hero: false };
+      if (/CACI|HON/.test(ticker)) return { pattern: "cruiser", hero: false };
+
+      // By sector
+      if (/VTOL|EVTOL|AVIATION/i.test(sector))
+        return { pattern: "carrier", hero: false };
+
+      if (/SPACE|LAUNCH|SAT|ORBITAL/i.test(sector))
+        return { pattern: "flagship", hero: false };
+
+      if (/INDUSTRIAL|MATERIALS|CARGO/i.test(sector))
+        return { pattern: "hauler", hero: false };
+
+      if (/DEFENSE|MILITARY/i.test(sector))
+        return { pattern: "cruiser", hero: false };
+
+      if (/COMMS|RELAY|CELLULAR/i.test(sector))
+        return { pattern: "station", hero: false };
+
+      if (/MEME|RETAIL|CHAOTIC/i.test(sector))
+        return { pattern: "probe", hero: false };
+
+      if (/LUNAR|SURFACE/i.test(sector))
+        return { pattern: "lander", hero: false };
+
+      if (/SURVEILLANCE|RECON|EARTH/i.test(sector))
+        return { pattern: "drone", hero: false };
+
+      // Default
+      return { pattern: "lander", hero: false };
+    }
+    
+    // Get pixel ship lore
+    function getPixelShipLore(patternKey) {
+      return PIXEL_SHIP_LORE[patternKey] || PIXEL_SHIP_LORE.lander;
+    }
+    
     // Apply ship to an SVG element with use element
     function applyShipToSvg(svgEl, useEl, mapping, pnlNum) {
       if (!svgEl || !useEl) return;
@@ -7479,20 +7807,28 @@
       }
     }
     
-    // Update sidebar ship profile
+    // Update sidebar ship profile - now using pixel ships!
     function updateSidebarShip(ticker, sector, pnlNum) {
       const svgEl = document.querySelector(".ship-profile .ship-svg");
-      const useEl = document.getElementById("sidebar-ship-use");
       const caption = document.getElementById("ship-caption");
       const statusEl = document.getElementById("ship-status");
       const signalEl = document.getElementById("ship-signal");
       
-      if (!svgEl || !useEl) return;
+      if (!svgEl) return;
 
-      const mapping = mapTickerToShip(ticker, sector);
-      applyShipToSvg(svgEl, useEl, mapping, pnlNum);
+      // Use pixel ship rendering
+      const meta = mapTickerToPixelShip(ticker, sector, pnlNum);
+      const lore = getPixelShipLore(meta.pattern);
       
-      if (caption) caption.textContent = `${ticker.toUpperCase()} · ${mapping.label}`;
+      renderPixelShip(svgEl, meta.pattern, { 
+        hero: meta.hero, 
+        pnlPercent: pnlNum 
+      });
+      
+      if (caption) {
+        const label = meta.hero ? lore.label + " ★" : lore.label;
+        caption.textContent = `${ticker.toUpperCase()} · ${label}`;
+      }
       
       // Update status based on P&L
       if (statusEl && signalEl) {
@@ -7535,14 +7871,8 @@
 
       if (!strip || !svg) return;
       
-      // Ensure SVG has a use element
-      let fleetUse = svg.querySelector("use");
-      if (!fleetUse) {
-        fleetUse = document.createElementNS("http://www.w3.org/2000/svg", "use");
-        fleetUse.id = "fleet-ship-use";
-        svg.appendChild(fleetUse);
-      }
-
+      // No more <use> element needed - we render pixels directly!
+      
       function pnlToHealth(pnl) {
         const raw = Math.max(-50, Math.min(150, pnl));
         return Math.round(((raw + 50) / 200) * 100);
@@ -7555,11 +7885,14 @@
         return "CRITICAL";
       }
       
-      // Render ship using the mapping system
-      function renderFleetShip(ticker, sector, pnlNum) {
-        const mapping = mapTickerToShip(ticker, sector);
-        applyShipToSvg(svg, fleetUse, mapping, pnlNum);
-        return mapping;
+      // Render ship using pixel ship system
+      function renderFleetShipPixel(ticker, sector, pnlNum) {
+        const meta = mapTickerToPixelShip(ticker, sector, pnlNum);
+        renderPixelShip(svg, meta.pattern, { 
+          hero: meta.hero, 
+          pnlPercent: pnlNum 
+        });
+        return meta;
       }
 
       const fleet = [];
@@ -7572,7 +7905,8 @@
           const pnlNum = ((pos.current_price - pos.entry_price) / pos.entry_price) * 100;
           const pnlText = (pnlNum >= 0 ? '+' : '') + pnlNum.toFixed(1) + '%';
           const sector = profile.sector || 'Unknown';
-          const mapping = mapTickerToShip(pos.ticker, sector);
+          const meta = mapTickerToPixelShip(pos.ticker, sector, pnlNum);
+          const lore = getPixelShipLore(meta.pattern);
 
           fleet.push({
             ticker: pos.ticker,
@@ -7580,9 +7914,10 @@
             value: value,
             pnlText: pnlText,
             pnlNum: pnlNum,
-            shipClass: mapping.label,
+            shipClass: lore.label,
             codename: profile.codename || pos.ticker,
-            isHero: mapping.isHero
+            isHero: meta.hero,
+            pattern: meta.pattern
           });
         });
       }
@@ -7613,15 +7948,18 @@
         const ship = fleet.find(s => s.ticker === ticker);
         if (!ship) return;
 
-        // Render ship using pro symbol library
-        renderFleetShip(ship.ticker, ship.sector, ship.pnlNum);
+        // Render pixel ship in holobay
+        renderFleetShipPixel(ship.ticker, ship.sector, ship.pnlNum);
         
         // Update sidebar ship profile too
         updateSidebarShip(ship.ticker, ship.sector, ship.pnlNum);
+        
+        // Get lore for display
+        const lore = getPixelShipLore(ship.pattern);
 
         nameEl.textContent = `${ship.ticker} · ${ship.codename}`;
-        classEl.textContent = ship.shipClass;
-        sectorEl.textContent = ship.sector;
+        classEl.textContent = ship.shipClass + (ship.isHero ? ' ★' : '');
+        sectorEl.textContent = lore.hud; // Show HUD tag instead of sector
 
         const health = pnlToHealth(ship.pnlNum);
         hullBar.style.width = `${Math.max(5, health)}%`;
