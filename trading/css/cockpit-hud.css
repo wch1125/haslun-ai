@@ -271,6 +271,7 @@ body.cockpit-active .mobile-quick-stats {
   display: flex;
   align-items: center;
   justify-content: center;
+  --ship-glow-color: #33ff99;
 }
 
 .ship-showcase-ring {
@@ -279,6 +280,8 @@ body.cockpit-active .mobile-quick-stats {
   border: 1px solid rgba(51, 255, 153, 0.15);
   border-radius: 50%;
   animation: rotate-slow 60s linear infinite;
+  box-shadow: 0 0 30px rgba(51, 255, 153, 0.1), inset 0 0 30px rgba(51, 255, 153, 0.05);
+  transition: border-color 0.5s ease, box-shadow 0.5s ease;
 }
 
 .ship-showcase-ring::before {
@@ -289,9 +292,25 @@ body.cockpit-active .mobile-quick-stats {
   border-radius: 50%;
 }
 
+/* Inner pulsing ring */
+.ship-showcase-ring::after {
+  content: '';
+  position: absolute;
+  inset: 20%;
+  border: 1px solid var(--ship-glow-color, rgba(51, 255, 153, 0.1));
+  border-radius: 50%;
+  animation: pulse-ring 3s ease-in-out infinite;
+  opacity: 0.3;
+}
+
 @keyframes rotate-slow {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
+}
+
+@keyframes pulse-ring {
+  0%, 100% { transform: scale(1); opacity: 0.2; }
+  50% { transform: scale(1.08); opacity: 0.4; }
 }
 
 .ship-showcase-sprite {
@@ -301,11 +320,36 @@ body.cockpit-active .mobile-quick-stats {
   max-height: 70%;
   image-rendering: pixelated;
   filter: drop-shadow(0 0 30px rgba(51, 255, 153, 0.3));
-  transition: transform 0.3s ease;
+  transition: filter 0.5s ease;
+}
+
+/* Allow transform to be controlled by JS idle animation */
+.ship-idle-animated .ship-showcase-sprite {
+  transition: filter 0.5s ease;
 }
 
 .ship-showcase-sprite:hover {
-  transform: scale(1.05);
+  /* Hover handled by JS animation when active */
+}
+
+/* Engine glow effect */
+.ship-showcase::before {
+  content: '';
+  position: absolute;
+  bottom: 20%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 60px;
+  background: radial-gradient(ellipse at center, var(--ship-glow-color, #33ff99) 0%, transparent 70%);
+  opacity: 0.15;
+  animation: engine-pulse 2s ease-in-out infinite;
+  z-index: 1;
+}
+
+@keyframes engine-pulse {
+  0%, 100% { opacity: 0.1; transform: translateX(-50%) scaleY(1); }
+  50% { opacity: 0.2; transform: translateX(-50%) scaleY(1.2); }
 }
 
 /* Ship Name Plate */

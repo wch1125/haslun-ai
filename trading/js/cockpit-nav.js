@@ -19,6 +19,7 @@
       this.initHangar();
       this.initBattleArena();
       this.initNews();
+      this.initHullColorPickers(); // Wire up hull color buttons
       
       // Start with hangar panel visible
       this.switchPanel('hangar');
@@ -34,6 +35,8 @@
       });
       
       console.log('[CockpitNav] Initialized - 3 Panel Architecture Active');
+      console.log('[CockpitNav] Hull color system wired');
+      console.log('[CockpitNav] Ship idle animations enabled');
     },
     
     bindNavigation() {
@@ -141,6 +144,12 @@
       this.updateShipDisplay();
     },
     
+    // Current livery state
+    livery: {
+      hull: '#33ff99',
+      accent: '#33ff99'
+    },
+    
     updateShipDisplay() {
       const ticker = this.selectedShip;
       const tele = window.ShipTelemetry?.getTelemetry?.(ticker) || {};
@@ -152,6 +161,9 @@
       if (spriteEl) {
         spriteEl.src = sprite;
         spriteEl.alt = ticker;
+        
+        // Apply hull color tint via CSS filter
+        this.applyHullColorToSprite(spriteEl);
       }
       
       // Update nameplate
@@ -165,6 +177,194 @@
       
       // Update battle preview
       this.updateBattlePreview();
+      
+      // Start idle animation on the ship showcase
+      this.startShipIdleAnimation(ticker, shipClass);
+    },
+    
+    // =========================================================================
+    // HULL COLOR SYSTEM
+    // =========================================================================
+    
+    initHullColorPickers() {
+      // Find all hull color swatches
+      document.querySelectorAll('.color-picker-row').forEach((row, rowIndex) => {
+        const isAccent = rowIndex === 1; // Second row is accent colors
+        
+        row.querySelectorAll('.color-swatch').forEach(swatch => {
+          swatch.style.cursor = 'pointer';
+          swatch.addEventListener('click', () => {
+            const color = swatch.style.background || swatch.style.backgroundColor;
+            
+            // Update active state
+            row.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+            swatch.classList.add('active');
+            
+            // Update livery
+            if (isAccent) {
+              this.livery.accent = color;
+            } else {
+              this.livery.hull = color;
+            }
+            
+            // Redraw ship with new colors
+            const spriteEl = document.getElementById('hangar-ship-sprite');
+            if (spriteEl) {
+              this.applyHullColorToSprite(spriteEl);
+            }
+            
+            // Log the change
+            console.log(`[CockpitNav] ${isAccent ? 'Accent' : 'Hull'} color set to ${color}`);
+          });
+        });
+      });
+    },
+    
+    applyHullColorToSprite(spriteEl) {
+      if (!spriteEl) return;
+      
+      const hullColor = this.livery.hull;
+      
+      // Convert color to HSL for filter calculation
+      const hsl = this.hexToHsl(hullColor);
+      
+      // Build CSS filter to tint the sprite
+      // sepia(1) makes it brown, then hue-rotate shifts to target color
+      const hueRotate = hsl.h - 50; // Offset from sepia base
+      const saturation = hsl.s / 50 * 100; // Boost saturation
+      const brightness = hsl.l / 50 * 100;
+      
+      // Apply subtle color overlay effect
+      spriteEl.style.filter = `
+        drop-shadow(0 0 20px ${hullColor}40)
+        drop-shadow(0 0 40px ${hullColor}20)
+      `;
+      
+      // Add glow ring effect to showcase
+      const showcase = spriteEl.closest('.ship-showcase');
+      if (showcase) {
+        showcase.style.setProperty('--ship-glow-color', hullColor);
+        const ring = showcase.querySelector('.ship-showcase-ring');
+        if (ring) {
+          ring.style.borderColor = hullColor;
+          ring.style.boxShadow = `0 0 30px ${hullColor}40, inset 0 0 30px ${hullColor}20`;
+        }
+      }
+    },
+    
+    hexToHsl(hex) {
+      // Handle rgb() format
+      if (hex.startsWith('rgb')) {
+        const match = hex.match(/(\d+)/g);
+        if (match) {
+          const [r, g, b] = match.map(Number);
+          return this.rgbToHsl(r, g, b);
+        }
+      }
+      
+      // Handle hex format
+      let color = hex.replace('#', '');
+      if (color.length === 3) {
+        color = color.split('').map(c => c + c).join('');
+      }
+      
+      const r = parseInt(color.substr(0, 2), 16) / 255;
+      const g = parseInt(color.substr(2, 2), 16) / 255;
+      const b = parseInt(color.substr(4, 2), 16) / 255;
+      
+      const max = Math.max(r, g, b);
+      const min = Math.min(r, g, b);
+      let h, s, l = (max + min) / 2;
+      
+      if (max === min) {
+        h = s = 0;
+      } else {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        switch (max) {
+          case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+          case g: h = ((b - r) / d + 2) / 6; break;
+          case b: h = ((r - g) / d + 4) / 6; break;
+        }
+      }
+      
+      return { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) };
+    },
+    
+    rgbToHsl(r, g, b) {
+      r /= 255; g /= 255; b /= 255;
+      const max = Math.max(r, g, b);
+      const min = Math.min(r, g, b);
+      let h, s, l = (max + min) / 2;
+      
+      if (max === min) {
+        h = s = 0;
+      } else {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        switch (max) {
+          case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+          case g: h = ((b - r) / d + 2) / 6; break;
+          case b: h = ((r - g) / d + 4) / 6; break;
+        }
+      }
+      
+      return { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) };
+    },
+    
+    // =========================================================================
+    // SHIP IDLE ANIMATION
+    // =========================================================================
+    
+    startShipIdleAnimation(ticker, shipClass) {
+      // Find the ship showcase container (parent of the sprite)
+      const showcase = document.querySelector('.ship-showcase');
+      if (!showcase) return;
+      
+      // Stop any existing animation
+      if (window.ShipIdleAnimation) {
+        window.ShipIdleAnimation.stop(showcase);
+        
+        // Start new animation with ship-specific parameters
+        window.ShipIdleAnimation.start(showcase, {
+          ticker: ticker,
+          shipClass: this.getShipClassType(shipClass),
+          engineGlow: true
+        });
+      }
+    },
+    
+    getShipClassType(classLabel) {
+      // Map full class labels to animation preset keys
+      const mapping = {
+        'FLAGSHIP CLASS': 'Flagship',
+        'FLAGSHIP': 'Flagship',
+        'CARRIER CLASS': 'Carrier',
+        'CARRIER': 'Carrier',
+        'FIGHTER CLASS': 'Fighter',
+        'FIGHTER': 'Fighter',
+        'SCOUT CLASS': 'Scout',
+        'SCOUT': 'Scout',
+        'DRONE CLASS': 'Drone',
+        'DRONE': 'Drone',
+        'LANDER CLASS': 'Lander',
+        'LANDER': 'Lander',
+        'EVTOL CLASS': 'eVTOL',
+        'LIGHT CLASS': 'eVTOL',
+        'CARGO CLASS': 'Cargo',
+        'HAULER CLASS': 'Cargo',
+        'HAULER': 'Cargo',
+        'RELAY CLASS': 'Relay',
+        'RELAY': 'Relay',
+        'COMMUNICATIONS': 'Relay',
+        'RECON CLASS': 'Recon',
+        'RECON': 'Recon',
+        'MOONSHOT CLASS': 'Moonshot',
+        'MOONSHOT': 'Moonshot',
+        'WILDCARD': 'Moonshot'
+      };
+      
+      return mapping[classLabel?.toUpperCase()] || 'default';
     },
     
     updateStatBars(tele) {
