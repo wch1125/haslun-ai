@@ -1207,55 +1207,61 @@
           <div class="arcade-lobby fleet-ui-layer">
             <div class="arcade-lobby-header">
               <div class="arcade-lobby-title">
-                <span class="arcade-icon">◇</span>
+                <span class="arcade-icon">◈</span>
                 <div>
                   <h2>PARALLAX ARCADE</h2>
-                  <span class="arcade-subtitle">FLEET COMMAND TRAINING SIMULATIONS</span>
+                  <span class="arcade-subtitle">VECTOR RACING SIMULATION</span>
                 </div>
               </div>
               <div class="arcade-stats-bar">
-                <div class="arcade-stat"><span class="label">HIGH SCORE</span><span class="value" id="arcade-high-score">0</span></div>
-                <div class="arcade-stat"><span class="label">GAMES PLAYED</span><span class="value" id="arcade-games-played">0</span></div>
+                <div class="arcade-stat"><span class="label">BEST DISTANCE</span><span class="value" id="arcade-high-score">0 km</span></div>
+                <div class="arcade-stat"><span class="label">RUNS</span><span class="value" id="arcade-games-played">0</span></div>
               </div>
             </div>
             
-            <div class="arcade-games-grid">
-              <!-- Signal Invaders Card -->
-              <div class="arcade-game-card" onclick="window.SignalInvaders && SignalInvaders.start()">
-                <div class="game-card-preview" id="invaders-preview">
-                  <canvas id="invaders-preview-canvas" width="280" height="160"></canvas>
-                  <div class="game-card-overlay">
-                    <span class="play-icon">▶</span>
+            <!-- PARALLAX RUN - Unified Arcade Experience -->
+            <div class="parallax-run-launcher">
+              <div class="run-hero-card" onclick="window.ParallaxRun && ParallaxRun.start()">
+                <div class="run-hero-preview">
+                  <canvas id="run-preview-canvas" width="400" height="200"></canvas>
+                  <div class="run-hero-overlay">
+                    <span class="run-play-icon">▶</span>
+                    <span class="run-play-text">INITIATE RUN</span>
                   </div>
                 </div>
-                <div class="game-card-info">
-                  <div class="game-card-title">[SIGNAL INVADERS]</div>
-                  <div class="game-card-desc">Defend the array against hostile market signals. Your fleet ships become the enemy waves!</div>
-                  <div class="game-card-controls">
-                    <span>← → MOVE</span>
-                    <span>SPACE FIRE</span>
+                <div class="run-hero-info">
+                  <div class="run-hero-title">PARALLAX RUN</div>
+                  <div class="run-hero-subtitle">High-Speed Market Corridor</div>
+                  <div class="run-hero-desc">
+                    Thread through the volatility field. Dodge debris, ride momentum streams, 
+                    and push your ship to the limit. The market is the track — speed is survival.
+                  </div>
+                  <div class="run-hero-controls">
+                    <span class="control-hint"><kbd>←</kbd> <kbd>→</kbd> DODGE</span>
+                    <span class="control-hint"><kbd>SPACE</kbd> BOOST</span>
                   </div>
                 </div>
-                <div class="game-card-badge">CLASSIC</div>
               </div>
               
-              <!-- Terrain Lander Card -->
-              <div class="arcade-game-card" onclick="window.LandingGame && LandingGame.start()">
-                <div class="game-card-preview" id="lander-preview">
-                  <canvas id="lander-preview-canvas" width="280" height="160"></canvas>
-                  <div class="game-card-overlay">
-                    <span class="play-icon">▶</span>
+              <div class="run-stats-panel">
+                <div class="run-stat-block">
+                  <span class="run-stat-label">LAST RUN</span>
+                  <span class="run-stat-value" id="run-last-distance">— km</span>
+                </div>
+                <div class="run-stat-block highlight">
+                  <span class="run-stat-label">BEST RUN</span>
+                  <span class="run-stat-value" id="run-best-distance">0 km</span>
+                </div>
+                <div class="run-stat-block">
+                  <span class="run-stat-label">ACTIVE SHIP</span>
+                  <span class="run-stat-value" id="run-active-ship">RKLB</span>
+                </div>
+                <div class="run-stat-block">
+                  <span class="run-stat-label">SQUADRON</span>
+                  <div class="run-squadron-bar" id="run-squadron-strength">
+                    <span class="squadron-fill"></span>
                   </div>
                 </div>
-                <div class="game-card-info">
-                  <div class="game-card-title">[TERRAIN LANDER]</div>
-                  <div class="game-card-desc">Navigate treacherous market terrain and land safely on profit zones. Fuel management is critical.</div>
-                  <div class="game-card-controls">
-                    <span>← → STEER</span>
-                    <span>↑ THRUST</span>
-                  </div>
-                </div>
-                <div class="game-card-badge">LUNAR</div>
               </div>
             </div>
             
@@ -1263,17 +1269,11 @@
             <div class="arcade-ship-select">
               <div class="ship-select-header">
                 <span class="ship-select-title">▲ SELECT YOUR SHIP</span>
-                <span class="ship-select-hint">Choose your vessel for arcade missions</span>
+                <span class="ship-select-hint">Your vessel determines your handling characteristics</span>
               </div>
               <div class="ship-select-grid" id="arcade-ship-grid">
                 <!-- Ships will be populated dynamically -->
               </div>
-            </div>
-            
-            <!-- Cheat Codes Section -->
-            <div class="arcade-secrets">
-              <div class="secrets-title">[COMMAND CODES]</div>
-              <div class="secrets-hint">Type secret codes anywhere to unlock special features...</div>
             </div>
           </div>
         </div>
@@ -1544,57 +1544,63 @@
     </div>
     
     <!-- CHART LANDING GAME -->
-    <div id="landing-game-overlay" class="landing-game-overlay">
-      <div class="landing-game-container">
-        <button class="landing-close" id="landing-close">✕ ESC</button>
-        <div class="landing-game-header">
-          <div class="landing-game-title">[TERRAIN LANDER]</div>
-          <div class="landing-game-stats">
-            <span>FUEL: <span id="landing-fuel">100</span>%</span>
-            <span>VELOCITY: <span id="landing-velocity">0.0</span></span>
-            <span>ALT: <span id="landing-alt">100</span></span>
+    <!-- PARALLAX RUN GAME OVERLAY -->
+    <div id="parallax-run-overlay" class="parallax-run-overlay hidden">
+      <div class="run-game-backdrop"></div>
+      <div class="run-game-container">
+        <button class="run-close-btn" id="parallax-run-close-btn">✕ ESC</button>
+        
+        <div class="run-game-header">
+          <div class="run-game-title">[PARALLAX RUN]</div>
+          <div class="run-game-stats">
+            <div class="run-stat">
+              <span class="stat-label">DISTANCE</span>
+              <span class="stat-value" id="run-distance">0</span>
+              <span class="stat-unit">km</span>
+            </div>
+            <div class="run-stat">
+              <span class="stat-label">SPEED</span>
+              <span class="stat-value" id="run-speed">0</span>
+            </div>
+            <div class="run-stat multiplier">
+              <span class="stat-label">MULT</span>
+              <span class="stat-value" id="run-multiplier">×1.0</span>
+            </div>
           </div>
         </div>
-        <canvas id="landing-canvas"></canvas>
-        <div class="landing-controls">
-          <span>← → STEER</span>
-          <span>↑ THRUST</span>
-          <span>ESC EXIT</span>
-        </div>
-        <div class="landing-touch-controls">
-          <button class="landing-touch-btn" id="land-touch-left">◀</button>
-          <button class="landing-touch-btn thrust" id="land-touch-thrust">▲ THRUST</button>
-          <button class="landing-touch-btn" id="land-touch-right">▶</button>
-        </div>
-        <div class="landing-message" id="landing-message"></div>
-      </div>
-    </div>
-    
-    <!-- SIGNAL INVADERS ARCADE GAME -->
-    <div id="signal-invaders-overlay" class="arcade-game-overlay hidden">
-      <div class="arcade-game-backdrop"></div>
-      <div class="arcade-game-container">
-        <button class="arcade-close" id="invaders-close-btn">✕ ESC</button>
-        <div class="arcade-header">
-          <div class="arcade-title">[SIGNAL INVADERS]</div>
-          <div class="arcade-stats">
-            <span class="arcade-score">SCORE: <span id="invaders-score">0</span></span>
-            <span class="arcade-lives">LIVES: <span id="invaders-lives">♥♥♥</span></span>
-            <span class="arcade-wave">WAVE: <span id="invaders-wave">1</span></span>
+        
+        <div class="run-hud-bars">
+          <div class="run-bar-container hull-bar">
+            <span class="bar-label">HULL</span>
+            <div class="bar-track">
+              <div class="bar-fill" id="run-hull-bar" style="width: 100%"></div>
+            </div>
+            <span class="bar-value" id="run-hull">100</span>
+          </div>
+          <div class="run-bar-container boost-bar">
+            <span class="bar-label">BOOST</span>
+            <div class="bar-track">
+              <div class="bar-fill" id="run-boost-bar" style="width: 100%"></div>
+            </div>
+            <span class="bar-value" id="run-boost">100</span>
           </div>
         </div>
-        <canvas id="invaders-canvas" width="600" height="400"></canvas>
-        <div class="arcade-controls">
-          <span>← → MOVE</span>
-          <span>SPACE FIRE</span>
+        
+        <canvas id="parallax-run-canvas" width="700" height="450"></canvas>
+        
+        <div class="run-controls-hint">
+          <span>← → DODGE</span>
+          <span>SPACE / ↑ BOOST</span>
           <span>ESC EXIT</span>
         </div>
-        <div class="mobile-touch-controls" id="mobile-controls">
-          <button class="touch-btn" id="touch-left">◀</button>
-          <button class="touch-btn fire" id="touch-fire">FIRE</button>
-          <button class="touch-btn" id="touch-right">▶</button>
+        
+        <div class="run-touch-controls">
+          <button class="run-touch-btn" id="run-touch-left">◀</button>
+          <button class="run-touch-btn boost" id="run-touch-boost">▲ BOOST</button>
+          <button class="run-touch-btn" id="run-touch-right">▶</button>
         </div>
-        <div class="arcade-message" id="invaders-message"></div>
+        
+        <div class="run-message" id="run-message" style="display: none;"></div>
       </div>
     </div>
     

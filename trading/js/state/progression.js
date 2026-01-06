@@ -10,7 +10,7 @@
  *   { xp, level, upgrades: { thrusters, hull, sensors, weapons, core }, cosmetics, history }
  * 
  * Usage:
- *   Progression.awardXP('RKLB', 100, 'Training Simulation', { gameId: 'signal_invaders' })
+ *   Progression.awardXP('RKLB', 100, 'Training Simulation', { gameId: 'parallax_run' })
  *   Progression.equipUpgrade('RKLB', 'thrusters_mk1')
  *   Progression.computeEffects('RKLB') // { level, xp, upgrades, effects, visuals }
  *   Progression.getShipSummary('RKLB') // Quick summary for UI

@@ -4840,7 +4840,7 @@
         { id:'simulation', text:'Run P&L simulation', done:false },
         { id:'find_invader', text:'Find the hidden invader', done:false },
         { id:'arcade_score', text:'Score 500+ in Signal Invaders', done:false },
-        { id:'terrain_lander', text:'Soft land on the terrain', done:false },
+        { id:'parallax_run', text:'Complete a Parallax Run of 5000+ km', done:false },
         { id:'snoop_master', text:'Trigger 5 access denials', done:false }
       ];
       
@@ -6148,7 +6148,7 @@
 
       // =========================================================================
       // MINI-GAMES — Loaded from js/games/mini-games.js
-      // SignalInvaders, AdminConsole, LandingGame exposed via window object
+      // ParallaxRun exposed via window object
       // =========================================================================
 
       // =========================================================================
@@ -6242,7 +6242,7 @@
       initKonamiCode();
       initRippleEffects();
       
-      // SignalInvaders, AdminConsole, LandingGame loaded from js/games/mini-games.js
+      // ParallaxRun loaded from js/games/mini-games.js
       
       if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initArcade);
@@ -6252,9 +6252,8 @@
         document.addEventListener('DOMContentLoaded', initTrajectoryCanvas);
         document.addEventListener('DOMContentLoaded', initLoreEngine);
         document.addEventListener('DOMContentLoaded', initEnhancedCatalysts);
-        document.addEventListener('DOMContentLoaded', () => window.SignalInvaders && window.SignalInvaders.init());
+        document.addEventListener('DOMContentLoaded', () => window.ParallaxRun && window.ParallaxRun.init());
         document.addEventListener('DOMContentLoaded', () => window.AdminConsole && window.AdminConsole.init());
-        document.addEventListener('DOMContentLoaded', () => window.LandingGame && window.LandingGame.init());
         document.addEventListener('DOMContentLoaded', initConsoleShip);
         document.addEventListener('DOMContentLoaded', initMissionPanel); // Step 4
         document.addEventListener('DOMContentLoaded', initHangarFocusEvents); // Step 5
@@ -6266,9 +6265,8 @@
         initTrajectoryCanvas();
         initLoreEngine();
         initEnhancedCatalysts();
-        window.SignalInvaders && window.SignalInvaders.init();
+        window.ParallaxRun && window.ParallaxRun.init();
         window.AdminConsole && window.AdminConsole.init();
-        window.LandingGame && window.LandingGame.init();
         initConsoleShip();
         initMissionPanel(); // Step 4
         initHangarFocusEvents(); // Step 5
