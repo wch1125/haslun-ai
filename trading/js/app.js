@@ -3584,6 +3584,7 @@
       if (tab === 'hangar') return 'hangar';
       if (tab === 'chart') return 'data';
       if (tab === 'arcade') return 'arcade';
+      if (tab === 'garage' || tab === 'upgrades') return 'garage';
       if (tab === 'positions' || tab === 'options' || tab === 'catalysts') return 'command';
       return 'hangar'; // Default to hangar
     }
@@ -3616,15 +3617,40 @@
       
       // Show/hide subtabs based on group
       const commandSubtabs = document.getElementById('command-subtabs');
+      const garageSubtabs = document.getElementById('garage-subtabs');
       
       if (commandSubtabs) {
         commandSubtabs.style.display = (group === 'command') ? 'flex' : 'none';
+      }
+      
+      if (garageSubtabs) {
+        garageSubtabs.style.display = (group === 'garage') ? 'flex' : 'none';
       }
       
       // Update subtab active states
       document.querySelectorAll('#command-subtabs .subtab[data-tab]').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.tab === tabName);
       });
+      
+      document.querySelectorAll('#garage-subtabs .subtab[data-tab]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tabName);
+      });
+      
+      // Initialize Paint Bay when switching to garage
+      if (tabName === 'garage' && window.PaintBay) {
+        setTimeout(() => {
+          const container = document.getElementById('paint-bay-container');
+          if (container && !container.dataset.initialized) {
+            PaintBay.init('paint-bay-container');
+            container.dataset.initialized = 'true';
+          }
+        }, 100);
+      }
+      
+      // Initialize Upgrades panel when switching to upgrades
+      if (tabName === 'upgrades' && window.initUpgradesPanel) {
+        setTimeout(() => initUpgradesPanel(), 100);
+      }
       
       // Step 5.1: Start/stop fleet background animation
       handleFleetBackground(tabName);
@@ -3648,7 +3674,31 @@
       if (tabName === 'options' && window.initTrajectoryCanvas) {
         setTimeout(() => window.initTrajectoryCanvas(), 100);
       }
+      
+      // Update URL hash (without triggering hashchange)
+      if (history.replaceState) {
+        history.replaceState(null, '', '#' + tabName);
+      }
     }
+    
+    // Hash-based navigation support
+    function handleHashNavigation() {
+      const hash = window.location.hash.slice(1); // Remove #
+      if (hash) {
+        const validTabs = ['hangar', 'positions', 'arcade', 'garage', 'upgrades', 'chart', 'catalysts', 'options'];
+        if (validTabs.includes(hash)) {
+          switchTab(hash);
+        }
+      }
+    }
+    
+    // Listen for hash changes
+    window.addEventListener('hashchange', handleHashNavigation);
+    
+    // Handle initial hash on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      setTimeout(handleHashNavigation, 500); // Allow other init to complete first
+    });
     
     // Step 5.1: Fleet background controller
     let arcadeFlightController = null;
@@ -4944,7 +4994,7 @@
         { id:'simulation', text:'Run P&L simulation', done:false },
         { id:'find_invader', text:'Find the hidden invader', done:false },
         { id:'arcade_score', text:'Score 500+ in Signal Invaders', done:false },
-        { id:'parallax_run', text:'Complete a Parallax Run of 5000+ km', done:false },
+        { id:'parallax_run', text:'Complete a Space Run of 5000+ km', done:false },
         { id:'snoop_master', text:'Trigger 5 access denials', done:false }
       ];
       
@@ -7269,9 +7319,276 @@
       }
     }
     
+    // ═══════════════════════════════════════════════════════════════════════════
+    // UPGRADES PANEL - Interactive ship upgrade preview
+    // ═══════════════════════════════════════════════════════════════════════════
+    
+    let upgradesPanelInitialized = false;
+    
+    function initUpgradesPanel() {
+      if (upgradesPanelInitialized) return;
+      upgradesPanelInitialized = true;
+      
+      const canvas = document.getElementById('upgrade-preview-canvas');
+      if (!canvas) return;
+      
+      const ctx = canvas.getContext('2d');
+      ctx.imageSmoothingEnabled = false;
+      
+      // Sliders
+      const sliders = {
+        pnl: document.getElementById('upgrade-pnl'),
+        winrate: document.getElementById('upgrade-winrate'),
+        volatility: document.getElementById('upgrade-volatility'),
+        volume: document.getElementById('upgrade-volume'),
+        gain: document.getElementById('upgrade-gain'),
+        drawdown: document.getElementById('upgrade-drawdown')
+      };
+      
+      // Value displays
+      const values = {
+        pnl: document.getElementById('upgrade-pnl-value'),
+        winrate: document.getElementById('upgrade-winrate-value'),
+        volatility: document.getElementById('upgrade-volatility-value'),
+        volume: document.getElementById('upgrade-volume-value'),
+        gain: document.getElementById('upgrade-gain-value'),
+        drawdown: document.getElementById('upgrade-drawdown-value')
+      };
+      
+      const tickerSelect = document.getElementById('upgrade-ticker-select');
+      const powerValue = document.getElementById('upgrade-power-value');
+      const powerBar = document.getElementById('upgrade-power-bar');
+      const upgradeList = document.getElementById('upgrade-breakdown-list');
+      const upgradeSummary = document.getElementById('upgrade-summary-text');
+      
+      // Stat thresholds for upgrades (simplified version)
+      const UPGRADE_TIERS = {
+        wings: [
+          { min: -Infinity, max: 0.25, id: 'wing_small', label: 'Scout Wings' },
+          { min: 0.25, max: 0.50, id: 'wing_mid', label: 'Standard Wings' },
+          { min: 0.50, max: 0.75, id: 'wing_large', label: 'Combat Wings' },
+          { min: 0.75, max: Infinity, id: 'wing_elite', label: 'Elite Wings' }
+        ],
+        engines: [
+          { min: -Infinity, max: 0.33, id: 'thruster_1', label: 'Basic Thruster' },
+          { min: 0.33, max: 0.66, id: 'thruster_2', label: 'Ion Drive' },
+          { min: 0.66, max: Infinity, id: 'thruster_3', label: 'Plasma Core' }
+        ],
+        armor: [
+          { min: -Infinity, max: 0.40, id: null, label: 'No Armor' },
+          { min: 0.40, max: 0.70, id: 'plate_1', label: 'Light Plating' },
+          { min: 0.70, max: Infinity, id: 'plate_2', label: 'Heavy Armor' }
+        ],
+        antenna: [
+          { min: -Infinity, max: 0.50, id: null, label: 'No Antenna' },
+          { min: 0.50, max: 0.80, id: 'antenna_1', label: 'Comm Array' },
+          { min: 0.80, max: Infinity, id: 'antenna_2', label: 'Command Array' }
+        ],
+        weapons: [
+          { min: -Infinity, max: 0.60, id: null, label: 'Unarmed' },
+          { min: 0.60, max: 0.85, id: 'weapon_1', label: 'Laser Banks' },
+          { min: 0.85, max: Infinity, id: 'weapon_2', label: 'Missile Pods' }
+        ],
+        shield: [
+          { min: -Infinity, max: 0.70, id: null, label: 'No Shield' },
+          { min: 0.70, max: Infinity, id: 'shield_1', label: 'Energy Shield' }
+        ]
+      };
+      
+      function clamp01(x) { return Math.max(0, Math.min(1, x)); }
+      function mapRange(v, a, b) { return a === b ? 0 : (v - a) / (b - a); }
+      
+      function pickTier(tiers, val) {
+        for (const t of tiers) {
+          if (val >= t.min && val < t.max) return t;
+        }
+        return tiers[tiers.length - 1];
+      }
+      
+      function getCurrentStats() {
+        return {
+          todayPnlPct: parseFloat(sliders.pnl?.value || 0),
+          winRate: parseFloat(sliders.winrate?.value || 50) / 100,
+          volatility: parseFloat(sliders.volatility?.value || 3) / 100,
+          relativeVolume: parseFloat(sliders.volume?.value || 1),
+          totalGainPct: parseFloat(sliders.gain?.value || 0),
+          maxDrawdownPct: parseFloat(sliders.drawdown?.value || 10)
+        };
+      }
+      
+      function updateValueDisplays() {
+        if (values.pnl) values.pnl.textContent = (sliders.pnl?.value || 0) + '%';
+        if (values.winrate) values.winrate.textContent = (sliders.winrate?.value || 50) + '%';
+        if (values.volatility) values.volatility.textContent = (sliders.volatility?.value || 3) + '%';
+        if (values.volume) values.volume.textContent = parseFloat(sliders.volume?.value || 1).toFixed(1) + 'x';
+        if (values.gain) values.gain.textContent = (sliders.gain?.value || 0) + '%';
+        if (values.drawdown) values.drawdown.textContent = (sliders.drawdown?.value || 10) + '%';
+      }
+      
+      function mapStatsToUpgrades(stats) {
+        const momentum = clamp01(mapRange(stats.todayPnlPct, -5, 5));
+        const strength = clamp01(mapRange(stats.winRate, 0.3, 0.8));
+        const risk = clamp01(mapRange(stats.volatility, 0.01, 0.08));
+        const activity = clamp01(mapRange(stats.relativeVolume, 0.5, 3.0));
+        const magnitude = clamp01(mapRange(stats.totalGainPct, -20, 50));
+        const consistency = clamp01(mapRange(20 - stats.maxDrawdownPct, 0, 20));
+        
+        return {
+          wings: { ...pickTier(UPGRADE_TIERS.wings, momentum), val: momentum },
+          engines: { ...pickTier(UPGRADE_TIERS.engines, strength), val: strength },
+          armor: { ...pickTier(UPGRADE_TIERS.armor, risk), val: risk },
+          antenna: { ...pickTier(UPGRADE_TIERS.antenna, activity), val: activity },
+          weapons: { ...pickTier(UPGRADE_TIERS.weapons, magnitude), val: magnitude },
+          shield: { ...pickTier(UPGRADE_TIERS.shield, consistency), val: consistency }
+        };
+      }
+      
+      function calculatePowerLevel(upgrades) {
+        const weights = { engines: 1.5, wings: 1.2, weapons: 1.3, armor: 1.0, antenna: 0.8, shield: 1.4 };
+        let total = 0, count = 0;
+        for (const [slot, data] of Object.entries(upgrades)) {
+          const w = weights[slot] || 1;
+          total += (data.val || 0) * w;
+          count += w;
+        }
+        return Math.round((total / count) * 100);
+      }
+      
+      function renderUpgradeList(upgrades) {
+        if (!upgradeList) return;
+        const slots = ['wings', 'engines', 'armor', 'antenna', 'weapons', 'shield'];
+        upgradeList.innerHTML = slots.map(slot => {
+          const tier = upgrades[slot];
+          const hasUpgrade = tier?.id != null;
+          return `<div class="upgrade-item">
+            <span class="upgrade-slot">${slot}</span>
+            <span class="upgrade-value ${hasUpgrade ? '' : 'none'}">${tier?.label || 'None'}</span>
+          </div>`;
+        }).join('');
+      }
+      
+      function getSummary(upgrades) {
+        const parts = [];
+        for (const [slot, tier] of Object.entries(upgrades)) {
+          if (tier?.id) parts.push(tier.label);
+        }
+        return parts.join(', ') || 'Stock Configuration';
+      }
+      
+      async function updatePreview() {
+        const ticker = tickerSelect?.value || 'RKLB';
+        const stats = getCurrentStats();
+        const upgrades = mapStatsToUpgrades(stats);
+        const power = calculatePowerLevel(upgrades);
+        
+        // Update UI
+        if (powerValue) powerValue.textContent = power;
+        if (powerBar) powerBar.style.width = power + '%';
+        if (upgradeSummary) upgradeSummary.textContent = getSummary(upgrades);
+        renderUpgradeList(upgrades);
+        
+        // Draw ship preview (placeholder with procedural upgrades)
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Try to load base ship image
+        const baseSrc = `assets/ships/animated/${ticker}/${ticker}_base.png`;
+        try {
+          const img = new Image();
+          img.src = baseSrc;
+          await new Promise((res, rej) => {
+            img.onload = res;
+            img.onerror = () => {
+              // Fallback to static
+              img.src = `assets/ships/static/${ticker}-flagship-ship.png`;
+              img.onload = res;
+              img.onerror = rej;
+            };
+          });
+          
+          // Draw scaled up 3x
+          const scale = 3;
+          const x = (canvas.width - img.width * scale) / 2;
+          const y = (canvas.height - img.height * scale) / 2;
+          ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
+          
+          // Draw procedural upgrade indicators
+          drawUpgradeEffects(ctx, upgrades, canvas.width / 2, canvas.height / 2);
+        } catch (e) {
+          // Draw placeholder
+          drawPlaceholderShip(ctx, canvas.width / 2, canvas.height / 2, upgrades);
+        }
+      }
+      
+      function drawUpgradeEffects(ctx, upgrades, cx, cy) {
+        ctx.save();
+        
+        // Engine glow
+        if (upgrades.engines?.id) {
+          const glow = upgrades.engines.val || 0.5;
+          const gradient = ctx.createRadialGradient(cx, cy + 40, 0, cx, cy + 40, 30 * glow);
+          gradient.addColorStop(0, `rgba(255, ${150 + glow * 100}, 50, ${glow * 0.8})`);
+          gradient.addColorStop(1, 'rgba(255, 50, 0, 0)');
+          ctx.fillStyle = gradient;
+          ctx.fillRect(cx - 40, cy + 20, 80, 60);
+        }
+        
+        // Shield effect
+        if (upgrades.shield?.id) {
+          ctx.strokeStyle = `rgba(51, 255, 153, ${0.3 + upgrades.shield.val * 0.3})`;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.ellipse(cx, cy, 70, 60, 0, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        
+        ctx.restore();
+      }
+      
+      function drawPlaceholderShip(ctx, cx, cy, upgrades) {
+        ctx.save();
+        ctx.fillStyle = '#334455';
+        ctx.strokeStyle = '#556677';
+        ctx.lineWidth = 2;
+        
+        // Basic ship shape
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - 50);
+        ctx.lineTo(cx + 30, cy + 30);
+        ctx.lineTo(cx + 10, cy + 40);
+        ctx.lineTo(cx, cy + 25);
+        ctx.lineTo(cx - 10, cy + 40);
+        ctx.lineTo(cx - 30, cy + 30);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        
+        drawUpgradeEffects(ctx, upgrades, cx, cy);
+        ctx.restore();
+      }
+      
+      // Bind events
+      Object.values(sliders).forEach(slider => {
+        if (slider) {
+          slider.addEventListener('input', () => {
+            updateValueDisplays();
+            updatePreview();
+          });
+        }
+      });
+      
+      if (tickerSelect) {
+        tickerSelect.addEventListener('change', updatePreview);
+      }
+      
+      // Initial render
+      updateValueDisplays();
+      updatePreview();
+    }
+    
     // Make functions globally available
     window.initHangarPanel = initHangarPanel;
     window.cycleHangarShip = cycleHangarShip;
     window.selectHangarShip = selectHangarShip;
     window.setPerformanceMode = setPerformanceMode;
     window.triggerHeroSpecial = triggerHeroSpecial;
+    window.initUpgradesPanel = initUpgradesPanel;

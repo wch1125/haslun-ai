@@ -1,5 +1,5 @@
 // =========================================================================
-// PARALLAX RUN
+// SPACE RUN
 // High-Speed Market Corridor Racing Game
 // Inspired by F-Zero / Captain Falcon / Wipeout
 // =========================================================================
@@ -22,7 +22,7 @@
   }
   
   // =========================================================================
-  // PARALLAX RUN - MAIN GAME
+  // SPACE RUN - MAIN GAME
   // =========================================================================
   const ParallaxRun = {
     canvas: null,
@@ -236,7 +236,7 @@
       this.gameLoop();
       
       if (typeof logTerminal === 'function') {
-        logTerminal(`PARALLAX RUN initialized. Ship: ${this.selectedShip}. Threading the market corridor...`);
+        logTerminal(`SPACE RUN initialized. Ship: ${this.selectedShip}. Threading the market corridor...`);
       }
       if (window.MechSFX) {
         MechSFX.powerUp(0.3);
@@ -256,7 +256,7 @@
       }
       
       if (typeof logTerminal === 'function') {
-        logTerminal(`PARALLAX RUN ended. Distance: ${Math.floor(this.distance)} km`);
+        logTerminal(`SPACE RUN ended. Distance: ${Math.floor(this.distance)} km`);
       }
     },
     
@@ -555,7 +555,7 @@
       }
       
       if (typeof showToast === 'function') {
-        showToast(`Parallax Run: ${finalDistance.toLocaleString()} km!`, isNewBest ? 'alert' : 'info');
+        showToast(`Space Run: ${finalDistance.toLocaleString()} km!`, isNewBest ? 'alert' : 'info');
       }
       
       if (window.MechSFX) {
@@ -918,7 +918,7 @@
   // Legacy aliases (in case any code references old games)
   window.SignalInvaders = {
     start: () => {
-      console.log('Signal Invaders has been retired. Launching Parallax Run instead.');
+      console.log('Signal Invaders has been retired. Launching Space Run instead.');
       ParallaxRun.start();
     }
   };

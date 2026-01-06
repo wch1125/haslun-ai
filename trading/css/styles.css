@@ -11061,3 +11061,312 @@ body.no-scanlines::before {
         font-size: 1.1rem;
       }
     }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   GARAGE PANEL - Paint Bay & Upgrades
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.garage-container,
+.upgrades-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+.garage-header,
+.upgrades-header {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--phosphor-dim);
+}
+
+.garage-title,
+.upgrades-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.garage-icon,
+.upgrades-icon {
+  font-size: 2rem;
+}
+
+.garage-title h2,
+.upgrades-title h2 {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 1.5rem;
+  color: var(--phosphor);
+  margin: 0;
+  letter-spacing: 0.1em;
+}
+
+.garage-subtitle,
+.upgrades-subtitle {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.garage-desc,
+.upgrades-desc {
+  color: #aaa;
+  font-size: 0.85rem;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   UPGRADES PANEL SPECIFIC
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.upgrades-content {
+  display: grid;
+  grid-template-columns: 1fr 250px 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.upgrades-controls,
+.upgrades-preview,
+.upgrades-breakdown {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1rem;
+}
+
+.upgrades-controls h3,
+.upgrades-breakdown h3 {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--phosphor-dim);
+  margin: 0 0 1rem 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.upgrades-slider-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.upgrade-slider-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.upgrade-slider-group label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.upgrade-slider-group label span {
+  color: var(--phosphor);
+}
+
+.upgrade-slider-group input[type="range"] {
+  width: 100%;
+  height: 4px;
+  -webkit-appearance: none;
+  background: var(--border);
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.upgrade-slider-group input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  background: var(--phosphor);
+  border-radius: 50%;
+}
+
+/* Preview Section */
+.upgrades-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.upgrade-ship-select {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.upgrade-ship-select label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.upgrade-ship-select select {
+  flex: 1;
+  padding: 0.4rem;
+  background: var(--bg-deep);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.75rem;
+}
+
+.upgrade-canvas-container {
+  background: 
+    linear-gradient(45deg, #0a0a0a 25%, transparent 25%),
+    linear-gradient(-45deg, #0a0a0a 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #0a0a0a 75%),
+    linear-gradient(-45deg, transparent 75%, #0a0a0a 75%);
+  background-size: 12px 12px;
+  background-position: 0 0, 0 6px, 6px -6px, -6px 0px;
+  background-color: #151515;
+  border-radius: 4px;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.upgrade-canvas-container canvas {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+.upgrade-power-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.upgrade-power-display .power-label {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.upgrade-power-display .power-value {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 2rem;
+  color: var(--phosphor);
+}
+
+.upgrade-power-bar {
+  width: 100%;
+  height: 6px;
+  background: var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.upgrade-power-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ff4444, #ffaa00, #33ff99);
+  transition: width 0.3s ease;
+}
+
+/* Breakdown Section */
+.upgrade-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.upgrade-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.75rem;
+}
+
+.upgrade-item:last-child {
+  border-bottom: none;
+}
+
+.upgrade-slot {
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.upgrade-value {
+  color: var(--phosphor);
+}
+
+.upgrade-value.none {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.upgrade-summary {
+  font-size: 0.8rem;
+  color: var(--phosphor);
+  text-align: center;
+  padding: 0.75rem;
+  background: rgba(51, 255, 153, 0.05);
+  border-radius: 4px;
+}
+
+/* Info Section */
+.upgrades-info {
+  background: rgba(51, 255, 153, 0.05);
+  border: 1px solid var(--phosphor-dim);
+  border-radius: 4px;
+  padding: 1.25rem;
+}
+
+.upgrades-info h3 {
+  color: var(--phosphor);
+  font-size: 0.85rem;
+  margin: 0 0 1rem 0;
+}
+
+.upgrades-info ul {
+  margin: 0;
+  padding-left: 1.25rem;
+  color: #ccc;
+  font-size: 0.8rem;
+  line-height: 1.8;
+}
+
+.upgrades-info li strong {
+  color: var(--phosphor);
+}
+
+/* Mobile responsive */
+@media (max-width: 900px) {
+  .upgrades-content {
+    grid-template-columns: 1fr;
+  }
+  
+  .upgrades-preview {
+    order: -1;
+  }
+}
+
+@media (max-width: 480px) {
+  .garage-container,
+  .upgrades-container {
+    padding: 1rem;
+  }
+  
+  .garage-title h2,
+  .upgrades-title h2 {
+    font-size: 1.2rem;
+  }
+}

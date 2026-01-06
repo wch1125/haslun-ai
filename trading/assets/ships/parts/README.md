@@ -1,4 +1,4 @@
-# PARALLAX Ship Parts - Sprite Asset Guide
+# SPACE CAPITAL Ship Parts - Sprite Asset Guide
 
 This document specifies the modular sprite parts needed for the upgrade system.
 All sprites should match your existing pixel art style (16-bit aesthetic, nearest neighbor, crisp edges).

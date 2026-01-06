@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#0a0c0f">
-  <title>PARALLAX \\ COMMAND INTERFACE</title>
+  <title>SPACE CAPITAL \\ COMMAND INTERFACE</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%230a0c0f' width='100' height='100'/%3E%3Ccircle cx='50' cy='50' r='35' fill='none' stroke='%2333ff99' stroke-width='2'/%3E%3Ccircle cx='50' cy='50' r='25' fill='none' stroke='%2333ff99' stroke-width='1' opacity='0.5'/%3E%3Ccircle cx='50' cy='50' r='4' fill='%23ffb347'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -19,6 +19,8 @@
   <link rel="stylesheet" href="css/ship-select.css">
   <!-- Accessibility & keyboard shortcuts styles -->
   <link rel="stylesheet" href="css/accessibility.css">
+  <!-- Paint Bay (ship color customization) -->
+  <link rel="stylesheet" href="css/paint-bay.css">
 <script src="js/space-scene.js"></script>
 </head>
 <body>
@@ -465,13 +467,14 @@
             </svg>
           </div>
           <div>
-            <div class="logo-text">PARALLAX</div>
+            <div class="logo-text">SPACE CAPITAL</div>
             <div class="logo-sub">FLEET COMMAND</div>
           </div>
         </div>
         <nav class="nav-tabs" role="tablist" aria-label="Main navigation">
           <button class="nav-tab active" data-group="hangar" data-tab="hangar" onclick="switchTab('hangar')" role="tab" aria-selected="true" aria-controls="hangar-panel">🚀 HANGAR</button>
           <button class="nav-tab" data-group="command" data-tab="positions" onclick="switchTab('positions')" role="tab" aria-selected="false" aria-controls="positions-panel">COMMAND</button>
+          <button class="nav-tab" data-group="garage" data-tab="garage" onclick="switchTab('garage')" role="tab" aria-selected="false" aria-controls="garage-panel">GARAGE</button>
           <button class="nav-tab" data-group="arcade" data-tab="arcade" onclick="switchTab('arcade')" role="tab" aria-selected="false" aria-controls="arcade-panel">ARCADE</button>
           <button class="nav-tab" data-group="data" data-tab="chart" onclick="switchTab('chart')" role="tab" aria-selected="false" aria-controls="chart-panel">DATA</button>
         </nav>
@@ -482,6 +485,12 @@
         <button class="subtab active" data-tab="positions" onclick="switchTab('positions')">FLEET</button>
         <button class="subtab" onclick="launchMissionCommand()">MISSIONS</button>
         <button class="subtab" data-tab="catalysts" onclick="switchTab('catalysts')">EVENTS</button>
+      </div>
+      
+      <!-- Secondary subtabs for GARAGE (Paint Bay + Ship Upgrades) -->
+      <div class="nav-subtabs" id="garage-subtabs" style="display:none;">
+        <button class="subtab active" data-tab="garage" onclick="switchTab('garage')">PAINT BAY</button>
+        <button class="subtab" data-tab="upgrades" onclick="switchTab('upgrades')">UPGRADES</button>
       </div>
       
       <div class="header-right">
@@ -528,6 +537,13 @@
         </div>
         <div style="padding: 0 0.5rem 0.5rem;">
           <button class="push-btn" style="width: 100%; margin-bottom: 0.5rem;" onclick="toggleMobileDrawer(); switchTab('arcade');">› Arcade</button>
+        </div>
+        <div class="sidebar-section" style="padding-bottom: 0.5rem;">
+          <div class="sidebar-title">🎨 Garage</div>
+        </div>
+        <div style="padding: 0 0.5rem 0.5rem;">
+          <button class="push-btn" style="width: 100%; margin-bottom: 0.5rem;" onclick="toggleMobileDrawer(); switchTab('garage');">› Paint Bay</button>
+          <button class="push-btn" style="width: 100%; margin-bottom: 0.5rem;" onclick="toggleMobileDrawer(); switchTab('upgrades');">› Ship Upgrades</button>
         </div>
         <div class="sidebar-section" style="padding-bottom: 0.5rem;">
           <div class="sidebar-title">Tracking</div>
@@ -1381,7 +1397,7 @@
               <div class="arcade-lobby-title">
                 <span class="arcade-icon">◈</span>
                 <div>
-                  <h2>PARALLAX ARCADE</h2>
+                  <h2>SPACE CAPITAL ARCADE</h2>
                   <span class="arcade-subtitle">VECTOR RACING SIMULATION</span>
                 </div>
               </div>
@@ -1391,7 +1407,7 @@
               </div>
             </div>
             
-            <!-- PARALLAX RUN - Unified Arcade Experience -->
+            <!-- SPACE RUN - Unified Arcade Experience -->
             <div class="parallax-run-launcher">
               <div class="run-hero-card" onclick="window.ParallaxRun && ParallaxRun.start()">
                 <div class="run-hero-preview">
@@ -1402,7 +1418,7 @@
                   </div>
                 </div>
                 <div class="run-hero-info">
-                  <div class="run-hero-title">PARALLAX RUN</div>
+                  <div class="run-hero-title">SPACE RUN</div>
                   <div class="run-hero-subtitle">High-Speed Market Corridor</div>
                   <div class="run-hero-desc">
                     Thread through the volatility field. Dodge debris, ride momentum streams, 
@@ -1446,6 +1462,118 @@
               <div class="ship-select-grid" id="arcade-ship-grid">
                 <!-- Ships will be populated dynamically -->
               </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- GARAGE PANEL - Paint Bay (Ship Color Customization) -->
+        <div class="tab-panel" id="garage-panel">
+          <div class="garage-container">
+            <div class="garage-header">
+              <div class="garage-title">
+                <span class="garage-icon">🎨</span>
+                <div>
+                  <h2>PAINT BAY</h2>
+                  <span class="garage-subtitle">Ship Livery Customization</span>
+                </div>
+              </div>
+              <p class="garage-desc">Customize your fleet's colors using watercolor glazing color theory. Pick 2-3 base colors to generate harmonious palettes.</p>
+            </div>
+            <div id="paint-bay-container"></div>
+          </div>
+        </div>
+        
+        <!-- UPGRADES PANEL - Visual Ship Upgrades Based on Stats -->
+        <div class="tab-panel" id="upgrades-panel">
+          <div class="upgrades-container">
+            <div class="upgrades-header">
+              <div class="upgrades-title">
+                <span class="upgrades-icon">⚙</span>
+                <div>
+                  <h2>SHIP UPGRADES</h2>
+                  <span class="upgrades-subtitle">Performance-Based Visual Evolution</span>
+                </div>
+              </div>
+              <p class="upgrades-desc">Your ships visually evolve based on their trading performance. Adjust stats to see how upgrades apply.</p>
+            </div>
+            
+            <div class="upgrades-content">
+              <!-- Stats Controls -->
+              <div class="upgrades-controls">
+                <h3>Simulate Stats</h3>
+                <div class="upgrades-slider-grid">
+                  <div class="upgrade-slider-group">
+                    <label>Today P&L <span id="upgrade-pnl-value">0%</span></label>
+                    <input type="range" id="upgrade-pnl" min="-10" max="10" value="0" step="0.5">
+                  </div>
+                  <div class="upgrade-slider-group">
+                    <label>Win Rate <span id="upgrade-winrate-value">50%</span></label>
+                    <input type="range" id="upgrade-winrate" min="20" max="90" value="50" step="1">
+                  </div>
+                  <div class="upgrade-slider-group">
+                    <label>Volatility <span id="upgrade-volatility-value">3%</span></label>
+                    <input type="range" id="upgrade-volatility" min="0.5" max="10" value="3" step="0.5">
+                  </div>
+                  <div class="upgrade-slider-group">
+                    <label>Volume <span id="upgrade-volume-value">1.0x</span></label>
+                    <input type="range" id="upgrade-volume" min="0.2" max="5" value="1" step="0.1">
+                  </div>
+                  <div class="upgrade-slider-group">
+                    <label>Total Gain <span id="upgrade-gain-value">0%</span></label>
+                    <input type="range" id="upgrade-gain" min="-30" max="80" value="0" step="1">
+                  </div>
+                  <div class="upgrade-slider-group">
+                    <label>Max Drawdown <span id="upgrade-drawdown-value">10%</span></label>
+                    <input type="range" id="upgrade-drawdown" min="0" max="30" value="10" step="1">
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Ship Preview -->
+              <div class="upgrades-preview">
+                <div class="upgrade-ship-select">
+                  <label>Ship:</label>
+                  <select id="upgrade-ticker-select">
+                    <option value="RKLB">RKLB - Flagship</option>
+                    <option value="LUNR">LUNR - Lander</option>
+                    <option value="JOBY">JOBY - eVTOL</option>
+                    <option value="GME">GME - Moonshot</option>
+                    <option value="ACHR">ACHR - eVTOL</option>
+                    <option value="BKSY">BKSY - Recon</option>
+                  </select>
+                </div>
+                <div class="upgrade-canvas-container">
+                  <canvas id="upgrade-preview-canvas" width="192" height="192"></canvas>
+                </div>
+                <div class="upgrade-power-display">
+                  <span class="power-label">POWER LEVEL</span>
+                  <span class="power-value" id="upgrade-power-value">50</span>
+                </div>
+                <div class="upgrade-power-bar">
+                  <div class="upgrade-power-fill" id="upgrade-power-bar" style="width: 50%"></div>
+                </div>
+              </div>
+              
+              <!-- Upgrade Breakdown -->
+              <div class="upgrades-breakdown">
+                <h3>Active Upgrades</h3>
+                <div class="upgrade-list" id="upgrade-breakdown-list">
+                  <!-- Populated dynamically -->
+                </div>
+                <div class="upgrade-summary" id="upgrade-summary-text">Stock Configuration</div>
+              </div>
+            </div>
+            
+            <div class="upgrades-info">
+              <h3>How Upgrades Work</h3>
+              <ul>
+                <li><strong>Wings</strong> — Today's P&L drives wing size (fast movers get bigger wings)</li>
+                <li><strong>Engines</strong> — Win rate determines engine power and glow</li>
+                <li><strong>Armor</strong> — Volatility adds protective plating</li>
+                <li><strong>Antenna</strong> — High volume = communication arrays</li>
+                <li><strong>Weapons</strong> — Total gains unlock weapon systems</li>
+                <li><strong>Shield</strong> — Low drawdown enables shields</li>
+              </ul>
             </div>
           </div>
         </div>
@@ -2137,6 +2265,12 @@
   
   <!-- Ship Select (Mario Kart-style stats) -->
   <script src="js/ui/ship-select.js"></script>
+  
+  <!-- Paint Bay (ship color customization) -->
+  <script src="js/ui/paint-bay.js"></script>
+  
+  <!-- SPACE RUN Racing Game -->
+  <script src="js/games/parallax-run.js"></script>
   
   <!-- Main application -->
   <script src="js/app.js"></script>

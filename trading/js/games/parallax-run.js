@@ -1,10 +1,10 @@
 /**
  * ═══════════════════════════════════════════════════════════════════════════
- * PARALLAX RUN - F-Zero 99 Style Racing Game
+ * SPACE RUN - F-Zero 99 Style Racing Game
  * ═══════════════════════════════════════════════════════════════════════════
  * 
  * A Mode 7-style pseudo-3D racing game inspired by F-Zero 99.
- * Built for the PARALLAX trading dashboard arcade section.
+ * Built for the SPACE CAPITAL trading dashboard arcade section.
  * 
  * Features:
  * - Mode 7 perspective track rendering

@@ -1,6 +1,6 @@
 /**
  * ═══════════════════════════════════════════════════════════════════════════
- * PARALLAX - Ship Paint Bay
+ * SPACE CAPITAL - Ship Paint Bay
  * ═══════════════════════════════════════════════════════════════════════════
  * 
  * Color customization system using watercolor glazing color theory.
