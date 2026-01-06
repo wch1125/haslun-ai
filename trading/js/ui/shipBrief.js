@@ -172,6 +172,30 @@ window.ShipBrief = (function() {
                 <span class="mood-indicator mood-neutral"></span>
                 <span class="mood-text">Standard operations</span>
               </div>
+              
+              <!-- Telemetry Traits (from 45-min data) -->
+              <div class="ship-brief-traits" id="ship-brief-traits">
+                <div class="trait-row" id="trait-hull" data-trait="hull">
+                  <span class="trait-label">Hull:</span>
+                  <span class="trait-value">—</span>
+                </div>
+                <div class="trait-row" id="trait-engine" data-trait="engine">
+                  <span class="trait-label">Engine:</span>
+                  <span class="trait-value">—</span>
+                </div>
+                <div class="trait-row" id="trait-stability" data-trait="stability">
+                  <span class="trait-label">Stability:</span>
+                  <span class="trait-value">—</span>
+                </div>
+                <div class="trait-row" id="trait-signal" data-trait="signal">
+                  <span class="trait-label">Signal:</span>
+                  <span class="trait-value">—</span>
+                </div>
+                <div class="trait-personality" id="trait-personality">
+                  <span class="personality-archetype">—</span>
+                  <span class="personality-summary">—</span>
+                </div>
+              </div>
             </div>
             
             <!-- Step 8: Pilot Progression -->
@@ -487,6 +511,9 @@ window.ShipBrief = (function() {
     // Step 8: Pilot Progression
     updateProgressionSection(data.ticker);
     
+    // Telemetry Traits (language that mirrors data)
+    updateTelemetryTraits(data.ticker);
+    
     // Operations data
     if (data.hasPosition) {
       dialogEl.querySelector('#ship-brief-value').textContent = '$' + data.value.toLocaleString(undefined, { maximumFractionDigits: 0 });
@@ -579,6 +606,64 @@ window.ShipBrief = (function() {
         slotEl.textContent = (slotLabels[slotName] || slotName.toUpperCase().slice(0, 3)) + ': —';
         slotEl.classList.remove('equipped');
       });
+    }
+  }
+  
+  /**
+   * Update telemetry traits section with descriptive language
+   * Shows traits as words, not numbers - making telemetry visible through language
+   */
+  function updateTelemetryTraits(ticker) {
+    const traitsEl = dialogEl.querySelector('#ship-brief-traits');
+    if (!traitsEl) return;
+    
+    // Check if telemetry is available
+    if (!window.ShipTelemetry?.hasData(ticker)) {
+      traitsEl.style.display = 'none';
+      return;
+    }
+    
+    traitsEl.style.display = '';
+    const traits = ShipTelemetry.getTraitDescriptors(ticker);
+    
+    // Hull trait
+    const hullRow = traitsEl.querySelector('#trait-hull');
+    if (hullRow && traits.hull) {
+      hullRow.querySelector('.trait-value').textContent = traits.hull.label;
+      hullRow.title = traits.hull.tooltip;
+      hullRow.dataset.mood = traits.hull.mood;
+    }
+    
+    // Engine trait
+    const engineRow = traitsEl.querySelector('#trait-engine');
+    if (engineRow && traits.engine) {
+      engineRow.querySelector('.trait-value').textContent = traits.engine.label;
+      engineRow.title = traits.engine.tooltip;
+      engineRow.dataset.mood = traits.engine.mood;
+    }
+    
+    // Stability trait
+    const stabilityRow = traitsEl.querySelector('#trait-stability');
+    if (stabilityRow && traits.stability) {
+      stabilityRow.querySelector('.trait-value').textContent = traits.stability.label;
+      stabilityRow.title = traits.stability.tooltip;
+      stabilityRow.dataset.mood = traits.stability.mood;
+    }
+    
+    // Signal trait
+    const signalRow = traitsEl.querySelector('#trait-signal');
+    if (signalRow && traits.signal) {
+      signalRow.querySelector('.trait-value').textContent = traits.signal.label;
+      signalRow.title = traits.signal.tooltip;
+      signalRow.dataset.mood = traits.signal.mood;
+    }
+    
+    // Personality
+    const personalityEl = traitsEl.querySelector('#trait-personality');
+    if (personalityEl && traits.personality) {
+      personalityEl.querySelector('.personality-archetype').textContent = traits.personality.archetype;
+      personalityEl.querySelector('.personality-summary').textContent = traits.personality.summary;
+      personalityEl.title = traits.personality.fantasy;
     }
   }
   

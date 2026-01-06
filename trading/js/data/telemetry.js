@@ -174,7 +174,16 @@ window.ShipTelemetry = (function() {
   // ═══════════════════════════════════════════════════════════════════════════
   // NORMALIZATION RANGES (for converting raw → 0-1 scale)
   // ═══════════════════════════════════════════════════════════════════════════
-
+  
+  /**
+   * RANGES define GAMEPLAY SCALING BOUNDS, not statistical extrema.
+   * These are design tuning knobs that affect fleet feel globally.
+   * 
+   * Adjust carefully:
+   * - Widening ranges → more ships cluster toward middle
+   * - Narrowing ranges → more ships hit extremes
+   * - These should reflect desired PLAYER PERCEPTION, not market reality
+   */
   const RANGES = {
     volatility: { min: 0.005, max: 0.035 },
     trendStrength: { min: 0, max: 4 },
@@ -529,34 +538,458 @@ window.ShipTelemetry = (function() {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
+  // RUNTIME TELEMETRY OVERLAYS
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+  /**
+   * Runtime overlays allow missions/events to affect ship behavior
+   * WITHOUT corrupting the historical identity stored in TELEMETRY.
+   * 
+   * These are transient modifiers that stack on top of base telemetry.
+   */
+  const runtimeOverlays = new Map();
+
+  function setRuntimeOverlay(ticker, overlay) {
+    runtimeOverlays.set(ticker, {
+      ...runtimeOverlays.get(ticker),
+      ...overlay,
+      _timestamp: Date.now()
+    });
+  }
+
+  function clearRuntimeOverlay(ticker) {
+    runtimeOverlays.delete(ticker);
+  }
+
+  function getRuntimeOverlay(ticker) {
+    return runtimeOverlays.get(ticker) || null;
+  }
+
+  /**
+   * Get effective telemetry (base + runtime overlay)
+   */
+  function getEffectiveTelemetry(ticker) {
+    const base = TELEMETRY[ticker] || DEFAULT_TELEMETRY;
+    const overlay = runtimeOverlays.get(ticker);
+    
+    if (!overlay) return base;
+    
+    // Apply multiplicative modifiers
+    return {
+      ...base,
+      hullResilience: base.hullResilience * (overlay.hullModifier || 1),
+      thrustPotential: base.thrustPotential * (overlay.thrustModifier || 1),
+      chopSensitivity: Math.min(1, base.chopSensitivity * (overlay.stressMultiplier || 1)),
+      signalClarity: base.signalClarity * (overlay.clarityModifier || 1),
+      // Flags
+      _hasOverlay: true,
+      _missionFatigue: overlay.missionFatigue || 0,
+      _recentShock: overlay.recentShock || false
+    };
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TEXTUAL DESCRIPTORS (Language that mirrors data, no numbers)
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+  /**
+   * Get human-readable trait descriptions for tooltips/labels.
+   * These explain telemetry through LANGUAGE, not statistics.
+   */
+  function getTraitDescriptors(ticker) {
+    const t = TELEMETRY[ticker] || DEFAULT_TELEMETRY;
+    
+    const descriptors = {
+      hull: getHullDescriptor(t),
+      engine: getEngineDescriptor(t),
+      stability: getStabilityDescriptor(t),
+      signal: getSignalDescriptor(t),
+      personality: getPersonalityDescriptor(t)
+    };
+    
+    return descriptors;
+  }
+
+  function getHullDescriptor(t) {
+    if (t.hullResilience > 0.7) {
+      return {
+        label: 'Battle-Hardened',
+        tooltip: 'Historically resilient under drawdown. Recovers quickly from adverse conditions.',
+        mood: 'confident'
+      };
+    } else if (t.hullResilience > 0.5) {
+      return {
+        label: 'Standard Hull',
+        tooltip: 'Moderate stress tolerance. Performs reliably under normal conditions.',
+        mood: 'neutral'
+      };
+    } else if (t.hullResilience > 0.3) {
+      return {
+        label: 'Stressed Frame',
+        tooltip: 'Shows wear under pressure. Extended deployments not recommended.',
+        mood: 'cautious'
+      };
+    } else {
+      return {
+        label: 'Fragile',
+        tooltip: 'Structurally compromised. Handle with care. High risk of cascade failures.',
+        mood: 'critical'
+      };
+    }
+  }
+
+  function getEngineDescriptor(t) {
+    if (t.thrustPotential > 0.7) {
+      return {
+        label: 'Momentum-Class',
+        tooltip: 'Trend-following propulsion. Excels in sustained directional movement.',
+        mood: 'aggressive'
+      };
+    } else if (t.thrustPotential > 0.4) {
+      return {
+        label: 'Standard Drive',
+        tooltip: 'Balanced thrust output. Adaptable to varying conditions.',
+        mood: 'neutral'
+      };
+    } else if (t.thrustPotential > 0.2) {
+      return {
+        label: 'Economy Drive',
+        tooltip: 'Limited thrust capability. Best suited for short-range operations.',
+        mood: 'cautious'
+      };
+    } else {
+      return {
+        label: 'Underpowered',
+        tooltip: 'Weak directional bias. Often drifts without clear momentum.',
+        mood: 'strained'
+      };
+    }
+  }
+
+  function getStabilityDescriptor(t) {
+    if (t.maneuverStability > 0.7) {
+      return {
+        label: 'Rock Steady',
+        tooltip: 'Exceptional stability. Minimal drift variance. Command-grade.',
+        mood: 'confident'
+      };
+    } else if (t.maneuverStability > 0.5) {
+      return {
+        label: 'Stable',
+        tooltip: 'Predictable movement patterns. Reliable for most operations.',
+        mood: 'neutral'
+      };
+    } else if (t.maneuverStability > 0.3) {
+      return {
+        label: 'Erratic',
+        tooltip: 'Prone to sudden movements. Requires active monitoring.',
+        mood: 'cautious'
+      };
+    } else {
+      return {
+        label: 'Unstable',
+        tooltip: 'High chop sensitivity. Expect unpredictable behavior.',
+        mood: 'critical'
+      };
+    }
+  }
+
+  function getSignalDescriptor(t) {
+    if (t.signalClarity > 0.6) {
+      return {
+        label: 'Crystal Clear',
+        tooltip: 'Strong signal-to-noise ratio. Indicators are reliable.',
+        mood: 'confident'
+      };
+    } else if (t.signalClarity > 0.4) {
+      return {
+        label: 'Readable',
+        tooltip: 'Adequate signal quality. Some noise filtering required.',
+        mood: 'neutral'
+      };
+    } else if (t.signalClarity > 0.25) {
+      return {
+        label: 'Noisy',
+        tooltip: 'Degraded signal quality. False readings common.',
+        mood: 'cautious'
+      };
+    } else {
+      return {
+        label: 'Nebulous',
+        tooltip: 'Signal lost in noise. Operating on instruments only.',
+        mood: 'critical'
+      };
+    }
+  }
+
+  function getPersonalityDescriptor(t) {
+    // Combine traits into a personality summary
+    if (t.regimeBias === 'trend' && t.thrustPotential > 0.6) {
+      return {
+        archetype: 'Trailblazer',
+        summary: 'Built for sustained momentum. Thrives in trending markets.',
+        fantasy: 'Command ship leading the fleet through charted territory.'
+      };
+    } else if (t.regimeBias === 'chaotic' && t.chopSensitivity > 0.6) {
+      return {
+        archetype: 'Wild Card',
+        summary: 'Unpredictable but opportunistic. High risk, high potential.',
+        fantasy: 'Volatile asset that could spike or crash without warning.'
+      };
+    } else if (t.maneuverStability > 0.7 && t.thrustPotential < 0.4) {
+      return {
+        archetype: 'Anchor',
+        summary: 'Stable presence. Low excitement, high reliability.',
+        fantasy: 'Support vessel providing fleet stability.'
+      };
+    } else if (t.signalClarity < 0.3) {
+      return {
+        archetype: 'Ghost',
+        summary: 'Hard to read. Operates in fog. Trust your instincts.',
+        fantasy: 'Reconnaissance unit in uncharted space.'
+      };
+    } else {
+      return {
+        archetype: 'Workhorse',
+        summary: 'Balanced capabilities. Reliable under most conditions.',
+        fantasy: 'Versatile craft suitable for varied missions.'
+      };
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // FLEET-LEVEL TELEMETRY (Emergent behavior from aggregation)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /**
+   * Compute fleet-wide telemetry metrics.
+   * These drive hangar ambience, mission recommendations, and fleet mood.
+   */
+  function getFleetTelemetry(tickers) {
+    // Default to all tickers if none specified
+    if (!tickers || tickers.length === 0) {
+      tickers = Object.keys(TELEMETRY);
+    }
+    
+    const telemetries = tickers
+      .map(t => TELEMETRY[t])
+      .filter(Boolean);
+    
+    if (telemetries.length === 0) return null;
+    
+    const n = telemetries.length;
+    
+    // Averages
+    const avgHull = telemetries.reduce((s, t) => s + t.hullResilience, 0) / n;
+    const avgThrust = telemetries.reduce((s, t) => s + t.thrustPotential, 0) / n;
+    const avgStability = telemetries.reduce((s, t) => s + t.maneuverStability, 0) / n;
+    const avgChop = telemetries.reduce((s, t) => s + t.chopSensitivity, 0) / n;
+    const avgSignal = telemetries.reduce((s, t) => s + t.signalClarity, 0) / n;
+    
+    // Variance (fleet coherence)
+    const varianceChop = telemetries.reduce((s, t) => 
+      s + Math.pow(t.chopSensitivity - avgChop, 2), 0) / n;
+    const varianceThrust = telemetries.reduce((s, t) => 
+      s + Math.pow(t.thrustPotential - avgThrust, 2), 0) / n;
+    
+    // Derived fleet metrics
+    const fleetStability = 1 - Math.sqrt(varianceChop);
+    const commandCoherence = avgThrust * avgStability * (1 - Math.sqrt(varianceThrust));
+    
+    // Risk posture
+    let riskPosture = 'balanced';
+    if (avgChop > 0.6 || avgHull < 0.4) {
+      riskPosture = 'aggressive';
+    } else if (avgStability > 0.7 && avgChop < 0.3) {
+      riskPosture = 'conservative';
+    }
+    
+    // Fleet mood
+    let fleetMood = 'operational';
+    if (commandCoherence > 0.5 && fleetStability > 0.7) {
+      fleetMood = 'confident';
+    } else if (avgHull < 0.35 || avgSignal < 0.3) {
+      fleetMood = 'strained';
+    } else if (avgChop > 0.6) {
+      fleetMood = 'alert';
+    }
+    
+    // Command ship identification (highest thrust + stability)
+    let commandShip = null;
+    let commandScore = 0;
+    tickers.forEach(ticker => {
+      const t = TELEMETRY[ticker];
+      if (t) {
+        const score = t.thrustPotential * t.maneuverStability;
+        if (score > commandScore) {
+          commandScore = score;
+          commandShip = ticker;
+        }
+      }
+    });
+    
+    return {
+      // Core averages
+      avgHull: Math.round(avgHull * 100) / 100,
+      avgThrust: Math.round(avgThrust * 100) / 100,
+      avgStability: Math.round(avgStability * 100) / 100,
+      avgChop: Math.round(avgChop * 100) / 100,
+      avgSignal: Math.round(avgSignal * 100) / 100,
+      
+      // Derived
+      fleetStability: Math.round(fleetStability * 100) / 100,
+      commandCoherence: Math.round(commandCoherence * 100) / 100,
+      riskPosture,
+      fleetMood,
+      
+      // Leadership
+      commandShip,
+      commandScore: Math.round(commandScore * 100) / 100,
+      
+      // Meta
+      shipCount: n
+    };
+  }
+
+  /**
+   * Get fleet-level textual status
+   */
+  function getFleetStatus(tickers) {
+    const fleet = getFleetTelemetry(tickers);
+    if (!fleet) return null;
+    
+    let headline = 'Fleet Operational';
+    let subtext = 'All systems nominal.';
+    
+    if (fleet.fleetMood === 'confident') {
+      headline = 'Fleet Combat Ready';
+      subtext = `${fleet.commandShip} commanding. High coherence detected.`;
+    } else if (fleet.fleetMood === 'strained') {
+      headline = 'Fleet Under Stress';
+      subtext = 'Multiple systems showing wear. Consider rotation.';
+    } else if (fleet.fleetMood === 'alert') {
+      headline = 'Fleet on Alert';
+      subtext = 'Elevated volatility across positions. Monitor closely.';
+    }
+    
+    return {
+      headline,
+      subtext,
+      mood: fleet.fleetMood,
+      posture: fleet.riskPosture,
+      commandShip: fleet.commandShip
+    };
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // LIVERY MODULATION (Telemetry → Palette bias)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /**
+   * Get palette generation bias based on telemetry.
+   * These are NUDGES, not overrides - they influence generation.
+   */
+  function getPaletteBias(ticker) {
+    const t = TELEMETRY[ticker] || DEFAULT_TELEMETRY;
+    
+    return {
+      // Contrast: high chop → higher contrast (more visual separation)
+      contrastBias: 0.5 + (t.chopSensitivity * 0.4),
+      
+      // Saturation: strong trend → higher saturation (confident colors)
+      saturationBias: 0.6 + (t.thrustPotential * 0.3),
+      
+      // Warmth: volatile/chaotic → warmer (oranges, reds)
+      // Stable → cooler (blues, greens)
+      warmthBias: 0.5 + (t.chopSensitivity * 0.3) - (t.maneuverStability * 0.2),
+      
+      // Brightness: high signal clarity → brighter
+      brightnessBias: 0.5 + (t.signalClarity * 0.3),
+      
+      // Complexity: chaotic regime → more accent colors
+      complexityBias: t.regimeBias === 'chaotic' ? 0.8 : 
+                      t.regimeBias === 'trend' ? 0.4 : 0.6,
+      
+      // Recommended hue families
+      suggestedHues: getSuggestedHues(t)
+    };
+  }
+
+  function getSuggestedHues(t) {
+    const hues = [];
+    
+    // Trend-strong: command colors (greens, blues)
+    if (t.thrustPotential > 0.6) {
+      hues.push('green', 'teal', 'blue');
+    }
+    
+    // Chaotic: warning/energy colors (oranges, reds)
+    if (t.regimeBias === 'chaotic' || t.chopSensitivity > 0.6) {
+      hues.push('orange', 'red', 'amber');
+    }
+    
+    // Stable/carrier: cool professional (blue, gray, silver)
+    if (t.maneuverStability > 0.7) {
+      hues.push('blue', 'silver', 'cyan');
+    }
+    
+    // Low signal: mysterious (purple, dark blue)
+    if (t.signalClarity < 0.3) {
+      hues.push('purple', 'indigo', 'void');
+    }
+    
+    // Default
+    if (hues.length === 0) {
+      hues.push('green', 'blue', 'gray');
+    }
+    
+    return [...new Set(hues)]; // Deduplicate
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
   // PUBLIC API
   // ═══════════════════════════════════════════════════════════════════════════
 
   console.log('[ShipTelemetry] Initialized with', Object.keys(TELEMETRY).length, 'ticker profiles');
 
   return {
-    // Core data access
+    // Core data access (LOCKED CONTRACT)
     getTelemetry: (ticker) => TELEMETRY[ticker] || DEFAULT_TELEMETRY,
     getAllTelemetry: () => ({ ...TELEMETRY }),
     hasData: (ticker) => !!TELEMETRY[ticker],
     
-    // Behavioral parameters
+    // Effective telemetry (with runtime overlays)
+    getEffectiveTelemetry,
+    
+    // Runtime overlays
+    setRuntimeOverlay,
+    clearRuntimeOverlay,
+    getRuntimeOverlay,
+    
+    // Behavioral parameters (LOCKED CONTRACT)
     getAnimationModifiers,
     getBehaviorRecommendations,
     getSuggestedClass,
     
-    // UI descriptors
+    // UI descriptors (LOCKED CONTRACT)
     getStatusDescriptor,
+    getTraitDescriptors,
     
-    // Livery integration
+    // Fleet-level (LOCKED CONTRACT)
+    getFleetTelemetry,
+    getFleetStatus,
+    
+    // Livery integration (LOCKED CONTRACT)
     getLiverySuggestion,
+    getPaletteBias,
     
-    // Mission integration
+    // Mission integration (LOCKED CONTRACT)
     getMissionAffinities,
     
-    // Raw access (for debugging)
+    // Raw access (for debugging only)
     _RAW_METRICS: RAW_METRICS,
-    _TELEMETRY: TELEMETRY
+    _TELEMETRY: TELEMETRY,
+    _RANGES: RANGES
   };
 
 })();

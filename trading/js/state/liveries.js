@@ -181,16 +181,41 @@ window.LiverySystem = (function() {
 
   /**
    * Generate palette roles from base colors
+   * Optionally applies telemetry-based bias for the ticker
    */
-  function generatePaletteRoles(baseColors) {
+  function generatePaletteRoles(baseColors, ticker) {
     if (!baseColors || baseColors.length < 2) {
       baseColors = ['#33ff99', '#00cc77', '#0a3333'];
     }
 
-    const primary = baseColors[0];
-    const secondary = baseColors[1];
-    const tertiary = baseColors[2] || blendColors(primary, secondary, 0.5);
+    let primary = baseColors[0];
+    let secondary = baseColors[1];
+    let tertiary = baseColors[2] || blendColors(primary, secondary, 0.5);
 
+    // Apply telemetry bias if available
+    if (ticker && window.ShipTelemetry?.hasData(ticker)) {
+      const bias = ShipTelemetry.getPaletteBias(ticker);
+      
+      // Adjust saturation based on telemetry
+      primary = adjustSaturation(primary, bias.saturationBias);
+      secondary = adjustSaturation(secondary, bias.saturationBias * 0.9);
+      
+      // Adjust brightness based on signal clarity
+      primary = adjustBrightness(primary, bias.brightnessBias);
+      
+      // Adjust contrast between primary and shadow
+      const contrastAmount = 0.3 + (bias.contrastBias * 0.2);
+      
+      return [
+        { role: 'primary', hex: primary },
+        { role: 'secondary', hex: secondary },
+        { role: 'glaze', hex: blendColors(primary, secondary, 0.3) },
+        { role: 'highlight', hex: lightenColor(primary, 0.25 + (bias.brightnessBias * 0.1)) },
+        { role: 'shadow', hex: darkenColor(secondary, contrastAmount) }
+      ];
+    }
+
+    // Default generation without bias
     return [
       { role: 'primary', hex: primary },
       { role: 'secondary', hex: secondary },
@@ -198,6 +223,47 @@ window.LiverySystem = (function() {
       { role: 'highlight', hex: lightenColor(primary, 0.3) },
       { role: 'shadow', hex: darkenColor(secondary, 0.4) }
     ];
+  }
+
+  /**
+   * Adjust color saturation
+   */
+  function adjustSaturation(hex, factor) {
+    const rgb = hexToRgb(hex);
+    const max = Math.max(rgb.r, rgb.g, rgb.b);
+    const min = Math.min(rgb.r, rgb.g, rgb.b);
+    const l = (max + min) / 2 / 255;
+    
+    // Convert to HSL, adjust saturation, convert back
+    const d = (max - min) / 255;
+    if (d === 0) return hex; // Achromatic
+    
+    const s = l > 0.5 ? d / (2 - max/255 - min/255) : d / (max/255 + min/255);
+    const newS = Math.min(1, s * factor);
+    
+    // Simplified: blend toward or away from gray based on factor
+    const gray = (rgb.r + rgb.g + rgb.b) / 3;
+    const blend = factor > 1 ? 0 : 1 - factor;
+    
+    return rgbToHex(
+      rgb.r + (gray - rgb.r) * blend * 0.3,
+      rgb.g + (gray - rgb.g) * blend * 0.3,
+      rgb.b + (gray - rgb.b) * blend * 0.3
+    );
+  }
+
+  /**
+   * Adjust color brightness
+   */
+  function adjustBrightness(hex, factor) {
+    const rgb = hexToRgb(hex);
+    const adjustment = (factor - 0.5) * 50; // -25 to +25
+    
+    return rgbToHex(
+      rgb.r + adjustment,
+      rgb.g + adjustment,
+      rgb.b + adjustment
+    );
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -697,6 +763,7 @@ window.LiverySystem = (function() {
 
   /**
    * Create livery from Paint Bay output
+   * Now applies telemetry-based palette bias when ticker is provided
    */
   function createFromPaintBay(options) {
     const livery = createLivery({
@@ -707,7 +774,8 @@ window.LiverySystem = (function() {
       palette: {
         model: 'dual-glaze',
         baseColors: options.baseColors,
-        generated: generatePaletteRoles(options.baseColors)
+        // Pass ticker for telemetry-biased palette generation
+        generated: generatePaletteRoles(options.baseColors, options.ticker)
       },
       appliesTo: {
         ships: options.ticker ? [options.ticker] : [],

@@ -753,3 +753,103 @@ body.ship-brief-open {
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.7; transform: scale(1.2); }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TELEMETRY TRAITS (Language that mirrors data)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.ship-brief-traits {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.75rem;
+  margin-top: 0.75rem;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+
+.trait-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.2rem 0;
+  cursor: help;
+  transition: background 0.15s;
+}
+
+.trait-row:hover {
+  background: rgba(51, 255, 153, 0.05);
+}
+
+.trait-label {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.trait-value {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+/* Trait mood colors */
+.trait-row[data-mood="confident"] .trait-value {
+  color: var(--phosphor);
+}
+
+.trait-row[data-mood="aggressive"] .trait-value {
+  color: #ff9933;
+}
+
+.trait-row[data-mood="neutral"] .trait-value {
+  color: var(--text);
+}
+
+.trait-row[data-mood="cautious"] .trait-value {
+  color: var(--amber);
+}
+
+.trait-row[data-mood="strained"] .trait-value {
+  color: #ff9999;
+}
+
+.trait-row[data-mood="critical"] .trait-value {
+  color: var(--red);
+  animation: trait-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes trait-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* Personality section */
+.trait-personality {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding-top: 0.5rem;
+  margin-top: 0.35rem;
+  border-top: 1px dashed var(--border);
+  cursor: help;
+}
+
+.personality-archetype {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--phosphor);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.personality-summary {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  font-style: italic;
+  line-height: 1.4;
+}
