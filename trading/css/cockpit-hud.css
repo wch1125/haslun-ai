@@ -202,13 +202,38 @@ body.cockpit-active .content {
   display: block;
 }
 
-/* Position cockpit panels in the main content area */
+/* Position cockpit panels FIXED over the app content */
 body.cockpit-active .cockpit-panel {
-  position: relative;
-  z-index: 10;
+  position: fixed;
+  top: 60px;       /* Below header */
+  left: 0;
+  right: 0;
+  bottom: 80px;    /* Above HUD */
+  z-index: 100;    /* Above app content, below HUD */
+  max-width: 100%;
+  overflow-y: auto;
+  padding: 20px;
+  padding-top: 20px;
+  box-sizing: border-box;
+}
+
+/* Center the content inside the fixed panel */
+body.cockpit-active .cockpit-panel > * {
   max-width: 1600px;
-  margin: 0 auto;
-  padding-top: 80px; /* Space below header */
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Hide the old app content when cockpit panels are active */
+body.cockpit-active .main {
+  display: none !important;
+}
+
+body.cockpit-active .status-strip,
+body.cockpit-active .watermark,
+body.cockpit-active .mobile-bottom-nav,
+body.cockpit-active .mobile-quick-stats {
+  display: none !important;
 }
 
 /* -------------------------------------------------------------------------
