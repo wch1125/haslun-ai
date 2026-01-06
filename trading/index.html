@@ -15,6 +15,7 @@
   <link rel="stylesheet" href="css/crt-effects.css">
   <!-- Ship Brief dialog styles (isolated for modularity) -->
   <link rel="stylesheet" href="css/ship-brief.css">
+  <link rel="stylesheet" href="css/fleet-command.css">
 </head>
 <body>
   <!-- CRT NOISE OVERLAY -->
@@ -623,8 +624,8 @@
             <div class="holo-scan-line"></div>
           </div>
         </div>
-        <div class="sidebar-section" style="padding-bottom: 0.5rem;"><div class="sidebar-title">Tracking</div></div>
-        <div class="watchlist" id="watchlist"></div>
+        <div class="sidebar-section" style="padding-bottom: 0.5rem;"><div class="sidebar-title">Fleet Command</div></div>
+        <div id="fleet-command-container"></div>
       </aside>
       
       <div class="content">
@@ -1931,6 +1932,9 @@
   
   <!-- Unified Ship Brief Dialog -->
   <script src="js/ui/shipBrief.js"></script>
+  
+  <!-- Fleet Command UI -->
+  <script src="js/ui/fleet-command.js"></script>
   
   <!-- Context Focus (Page-Behind Awareness) -->
   <script src="js/ui/contextFocus.js"></script>

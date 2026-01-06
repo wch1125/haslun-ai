@@ -28,19 +28,296 @@
     
     body {
       font-family: 'IBM Plex Mono', monospace;
-      background: var(--bg-dark);
+      background: 
+        radial-gradient(ellipse at center, transparent 0%, transparent 60%, rgba(0,0,0,0.35) 100%),
+        var(--bg-dark);
       color: var(--text);
       min-height: 100vh;
       line-height: 1.5;
     }
     
+    /* CRT Scanlines Overlay */
     body::before {
       content: '';
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.1) 2px, rgba(0,0,0,0.1) 4px);
+      background: repeating-linear-gradient(
+        0deg, 
+        transparent, 
+        transparent 3px, 
+        rgba(0,0,0,0.06) 3px, 
+        rgba(0,0,0,0.06) 4px
+      );
       pointer-events: none;
       z-index: 9999;
+    }
+    
+    /* CRT Ambient Glow */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 9998;
+      background: radial-gradient(
+        ellipse 100% 60% at 50% 30%,
+        rgba(51, 255, 153, 0.03) 0%,
+        transparent 70%
+      );
+      animation: crt-breathe 5s ease-in-out infinite;
+    }
+    
+    @keyframes crt-breathe {
+      0%, 100% { opacity: 0.5; }
+      50% { opacity: 1; }
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════════
+       SCROLLING TICKER BANNER — News broadcast style
+       ═══════════════════════════════════════════════════════════════════ */
+    .ticker-banner {
+      position: relative;
+      background: linear-gradient(to bottom, #080c10, #0d1218);
+      border-bottom: 1px solid var(--border);
+      overflow: hidden;
+      height: 32px;
+      display: flex;
+      align-items: center;
+    }
+    
+    .ticker-banner::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        90deg,
+        rgba(10, 14, 20, 1) 0%,
+        transparent 5%,
+        transparent 95%,
+        rgba(10, 14, 20, 1) 100%
+      );
+      pointer-events: none;
+      z-index: 2;
+    }
+    
+    .ticker-label {
+      flex-shrink: 0;
+      background: var(--phosphor);
+      color: var(--bg-dark);
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 0.35rem 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      z-index: 3;
+      box-shadow: 2px 0 10px rgba(51, 255, 153, 0.4);
+    }
+    
+    .ticker-track {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+    
+    .ticker-content {
+      display: flex;
+      gap: 3rem;
+      animation: ticker-scroll 45s linear infinite;
+      white-space: nowrap;
+      padding-left: 100%;
+    }
+    
+    .ticker-content:hover {
+      animation-play-state: paused;
+    }
+    
+    @keyframes ticker-scroll {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+    
+    .ticker-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.75rem;
+      color: var(--text-dim);
+    }
+    
+    .ticker-item .symbol {
+      color: var(--phosphor);
+      font-weight: 600;
+    }
+    
+    .ticker-item .price {
+      color: var(--text);
+    }
+    
+    .ticker-item .change {
+      font-weight: 600;
+    }
+    
+    .ticker-item .change.up { color: var(--phosphor); }
+    .ticker-item .change.down { color: var(--red); }
+    
+    .ticker-item .separator {
+      color: var(--border);
+      margin: 0 0.5rem;
+    }
+    
+    /* Mission badge in ticker */
+    .ticker-item .mission-badge {
+      color: var(--amber);
+      font-size: 0.6rem;
+      margin-left: 0.25rem;
+      animation: pulse-badge 1s ease-in-out infinite;
+    }
+    
+    @keyframes pulse-badge {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.7; transform: scale(1.2); }
+    }
+    
+    /* Mission status flash in ticker */
+    .ticker-item.mission-alert {
+      color: var(--amber);
+      animation: ticker-flash 2s ease-in-out infinite;
+    }
+    
+    @keyframes ticker-flash {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════════
+       ENHANCED PANEL STYLING — Pip-Boy aesthetic
+       ═══════════════════════════════════════════════════════════════════ */
+    .panel {
+      background: linear-gradient(180deg, rgba(13, 18, 24, 0.95) 0%, rgba(8, 12, 16, 0.98) 100%);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    /* Glass reflection on panels */
+    .panel::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 40%;
+      background: linear-gradient(
+        180deg,
+        rgba(51, 255, 153, 0.03) 0%,
+        transparent 100%
+      );
+      pointer-events: none;
+    }
+    
+    /* Panel header glow */
+    .panel-header {
+      position: relative;
+      background: linear-gradient(
+        90deg,
+        rgba(51, 255, 153, 0.08) 0%,
+        transparent 50%
+      );
+    }
+    
+    .panel-title {
+      text-shadow: 0 0 10px var(--phosphor-dim);
+    }
+    
+    /* Phosphor glow on important values */
+    .stat-value {
+      text-shadow: 
+        0 0 5px currentColor,
+        0 0 15px currentColor;
+    }
+    
+    /* Mission card enhancements */
+    .mission-card {
+      transition: all 0.3s ease;
+      border: 1px solid var(--border);
+    }
+    
+    .mission-card:hover {
+      border-color: var(--phosphor-dim);
+      box-shadow: 
+        0 0 20px rgba(51, 255, 153, 0.1),
+        inset 0 0 30px rgba(51, 255, 153, 0.03);
+    }
+    
+    .mission-card.recommended {
+      border-color: var(--phosphor-dim);
+      box-shadow: 0 0 15px rgba(51, 255, 153, 0.15);
+    }
+    
+    /* Active mission highlight */
+    .ami-card {
+      background: linear-gradient(
+        135deg,
+        rgba(51, 255, 153, 0.08) 0%,
+        rgba(13, 18, 24, 0.95) 50%
+      );
+      border: 1px solid var(--phosphor-dim);
+      animation: active-pulse 3s ease-in-out infinite;
+    }
+    
+    @keyframes active-pulse {
+      0%, 100% { 
+        box-shadow: 0 0 10px rgba(51, 255, 153, 0.2);
+      }
+      50% { 
+        box-shadow: 0 0 25px rgba(51, 255, 153, 0.35);
+      }
+    }
+    
+    /* Fleet bay styling */
+    .fleet-bay {
+      background: linear-gradient(180deg, #0d1218 0%, #080c10 100%);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      margin-top: 1.5rem;
+    }
+    
+    .fleet-bay-header {
+      background: linear-gradient(
+        90deg,
+        rgba(51, 255, 153, 0.06) 0%,
+        transparent 100%
+      );
+    }
+    
+    /* Ship cards in fleet */
+    .fleet-ship {
+      transition: all 0.2s ease;
+    }
+    
+    .fleet-ship:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(51, 255, 153, 0.2);
+    }
+    
+    /* Scrollbar styling */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    
+    ::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.2);
+    }
+    
+    ::-webkit-scrollbar-thumb {
+      background: linear-gradient(
+        to bottom,
+        var(--phosphor-dim),
+        rgba(51, 255, 153, 0.3)
+      );
+      border-radius: 3px;
     }
     
     /* Page Navigation (matches index.html grouped nav) */
@@ -100,19 +377,129 @@
     
     .container { max-width: 1600px; margin: 0 auto; padding: 1.5rem; }
     
+    /* ═══════════════════════════════════════════════════════════════════
+       CRT SCREEN FRAME — Pip-Boy Command Terminal
+       ═══════════════════════════════════════════════════════════════════ */
+    .crt-frame {
+      position: relative;
+      background: linear-gradient(145deg, #080a0d 0%, #0d1218 50%, #080a0d 100%);
+      border: 2px solid rgba(51, 255, 153, 0.3);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 
+        0 0 30px rgba(51, 255, 153, 0.1),
+        inset 0 0 60px rgba(0, 0, 0, 0.5),
+        inset 0 2px 0 rgba(51, 255, 153, 0.1);
+    }
+    
+    /* CRT screen curvature effect */
+    .crt-frame::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 12px;
+      background: radial-gradient(
+        ellipse 120% 80% at 50% 0%,
+        rgba(51, 255, 153, 0.04) 0%,
+        transparent 50%
+      );
+      pointer-events: none;
+    }
+    
+    /* Screen edge highlight */
+    .crt-frame::after {
+      content: '';
+      position: absolute;
+      inset: 3px;
+      border-radius: 10px;
+      border: 1px solid rgba(51, 255, 153, 0.08);
+      pointer-events: none;
+      box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.3);
+    }
+    
+    /* Corner brackets on frame */
+    .crt-corner {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      border-color: var(--phosphor);
+      border-style: solid;
+      opacity: 0.5;
+    }
+    .crt-corner.tl { top: 8px; left: 8px; border-width: 2px 0 0 2px; }
+    .crt-corner.tr { top: 8px; right: 8px; border-width: 2px 2px 0 0; }
+    .crt-corner.bl { bottom: 8px; left: 8px; border-width: 0 0 2px 2px; }
+    .crt-corner.br { bottom: 8px; right: 8px; border-width: 0 2px 2px 0; }
+    
+    /* Static noise background */
+    .crt-static {
+      position: absolute;
+      inset: 0;
+      border-radius: 12px;
+      opacity: 0.015;
+      pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      animation: static-flicker 0.15s steps(5) infinite;
+    }
+    
+    @keyframes static-flicker {
+      0% { transform: translate(0, 0); }
+      25% { transform: translate(-0.5%, 0.5%); }
+      50% { transform: translate(0.5%, -0.5%); }
+      75% { transform: translate(-0.5%, -0.5%); }
+      100% { transform: translate(0, 0); }
+    }
+    
+    /* Horizontal scan line */
+    .crt-scanline {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(
+        to bottom,
+        transparent,
+        rgba(51, 255, 153, 0.08),
+        transparent
+      );
+      pointer-events: none;
+      animation: scanline-move 4s linear infinite;
+      z-index: 10;
+    }
+    
+    @keyframes scanline-move {
+      0% { top: -3px; }
+      100% { top: 100%; }
+    }
+    
     /* Header */
     .header {
       display: flex; justify-content: space-between; align-items: center;
       margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border);
+      position: relative;
+      z-index: 5;
     }
-    .header-title h1 { font-size: 1.5rem; color: var(--phosphor); text-shadow: 0 0 20px var(--phosphor-dim); letter-spacing: 2px; }
+    .header-title h1 { 
+      font-size: 1.5rem; 
+      color: var(--phosphor); 
+      text-shadow: 
+        0 0 10px var(--phosphor-dim),
+        0 0 30px var(--phosphor-dim),
+        0 0 50px rgba(51, 255, 153, 0.2);
+      letter-spacing: 3px;
+    }
     .header-title .subtitle { color: var(--text-dim); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; }
     .back-btn { 
       font-family: inherit; font-size: 0.85rem; background: transparent;
       color: var(--phosphor); border: 1px solid var(--border); padding: 0.5rem 1rem;
       cursor: pointer; transition: all 0.2s; text-transform: uppercase; letter-spacing: 1px;
     }
-    .back-btn:hover { background: var(--bg-card-hover); border-color: var(--phosphor); }
+    .back-btn:hover { 
+      background: var(--bg-card-hover); 
+      border-color: var(--phosphor);
+      box-shadow: 0 0 15px var(--phosphor-dim);
+    }
     
     /* Controls */
     .controls { display: flex; gap: 1rem; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; }
@@ -488,7 +875,27 @@
     <span class="path-leaf">MISSIONS</span>
   </div>
   
+  <!-- Scrolling Ticker Banner -->
+  <div class="ticker-banner">
+    <div class="ticker-label">LIVE</div>
+    <div class="ticker-track">
+      <div class="ticker-content" id="ticker-content">
+        <!-- Populated by JavaScript -->
+        <span class="ticker-item">Loading market data...</span>
+      </div>
+    </div>
+  </div>
+  
   <div class="container">
+    <!-- CRT Screen Frame -->
+    <div class="crt-frame">
+      <div class="crt-static"></div>
+      <div class="crt-scanline"></div>
+      <div class="crt-corner tl"></div>
+      <div class="crt-corner tr"></div>
+      <div class="crt-corner bl"></div>
+      <div class="crt-corner br"></div>
+      
     <!-- Header -->
     <header class="header">
       <div class="header-title">
@@ -620,6 +1027,8 @@
         </div>
       </div>
     </div>
+    
+    </div><!-- End CRT Frame -->
     
     <!-- Step 3: Fleet Bay Panel -->
     <div class="fleet-bay">
@@ -1493,16 +1902,99 @@
      */
     function returnToDashboard() {
       let url = 'index.html#positions';
-      // Optionally pass current ticker back (uncomment if index.html reads URL params)
-      // if (UI.currentTicker) {
-      //   url += `?ticker=${encodeURIComponent(UI.currentTicker)}`;
-      // }
       window.location.href = url;
     }
+    
+    /**
+     * ═══════════════════════════════════════════════════════════════════
+     * LIVE TICKER BANNER — News broadcast style scrolling prices
+     * ═══════════════════════════════════════════════════════════════════
+     */
+    const TickerBanner = {
+      container: null,
+      data: null,
+      
+      async init() {
+        this.container = document.getElementById('ticker-content');
+        if (!this.container) return;
+        
+        try {
+          // Load stats data
+          const response = await fetch('data/stats.json');
+          this.data = await response.json();
+          this.render();
+          
+          // Refresh every 60 seconds
+          setInterval(() => this.render(), 60000);
+        } catch (e) {
+          console.warn('Ticker banner failed to load:', e);
+          this.container.innerHTML = '<span class="ticker-item">Market data unavailable</span>';
+        }
+      },
+      
+      render() {
+        if (!this.data?.stats) return;
+        
+        const stats = this.data.stats;
+        const tickers = this.data.tickers || Object.keys(stats);
+        
+        // Build ticker items
+        let items = [];
+        
+        // Get active missions for alerts
+        const activeMissions = typeof MissionSystem !== 'undefined' 
+          ? MissionSystem.getActiveMissions() 
+          : [];
+        const missionTickers = new Set(activeMissions.map(m => m.ticker));
+        
+        for (const ticker of tickers) {
+          const s = stats[ticker];
+          if (!s) continue;
+          
+          const price = s.current?.toFixed(2) || '--';
+          const change = s.return_1d;
+          const changeStr = change >= 0 ? `+${change.toFixed(2)}%` : `${change.toFixed(2)}%`;
+          const changeClass = change >= 0 ? 'up' : 'down';
+          
+          // Check if has active mission
+          const hasMission = missionTickers.has(ticker);
+          const missionClass = hasMission ? ' mission-alert' : '';
+          
+          items.push(`
+            <span class="ticker-item${missionClass}">
+              <span class="symbol">${ticker}</span>
+              <span class="price">$${price}</span>
+              <span class="change ${changeClass}">${changeStr}</span>
+              ${hasMission ? '<span class="mission-badge">◉</span>' : ''}
+            </span>
+          `);
+        }
+        
+        // Add mission status alerts
+        for (const m of activeMissions) {
+          const progress = Math.round((m.barsElapsed / m.barsTotal) * 100);
+          items.push(`
+            <span class="ticker-item mission-alert">
+              MISSION: ${m.ticker} ${m.missionType.replace('_', ' ')} — ${progress}% COMPLETE
+            </span>
+          `);
+        }
+        
+        // Duplicate for seamless scroll
+        const content = items.join('<span class="separator">•</span>');
+        this.container.innerHTML = content + '<span class="separator">•</span>' + content;
+        
+        // Adjust animation duration based on content length
+        const itemCount = items.length * 2;
+        const duration = Math.max(30, itemCount * 3);
+        this.container.style.animationDuration = `${duration}s`;
+      }
+    };
     
     // Initialize
     document.addEventListener('DOMContentLoaded', () => {
       UI.init();
+      TickerBanner.init();
       
       // Replace warning icon in disclaimer with pixel icon
       const warningSpan = document.querySelector('.px-warning-icon');

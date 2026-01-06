@@ -40,6 +40,25 @@ window.ShipBrief = (function() {
   // Default fallback sprite
   const DEFAULT_SPRITE = 'assets/ships/static/Unclaimed-Drone-ship.png';
   
+  // Ship taglines for display
+  const SHIP_TAGLINES = {
+    RKLB: 'Spearhead command ship.<br>Victory follows in its wake.',
+    LUNR: 'Lunar surface specialist.<br>First boots, lasting impact.',
+    ACHR: 'Precision carrier class.<br>Silent approach, swift arrival.',
+    BKSY: 'Eyes in the dark.<br>Nothing escapes detection.',
+    JOBY: 'Light assault craft.<br>Speed is survival.',
+    ASTS: 'Communication relay hub.<br>The signal never sleeps.',
+    GME: 'Wildcard interceptor.<br>Expect the unexpected.',
+    PL: 'Long-range scout.<br>Charting the unknown.',
+    KTOS: 'Combat superiority fighter.<br>Dominance through firepower.',
+    GE: 'Heavy strike platform.<br>Overwhelming force on call.',
+    LHX: 'Surveillance drone.<br>Invisible. Omnipresent.',
+    RTX: 'Officer command vessel.<br>Strategic precision.',
+    COHR: 'Optical specialist.<br>Light is the weapon.',
+    RDW: 'Logistics hauler.<br>Supply line lifeline.',
+    EVEX: 'Troop transport.<br>Delivering the payload.'
+  };
+  
   // ═══════════════════════════════════════════════════════════════════════════
   // SOUND CONFIGURATION
   // Global flag to enable/disable UI sounds (default: OFF for accessibility)
@@ -89,6 +108,12 @@ window.ShipBrief = (function() {
             
             <!-- Role Badge -->
             <div class="ship-brief-role" id="ship-brief-role">FLAGSHIP</div>
+            
+            <!-- Ship Name & Tagline -->
+            <div class="ship-brief-title-section">
+              <div class="ship-brief-title-name" id="ship-brief-title-name">RKLB · FLAGSHIP</div>
+              <div class="ship-brief-title-tagline" id="ship-brief-title-tagline">Spearhead command ship.<br>Victory follows in its wake.</div>
+            </div>
             
             <!-- Status Line -->
             <div class="ship-brief-authority" id="ship-brief-authority">
@@ -276,7 +301,7 @@ window.ShipBrief = (function() {
       cargo: 0,
       fuel: 50,
       isOperational: true,
-      lore: 'Unknown vessel. No registry data available.'
+      lore: SHIP_TAGLINES[ticker] || 'Unknown vessel. No registry data available.'
     };
     
     // Get ship names from global
@@ -300,10 +325,13 @@ window.ShipBrief = (function() {
       data.sector = tickerThemes[ticker].toUpperCase();
     }
     
-    // Get profile data
+    // Get profile data (don't overwrite custom taglines)
     if (window.TICKER_PROFILES && TICKER_PROFILES[ticker]) {
       const profile = TICKER_PROFILES[ticker];
-      data.lore = profile.briefDescription || profile.overview || data.lore;
+      // Only use profile description if we don't have a custom tagline
+      if (!SHIP_TAGLINES[ticker]) {
+        data.lore = profile.briefDescription || profile.overview || data.lore;
+      }
     }
     
     // Get position data (check multiple sources)
@@ -346,12 +374,15 @@ window.ShipBrief = (function() {
     // Determine role based on data
     data.role = determineRole(ticker, data);
     
-    // Get lore from pixel ship mapping if available
+    // Get lore from pixel ship mapping if available (but keep custom taglines)
     if (window.mapTickerToPixelShip && window.PIXEL_SHIP_LORE) {
       const shipMeta = mapTickerToPixelShip(ticker, data.sector, data.pnlPct);
       const shipLore = PIXEL_SHIP_LORE[shipMeta?.pattern] || {};
       if (shipLore.label) data.role = shipLore.label;
-      if (shipLore.lore) data.lore = shipLore.lore;
+      // Only use pixel ship lore if we don't have a custom tagline
+      if (shipLore.lore && !SHIP_TAGLINES[ticker]) {
+        data.lore = shipLore.lore;
+      }
     }
     
     return data;
@@ -408,6 +439,17 @@ window.ShipBrief = (function() {
     roleEl.textContent = data.role;
     roleEl.style.color = data.color;
     roleEl.style.borderColor = data.color;
+    
+    // Title section (name and tagline)
+    const titleNameEl = dialogEl.querySelector('#ship-brief-title-name');
+    const titleTaglineEl = dialogEl.querySelector('#ship-brief-title-tagline');
+    if (titleNameEl) {
+      titleNameEl.textContent = data.ticker + ' · ' + data.role;
+      titleNameEl.style.color = data.color;
+    }
+    if (titleTaglineEl) {
+      titleTaglineEl.innerHTML = data.lore || 'Unknown vessel configuration.';
+    }
     
     // Authority line (show only for flagship or operational)
     const authorityEl = dialogEl.querySelector('#ship-brief-authority');

@@ -1707,6 +1707,11 @@
       // Initialize Fleet HoloBay
       initFleetHolobay();
       
+      // Initialize Fleet Command panel (new UI)
+      if (window.FleetCommand) {
+        FleetCommand.init('fleet-command-container');
+      }
+      
       // Initialize glossary tooltips
       attachGlossaryTooltips();
       
@@ -1754,7 +1759,11 @@
           '<div class="watchlist-change ' + (change >= 0 ? 'positive' : 'negative') + '">' + (change >= 0 ? '+' : '') + change.toFixed(2) + '%</div></div></div>';
       }).join('');
       
-      document.getElementById('watchlist').innerHTML = watchlistHTML;
+      // Update watchlist if it exists (may be replaced by Fleet Command)
+      const watchlistEl = document.getElementById('watchlist');
+      if (watchlistEl) {
+        watchlistEl.innerHTML = watchlistHTML;
+      }
       
       // Also populate mobile watchlist
       const mobileWatchlist = document.getElementById('mobile-watchlist');

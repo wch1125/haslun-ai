@@ -159,18 +159,55 @@
 
 .ship-brief-display {
   position: relative;
-  width: 200px;
-  height: 200px;
+  width: 220px;
+  height: 220px;
   display: flex;
   align-items: center;
   justify-content: center;
+  /* CRT Frame styling */
+  background: linear-gradient(145deg, #080a0d 0%, #0d1218 50%, #080a0d 100%);
+  border: 2px solid rgba(51, 255, 153, 0.5);
+  border-radius: 8px;
+  box-shadow: 
+    0 0 30px rgba(51, 255, 153, 0.15),
+    inset 0 0 40px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(51, 255, 153, 0.1);
+}
+
+/* CRT screen curvature reflection */
+.ship-brief-display::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  border-radius: 6px 6px 0 0;
+  background: linear-gradient(
+    180deg,
+    rgba(51, 255, 153, 0.04) 0%,
+    transparent 100%
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Inner screen edge */
+.ship-brief-display::after {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border-radius: 6px;
+  border: 1px solid rgba(51, 255, 153, 0.15);
+  pointer-events: none;
 }
 
 /* Scan Frame */
 .ship-brief-scan-frame {
   position: absolute;
-  inset: 0;
+  inset: 10px;
   pointer-events: none;
+  z-index: 2;
 }
 
 .ship-brief-scan-corner {
@@ -180,7 +217,7 @@
   border-color: var(--ship-color, var(--phosphor));
   border-style: solid;
   border-width: 0;
-  opacity: 0.6;
+  opacity: 0.7;
 }
 
 .ship-brief-scan-corner.tl { top: 0; left: 0; border-top-width: 2px; border-left-width: 2px; }
@@ -193,22 +230,27 @@
   top: 0;
   left: 0;
   right: 0;
-  height: 2px;
+  height: 3px;
   background: linear-gradient(90deg, transparent, var(--ship-color, var(--phosphor)), transparent);
   animation: ship-brief-scan-sweep 3s ease-in-out infinite;
+  z-index: 3;
 }
 
 @keyframes ship-brief-scan-sweep {
   0%, 100% { top: 0; opacity: 0.3; }
-  50% { top: 100%; opacity: 0.6; }
+  50% { top: calc(100% - 3px); opacity: 0.6; }
 }
 
 .ship-brief-img {
   width: 160px;
   height: 160px;
   object-fit: contain;
-  filter: drop-shadow(0 0 20px rgba(51, 255, 153, 0.3));
+  image-rendering: pixelated;
+  filter: 
+    drop-shadow(0 0 15px rgba(71, 212, 255, 0.5))
+    drop-shadow(0 0 30px rgba(51, 255, 153, 0.3));
   animation: ship-brief-hover 4s ease-in-out infinite;
+  z-index: 2;
 }
 
 @keyframes ship-brief-hover {
@@ -216,9 +258,34 @@
   50% { transform: translateY(-6px); }
 }
 
+/* Ship Name & Tagline (below CRT display) */
+.ship-brief-title-section {
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.ship-brief-title-name {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--phosphor);
+  letter-spacing: 0.1em;
+  text-shadow: 
+    0 0 15px rgba(51, 255, 153, 0.5),
+    0 0 30px rgba(51, 255, 153, 0.3);
+}
+
+.ship-brief-title-tagline {
+  font-size: 0.85rem;
+  color: #c8d4e0;
+  margin-top: 0.5rem;
+  font-style: italic;
+  opacity: 0.85;
+  line-height: 1.4;
+}
+
 /* Role Badge */
 .ship-brief-role {
-  padding: 0.3rem 0.75rem;
+  padding: 0.35rem 0.85rem;
   font-family: var(--font-mono);
   font-size: 0.7rem;
   font-weight: 600;
@@ -226,7 +293,8 @@
   color: var(--ship-color, var(--phosphor));
   border: 1px solid var(--ship-color, var(--phosphor));
   border-radius: 2px;
-  background: rgba(51, 255, 153, 0.05);
+  background: rgba(51, 255, 153, 0.1);
+  box-shadow: 0 0 10px rgba(51, 255, 153, 0.2);
 }
 
 /* Authority Line */
