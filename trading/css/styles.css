@@ -339,6 +339,29 @@
       z-index: 1;
     }
     
+    /* Ship Animation Container (for ShipAnimator) */
+    .ship-anim-container {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .ship-anim-container img.ship-sprite {
+      width: 140px;
+      max-width: 100%;
+      height: auto;
+      object-fit: contain;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      filter: drop-shadow(0 0 20px var(--phosphor-glow));
+      animation: ship-hover 4s ease-in-out infinite;
+    }
+    
     @keyframes ship-hover {
       0%, 100% { transform: translateY(0); }
       50% { transform: translateY(-6px); }
@@ -673,7 +696,11 @@
       }
       
       .hangar-fleet-sidebar {
-        display: none; /* Hide sidebar on tablet, use fleet dock instead */
+        display: none; /* Hide sidebar on tablet, use carousel instead */
+      }
+      
+      .hangar-mobile-carousel {
+        display: block;
       }
       
       .hangar-dossier-panel {
@@ -726,9 +753,7 @@
       }
       
       .hangar-floating-fleet {
-        flex-direction: row;
-        flex-wrap: wrap;
-        justify-content: center;
+        display: none; /* Hide floating fleet on mobile, use carousel */
       }
       
       .floating-ship-sprite {
@@ -749,7 +774,175 @@
       }
     }
     
-    :root {
+    /* === MOBILE SHIP CAROUSEL === */
+    .hangar-mobile-carousel {
+      display: none; /* Hidden on desktop */
+      position: relative;
+      width: 100%;
+      overflow: hidden;
+      padding: 0.75rem 0;
+      background: rgba(10, 12, 15, 0.8);
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .carousel-track {
+      display: flex;
+      gap: 0.75rem;
+      padding: 0 1rem;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      scroll-behavior: smooth;
+    }
+    
+    .carousel-track::-webkit-scrollbar {
+      display: none;
+    }
+    
+    .carousel-ship-card {
+      flex: 0 0 auto;
+      width: 140px;
+      scroll-snap-align: center;
+      background: var(--bg-panel);
+      border: 2px solid var(--border);
+      border-radius: 6px;
+      padding: 0.5rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: center;
+    }
+    
+    .carousel-ship-card:hover,
+    .carousel-ship-card.active {
+      border-color: var(--phosphor);
+      background: rgba(51, 255, 153, 0.05);
+    }
+    
+    .carousel-ship-card.active {
+      box-shadow: 0 0 15px var(--phosphor-glow);
+    }
+    
+    .carousel-ship-sprite {
+      width: 64px;
+      height: 64px;
+      object-fit: contain;
+      image-rendering: pixelated;
+      margin: 0 auto;
+    }
+    
+    .carousel-ship-ticker {
+      font-family: var(--font-display);
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--phosphor);
+      margin-top: 0.25rem;
+    }
+    
+    .carousel-ship-class {
+      font-family: var(--font-mono);
+      font-size: 0.55rem;
+      color: var(--amber);
+      margin-top: 0.1rem;
+    }
+    
+    .carousel-ship-pnl {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      margin-top: 0.25rem;
+    }
+    
+    .carousel-ship-pnl.positive { color: var(--signal-up); }
+    .carousel-ship-pnl.negative { color: var(--signal-down); }
+    
+    .carousel-indicators {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+    
+    .carousel-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--border);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .carousel-dot.active {
+      background: var(--phosphor);
+      box-shadow: 0 0 8px var(--phosphor-glow);
+    }
+    
+    .carousel-nav {
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-between;
+      pointer-events: none;
+      transform: translateY(-50%);
+      padding: 0 0.25rem;
+    }
+    
+    .carousel-arrow {
+      pointer-events: auto;
+      width: 28px;
+      height: 28px;
+      background: rgba(10, 12, 15, 0.9);
+      border: 1px solid var(--phosphor-dim);
+      border-radius: 50%;
+      color: var(--phosphor);
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .carousel-arrow:hover {
+      background: var(--phosphor-ghost);
+      box-shadow: 0 0 10px var(--phosphor-glow);
+    }
+    
+    /* === PERFORMANCE MODE TOGGLE === */
+    .perf-select {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      padding: 0.15rem 0.3rem;
+      cursor: pointer;
+    }
+    
+    .perf-select option {
+      background: var(--bg-void);
+    }
+    
+    /* === PERFORMANCE MODE: DISABLE SCANLINES === */
+body.no-scanlines .noise-overlay,
+body.no-scanlines .scanline-overlay {
+  display: none !important;
+}
+
+body.no-scanlines::before {
+  display: none !important;
+}
+
+/* Reduced motion for battery mode */
+@media (prefers-reduced-motion: reduce) {
+  .viewport-ship-sprite,
+  .floating-ship-sprite,
+  .hero-ship-sprite,
+  .ship-anim-container img {
+    animation: none !important;
+  }
+}
+
+:root {
       --bg-void: #050608;
       --bg-deep: #0a0c0f;
       --bg-panel: #0d1117;

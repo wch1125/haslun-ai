@@ -9,8 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Orbitron:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+  <!-- Chart.js loaded lazily when DATA tab is accessed -->
   <link rel="stylesheet" href="css/styles.css">
   <link rel="stylesheet" href="css/crt-effects.css">
   <!-- Ship Brief dialog styles (isolated for modularity) -->
@@ -633,7 +632,7 @@
         <div class="tab-panel active" id="hangar-panel">
           <div class="hangar-command-layout">
             
-            <!-- LEFT: Fleet Command List -->
+            <!-- LEFT: Fleet Command List (Desktop) -->
             <div class="hangar-fleet-sidebar">
               <div class="fleet-sidebar-header">
                 <span class="fleet-header-icon">▲</span>
@@ -670,10 +669,24 @@
                 </div>
               </div>
               
+              <!-- MOBILE: Ship Carousel (swipeable) -->
+              <div class="hangar-mobile-carousel" id="hangar-mobile-carousel">
+                <div class="carousel-track" id="carousel-track">
+                  <!-- Populated dynamically with ship cards -->
+                </div>
+                <div class="carousel-indicators" id="carousel-indicators">
+                  <!-- Dots populated dynamically -->
+                </div>
+                <div class="carousel-nav">
+                  <button class="carousel-arrow prev" onclick="carouselPrev()">◀</button>
+                  <button class="carousel-arrow next" onclick="carouselNext()">▶</button>
+                </div>
+              </div>
+              
               <!-- Center: Ship Viewport + Floating Fleet -->
               <div class="hangar-viewport-area">
                 <!-- Framed ship viewport -->
-                <div class="hangar-ship-viewport">
+                <div class="hangar-ship-viewport" id="hangar-ship-viewport">
                   <div class="viewport-frame">
                     <div class="viewport-corner tl"></div>
                     <div class="viewport-corner tr"></div>
@@ -681,7 +694,8 @@
                     <div class="viewport-corner br"></div>
                     <div class="viewport-grid"></div>
                     <div class="viewport-scanline"></div>
-                    <img id="hangar-hero-sprite" class="viewport-ship-sprite" src="assets/ships/RKLB-flagship-ship.png" alt="Active vessel">
+                    <!-- Ship animator will be injected here -->
+                    <div class="ship-anim-container" id="hero-ship-container"></div>
                   </div>
                   <div class="viewport-label">
                     <span class="viewport-ticker" id="hangar-callsign">RKLB</span>
@@ -1548,6 +1562,16 @@
         </select>
       </div>
       
+      <!-- Performance Mode Toggle -->
+      <div class="status-item perf-toggle">
+        <span class="value" title="Graphics quality">GFX</span>
+        <select id="perf-mode-select" class="perf-select" onchange="setPerformanceMode(this.value)">
+          <option value="full">FULL</option>
+          <option value="balanced" selected>BALANCED</option>
+          <option value="battery">BATTERY</option>
+        </select>
+      </div>
+      
       <!-- Color Profile Control -->
       <div class="status-item" style="min-width: 180px;">
         <div style="display: flex; align-items: center; gap: 0.5rem;">
@@ -2079,6 +2103,7 @@
   <script src="js/data/glossary.js"></script>
   <script src="js/data/pixel-icons.js"></script>
   <script src="js/data/ship-data.js"></script>
+  <script src="js/data/ship-animator.js"></script>
   <script src="js/data/holo-ships.js"></script>
   
   <!-- Audio system -->

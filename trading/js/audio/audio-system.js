@@ -8,10 +8,19 @@
 (function() {
   // Audio context (lazy init)
   let audioCtx = null;
+  let audioDisabled = false;
+  
   function getAudioContext() {
+    if (audioDisabled) return null;
     if (!audioCtx) {
-      const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      audioCtx = AudioCtx ? new AudioCtx() : null;
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        audioCtx = AudioCtx ? new AudioCtx() : null;
+      } catch (e) {
+        console.warn('[Audio] AudioContext not available:', e);
+        audioDisabled = true;
+        return null;
+      }
     }
     return audioCtx;
 }
@@ -22,84 +31,89 @@
 const MechSFX = {
   // Bass-heavy synth hit (like mech footsteps)
   bassHit(freq = 60, duration = 0.15) {
-    const ctx = getAudioContext();
-    if (!ctx) return;
-    if (ctx.state === 'suspended') ctx.resume();
+    try {
+      const ctx = getAudioContext();
+      if (!ctx) return;
+      if (ctx.state === 'suspended') ctx.resume();
+      
+      const osc = ctx.createOscillator();
+      const osc2 = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const filter = ctx.createBiquadFilter();
+      
+      // Two detuned oscillators for thickness
+      osc.type = 'sawtooth';
+      osc.frequency.value = freq;
+      osc2.type = 'square';
+      osc2.frequency.value = freq * 0.5;
+      osc2.detune.value = -10;
+      
+      // Low pass filter for that analog warmth
+      filter.type = 'lowpass';
+      filter.frequency.value = 800;
+      filter.Q.value = 2;
+      // Filter sweep
+      filter.frequency.setValueAtTime(800, ctx.currentTime);
+      filter.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + duration);
+      
+      // Punchy envelope
+      gain.gain.setValueAtTime(0.18, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
     
-    const osc = ctx.createOscillator();
-    const osc2 = ctx.createOscillator();
-    const gain = ctx.createGain();
-    const filter = ctx.createBiquadFilter();
+      osc.connect(filter);
+      osc2.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
     
-    // Two detuned oscillators for thickness
-    osc.type = 'sawtooth';
-    osc.frequency.value = freq;
-    osc2.type = 'square';
-    osc2.frequency.value = freq * 0.5;
-    osc2.detune.value = -10;
-    
-    // Low pass filter for that analog warmth
-    filter.type = 'lowpass';
-    filter.frequency.value = 800;
-    filter.Q.value = 2;
-    // Filter sweep
-    filter.frequency.setValueAtTime(800, ctx.currentTime);
-    filter.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + duration);
-    
-    // Punchy envelope
-    gain.gain.setValueAtTime(0.18, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
-    
-    osc.connect(filter);
-    osc2.connect(filter);
-    filter.connect(gain);
-    gain.connect(ctx.destination);
-    
-    osc.start();
-    osc2.start();
-    osc.stop(ctx.currentTime + duration);
-    osc2.stop(ctx.currentTime + duration);
+      osc.start();
+      osc2.start();
+      osc.stop(ctx.currentTime + duration);
+      osc2.stop(ctx.currentTime + duration);
+    } catch (e) { /* Ignore audio errors */ }
   },
   
   // Synth stab (like UI confirmations in mech cockpits)
   synthStab(freq = 440, duration = 0.08) {
-    const ctx = getAudioContext();
-    if (!ctx) return;
-    if (ctx.state === 'suspended') ctx.resume();
+    try {
+      const ctx = getAudioContext();
+      if (!ctx) return;
+      if (ctx.state === 'suspended') ctx.resume();
     
-    const osc = ctx.createOscillator();
-    const osc2 = ctx.createOscillator();
-    const gain = ctx.createGain();
-    const filter = ctx.createBiquadFilter();
+      const osc = ctx.createOscillator();
+      const osc2 = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const filter = ctx.createBiquadFilter();
     
-    osc.type = 'square';
-    osc.frequency.value = freq;
-    osc2.type = 'sawtooth';
-    osc2.frequency.value = freq * 1.01; // Slight detune
+      osc.type = 'square';
+      osc.frequency.value = freq;
+      osc2.type = 'sawtooth';
+      osc2.frequency.value = freq * 1.01; // Slight detune
     
-    filter.type = 'bandpass';
-    filter.frequency.value = freq * 2;
-    filter.Q.value = 1;
+      filter.type = 'bandpass';
+      filter.frequency.value = freq * 2;
+      filter.Q.value = 1;
     
-    gain.gain.setValueAtTime(0.12, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+      gain.gain.setValueAtTime(0.12, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
     
-    osc.connect(filter);
-    osc2.connect(filter);
-    filter.connect(gain);
-    gain.connect(ctx.destination);
+      osc.connect(filter);
+      osc2.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
     
-    osc.start();
-    osc2.start();
-    osc.stop(ctx.currentTime + duration);
-    osc2.stop(ctx.currentTime + duration);
+      osc.start();
+      osc2.start();
+      osc.stop(ctx.currentTime + duration);
+      osc2.stop(ctx.currentTime + duration);
+    } catch (e) { /* Ignore audio errors */ }
   },
   
   // Alarm/alert sound (descending synth sweep)
   alert(startFreq = 800, endFreq = 200, duration = 0.25) {
-    const ctx = getAudioContext();
-    if (!ctx) return;
-    if (ctx.state === 'suspended') ctx.resume();
+    try {
+      const ctx = getAudioContext();
+      if (!ctx) return;
+      if (ctx.state === 'suspended') ctx.resume();
     
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
@@ -126,52 +140,56 @@ const MechSFX = {
     
     osc.start();
     osc.stop(ctx.currentTime + duration);
+    } catch (e) { /* Ignore audio errors */ }
   },
   
   // Power up sound (rising sweep with harmonics)
   powerUp(duration = 0.3) {
-    const ctx = getAudioContext();
-    if (!ctx) return;
-    if (ctx.state === 'suspended') ctx.resume();
+    try {
+      const ctx = getAudioContext();
+      if (!ctx) return;
+      if (ctx.state === 'suspended') ctx.resume();
     
-    const osc = ctx.createOscillator();
-    const osc2 = ctx.createOscillator();
-    const gain = ctx.createGain();
-    const filter = ctx.createBiquadFilter();
+      const osc = ctx.createOscillator();
+      const osc2 = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const filter = ctx.createBiquadFilter();
     
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(80, ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + duration);
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(80, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + duration);
     
-    osc2.type = 'square';
-    osc2.frequency.setValueAtTime(160, ctx.currentTime);
-    osc2.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + duration);
+      osc2.type = 'square';
+      osc2.frequency.setValueAtTime(160, ctx.currentTime);
+      osc2.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + duration);
     
-    filter.type = 'lowpass';
-    filter.frequency.setValueAtTime(200, ctx.currentTime);
-    filter.frequency.exponentialRampToValueAtTime(3000, ctx.currentTime + duration);
-    filter.Q.value = 4;
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(200, ctx.currentTime);
+      filter.frequency.exponentialRampToValueAtTime(3000, ctx.currentTime + duration);
+      filter.Q.value = 4;
     
-    gain.gain.setValueAtTime(0.15, ctx.currentTime);
-    gain.gain.setValueAtTime(0.15, ctx.currentTime + duration * 0.7);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+      gain.gain.setValueAtTime(0.15, ctx.currentTime);
+      gain.gain.setValueAtTime(0.15, ctx.currentTime + duration * 0.7);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
     
-    osc.connect(filter);
-    osc2.connect(filter);
-    filter.connect(gain);
-    gain.connect(ctx.destination);
+      osc.connect(filter);
+      osc2.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
     
-    osc.start();
-    osc2.start();
-    osc.stop(ctx.currentTime + duration);
-    osc2.stop(ctx.currentTime + duration);
+      osc.start();
+      osc2.start();
+      osc.stop(ctx.currentTime + duration);
+      osc2.stop(ctx.currentTime + duration);
+    } catch (e) { /* Ignore audio errors */ }
   },
   
   // Weapon fire sound
   weaponFire(duration = 0.12) {
-    const ctx = getAudioContext();
-    if (!ctx) return;
-    if (ctx.state === 'suspended') ctx.resume();
+    try {
+      const ctx = getAudioContext();
+      if (!ctx) return;
+      if (ctx.state === 'suspended') ctx.resume();
     
     // Noise generator for "pew" texture
     const bufferSize = ctx.sampleRate * duration;
@@ -207,13 +225,15 @@ const MechSFX = {
     noise.start();
     osc.start();
     osc.stop(ctx.currentTime + duration);
+    } catch (e) { /* Ignore audio errors */ }
   },
   
   // Explosion/impact sound
   impact(duration = 0.35) {
-    const ctx = getAudioContext();
-    if (!ctx) return;
-    if (ctx.state === 'suspended') ctx.resume();
+    try {
+      const ctx = getAudioContext();
+      if (!ctx) return;
+      if (ctx.state === 'suspended') ctx.resume();
     
     // Deep bass thump
     const osc = ctx.createOscillator();
@@ -256,39 +276,46 @@ const MechSFX = {
     noiseGain.connect(ctx.destination);
     
     noise.start();
+    } catch (e) { /* Ignore audio errors */ }
   },
   
   // Selection/tick sound
   tick(freq = 880, duration = 0.04) {
-    const ctx = getAudioContext();
-    if (!ctx) return;
-    if (ctx.state === 'suspended') ctx.resume();
+    try {
+      const ctx = getAudioContext();
+      if (!ctx) return;
+      if (ctx.state === 'suspended') ctx.resume();
     
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
     
-    osc.type = 'triangle';
-    osc.frequency.value = freq;
+      osc.type = 'triangle';
+      osc.frequency.value = freq;
     
-    gain.gain.setValueAtTime(0.08, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+      gain.gain.setValueAtTime(0.08, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
     
-    osc.connect(gain);
-    gain.connect(ctx.destination);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
     
-    osc.start();
-    osc.stop(ctx.currentTime + duration);
+      osc.start();
+      osc.stop(ctx.currentTime + duration);
+    } catch (e) { /* Ignore audio errors */ }
   },
   
   // Success fanfare (two-tone up)
   success() {
-    this.synthStab(523, 0.08);
-    setTimeout(() => this.synthStab(659, 0.12), 80);
+    try {
+      this.synthStab(523, 0.08);
+      setTimeout(() => this.synthStab(659, 0.12), 80);
+    } catch (e) { /* Ignore audio errors */ }
   },
   
   // Error/warning tone
   error() {
-    this.alert(400, 200, 0.15);
+    try {
+      this.alert(400, 200, 0.15);
+    } catch (e) { /* Ignore audio errors */ }
   }
 };
 
@@ -302,31 +329,44 @@ const MechaBGM = {
   isPlaying: false,
   currentTrack: null,
   volume: 0.12, // Default volume (subtle background)
+  disabled: false,
   
   init() {
-    if (this.ctx) return;
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    if (!AudioCtx) return;
-    this.ctx = new AudioCtx();
-    this.masterGain = this.ctx.createGain();
-    this.masterGain.gain.value = this.volume;
-    this.masterGain.connect(this.ctx.destination);
+    if (this.ctx || this.disabled) return;
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) {
+        this.disabled = true;
+        return;
+      }
+      this.ctx = new AudioCtx();
+      this.masterGain = this.ctx.createGain();
+      this.masterGain.gain.value = this.volume;
+      this.masterGain.connect(this.ctx.destination);
+    } catch (e) {
+      console.warn('[MechaBGM] AudioContext not available');
+      this.disabled = true;
+    }
   },
   
   setVolume(v) {
     this.volume = Math.max(0, Math.min(1, v));
-    if (this.masterGain) {
-      this.masterGain.gain.setTargetAtTime(this.volume, this.ctx.currentTime, 0.1);
+    if (this.masterGain && this.ctx) {
+      try {
+        this.masterGain.gain.setTargetAtTime(this.volume, this.ctx.currentTime, 0.1);
+      } catch (e) { /* Ignore */ }
     }
   },
   
   // Epic synth pad drone
   createPad(freq, duration) {
-    const osc1 = this.ctx.createOscillator();
-    const osc2 = this.ctx.createOscillator();
-    const osc3 = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-    const filter = this.ctx.createBiquadFilter();
+    if (!this.ctx || this.disabled) return;
+    try {
+      const osc1 = this.ctx.createOscillator();
+      const osc2 = this.ctx.createOscillator();
+      const osc3 = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      const filter = this.ctx.createBiquadFilter();
     
     osc1.type = 'sawtooth';
     osc1.frequency.value = freq;
@@ -357,40 +397,46 @@ const MechaBGM = {
     osc1.stop(now + duration);
     osc2.stop(now + duration);
     osc3.stop(now + duration);
+    } catch (e) { /* Ignore audio errors */ }
   },
   
   // Rhythmic bass pulse
   createBass(freq, pattern, loopDuration) {
-    const now = this.ctx.currentTime;
-    const eighthNote = loopDuration / 8;
+    if (!this.ctx || this.disabled) return;
+    try {
+      const now = this.ctx.currentTime;
+      const eighthNote = loopDuration / 8;
     
-    pattern.forEach((hit, i) => {
-      if (!hit) return;
-      const startTime = now + (i * eighthNote);
+      pattern.forEach((hit, i) => {
+        if (!hit) return;
+        const startTime = now + (i * eighthNote);
       
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
       
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(freq, startTime);
-      osc.frequency.exponentialRampToValueAtTime(freq * 0.8, startTime + 0.15);
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(freq, startTime);
+        osc.frequency.exponentialRampToValueAtTime(freq * 0.8, startTime + 0.15);
       
-      gain.gain.setValueAtTime(0.1, startTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.2);
+        gain.gain.setValueAtTime(0.1, startTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.2);
       
-      osc.connect(gain);
-      gain.connect(this.masterGain);
+        osc.connect(gain);
+        gain.connect(this.masterGain);
       
-      osc.start(startTime);
-      osc.stop(startTime + 0.25);
-    });
+        osc.start(startTime);
+        osc.stop(startTime + 0.25);
+      });
+    } catch (e) { /* Ignore audio errors */ }
   },
   
   // Epic arpeggio sequence
   createArp(baseFreq, loopDuration) {
-    const now = this.ctx.currentTime;
-    const sixteenthNote = loopDuration / 16;
-    const intervals = [1, 1.2, 1.5, 2, 2.4, 3, 4, 3, 2.4, 2, 1.5, 1.2, 1, 1.5, 2, 1.5];
+    if (!this.ctx || this.disabled) return;
+    try {
+      const now = this.ctx.currentTime;
+      const sixteenthNote = loopDuration / 16;
+      const intervals = [1, 1.2, 1.5, 2, 2.4, 3, 4, 3, 2.4, 2, 1.5, 1.2, 1, 1.5, 2, 1.5];
     
     for (let i = 0; i < 16; i++) {
       if (Math.random() > 0.65) continue;
@@ -419,68 +465,76 @@ const MechaBGM = {
       osc.start(startTime);
       osc.stop(startTime + sixteenthNote);
     }
+    } catch (e) { /* Ignore audio errors */ }
   },
   
   // Main loop
   playLoop() {
-    if (!this.ctx) this.init();
-    if (!this.ctx) return;
+    if (this.disabled) return;
+    try {
+      if (!this.ctx) this.init();
+      if (!this.ctx || this.disabled) return;
     
-    if (this.ctx.state === 'suspended') {
-      this.ctx.resume();
-    }
+      if (this.ctx.state === 'suspended') {
+        this.ctx.resume();
+      }
     
-    const bpm = 110;
-    const barDuration = (60 / bpm) * 4;
-    const loopDuration = barDuration * 2;
+      const bpm = 110;
+      const barDuration = (60 / bpm) * 4;
+      const loopDuration = barDuration * 2;
     
-    const chords = [
-      { root: 110 },   // A minor
-      { root: 146.83 }, // D
-      { root: 130.81 }, // C
-      { root: 98 },     // G
-    ];
+      const chords = [
+        { root: 110 },   // A minor
+        { root: 146.83 }, // D
+        { root: 130.81 }, // C
+        { root: 98 },     // G
+      ];
     
-    const playSegment = (segmentIndex) => {
-      if (!this.isPlaying) return;
+      const playSegment = (segmentIndex) => {
+        if (!this.isPlaying) return;
       
-      const chord = chords[segmentIndex % chords.length];
+        const chord = chords[segmentIndex % chords.length];
       
-      this.createPad(chord.root, loopDuration);
-      this.createPad(chord.root * 1.5, loopDuration);
-      this.createBass(chord.root * 0.5, [1,0,1,0,0,1,0,0], loopDuration);
-      this.createArp(chord.root * 2, loopDuration);
+        this.createPad(chord.root, loopDuration);
+        this.createPad(chord.root * 1.5, loopDuration);
+        this.createBass(chord.root * 0.5, [1,0,1,0,0,1,0,0], loopDuration);
+        this.createArp(chord.root * 2, loopDuration);
       
-      setTimeout(() => playSegment(segmentIndex + 1), loopDuration * 1000);
-    };
+        setTimeout(() => playSegment(segmentIndex + 1), loopDuration * 1000);
+      };
     
-    this.isPlaying = true;
-    playSegment(0);
+      this.isPlaying = true;
+      playSegment(0);
     
-    if (typeof logTerminal === 'function') {
-      logTerminal('BGM SYSTEM · MECHA SORTIE · playing');
-    }
+      if (typeof logTerminal === 'function') {
+        logTerminal('BGM SYSTEM · MECHA SORTIE · playing');
+      }
+    } catch (e) { /* Ignore audio errors */ }
   },
   
   stop() {
     this.isPlaying = false;
-    if (this.masterGain) {
-      this.masterGain.gain.setTargetAtTime(0, this.ctx.currentTime, 0.3);
-    }
+    try {
+      if (this.masterGain && this.ctx) {
+        this.masterGain.gain.setTargetAtTime(0, this.ctx.currentTime, 0.3);
+      }
+    } catch (e) { /* Ignore */ }
     if (typeof logTerminal === 'function') {
       logTerminal('BGM SYSTEM · standby');
     }
   },
   
   toggle() {
-    if (this.isPlaying) {
-      this.stop();
-    } else {
-      if (this.masterGain) {
-        this.masterGain.gain.setTargetAtTime(this.volume, this.ctx.currentTime, 0.1);
+    try {
+      if (this.isPlaying) {
+        this.stop();
+      } else {
+        if (this.masterGain && this.ctx) {
+          this.masterGain.gain.setTargetAtTime(this.volume, this.ctx.currentTime, 0.1);
+        }
+        this.playLoop();
       }
-      this.playLoop();
-    }
+    } catch (e) { /* Ignore audio errors */ }
     return this.isPlaying;
   }
 };

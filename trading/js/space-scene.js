@@ -17,6 +17,18 @@ const SpaceScene = (() => {
   const isMobile = window.innerWidth < 768;
   let dpr = Math.min(window.devicePixelRatio || 1, isMobile ? 1.5 : 2);
   
+  // Performance detection - reduce effects on low-powered devices
+  const isLowPowerDevice = isMobile || navigator.hardwareConcurrency < 4;
+  
+  // Performance settings
+  let perfSettings = {
+    animatedSprites: !isLowPowerDevice,
+    fleetFlybys: !isLowPowerDevice,
+    parallax: !isLowPowerDevice,
+    debris: true,
+    scanlines: true
+  };
+  
   // Ship sprites for flybys
   const shipSprites = {};
   const shipTypes = ['RKLB', 'LUNR', 'JOBY', 'ACHR', 'ASTS', 'BKSY', 'GME', 'KTOS'];
@@ -88,15 +100,17 @@ const SpaceScene = (() => {
     const config = modeConfig[mode] || modeConfig.hangar;
     stars = [];
     
-    // Create stars for each parallax layer
-    parallaxLayers.forEach((layer, layerIdx) => {
+    // Create stars for each parallax layer (or single layer if parallax disabled)
+    const layers = perfSettings.parallax ? parallaxLayers : [parallaxLayers[2]];
+    
+    layers.forEach((layer, layerIdx) => {
       const count = isMobile ? Math.floor(config.starCount * 0.4) : Math.floor(config.starCount * 0.6);
       
       for (let i = 0; i < count; i++) {
         stars.push({
           x: Math.random() * window.innerWidth,
           y: Math.random() * window.innerHeight,
-          layer: layerIdx,
+          layer: perfSettings.parallax ? layerIdx : 0,
           size: layer.starSize * (Math.random() * 0.8 + 0.6),
           color: starColors[Math.floor(Math.random() * starColors.length)],
           twinkle: Math.random() * Math.PI * 2,
@@ -107,6 +121,11 @@ const SpaceScene = (() => {
   }
   
   function initDebris() {
+    if (!perfSettings.debris) {
+      debris = [];
+      return;
+    }
+    
     const config = modeConfig[mode] || modeConfig.hangar;
     const count = isMobile ? Math.floor(config.debrisCount * 0.5) : config.debrisCount;
     
@@ -151,7 +170,7 @@ const SpaceScene = (() => {
   }
   
   function maybeSpawnFleetShip() {
-    if (!spritesLoaded) return;
+    if (!spritesLoaded || !perfSettings.fleetFlybys) return;
     
     const config = modeConfig[mode] || modeConfig.hangar;
     const maxShips = isMobile ? 2 : 4;
@@ -172,8 +191,10 @@ const SpaceScene = (() => {
     ctx.fillRect(0, 0, canvas.width / dpr, canvas.height / dpr);
     
     // Draw stars with parallax layers
+    const activeParallaxLayers = perfSettings.parallax ? parallaxLayers : [{ speedMult: 1, opacity: 0.8 }];
+    
     stars.forEach(s => {
-      const layer = parallaxLayers[s.layer];
+      const layer = activeParallaxLayers[s.layer] || activeParallaxLayers[0];
       s.y += config.starSpeed * layer.speedMult;
       s.twinkle += s.twinkleSpeed;
       
@@ -191,79 +212,82 @@ const SpaceScene = (() => {
     ctx.globalAlpha = 1;
     
     // Draw fleet flyby ships (behind debris)
-    maybeSpawnFleetShip();
-    
-    fleetShips = fleetShips.filter(ship => {
-      const config = modeConfig[mode] || modeConfig.hangar;
-      const speed = config.shipSpeed * (0.5 + ship.depth * 0.5);
+    if (perfSettings.fleetFlybys) {
+      maybeSpawnFleetShip();
       
-      ship.x += ship.direction * speed;
-      ship.wobble += ship.wobbleSpeed;
-      const wobbleY = Math.sin(ship.wobble) * 3;
-      
-      // Check if off screen
-      if ((ship.direction > 0 && ship.x > window.innerWidth + 150) ||
-          (ship.direction < 0 && ship.x < -150)) {
-        return false; // Remove
-      }
-      
-      // Draw the ship
-      const sprite = shipSprites[ship.type];
-      if (sprite) {
-        ctx.save();
-        ctx.globalAlpha = ship.opacity;
-        ctx.translate(ship.x, ship.y + wobbleY);
-        ctx.rotate(ship.rotation);
+      fleetShips = fleetShips.filter(ship => {
+        const speed = config.shipSpeed * (0.5 + ship.depth * 0.5);
         
-        const w = sprite.width * ship.scale;
-        const h = sprite.height * ship.scale;
+        ship.x += ship.direction * speed;
+        ship.wobble += ship.wobbleSpeed;
+        const wobbleY = Math.sin(ship.wobble) * 3;
         
-        // Draw silhouette effect (darker, slightly blue-tinted)
-        ctx.filter = 'brightness(0.3) sepia(1) saturate(0.5) hue-rotate(180deg)';
-        ctx.drawImage(sprite, -w/2, -h/2, w, h);
-        ctx.filter = 'none';
+        // Check if off screen
+        if ((ship.direction > 0 && ship.x > window.innerWidth + 150) ||
+            (ship.direction < 0 && ship.x < -150)) {
+          return false; // Remove
+        }
         
-        ctx.restore();
-      }
-      
-      return true; // Keep
-    });
+        // Draw the ship
+        const sprite = shipSprites[ship.type];
+        if (sprite) {
+          ctx.save();
+          ctx.globalAlpha = ship.opacity;
+          ctx.translate(ship.x, ship.y + wobbleY);
+          ctx.rotate(ship.rotation);
+          
+          const w = sprite.width * ship.scale;
+          const h = sprite.height * ship.scale;
+          
+          // Draw silhouette effect (darker, slightly blue-tinted)
+          ctx.filter = 'brightness(0.3) sepia(1) saturate(0.5) hue-rotate(180deg)';
+          ctx.drawImage(sprite, -w/2, -h/2, w, h);
+          ctx.filter = 'none';
+          
+          ctx.restore();
+        }
+        
+        return true; // Keep
+      });
+    }
     
     ctx.globalAlpha = 1;
     
     // Draw debris
-    debris.forEach(d => {
-      d.y += d.z * config.debrisSpeed;
-      d.rotation += d.rotSpeed;
-      
-      if (d.y > window.innerHeight + 50) {
-        Object.assign(d, createDebris());
-        d.y = -30;
-      }
-      
-      ctx.save();
-      ctx.translate(d.x, d.y);
-      ctx.rotate(d.rotation);
-      ctx.globalAlpha = 0.4 * d.z;
-      ctx.fillStyle = d.color;
-      
-      if (d.type === 'chunk') {
-        // Draw angular chunk shape
-        ctx.beginPath();
-        ctx.moveTo(0, -d.size);
-        ctx.lineTo(d.size * 0.8, -d.size * 0.3);
-        ctx.lineTo(d.size * 0.5, d.size * 0.7);
-        ctx.lineTo(-d.size * 0.6, d.size * 0.4);
-        ctx.lineTo(-d.size * 0.7, -d.size * 0.5);
-        ctx.closePath();
-        ctx.fill();
-      } else {
-        // Draw debris rectangle
-        ctx.fillRect(-d.size/2, -d.size/2, d.size, d.size);
-      }
-      
-      ctx.restore();
-    });
+    if (perfSettings.debris) {
+      debris.forEach(d => {
+        d.y += d.z * config.debrisSpeed;
+        d.rotation += d.rotSpeed;
+        
+        if (d.y > window.innerHeight + 50) {
+          Object.assign(d, createDebris());
+          d.y = -30;
+        }
+        
+        ctx.save();
+        ctx.translate(d.x, d.y);
+        ctx.rotate(d.rotation);
+        ctx.globalAlpha = 0.4 * d.z;
+        ctx.fillStyle = d.color;
+        
+        if (d.type === 'chunk') {
+          // Draw angular chunk shape
+          ctx.beginPath();
+          ctx.moveTo(0, -d.size);
+          ctx.lineTo(d.size * 0.8, -d.size * 0.3);
+          ctx.lineTo(d.size * 0.5, d.size * 0.7);
+          ctx.lineTo(-d.size * 0.6, d.size * 0.4);
+          ctx.lineTo(-d.size * 0.7, -d.size * 0.5);
+          ctx.closePath();
+          ctx.fill();
+        } else {
+          // Draw debris rectangle
+          ctx.fillRect(-d.size/2, -d.size/2, d.size, d.size);
+        }
+        
+        ctx.restore();
+      });
+    }
     
     ctx.globalAlpha = 1;
     
@@ -274,6 +298,19 @@ const SpaceScene = (() => {
     if (modeConfig[newMode] && newMode !== mode) {
       mode = newMode;
       initDebris();
+    }
+  }
+  
+  function setPerformance(settings) {
+    perfSettings = { ...perfSettings, ...settings };
+    
+    // Reinitialize if needed
+    initStars();
+    initDebris();
+    
+    // Clear fleet ships if disabled
+    if (!perfSettings.fleetFlybys) {
+      fleetShips = [];
     }
   }
 
@@ -291,7 +328,7 @@ const SpaceScene = (() => {
     draw();
   }
 
-  return { mount, setMode };
+  return { mount, setMode, setPerformance };
 })();
 
 window.SpaceScene = SpaceScene;

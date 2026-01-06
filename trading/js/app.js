@@ -15,6 +15,64 @@
     const SHIP_SPRITES = window.SHIP_SPRITES || {};
     const DEFAULT_SHIP_SPRITE = window.DEFAULT_SHIP_SPRITE || 'assets/ships/static/Unclaimed-Drone-ship.png';
     
+    // =========================================================================
+    // CHART.JS LAZY LOADER
+    // Only loads Chart.js when DATA tab is accessed (saves ~200KB initial load)
+    // =========================================================================
+    const ChartLoader = {
+      loaded: false,
+      loading: false,
+      callbacks: [],
+      
+      async load() {
+        if (this.loaded) return Promise.resolve();
+        if (this.loading) {
+          return new Promise(resolve => this.callbacks.push(resolve));
+        }
+        
+        this.loading = true;
+        console.log('[PERF] Lazy-loading Chart.js...');
+        
+        try {
+          // Load Chart.js
+          await this.loadScript('https://cdn.jsdelivr.net/npm/chart.js');
+          // Load date adapter
+          await this.loadScript('https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns');
+          
+          this.loaded = true;
+          this.loading = false;
+          console.log('[PERF] Chart.js loaded successfully');
+          
+          // Resolve all waiting callbacks
+          this.callbacks.forEach(cb => cb());
+          this.callbacks = [];
+          
+          return Promise.resolve();
+        } catch (err) {
+          this.loading = false;
+          console.error('[PERF] Failed to load Chart.js:', err);
+          return Promise.reject(err);
+        }
+      },
+      
+      loadScript(src) {
+        return new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = src;
+          script.onload = resolve;
+          script.onerror = reject;
+          document.head.appendChild(script);
+        });
+      },
+      
+      // Check if Chart is available
+      isReady() {
+        return this.loaded && typeof Chart !== 'undefined';
+      }
+    };
+    
+    window.ChartLoader = ChartLoader;
+    
     // Loading screen countdown (data-driven fleet)
     function clamp(n,a,b){ return Math.max(a, Math.min(b,n)); }
 
@@ -2205,6 +2263,14 @@
     }
     
     function updateCharts() {
+      // Lazy load Chart.js if not yet loaded
+      if (!ChartLoader.isReady()) {
+        ChartLoader.load().then(() => {
+          updateCharts(); // Retry after loading
+        });
+        return;
+      }
+      
       const data = tickerData[currentTicker];
       if (!data) return;
       let source = currentTimeframe === '1D' ? data.daily : data.intraday;
@@ -3504,6 +3570,13 @@
       // Auto-collapse Context Bay when leaving Telemetry
       if (tabName !== 'chart') {
         toggleContextBay(false);
+      }
+      
+      // Preload Chart.js when switching to data/chart tab
+      if (tabName === 'chart' && !ChartLoader.isReady()) {
+        ChartLoader.load().then(() => {
+          updateCharts();
+        });
       }
       
       // Determine which group this tab belongs to
@@ -6534,24 +6607,138 @@
     /**
      * HANGAR PANEL - Dense Command Interface
      * Fleet Command sidebar + Framed viewport + Bottom dossier
+     * Mobile carousel + Touch swipe + Animated sprites
      */
     let hangarShipIndex = 0;
     let hangarShipList = [];
+    let carouselTouchStartX = 0;
+    let carouselTouchEndX = 0;
+    let heroAnimator = null; // ShipAnimator instance for viewport
+    let floatingAnimators = []; // Animators for floating fleet
     
-    async function initHangarPanel() {
-      // Build ship roster if not already done
-      if (hangarShipList.length === 0) {
-        hangarShipList = await buildHangarShipList();
+    // Performance mode settings
+    const perfModes = {
+      full: { animatedSprites: true, fleetFlybys: true, parallax: true, debris: true, scanlines: true },
+      balanced: { animatedSprites: true, fleetFlybys: true, parallax: true, debris: true, scanlines: false },
+      battery: { animatedSprites: false, fleetFlybys: false, parallax: false, debris: false, scanlines: false }
+    };
+    let currentPerfMode = 'balanced';
+    
+    function setPerformanceMode(mode) {
+      currentPerfMode = mode;
+      const settings = perfModes[mode];
+      
+      // Update space scene
+      if (window.SpaceScene && SpaceScene.setPerformance) {
+        SpaceScene.setPerformance(settings);
       }
       
-      // Get current selected ship or default to first
-      const selectedTicker = getSelectedShip() || (hangarShipList[0]?.ticker || 'RKLB');
-      hangarShipIndex = Math.max(0, hangarShipList.findIndex(s => s.ticker === selectedTicker));
+      // Toggle scanlines
+      document.body.classList.toggle('no-scanlines', !settings.scanlines);
       
-      // Populate all sections
-      populateFleetSidebar();
-      populateFloatingFleet();
-      updateHangarDisplay();
+      // Update hero animator - switch between frame animation and static
+      if (heroAnimator) {
+        if (settings.animatedSprites) {
+          heroAnimator.play('idle');
+        } else {
+          heroAnimator.stop();
+          heroAnimator._loadStaticFallback();
+        }
+      }
+      
+      // Update floating animators
+      floatingAnimators.forEach(anim => {
+        if (settings.animatedSprites) {
+          anim.play('idle');
+        } else {
+          anim.stop();
+          anim._loadStaticFallback();
+        }
+      });
+      
+      // Save preference
+      localStorage.setItem('parallax_perf_mode', mode);
+      
+      console.log(`[PERF] Mode set to: ${mode}`, settings);
+    }
+    
+    async function initHangarPanel() {
+      try {
+        // Build ship roster if not already done
+        if (hangarShipList.length === 0) {
+          hangarShipList = await buildHangarShipList();
+        }
+        
+        // Get current selected ship or default to first
+        const selectedTicker = getSelectedShip() || (hangarShipList[0]?.ticker || 'RKLB');
+        hangarShipIndex = Math.max(0, hangarShipList.findIndex(s => s.ticker === selectedTicker));
+        
+        // Populate all sections
+        populateFleetSidebar();
+        populateFloatingFleet();
+        populateMobileCarousel();
+        
+        // Initialize hero ship animator
+        initHeroAnimator();
+        
+        updateHangarDisplay();
+        
+        // Initialize touch swipe for viewport
+        initViewportSwipe();
+        
+        // Load saved performance mode
+        const savedPerfMode = localStorage.getItem('parallax_perf_mode');
+        if (savedPerfMode && perfModes[savedPerfMode]) {
+          currentPerfMode = savedPerfMode;
+          const selector = document.getElementById('perf-mode-select');
+          if (selector) selector.value = savedPerfMode;
+          setPerformanceMode(savedPerfMode);
+        }
+        
+        console.log('[HANGAR] Panel initialized successfully');
+      } catch (err) {
+        console.error('[HANGAR] Failed to initialize hangar panel:', err);
+      }
+    }
+    
+    function initHeroAnimator() {
+      const animContainer = document.getElementById('hero-ship-container');
+      if (!animContainer || !window.ShipAnimator) {
+        console.warn('[HANGAR] ShipAnimator not available, using static images');
+        return;
+      }
+      
+      const ship = hangarShipList[hangarShipIndex];
+      if (!ship) return;
+      
+      // Destroy old animator
+      if (heroAnimator) {
+        heroAnimator.destroy();
+      }
+      
+      // Clear container
+      animContainer.innerHTML = '';
+      
+      // Create new animator with frame-by-frame animation
+      heroAnimator = new ShipAnimator(ship.ticker, animContainer, {
+        autoplay: perfModes[currentPerfMode].animatedSprites,
+        defaultAnimation: 'idle',
+        preloadAll: true  // Preload all frames for smooth animation
+      });
+      
+      // Style the animated image
+      setTimeout(() => {
+        const img = animContainer.querySelector('img.ship-sprite');
+        if (img) {
+          img.style.width = '140px';
+          img.style.height = 'auto';
+          img.style.filter = 'drop-shadow(0 0 20px var(--phosphor-glow))';
+          img.style.imageRendering = 'pixelated';
+          img.id = 'hangar-hero-sprite';
+        }
+      }, 50);
+      
+      console.log(`[HANGAR] Hero animator initialized for ${ship.ticker}`);
     }
     
     async function buildHangarShipList() {
@@ -6662,6 +6849,7 @@
           designation: `${shipClassMap[ticker]?.substring(0,3) || 'STD'}-${String(seed % 100).padStart(3, '0')}`,
           sector: profile.sector || 'SPACE SYSTEMS',
           sprite: `assets/ships/${ticker}-${shipType}.png`,
+          animatedSprite: `assets/ships/animated/gifs/${ticker}_idle.gif`,
           fallbackSprite: `assets/ships/static/${ticker}-${shipType}.png`,
           value: stats.value || Math.round((stats.current || 10) * (50 + seed % 100)),
           pnl: Math.round((stats.return_1d || (Math.random() * 10 - 3)) * 30),
@@ -6730,11 +6918,125 @@
       });
     }
     
+    function populateMobileCarousel() {
+      const track = document.getElementById('carousel-track');
+      const indicators = document.getElementById('carousel-indicators');
+      if (!track || !indicators) return;
+      
+      track.innerHTML = '';
+      indicators.innerHTML = '';
+      
+      hangarShipList.forEach((ship, idx) => {
+        // Ship card
+        const card = document.createElement('div');
+        card.className = `carousel-ship-card ${idx === hangarShipIndex ? 'active' : ''}`;
+        card.onclick = () => selectHangarShip(idx);
+        card.dataset.index = idx;
+        
+        const pnlClass = ship.pnl >= 0 ? 'positive' : 'negative';
+        const pnlStr = ship.pnl >= 0 ? `+$${ship.pnl}` : `-$${Math.abs(ship.pnl)}`;
+        
+        card.innerHTML = `
+          <img class="carousel-ship-sprite" src="${ship.sprite}" alt="${ship.ticker}" onerror="this.src='${ship.fallbackSprite}'">
+          <div class="carousel-ship-ticker">${ship.ticker}</div>
+          <div class="carousel-ship-class">${ship.class}</div>
+          <div class="carousel-ship-pnl ${pnlClass}">${pnlStr}</div>
+        `;
+        
+        track.appendChild(card);
+        
+        // Indicator dot
+        const dot = document.createElement('div');
+        dot.className = `carousel-dot ${idx === hangarShipIndex ? 'active' : ''}`;
+        dot.onclick = () => {
+          selectHangarShip(idx);
+          scrollCarouselTo(idx);
+        };
+        indicators.appendChild(dot);
+      });
+      
+      // Touch swipe handlers for carousel
+      track.addEventListener('touchstart', (e) => {
+        carouselTouchStartX = e.changedTouches[0].screenX;
+      }, { passive: true });
+      
+      track.addEventListener('touchend', (e) => {
+        carouselTouchEndX = e.changedTouches[0].screenX;
+        handleCarouselSwipe();
+      }, { passive: true });
+    }
+    
+    function handleCarouselSwipe() {
+      const diff = carouselTouchStartX - carouselTouchEndX;
+      const threshold = 50;
+      
+      if (Math.abs(diff) > threshold) {
+        if (diff > 0) {
+          carouselNext();
+        } else {
+          carouselPrev();
+        }
+      }
+    }
+    
+    function scrollCarouselTo(index) {
+      const track = document.getElementById('carousel-track');
+      const card = track?.querySelector(`[data-index="${index}"]`);
+      if (card) {
+        card.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      }
+    }
+    
+    function carouselNext() {
+      const newIndex = (hangarShipIndex + 1) % hangarShipList.length;
+      selectHangarShip(newIndex);
+      scrollCarouselTo(newIndex);
+    }
+    
+    function carouselPrev() {
+      const newIndex = (hangarShipIndex - 1 + hangarShipList.length) % hangarShipList.length;
+      selectHangarShip(newIndex);
+      scrollCarouselTo(newIndex);
+    }
+    
+    window.carouselNext = carouselNext;
+    window.carouselPrev = carouselPrev;
+    
+    // Touch swipe for main viewport
+    function initViewportSwipe() {
+      const viewport = document.getElementById('hangar-ship-viewport');
+      if (!viewport) return;
+      
+      let touchStartX = 0;
+      
+      viewport.addEventListener('touchstart', (e) => {
+        touchStartX = e.changedTouches[0].screenX;
+      }, { passive: true });
+      
+      viewport.addEventListener('touchend', (e) => {
+        const touchEndX = e.changedTouches[0].screenX;
+        const diff = touchStartX - touchEndX;
+        const threshold = 50;
+        
+        if (Math.abs(diff) > threshold) {
+          if (diff > 0) {
+            cycleHangarShip(1);
+          } else {
+            cycleHangarShip(-1);
+          }
+        }
+      }, { passive: true });
+    }
+    
     function populateFloatingFleet() {
       const container = document.getElementById('hangar-floating-fleet');
       if (!container) return;
       
       container.innerHTML = '';
+      
+      // Destroy old floating animators
+      floatingAnimators.forEach(a => a.destroy());
+      floatingAnimators = [];
       
       // Create formation: 1 top, 2 middle, 1 bottom
       const formation = [
@@ -6757,12 +7059,39 @@
             if (idx >= 0) selectHangarShip(idx);
           };
           
-          shipDiv.innerHTML = `
-            <img class="floating-ship-sprite" src="${ship.sprite}" alt="${ship.ticker}" onerror="this.src='${ship.fallbackSprite}'">
-            <span class="floating-ship-label">${ship.class}</span>
-          `;
+          // Create animator container
+          const animContainer = document.createElement('div');
+          animContainer.className = 'floating-ship-anim';
+          animContainer.dataset.ticker = ship.ticker;
+          shipDiv.appendChild(animContainer);
+          
+          // Add label
+          const label = document.createElement('span');
+          label.className = 'floating-ship-label';
+          label.textContent = ship.class;
+          shipDiv.appendChild(label);
           
           rowDiv.appendChild(shipDiv);
+          
+          // Create animator for this floating ship
+          if (window.ShipAnimator && perfModes[currentPerfMode].animatedSprites) {
+            const anim = new ShipAnimator(ship.ticker, animContainer, {
+              autoplay: true,
+              defaultAnimation: 'idle'
+            });
+            // Style the floating ship
+            const img = animContainer.querySelector('img');
+            if (img) {
+              img.style.width = '64px';
+              img.style.height = '64px';
+              img.style.objectFit = 'contain';
+              img.classList.add('floating-ship-sprite');
+            }
+            floatingAnimators.push(anim);
+          } else {
+            // Fallback to static image
+            animContainer.innerHTML = `<img class="floating-ship-sprite" src="${ship.sprite}" alt="${ship.ticker}" onerror="this.src='${ship.fallbackSprite}'">`;
+          }
         });
         
         container.appendChild(rowDiv);
@@ -6770,11 +7099,26 @@
     }
     
     function selectHangarShip(index) {
+      const previousIndex = hangarShipIndex;
       hangarShipIndex = index;
+      
+      // Trigger special animation on selection
+      if (heroAnimator && previousIndex !== index) {
+        heroAnimator.triggerSpecial();
+      }
+      
       updateHangarDisplay();
       
       // Update sidebar active states
       document.querySelectorAll('.fleet-ship-card').forEach((el, idx) => {
+        el.classList.toggle('active', idx === index);
+      });
+      
+      // Update carousel active states
+      document.querySelectorAll('.carousel-ship-card').forEach((el, idx) => {
+        el.classList.toggle('active', idx === index);
+      });
+      document.querySelectorAll('.carousel-dot').forEach((el, idx) => {
         el.classList.toggle('active', idx === index);
       });
       
@@ -6799,22 +7143,55 @@
     function cycleHangarShip(direction) {
       const newIndex = (hangarShipIndex + direction + hangarShipList.length) % hangarShipList.length;
       selectHangarShip(newIndex);
+      scrollCarouselTo(newIndex);
     }
     
     function updateHangarDisplay() {
       const ship = hangarShipList[hangarShipIndex];
       if (!ship) return;
       
-      // Update viewport
-      const heroSprite = document.getElementById('hangar-hero-sprite');
+      // Update hero animator to new ship
+      const animContainer = document.getElementById('hero-ship-container');
+      
+      if (animContainer && window.ShipAnimator) {
+        // Check if we need to create a new animator for a different ship
+        if (!heroAnimator || heroAnimator.ticker !== ship.ticker) {
+          if (heroAnimator) {
+            heroAnimator.destroy();
+          }
+          
+          animContainer.innerHTML = '';
+          
+          heroAnimator = new ShipAnimator(ship.ticker, animContainer, {
+            autoplay: perfModes[currentPerfMode].animatedSprites,
+            defaultAnimation: 'idle',
+            preloadAll: true
+          });
+          
+          // Style after a brief delay to ensure image is created
+          setTimeout(() => {
+            const img = animContainer.querySelector('img.ship-sprite');
+            if (img) {
+              img.style.width = '140px';
+              img.style.height = 'auto';
+              img.style.filter = 'drop-shadow(0 0 20px var(--phosphor-glow))';
+              img.style.imageRendering = 'pixelated';
+            }
+          }, 50);
+          
+          console.log(`[HANGAR] Switched to ${ship.ticker} with frame animation`);
+        }
+      } else if (animContainer) {
+        // Fallback: use static image if ShipAnimator not available
+        const staticPath = ship.sprite;
+        animContainer.innerHTML = `<img class="ship-sprite" src="${staticPath}" alt="${ship.ticker}" style="width:140px;height:auto;image-rendering:pixelated;">`;
+      }
+      
+      // Update viewport labels
       const callsign = document.getElementById('hangar-callsign');
       const shipClass = document.getElementById('hangar-class');
       const lore = document.getElementById('hangar-lore');
       
-      if (heroSprite) {
-        heroSprite.src = ship.sprite;
-        heroSprite.onerror = () => { heroSprite.src = ship.fallbackSprite; };
-      }
       if (callsign) callsign.textContent = ship.ticker;
       if (shipClass) shipClass.textContent = ship.class;
       if (lore) lore.textContent = ship.lore;
@@ -6864,7 +7241,16 @@
       window.currentHangarTicker = ship.ticker;
     }
     
+    // Trigger special animation on hero ship (callable from anywhere)
+    function triggerHeroSpecial() {
+      if (heroAnimator) {
+        heroAnimator.triggerSpecial();
+      }
+    }
+    
     // Make functions globally available
     window.initHangarPanel = initHangarPanel;
     window.cycleHangarShip = cycleHangarShip;
     window.selectHangarShip = selectHangarShip;
+    window.setPerformanceMode = setPerformanceMode;
+    window.triggerHeroSpecial = triggerHeroSpecial;

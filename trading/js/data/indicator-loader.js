@@ -18,6 +18,7 @@ const IndicatorLoader = (function() {
   
   const BASE_PATH = 'data/indicators/45m/';
   let manifest = null;
+  let manifestError = null;
   let cache = {};
   
   // Column name mapping (TradingView headers → clean keys)
@@ -54,6 +55,7 @@ const IndicatorLoader = (function() {
    */
   async function loadManifest() {
     if (manifest) return manifest;
+    if (manifestError) throw manifestError;
     
     try {
       const response = await fetch(BASE_PATH + 'manifest.json');
@@ -62,7 +64,9 @@ const IndicatorLoader = (function() {
       console.log('[IndicatorLoader] Manifest loaded:', manifest.tickers.length, 'tickers available');
       return manifest;
     } catch (err) {
-      console.error('[IndicatorLoader] Failed to load manifest:', err);
+      // Cache the error so we don't spam the console on repeated calls.
+      manifestError = err;
+      console.warn('[IndicatorLoader] Manifest unavailable. Falling back to local ticker list. Details:', err);
       throw err;
     }
   }
@@ -71,16 +75,42 @@ const IndicatorLoader = (function() {
    * Get list of available tickers (ACTIVE + BENCHMARK for main dropdown)
    */
   async function getAvailableTickers() {
-    const m = await loadManifest();
-    // Step 3.1: Include ACTIVE and BENCHMARK, but mark them
-    return m.tickers
-      .filter(t => t.status === 'ACTIVE' || t.status === 'BENCHMARK' || !t.status)
-      .map(t => ({
-        ticker: t.ticker,
-        name: t.name || t.ticker,
-        file: t.file,
-        status: t.status || 'ACTIVE'
+    // Primary path: manifest-driven (45m CSV exports)
+    try {
+      const m = await loadManifest();
+      if (m && Array.isArray(m.tickers) && m.tickers.length) {
+        // Step 3.1: Include ACTIVE and BENCHMARK, but mark them
+        return m.tickers
+          .filter(t => t.status === 'ACTIVE' || t.status === 'BENCHMARK' || !t.status)
+          .map(t => ({
+            ticker: t.ticker,
+            name: t.name || t.ticker,
+            file: t.file,
+            status: t.status || 'ACTIVE'
+          }));
+      }
+    } catch (_) {
+      // fall through to legacy fallback below
+    }
+
+    // Fallback: use stats.json tickers list so the UI stays usable even
+    // when indicator exports haven't been installed yet.
+    try {
+      const res = await fetch('data/stats.json');
+      if (!res.ok) throw new Error('stats.json not found');
+      const stats = await res.json();
+      const tickers = Array.isArray(stats.tickers) ? stats.tickers : [];
+      return tickers.map(t => ({
+        ticker: String(t).toUpperCase(),
+        name: String(t).toUpperCase(),
+        // Placeholder file name; loadTicker will throw a helpful error if missing
+        file: String(t).toUpperCase() + '.csv',
+        status: 'ACTIVE'
       }));
+    } catch (e) {
+      console.warn('[IndicatorLoader] Fallback ticker list unavailable:', e);
+      return [];
+    }
   }
   
   /**
@@ -178,9 +208,19 @@ const IndicatorLoader = (function() {
       return cache[ticker];
     }
     
-    // Get manifest
-    const m = await loadManifest();
-    const tickerInfo = m.tickers.find(t => t.ticker === ticker);
+    // Get manifest (if installed)
+    let m;
+    try {
+      m = await loadManifest();
+    } catch (e) {
+      throw new Error(
+        `Indicator data not installed. Add 45m exports at ${BASE_PATH} (manifest.json + CSVs). ` +
+        `Found only: data/indicators/Read-me.txt.\n\n` +
+        `To fix: drop your TradingView 45m CSV exports into ${BASE_PATH} and create a manifest.json that lists each ticker + filename.`
+      );
+    }
+
+    const tickerInfo = (m && Array.isArray(m.tickers)) ? m.tickers.find(t => t.ticker === ticker) : null;
     
     if (!tickerInfo) {
       throw new Error(`Ticker ${ticker} not found in manifest. Available: ${m.tickers.map(t => t.ticker).join(', ')}`);
@@ -249,6 +289,7 @@ const IndicatorLoader = (function() {
   function clearCache() {
     cache = {};
     manifest = null;
+    manifestError = null;
     console.log('[IndicatorLoader] Cache cleared');
   }
   
@@ -256,15 +297,42 @@ const IndicatorLoader = (function() {
    * Get manifest metadata
    */
   async function getMetadata() {
-    const m = await loadManifest();
-    return {
-      timeframe: m.timeframe,
-      source: m.source,
-      lastUpdated: m.lastUpdated,
-      tickerCount: m.tickers.length,
-      tickers: m.tickers,  // Step 3: Include full ticker list with status
-      notes: m.notes
-    };
+    // Prefer manifest metadata when available.
+    try {
+      const m = await loadManifest();
+      return {
+        timeframe: m.timeframe,
+        source: m.source,
+        lastUpdated: m.lastUpdated,
+        tickerCount: (m.tickers || []).length,
+        tickers: m.tickers || [],
+        notes: m.notes
+      };
+    } catch (_) {
+      // Fallback so UI can still render, even without indicator exports.
+      try {
+        const res = await fetch('data/stats.json');
+        const stats = res.ok ? await res.json() : null;
+        const tickers = stats && Array.isArray(stats.tickers) ? stats.tickers : [];
+        return {
+          timeframe: '45m',
+          source: 'unavailable',
+          lastUpdated: null,
+          tickerCount: tickers.length,
+          tickers: tickers.map(t => ({ ticker: String(t).toUpperCase(), status: 'ACTIVE' })),
+          notes: 'Indicator manifest missing (data/indicators/45m/manifest.json). Install 45m exports to enable mission analytics.'
+        };
+      } catch (e) {
+        return {
+          timeframe: '45m',
+          source: 'unavailable',
+          lastUpdated: null,
+          tickerCount: 0,
+          tickers: [],
+          notes: 'Indicator manifest missing and stats.json unavailable.'
+        };
+      }
+    }
   }
   
   // Public API

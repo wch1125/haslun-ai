@@ -1186,7 +1186,12 @@
           
           this.computeBtn.disabled = true;
           this.setStatus('Ready', 'ready');
-          this.setMeta(`${tickers.length} sectors • Updated: ${meta.lastUpdated}`);
+          this.setMeta(`${tickers.length} sectors • Updated: ${meta.lastUpdated || 'N/A'}`);
+          
+          // Show warning if indicator data is unavailable
+          if (meta.source === 'unavailable' || meta.notes) {
+            console.warn('[MISSION] Indicator data status:', meta.notes);
+          }
           
           // Auto-select ticker from URL params (Step 2.2)
           if (this.preselectedTicker) {

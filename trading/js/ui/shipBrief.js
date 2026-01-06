@@ -725,71 +725,75 @@ window.ShipBrief = (function() {
       return;
     }
     
-    ensureDialog();
-    
-    currentTicker = ticker;
-    options = opts;
-    
-    // Resolve ship data
-    const data = resolveShipData(ticker);
-    
-    // Update dialog content
-    updateDialog(data);
-    
-    // Store previous focus
-    previousFocus = document.activeElement;
-    
-    // Lock scroll
-    lockScroll();
-    
-    // Clear any existing timers from previous open
-    clearAllTimers();
-    
-    // Reset boot animation
-    const bootOverlay = dialogEl.querySelector('#ship-brief-boot');
-    bootOverlay.classList.remove('done');
-    
-    // Show dialog
-    dialogEl.classList.remove('hidden');
-    requestAnimationFrame(() => {
-      dialogEl.classList.add('visible');
-    });
-    
-    isVisible = true;
-    
-    // Play sound
-    playOpenSound();
-    
-    // Add global ESC listener
-    document.addEventListener('keydown', globalKeydown);
-    
-    // Boot animation sequence (tracked for cleanup)
-    bootTimer = setTimeout(() => {
-      if (!isVisible) return; // Guard against close during animation
-      bootOverlay.classList.add('done');
+    try {
+      ensureDialog();
       
-      // Animate bars after boot
-      barTimer = setTimeout(() => {
-        if (!isVisible) return;
-        animateBars(data);
-        playBarSound();
-      }, 200);
+      currentTicker = ticker;
+      options = opts;
       
-      // Trap focus after animation
-      focusTimer = setTimeout(() => {
-        if (!isVisible) return;
-        trapFocus();
-      }, 100);
-    }, 600);
-    
-    // Dispatch event
-    window.dispatchEvent(new CustomEvent('shipbrief:open', { 
-      detail: { ticker, source: opts.source || 'unknown' } 
-    }));
-    
-    // Log if terminal available
-    if (window.logTerminal) {
-      logTerminal('SHIP BRIEF: ' + ticker + ' [' + data.name + '] accessed');
+      // Resolve ship data
+      const data = resolveShipData(ticker);
+      
+      // Update dialog content
+      updateDialog(data);
+      
+      // Store previous focus
+      previousFocus = document.activeElement;
+      
+      // Lock scroll
+      lockScroll();
+      
+      // Clear any existing timers from previous open
+      clearAllTimers();
+      
+      // Reset boot animation
+      const bootOverlay = dialogEl.querySelector('#ship-brief-boot');
+      bootOverlay.classList.remove('done');
+      
+      // Show dialog
+      dialogEl.classList.remove('hidden');
+      requestAnimationFrame(() => {
+        dialogEl.classList.add('visible');
+      });
+      
+      isVisible = true;
+      
+      // Play sound
+      playOpenSound();
+      
+      // Add global ESC listener
+      document.addEventListener('keydown', globalKeydown);
+      
+      // Boot animation sequence (tracked for cleanup)
+      bootTimer = setTimeout(() => {
+        if (!isVisible) return; // Guard against close during animation
+        bootOverlay.classList.add('done');
+        
+        // Animate bars after boot
+        barTimer = setTimeout(() => {
+          if (!isVisible) return;
+          animateBars(data);
+          playBarSound();
+        }, 200);
+        
+        // Trap focus after animation
+        focusTimer = setTimeout(() => {
+          if (!isVisible) return;
+          trapFocus();
+        }, 100);
+      }, 600);
+      
+      // Dispatch event
+      window.dispatchEvent(new CustomEvent('shipbrief:open', { 
+        detail: { ticker, source: opts.source || 'unknown' } 
+      }));
+      
+      // Log if terminal available
+      if (window.logTerminal) {
+        logTerminal('SHIP BRIEF: ' + ticker + ' [' + data.name + '] accessed');
+      }
+    } catch (err) {
+      console.error('[ShipBrief] Failed to open dialog:', err);
     }
   }
   
