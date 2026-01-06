@@ -331,7 +331,7 @@ window.PaintBay = (function() {
     renderPalette();
     
     // Auto-select ship from hangar if available
-    const hangarShip = window.currentHangarTicker || localStorage.getItem('parallax_selected_ship');
+    const hangarShip = window.currentHangarTicker || localStorage.getItem('space_capital_selected_ship');
     if (hangarShip) {
       selectShip(hangarShip);
     }

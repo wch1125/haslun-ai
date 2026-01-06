@@ -5243,7 +5243,7 @@ body.no-scanlines::before {
     .watermark { position: fixed; bottom: 2.5rem; left: 1.25rem; display: flex; align-items: center; gap: 0.85rem; padding: 0.6rem 1rem; background: var(--bg-panel); border: 1px solid var(--border); font-size: 0.7rem; color: var(--text-muted); z-index: 50; }
     .watermark a { color: var(--amber); text-decoration: none; letter-spacing: 0.05em; }
     .watermark a:hover { text-shadow: 0 0 10px var(--amber-glow); }
-    .watermark .parallax-mark { color: var(--phosphor); letter-spacing: 0.15em; font-weight: 500; opacity: 0.7; }
+    .watermark .space-capital-mark { color: var(--phosphor); letter-spacing: 0.15em; font-weight: 500; opacity: 0.7; }
     
     .status-strip {
       position: fixed;
@@ -10541,7 +10541,7 @@ body.no-scanlines::before {
        ═══════════════════════════════════════════════════════════════════════════ */
 
     /* === Launcher UI === */
-    .parallax-run-launcher {
+    .space-run-launcher {
       display: flex;
       flex-direction: column;
       gap: 1.5rem;
@@ -10720,7 +10720,7 @@ body.no-scanlines::before {
     }
 
     /* === Game Overlay === */
-    .parallax-run-overlay {
+    .space-run-overlay {
       position: fixed;
       inset: 0;
       z-index: 25000;
@@ -10732,7 +10732,7 @@ body.no-scanlines::before {
       transition: opacity 0.3s ease, visibility 0.3s ease;
     }
 
-    .parallax-run-overlay.active {
+    .space-run-overlay.active {
       opacity: 1;
       visibility: visible;
     }
@@ -10892,7 +10892,7 @@ body.no-scanlines::before {
     }
 
     /* Canvas */
-    #parallax-run-canvas {
+    #space-run-canvas {
       display: block;
       width: 100%;
       height: auto;

@@ -31,7 +31,7 @@
     return;
   }
 
-  const STORAGE_KEY = 'parallax_state_v1';
+  const STORAGE_KEY = 'space_capital_state_v1';
 
   // Keys that persist to localStorage
   const PERSIST_KEYS = [

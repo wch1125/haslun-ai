@@ -1266,7 +1266,7 @@
       if (/earth|geo|observation/i.test(sector)) return { symbol: "#ship-drone", label: "FIREFLY DRONE", isHero: false };
       if (/cellular|comms|relay|satellite/i.test(sector)) return { symbol: "#ship-relay", label: "COMM RELAY", isHero: false };
       if (/lunar/i.test(sector)) return { symbol: "#ship-lander", label: "LUNAR LANDER", isHero: false };
-      if (/stealth|black|secret/i.test(sector)) return { symbol: "#ship-parallax", label: "NIGHT PARALLAX", isHero: false };
+      if (/stealth|black|secret/i.test(sector)) return { symbol: "#ship-shadow", label: "NIGHT SHADOW", isHero: false };
       if (/experimental|biotech|pharma/i.test(sector)) return { symbol: "#ship-phantom", label: "PHANTOM NODE", isHero: false };
 
       // Default
@@ -4994,7 +4994,7 @@
         { id:'simulation', text:'Run P&L simulation', done:false },
         { id:'find_invader', text:'Find the hidden invader', done:false },
         { id:'arcade_score', text:'Score 500+ in Signal Invaders', done:false },
-        { id:'parallax_run', text:'Complete a Space Run of 5000+ km', done:false },
+        { id:'space_run', text:'Complete a Space Run of 5000+ km', done:false },
         { id:'snoop_master', text:'Trigger 5 access denials', done:false }
       ];
       
@@ -6648,7 +6648,7 @@
         console.log('[Hangar] Ship selected:', ticker, shipData);
         
         // Store selection
-        localStorage.setItem('parallax_selected_ship', ticker);
+        localStorage.setItem('space_capital_selected_ship', ticker);
         
         // Update the current ticker display if available
         if (typeof selectTicker === 'function') {
@@ -6676,7 +6676,7 @@
      * Get currently selected ship from localStorage
      */
     function getSelectedShip() {
-      return localStorage.getItem('parallax_selected_ship') || null;
+      return localStorage.getItem('space_capital_selected_ship') || null;
     }
     
     window.getSelectedShip = getSelectedShip;
@@ -6734,7 +6734,7 @@
       });
       
       // Save preference
-      localStorage.setItem('parallax_perf_mode', mode);
+      localStorage.setItem('space_capital_perf_mode', mode);
       
       console.log(`[PERF] Mode set to: ${mode}`, settings);
     }
@@ -6763,7 +6763,7 @@
       initViewportSwipe();
       
       // Load saved performance mode
-      const savedPerfMode = localStorage.getItem('parallax_perf_mode');
+      const savedPerfMode = localStorage.getItem('space_capital_perf_mode');
       if (savedPerfMode && perfModes[savedPerfMode]) {
         currentPerfMode = savedPerfMode;
         const selector = document.getElementById('perf-mode-select');
@@ -7196,7 +7196,7 @@
       // Store selection
       const ship = hangarShipList[index];
       if (ship) {
-        localStorage.setItem('parallax_selected_ship', ship.ticker);
+        localStorage.setItem('space_capital_selected_ship', ship.ticker);
         window.currentHangarTicker = ship.ticker;
         
         // Update global ticker selection if available

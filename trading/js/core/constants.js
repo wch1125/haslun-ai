@@ -1,21 +1,21 @@
 /**
  * ═══════════════════════════════════════════════════════════════════
- * PARALLAX CONSTANTS
+ * SPACE CAPITAL CONSTANTS
  * Centralized configuration for the entire application
  * ═══════════════════════════════════════════════════════════════════
  */
 
-window.PARALLAX = window.PARALLAX || {};
+window.SPACE_CAPITAL = window.SPACE_CAPITAL || {};
 
-window.PARALLAX.CONSTANTS = {
+window.SPACE_CAPITAL.CONSTANTS = {
   // ═══════════════════════════════════════════════════════════════════
   // STORAGE KEYS
   // ═══════════════════════════════════════════════════════════════════
   STORAGE: {
-    STATE_KEY: 'parallax_state_v1',
-    MISSIONS_KEY: 'parallax_missions_v1',
-    PROGRESSION_KEY: 'parallax_progression_v1',
-    SETTINGS_KEY: 'parallax_settings_v1'
+    STATE_KEY: 'space_capital_state_v1',
+    MISSIONS_KEY: 'space_capital_missions_v1',
+    PROGRESSION_KEY: 'space_capital_progression_v1',
+    SETTINGS_KEY: 'space_capital_settings_v1'
   },
 
   // ═══════════════════════════════════════════════════════════════════
@@ -132,20 +132,20 @@ window.PARALLAX.CONSTANTS = {
   }
 };
 
-// Shorthand alias
-window.PX = window.PARALLAX.CONSTANTS;
+// Shorthand alias (keeping PX for backwards compatibility)
+window.PX = window.SPACE_CAPITAL.CONSTANTS;
 
 // Freeze to prevent accidental modification
-Object.freeze(window.PARALLAX.CONSTANTS);
-Object.freeze(window.PARALLAX.CONSTANTS.STORAGE);
-Object.freeze(window.PARALLAX.CONSTANTS.BREAKPOINTS);
-Object.freeze(window.PARALLAX.CONSTANTS.ROUTES);
-Object.freeze(window.PARALLAX.CONSTANTS.ANIMATION);
-Object.freeze(window.PARALLAX.CONSTANTS.CHART);
-Object.freeze(window.PARALLAX.CONSTANTS.COLORS);
-Object.freeze(window.PARALLAX.CONSTANTS.FLIGHT);
-Object.freeze(window.PARALLAX.CONSTANTS.MISSIONS);
-Object.freeze(window.PARALLAX.CONSTANTS.FEATURES);
-Object.freeze(window.PARALLAX.CONSTANTS.DATA);
+Object.freeze(window.SPACE_CAPITAL.CONSTANTS);
+Object.freeze(window.SPACE_CAPITAL.CONSTANTS.STORAGE);
+Object.freeze(window.SPACE_CAPITAL.CONSTANTS.BREAKPOINTS);
+Object.freeze(window.SPACE_CAPITAL.CONSTANTS.ROUTES);
+Object.freeze(window.SPACE_CAPITAL.CONSTANTS.ANIMATION);
+Object.freeze(window.SPACE_CAPITAL.CONSTANTS.CHART);
+Object.freeze(window.SPACE_CAPITAL.CONSTANTS.COLORS);
+Object.freeze(window.SPACE_CAPITAL.CONSTANTS.FLIGHT);
+Object.freeze(window.SPACE_CAPITAL.CONSTANTS.MISSIONS);
+Object.freeze(window.SPACE_CAPITAL.CONSTANTS.FEATURES);
+Object.freeze(window.SPACE_CAPITAL.CONSTANTS.DATA);
 
-console.log('📐 PARALLAX constants loaded');
+console.log('📐 SPACE CAPITAL constants loaded');

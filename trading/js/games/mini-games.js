@@ -85,13 +85,13 @@
     selectedShip: 'RKLB',
     
     init() {
-      this.canvas = document.getElementById('parallax-run-canvas');
+      this.canvas = document.getElementById('space-run-canvas');
       if (!this.canvas) return;
       this.ctx = this.canvas.getContext('2d');
       
       // Load saved stats
       try {
-        const saved = localStorage.getItem('parallax_run_stats');
+        const saved = localStorage.getItem('space_run_stats');
         if (saved) {
           const data = JSON.parse(saved);
           this.bestDistance = data.bestDistance || 0;
@@ -124,7 +124,7 @@
       document.addEventListener('keyup', this.handleKeyUp);
       
       // Close button
-      const closeBtn = document.getElementById('parallax-run-close-btn');
+      const closeBtn = document.getElementById('space-run-close-btn');
       if (closeBtn) {
         closeBtn.onclick = () => this.close();
       }
@@ -224,7 +224,7 @@
       this.updateUI();
       
       // Show overlay
-      const overlay = document.getElementById('parallax-run-overlay');
+      const overlay = document.getElementById('space-run-overlay');
       if (overlay) {
         overlay.classList.remove('hidden');
         overlay.classList.add('active');
@@ -249,7 +249,7 @@
         cancelAnimationFrame(this.animationId);
       }
       
-      const overlay = document.getElementById('parallax-run-overlay');
+      const overlay = document.getElementById('space-run-overlay');
       if (overlay) {
         overlay.classList.remove('active');
         setTimeout(() => overlay.classList.add('hidden'), 300);
@@ -262,7 +262,7 @@
     
     saveStats() {
       try {
-        localStorage.setItem('parallax_run_stats', JSON.stringify({
+        localStorage.setItem('space_run_stats', JSON.stringify({
           bestDistance: this.bestDistance,
           gamesPlayed: this.gamesPlayed
         }));
@@ -544,14 +544,14 @@
       // Report to progression
       reportTrainingResult(
         this.selectedShip,
-        'parallax_run',
+        'space_run',
         finalDistance,
         finalDistance >= 5000 ? 'WIN' : 'LOSS'
       );
       
       // Complete mission for long runs
       if (finalDistance >= 5000 && typeof completeMission === 'function') {
-        completeMission('parallax_run');
+        completeMission('space_run');
       }
       
       if (typeof showToast === 'function') {
@@ -575,7 +575,7 @@
       // Restart after delay
       setTimeout(() => {
         if (msgEl) msgEl.style.display = 'none';
-        const overlay = document.getElementById('parallax-run-overlay');
+        const overlay = document.getElementById('space-run-overlay');
         if (overlay && overlay.classList.contains('active')) {
           this.start();
         }

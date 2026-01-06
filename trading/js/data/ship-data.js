@@ -40,7 +40,7 @@
     hud: "DESCENT TRAJECTORY LOCKED",
     lore: "Landers don't win wars. They bring people home."
   },
-  "#ship-parallax": {
+  "#ship-shadow": {
     hud: "BLACK CHANNEL AUTHENTICATED",
     lore: "Officially, this class does not exist. If you can see it — it chose to let you."
   },

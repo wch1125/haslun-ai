@@ -1,8 +1,8 @@
-# PARALLAX: Pilot's Cockpit
+# SPACE CAPITAL: Pilot's Cockpit
 
 ## Project Overview
 
-PARALLAX is a **trading dashboard disguised as a retro sci-fi space fleet command center**. It transforms traditional financial portfolio tracking into an immersive gaming-inspired experience, presenting stock positions as spaceships in a fleet, charts as telemetry readouts, and market data through the lens of NASA Mission Control meets 1980s anime mecha aesthetics.
+SPACE CAPITAL is a **trading dashboard disguised as a retro sci-fi space fleet command center**. It transforms traditional financial portfolio tracking into an immersive gaming-inspired experience, presenting stock positions as spaceships in a fleet, charts as telemetry readouts, and market data through the lens of NASA Mission Control meets 1980s anime mecha aesthetics.
 
 **This is web art as much as it is functional software.**
 

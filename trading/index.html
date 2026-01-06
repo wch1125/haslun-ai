@@ -414,8 +414,8 @@
         </g>
       </symbol>
 
-      <!-- BLACK OPS — NIGHT PARALLAX (stealth) -->
-      <symbol id="ship-parallax" viewBox="0 0 120 80">
+      <!-- BLACK OPS — NIGHT SHADOW (stealth) -->
+      <symbol id="ship-shadow" viewBox="0 0 120 80">
         <g class="ship-primary" style="stroke-dasharray:3 4;">
           <polygon points="60,14 96,40 60,66 24,40"/>
         </g>
@@ -1414,8 +1414,8 @@
             </div>
             
             <!-- SPACE RUN - Unified Arcade Experience -->
-            <div class="parallax-run-launcher">
-              <div class="run-hero-card" onclick="window.ParallaxRun && ParallaxRun.start()">
+            <div class="space-run-launcher">
+              <div class="run-hero-card" onclick="window.SpaceRun && SpaceRun.start()">
                 <div class="run-hero-preview">
                   <canvas id="run-preview-canvas" width="400" height="200"></canvas>
                   <div class="run-hero-overlay">
@@ -1679,7 +1679,7 @@
       </aside>
     </main>
     
-    <div class="watermark"><span title="Play money. Real feelings.">SIMULATION MODE</span><span class="parallax-mark">PARALLAX</span></div>
+    <div class="watermark"><span title="Play money. Real feelings.">SIMULATION MODE</span><span class="space-capital-mark">SPACE CAPITAL</span></div>
     
     <div class="status-strip">
       <div class="status-item" title="Everything is fine, which is statistically suspicious."><span class="dot green"></span><span class="value">SYSTEM NOMINAL</span></div>
@@ -1880,14 +1880,14 @@
     </div>
     
     <!-- CHART LANDING GAME -->
-    <!-- PARALLAX RUN GAME OVERLAY -->
-    <div id="parallax-run-overlay" class="parallax-run-overlay hidden">
+    <!-- SPACE RUN GAME OVERLAY -->
+    <div id="space-run-overlay" class="space-run-overlay hidden">
       <div class="run-game-backdrop"></div>
       <div class="run-game-container">
-        <button class="run-close-btn" id="parallax-run-close-btn">✕ ESC</button>
+        <button class="run-close-btn" id="space-run-close-btn">✕ ESC</button>
         
         <div class="run-game-header">
-          <div class="run-game-title">[PARALLAX RUN]</div>
+          <div class="run-game-title">[SPACE RUN]</div>
           <div class="run-game-stats">
             <div class="run-stat">
               <span class="stat-label">DISTANCE</span>
@@ -1922,7 +1922,7 @@
           </div>
         </div>
         
-        <canvas id="parallax-run-canvas" width="700" height="450"></canvas>
+        <canvas id="space-run-canvas" width="700" height="450"></canvas>
         
         <div class="run-controls-hint">
           <span>← → DODGE</span>
@@ -2621,7 +2621,7 @@
   <script src="js/ui/paint-bay.js"></script>
   
   <!-- SPACE RUN Racing Game -->
-  <script src="js/games/parallax-run.js"></script>
+  <script src="js/games/space-run.js"></script>
   
   <!-- BEY ARENA Spin Battle Game -->
   <script src="js/games/bey-arena.js"></script>
