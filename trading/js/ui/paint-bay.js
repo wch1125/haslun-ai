@@ -327,6 +327,7 @@ window.PaintBay = (function() {
     cacheDom(container);
     bindEvents();
     populateFleetGrid();
+    populateCustomLiveries();
     renderPalette();
     
     // Auto-select ship from hangar if available
@@ -334,6 +335,82 @@ window.PaintBay = (function() {
     if (hangarShip) {
       selectShip(hangarShip);
     }
+  }
+
+  function populateCustomLiveries() {
+    if (!window.LiverySystem) return;
+
+    const customGrid = dom.container?.querySelector('#custom-livery-grid');
+    const header = dom.container?.querySelector('#custom-liveries-header');
+    if (!customGrid) return;
+
+    const customLiveries = LiverySystem.getCustomLiveries();
+    
+    if (customLiveries.length === 0) {
+      customGrid.style.display = 'none';
+      if (header) header.style.display = 'none';
+      return;
+    }
+
+    if (header) header.style.display = 'block';
+    customGrid.style.display = 'grid';
+
+    customGrid.innerHTML = customLiveries.map(livery => `
+      <div class="livery-card custom" data-livery="${livery.id}" data-system-livery="true" title="${livery.description || livery.name}">
+        <div class="livery-preview">
+          ${livery.palette.baseColors.slice(0, 3).map(c => `<span style="background: ${c}"></span>`).join('')}
+        </div>
+        <div class="livery-name">${livery.name}</div>
+        <button class="livery-delete" data-delete="${livery.id}" title="Delete livery">×</button>
+      </div>
+    `).join('');
+
+    // Bind delete handlers
+    customGrid.querySelectorAll('.livery-delete').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const liveryId = btn.dataset.delete;
+        if (confirm('Delete this custom livery?')) {
+          LiverySystem.deleteLivery(liveryId);
+          populateCustomLiveries();
+        }
+      });
+    });
+
+    // Bind selection handlers
+    customGrid.querySelectorAll('.livery-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const liveryId = card.dataset.livery;
+        applySystemLivery(liveryId);
+      });
+    });
+  }
+
+  function applySystemLivery(liveryId) {
+    if (!window.LiverySystem) return;
+
+    const livery = LiverySystem.getLivery(liveryId);
+    if (!livery) return;
+
+    // Update state with livery colors
+    state.baseColors = [...livery.palette.baseColors];
+    state.activeLivery = liveryId;
+    setDirty(true);
+
+    // Update color inputs
+    updateColorInputs();
+
+    // Clear old selections
+    dom.liveryGrid?.querySelectorAll('.livery-card').forEach(card => {
+      card.classList.remove('active');
+    });
+    dom.container?.querySelectorAll('#custom-livery-grid .livery-card').forEach(card => {
+      card.classList.toggle('active', card.dataset.livery === liveryId);
+    });
+
+    // Update palette and preview
+    renderPalette();
+    debouncedUpdate();
   }
 
   function renderHTML() {
@@ -433,6 +510,11 @@ window.PaintBay = (function() {
                     <div class="livery-name">${livery.name}</div>
                   </div>
                 `).join('')}
+              </div>
+              
+              <h3 class="custom-liveries-header" id="custom-liveries-header" style="display: none;">Custom Liveries</h3>
+              <div class="livery-grid custom-liveries" id="custom-livery-grid">
+                <!-- Populated dynamically from LiverySystem -->
               </div>
               
               <div class="refit-actions">
@@ -581,11 +663,41 @@ window.PaintBay = (function() {
       dom.dockClassBadge.style.display = 'block';
     }
 
+    // Check for existing livery from LiverySystem
+    if (window.LiverySystem) {
+      const existingLivery = LiverySystem.getLiveryForTicker(ticker);
+      if (existingLivery) {
+        state.baseColors = [...existingLivery.palette.baseColors];
+        state.originalColors = [...existingLivery.palette.baseColors];
+        state.activeLivery = existingLivery.id;
+        
+        // Update color inputs
+        updateColorInputs();
+        renderPalette();
+        
+        // Show livery name in status
+        dom.shipStatus.querySelector('.status-text').textContent = 
+          `${ticker} docked · ${existingLivery.name}`;
+      }
+    }
+
     // Load ship image
     await loadShipImage(ship.sprite, ship.fallback);
     
     // Enable commit button
     if (dom.btnCommit) dom.btnCommit.disabled = false;
+  }
+
+  function updateColorInputs() {
+    if (dom.colorPrimary && state.baseColors[0]) {
+      dom.colorPrimary.value = state.baseColors[0];
+    }
+    if (dom.colorSecondary && state.baseColors[1]) {
+      dom.colorSecondary.value = state.baseColors[1];
+    }
+    if (dom.colorTertiary && state.baseColors[2]) {
+      dom.colorTertiary.value = state.baseColors[2];
+    }
   }
 
   async function loadShipImage(primarySrc, fallbackSrc) {
@@ -764,16 +876,40 @@ window.PaintBay = (function() {
   function handleCommit() {
     if (!state.selectedShip) return;
 
-    // Emit event for other systems
-    const event = new CustomEvent('paintbay:apply', {
+    const palette = generatePalette(state.baseColors);
+
+    // Emit legacy event for backwards compatibility
+    document.dispatchEvent(new CustomEvent('paintbay:apply', {
       detail: {
         ticker: state.selectedShip,
         colors: [...state.baseColors],
-        palette: generatePalette(state.baseColors),
+        palette,
         livery: state.activeLivery
       }
-    });
-    document.dispatchEvent(event);
+    }));
+
+    // Emit new livery:create event for LiverySystem
+    document.dispatchEvent(new CustomEvent('livery:create', {
+      detail: {
+        name: state.activeLivery 
+          ? (FLEET_LIVERIES.find(l => l.id === state.activeLivery)?.name || 'Custom')
+          : `${state.selectedShip} Custom`,
+        description: `Applied from Refit Bay`,
+        baseColors: [...state.baseColors],
+        ticker: state.selectedShip,
+        palette: {
+          model: state.baseColors.length > 2 ? 'triple-glaze' : 'dual-glaze',
+          baseColors: [...state.baseColors],
+          generated: [
+            { role: 'primary', hex: palette.primary },
+            { role: 'secondary', hex: palette.secondary },
+            { role: 'glaze', hex: palette.glaze1 || palette.glaze },
+            { role: 'highlight', hex: palette.highlight },
+            { role: 'shadow', hex: palette.shadow }
+          ]
+        }
+      }
+    }));
 
     // Update original colors
     state.originalColors = [...state.baseColors];
@@ -792,7 +928,7 @@ window.PaintBay = (function() {
 
     // Show toast if available
     if (window.showToast) {
-      showToast(`Livery applied to ${state.selectedShip}`, 'info');
+      showToast(`Livery committed for ${state.selectedShip}`, 'info');
     }
   }
 

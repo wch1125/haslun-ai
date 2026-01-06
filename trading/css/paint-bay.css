@@ -621,6 +621,63 @@
   margin-top: 0.2rem;
 }
 
+/* Custom Liveries Section */
+.custom-liveries-header {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--amber);
+  margin: 1rem 0 0.75rem 0;
+  padding-top: 0.75rem;
+  border-top: 1px dashed var(--border);
+}
+
+.livery-grid.custom-liveries {
+  margin-bottom: 0.5rem;
+}
+
+.livery-card.custom {
+  position: relative;
+  border-color: rgba(255, 179, 71, 0.3);
+}
+
+.livery-card.custom:hover {
+  border-color: var(--amber);
+  background: rgba(255, 179, 71, 0.05);
+}
+
+.livery-card.custom.active {
+  border-color: var(--amber);
+  background: rgba(255, 179, 71, 0.1);
+}
+
+.livery-delete {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 100, 100, 0.3);
+  color: #ff6666;
+  font-size: 12px;
+  line-height: 14px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s, background 0.15s;
+}
+
+.livery-card:hover .livery-delete {
+  opacity: 1;
+}
+
+.livery-delete:hover {
+  background: rgba(255, 100, 100, 0.6);
+  color: #fff;
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════
    ACTION BUTTONS
    ═══════════════════════════════════════════════════════════════════════════ */

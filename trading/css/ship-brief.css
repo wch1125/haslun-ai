@@ -683,3 +683,73 @@ body.ship-brief-open {
     justify-content: flex-start;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SHIP MOOD INDICATOR
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.ship-brief-mood {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  margin-top: 0.75rem;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+  border-left: 2px solid var(--phosphor-dim);
+}
+
+.ship-brief-mood .mood-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  animation: mood-pulse 2s ease-in-out infinite;
+}
+
+.ship-brief-mood .mood-indicator.mood-confident {
+  background: #33ff99;
+  box-shadow: 0 0 8px rgba(51, 255, 153, 0.5);
+}
+
+.ship-brief-mood .mood-indicator.mood-optimistic {
+  background: #66ffbb;
+}
+
+.ship-brief-mood .mood-indicator.mood-neutral {
+  background: #888;
+}
+
+.ship-brief-mood .mood-indicator.mood-cautious {
+  background: #ffcc00;
+}
+
+.ship-brief-mood .mood-indicator.mood-defensive {
+  background: #ff9900;
+}
+
+.ship-brief-mood .mood-indicator.mood-strained {
+  background: #ff6666;
+  animation: mood-alert 1s ease-in-out infinite;
+}
+
+.ship-brief-mood .mood-indicator.mood-critical {
+  background: #ff3333;
+  animation: mood-alert 0.5s ease-in-out infinite;
+}
+
+.ship-brief-mood .mood-text {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+@keyframes mood-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+@keyframes mood-alert {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.2); }
+}

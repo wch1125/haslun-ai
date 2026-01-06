@@ -166,6 +166,12 @@ window.ShipBrief = (function() {
                   </div>
                 </div>
               </div>
+              
+              <!-- Ship Mood / Behavior Status -->
+              <div class="ship-brief-mood" id="ship-brief-mood">
+                <span class="mood-indicator mood-neutral"></span>
+                <span class="mood-text">Standard operations</span>
+              </div>
             </div>
             
             <!-- Step 8: Pilot Progression -->
@@ -782,10 +788,21 @@ window.ShipBrief = (function() {
       }, 100);
     }, 600);
     
-    // Dispatch event
+    // Dispatch event (include dialog reference for behavior system)
     window.dispatchEvent(new CustomEvent('shipbrief:open', { 
-      detail: { ticker, source: opts.source || 'unknown' } 
+      detail: { 
+        ticker, 
+        source: opts.source || 'unknown',
+        dialog: dialogEl
+      } 
     }));
+    
+    // Initialize ship behavior system
+    if (window.ShipBehaviorBridge) {
+      setTimeout(() => {
+        ShipBehaviorBridge.initShipBrief(dialogEl, ticker);
+      }, 650); // After boot animation
+    }
     
     // Log if terminal available
     if (window.logTerminal) {

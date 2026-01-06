@@ -7203,6 +7203,16 @@
         if (typeof selectTicker === 'function') {
           selectTicker(ship.ticker);
         }
+        
+        // Initialize ship behavior system
+        if (window.ShipBehaviorBridge) {
+          setTimeout(() => ShipBehaviorBridge.initHangarHero(), 150);
+        }
+        
+        // Emit selection event for other systems
+        document.dispatchEvent(new CustomEvent('hangar:shipSelected', {
+          detail: { ticker: ship.ticker, index }
+        }));
       }
       
       // Play UI sound
