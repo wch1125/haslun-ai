@@ -25,8 +25,8 @@
   <link rel="stylesheet" href="css/ship-states.css">
   <!-- Bey Arena (Beyblade-style ship battles) -->
   <link rel="stylesheet" href="css/bey-arena.css">
-  <!-- Cockpit HUD (New 3-panel navigation) - Optimized -->
-  <link rel="stylesheet" href="css/cockpit-hud-fixed.css">
+  <!-- Cockpit HUD (New 3-panel navigation) -->
+  <link rel="stylesheet" href="css/cockpit-hud.css">
 <script src="js/space-scene.js"></script>
 </head>
 <body>
@@ -2280,27 +2280,27 @@
        Three pillars: HANGAR | BATTLE ARENA | NEWS
        ═══════════════════════════════════════════════════════════════════════════ -->
   
-  <nav class="cockpit-hud" role="tablist" aria-label="Main navigation">
-    <button class="hud-btn" data-panel="hangar" id="hangar-tab" role="tab" aria-selected="true" aria-controls="hangar-panel-new">
-      <span class="hud-btn-icon" aria-hidden="true">🔧</span>
+  <div class="cockpit-hud">
+    <button class="hud-btn active" data-panel="hangar">
+      <span class="hud-btn-icon">🔧</span>
       <span class="hud-btn-label">HANGAR</span>
     </button>
-    <button class="hud-btn battle-btn" data-panel="battle" id="battle-tab" role="tab" aria-selected="false" aria-controls="battle-panel">
-      <span class="hud-btn-icon" aria-hidden="true">⚔️</span>
+    <button class="hud-btn battle-btn" data-panel="battle">
+      <span class="hud-btn-icon">⚔️</span>
       <span class="hud-btn-label">BATTLE ARENA</span>
     </button>
-    <button class="hud-btn" data-panel="news" id="news-tab" role="tab" aria-selected="false" aria-controls="news-panel">
-      <span class="hud-btn-icon" aria-hidden="true">📡</span>
+    <button class="hud-btn" data-panel="news">
+      <span class="hud-btn-icon">📡</span>
       <span class="hud-btn-label">NEWS</span>
     </button>
-  </nav>
+  </div>
   
   <!-- ═══════════════════════════════════════════════════════════════════════════
        COCKPIT PANELS
        ═══════════════════════════════════════════════════════════════════════════ -->
   
   <!-- HANGAR PANEL - RPG Character Screen -->
-  <div class="cockpit-panel" id="hangar-panel-new" role="tabpanel" aria-labelledby="hangar-tab">
+  <div class="cockpit-panel active" id="hangar-panel-new" style="display: none;">
     <div class="hangar-rpg">
       
       <!-- LEFT SIDEBAR: Stats & Equipment -->
@@ -2315,27 +2315,27 @@
           
           <div class="stat-row">
             <span class="stat-label">THRUST</span>
-            <div class="stat-bar-wrap" role="progressbar" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100" aria-label="Thrust"><div class="stat-bar" id="stat-bar-thrust" style="width: 50%"></div></div>
+            <div class="stat-bar-wrap"><div class="stat-bar" id="stat-bar-thrust" style="width: 50%"></div></div>
             <span class="stat-value" id="stat-value-thrust">50</span>
           </div>
           <div class="stat-row">
             <span class="stat-label">STABILITY</span>
-            <div class="stat-bar-wrap" role="progressbar" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100" aria-label="Stability"><div class="stat-bar" id="stat-bar-stability" style="width: 50%"></div></div>
+            <div class="stat-bar-wrap"><div class="stat-bar" id="stat-bar-stability" style="width: 50%"></div></div>
             <span class="stat-value" id="stat-value-stability">50</span>
           </div>
           <div class="stat-row">
             <span class="stat-label">HULL</span>
-            <div class="stat-bar-wrap" role="progressbar" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100" aria-label="Hull"><div class="stat-bar" id="stat-bar-hull" style="width: 50%"></div></div>
+            <div class="stat-bar-wrap"><div class="stat-bar" id="stat-bar-hull" style="width: 50%"></div></div>
             <span class="stat-value" id="stat-value-hull">50</span>
           </div>
           <div class="stat-row">
             <span class="stat-label">SIGNAL</span>
-            <div class="stat-bar-wrap" role="progressbar" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100" aria-label="Signal"><div class="stat-bar" id="stat-bar-signal" style="width: 50%"></div></div>
+            <div class="stat-bar-wrap"><div class="stat-bar" id="stat-bar-signal" style="width: 50%"></div></div>
             <span class="stat-value" id="stat-value-signal">50</span>
           </div>
           <div class="stat-row">
             <span class="stat-label">VOLATILITY</span>
-            <div class="stat-bar-wrap" role="progressbar" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100" aria-label="Volatility"><div class="stat-bar" id="stat-bar-chop" style="width: 50%; background: linear-gradient(90deg, #ff6b35, #ff8f66);"></div></div>
+            <div class="stat-bar-wrap"><div class="stat-bar" id="stat-bar-chop" style="width: 50%; background: linear-gradient(90deg, #ff6b35, #ff8f66);"></div></div>
             <span class="stat-value" id="stat-value-chop" style="color: #ff6b35;">50</span>
           </div>
           
@@ -2398,12 +2398,9 @@
         <div class="ship-showcase">
           <div class="ship-showcase-ring"></div>
           <img src="assets/ships/static/RKLB-flagship-ship.png" 
-               alt="RKLB ship" 
+               alt="RKLB" 
                class="ship-showcase-sprite"
-               id="hangar-ship-sprite"
-               width="256"
-               height="256"
-               loading="eager">
+               id="hangar-ship-sprite">
         </div>
         
         <div class="ship-nameplate">
@@ -2507,7 +2504,7 @@
   </div>
   
   <!-- BATTLE ARENA PANEL -->
-  <div class="cockpit-panel" id="battle-panel" role="tabpanel" aria-labelledby="battle-tab" style="display: none;">
+  <div class="cockpit-panel" id="battle-panel" style="display: none;">
     <div class="battle-arena-panel">
       <div class="battle-ready-screen">
         <h1 class="battle-title">BATTLE ARENA</h1>
@@ -2515,15 +2512,15 @@
         
         <div class="battle-matchup">
           <div class="battle-ship-card">
-            <img src="assets/ships/static/RKLB-flagship-ship.png" alt="Player Ship" id="battle-player-sprite" width="80" height="80" loading="eager">
+            <img src="assets/ships/static/RKLB-flagship-ship.png" alt="Player Ship" id="battle-player-sprite">
             <span class="ticker" id="battle-player-ticker">RKLB</span>
             <span style="font-size: 10px; color: rgba(255,255,255,0.5);">YOUR SHIP</span>
           </div>
           
-          <span class="battle-vs" aria-hidden="true">VS</span>
+          <span class="battle-vs">VS</span>
           
           <div class="battle-ship-card">
-            <img src="assets/ships/static/ACHR-eVTOL-ship.png" alt="Opponent Ship" id="battle-opponent-sprite" width="80" height="80" loading="eager">
+            <img src="assets/ships/static/ACHR-eVTOL-ship.png" alt="Opponent Ship" id="battle-opponent-sprite">
             <span class="ticker" id="battle-opponent-ticker">ACHR</span>
             <span style="font-size: 10px; color: rgba(255,255,255,0.5);">OPPONENT</span>
           </div>
@@ -2554,7 +2551,7 @@
   </div>
   
   <!-- NEWS PANEL -->
-  <div class="cockpit-panel" id="news-panel" role="tabpanel" aria-labelledby="news-tab" style="display: none;">
+  <div class="cockpit-panel" id="news-panel" style="display: none;">
     <div class="news-panel">
       <div class="news-header">
         <h2 class="news-title">📡 FLEET TRANSMISSIONS</h2>
@@ -2629,8 +2626,8 @@
   <!-- BEY ARENA Spin Battle Game -->
   <script src="js/games/bey-arena.js"></script>
   
-  <!-- Cockpit Navigation Controller - Optimized -->
-  <script src="js/cockpit-nav-fixed.js"></script>
+  <!-- Cockpit Navigation Controller -->
+  <script src="js/cockpit-nav.js"></script>
   
   <!-- Ship Behavior System (reactive animations) -->
   <script src="js/ships/ship-behavior.js"></script>
