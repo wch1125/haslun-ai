@@ -379,14 +379,14 @@
         const ctx = chart.ctx;
         ctx.save();
         
-        // Enhanced glow for ribbon lines
+        // ENHANCED: Much stronger phosphor glow
         if (ds.isRibbon) {
-          ctx.shadowBlur = 12;
+          ctx.shadowBlur = 20;
           ctx.shadowColor = ds.borderColor;
           ctx.globalCompositeOperation = 'lighter';
         } else {
-          // Main price line gets stronger glow
-          ctx.shadowBlur = 10;
+          // Main price line gets HEAVY bloom
+          ctx.shadowBlur = 25;
           ctx.shadowColor = ds.borderColor;
           ctx.globalCompositeOperation = 'lighter';
         }
@@ -402,13 +402,73 @@
         const { ctx, chartArea } = chart;
         if (!chartArea) return;
         
-        // Subtle scanlines inside chart area
+        const now = performance.now() * 0.001;
+        const w = chartArea.right - chartArea.left;
+        const h = chartArea.bottom - chartArea.top;
+        
+        // ============================================
+        // SCANLINES — More visible
+        // ============================================
         ctx.save();
-        ctx.globalAlpha = 0.035;
+        ctx.globalAlpha = 0.08;
         ctx.fillStyle = '#000';
-        for (let y = chartArea.top; y < chartArea.bottom; y += 2) {
-          ctx.fillRect(chartArea.left, y, chartArea.right - chartArea.left, 1);
+        for (let y = chartArea.top; y < chartArea.bottom; y += 3) {
+          ctx.fillRect(chartArea.left, y, w, 1);
         }
+        ctx.restore();
+        
+        // ============================================
+        // PHOSPHOR BLOOM — Ambient glow overlay
+        // ============================================
+        ctx.save();
+        const gradient = ctx.createRadialGradient(
+          chartArea.left + w/2, chartArea.top + h/2, 0,
+          chartArea.left + w/2, chartArea.top + h/2, Math.max(w, h) * 0.7
+        );
+        gradient.addColorStop(0, 'rgba(51, 255, 153, 0.06)');
+        gradient.addColorStop(0.5, 'rgba(51, 255, 153, 0.03)');
+        gradient.addColorStop(1, 'rgba(51, 255, 153, 0)');
+        
+        ctx.globalCompositeOperation = 'screen';
+        ctx.globalAlpha = 0.5 + Math.sin(now * 0.8) * 0.15;
+        ctx.fillStyle = gradient;
+        ctx.fillRect(chartArea.left, chartArea.top, w, h);
+        ctx.restore();
+        
+        // ============================================
+        // VERTICAL SYNC SWEEP — Continuous scan line
+        // ============================================
+        ctx.save();
+        const sweepY = chartArea.top + ((now * 80) % h);
+        ctx.globalCompositeOperation = 'screen';
+        ctx.globalAlpha = 0.15;
+        
+        const sweepGrad = ctx.createLinearGradient(0, sweepY - 30, 0, sweepY + 30);
+        sweepGrad.addColorStop(0, 'rgba(51, 255, 153, 0)');
+        sweepGrad.addColorStop(0.4, 'rgba(51, 255, 153, 0.4)');
+        sweepGrad.addColorStop(0.5, 'rgba(71, 212, 255, 0.6)');
+        sweepGrad.addColorStop(0.6, 'rgba(51, 255, 153, 0.4)');
+        sweepGrad.addColorStop(1, 'rgba(51, 255, 153, 0)');
+        
+        ctx.fillStyle = sweepGrad;
+        ctx.fillRect(chartArea.left, sweepY - 30, w, 60);
+        ctx.restore();
+        
+        // ============================================
+        // CORNER VIGNETTE — CRT tube curve simulation
+        // ============================================
+        ctx.save();
+        const vignetteGrad = ctx.createRadialGradient(
+          chartArea.left + w/2, chartArea.top + h/2, Math.min(w, h) * 0.3,
+          chartArea.left + w/2, chartArea.top + h/2, Math.max(w, h) * 0.8
+        );
+        vignetteGrad.addColorStop(0, 'rgba(0, 0, 0, 0)');
+        vignetteGrad.addColorStop(0.7, 'rgba(0, 0, 0, 0.1)');
+        vignetteGrad.addColorStop(1, 'rgba(0, 0, 0, 0.4)');
+        
+        ctx.globalCompositeOperation = 'multiply';
+        ctx.fillStyle = vignetteGrad;
+        ctx.fillRect(chartArea.left, chartArea.top, w, h);
         ctx.restore();
       }
     };
@@ -507,13 +567,13 @@
         // On mobile: skip heavy effects entirely during normal operation
         // Only show effects during bursts, and keep them minimal
 
-        // Burst scheduling: mostly calm, occasional interference "packet"
+        // Burst scheduling: more frequent for dynamic visuals
         const st = this._state;
         if (now > st.nextBurstAt) {
-          // Next burst in 2.5s–8s (longer gaps on mobile)
-          st.nextBurstAt = now + (isMobile ? 3500 : 1800) + Math.random() * (isMobile ? 6000 : 4700);
-          // Burst lasts 100–300ms
-          st.burstUntil = now + (100 + Math.random() * 200);
+          // Next burst in 1.5s–4s (more frequent for visual interest)
+          st.nextBurstAt = now + (isMobile ? 2500 : 1200) + Math.random() * (isMobile ? 3500 : 2800);
+          // Burst lasts 150–400ms (longer for more impact)
+          st.burstUntil = now + (150 + Math.random() * 250);
           st.burstSeed = Math.random() * 1000;
         }
 
@@ -522,9 +582,9 @@
         // On mobile: only render during bursts to save performance
         if (isMobile && !inBurst) return;
 
-        // Intensity: baseline + burst spike
-        const base = isMobile ? 0 : (0.10 * intensity);
-        const burst = inBurst ? (0.75 * intensity) : 0.0;
+        // ENHANCED: Higher base intensity for constant visible effects
+        const base = isMobile ? 0.1 : 0.25;
+        const burst = inBurst ? (0.85 * intensity) : 0.0;
         const amt = base + burst;
         if (amt <= 0) return;
         
@@ -568,9 +628,9 @@
             } catch (e) { /* ignore */ }
           }
         } else {
-          // DESKTOP: Full scanline displacement
+          // DESKTOP: Full scanline displacement — MORE VISIBLE
           const step = 3;
-          const maxShift = 8 * amt;
+          const maxShift = 12 * amt;
           const maxIterations = Math.min(Math.floor(bandH / step), 150); // Cap iterations
           
           for (let i = 0; i < maxIterations; i++) {
@@ -579,11 +639,11 @@
             
             let shift = smoothNoise(yy, t) * maxShift;
             
-            if (inBurst && Math.random() < 0.06) {
-              shift += (Math.random() - 0.5) * (maxShift * 3);
+            if (inBurst && Math.random() < 0.08) {
+              shift += (Math.random() - 0.5) * (maxShift * 4);
             }
             
-            ctx.globalAlpha = inBurst ? (0.18 * intensity) : (0.07 * intensity);
+            ctx.globalAlpha = inBurst ? (0.25 * intensity) : (0.12 * intensity);
             
             try {
               ctx.drawImage(
@@ -596,19 +656,19 @@
         }
 
         // ============================================================
-        // B) CHROMATIC SPLIT — Desktop only (ctx.filter not reliable on mobile)
+        // B) CHROMATIC SPLIT — Desktop only, MORE VISIBLE
         // ============================================================
-        if (!isMobile && amt > 0.12) {
-          const cs = (inBurst ? 2.0 : 0.8) * amt;
+        if (!isMobile && amt > 0.08) {
+          const cs = (inBurst ? 3.0 : 1.5) * amt;
           ctx.globalCompositeOperation = 'screen';
           
           try {
-            ctx.globalAlpha = inBurst ? 0.08 : 0.04;
-            ctx.filter = 'hue-rotate(25deg) saturate(1.2)';
+            ctx.globalAlpha = inBurst ? 0.12 : 0.07;
+            ctx.filter = 'hue-rotate(30deg) saturate(1.4)';
             ctx.drawImage(canvas, chartArea.left, bandTop, w, bandH, 
                           chartArea.left + cs, bandTop, w, bandH);
             
-            ctx.filter = 'hue-rotate(-25deg) saturate(1.2)';
+            ctx.filter = 'hue-rotate(-30deg) saturate(1.4)';
             ctx.drawImage(canvas, chartArea.left, bandTop, w, bandH,
                           chartArea.left - cs, bandTop, w, bandH);
             
@@ -619,36 +679,61 @@
         }
 
         // ============================================================
-        // C) FIELD LOCK LINE SWEEP — Works on both platforms
+        // C) FIELD LOCK LINE SWEEP — CONTINUOUS + burst enhancement
         // ============================================================
+        // Always show at least one sweep line
+        const sweepPhase = (t * 1.5) % 1;
+        const sweepY = bandTop + (sweepPhase * bandH);
+        ctx.globalCompositeOperation = 'screen';
+        ctx.globalAlpha = 0.18 * intensity;
+        ctx.fillStyle = '#33ff99';
+        ctx.fillRect(chartArea.left, sweepY, w, 2);
+        
+        // Secondary sweep (slower)
+        const sweepPhase2 = ((t * 0.7) + 0.5) % 1;
+        const sweepY2 = bandTop + (sweepPhase2 * bandH);
+        ctx.globalAlpha = 0.10 * intensity;
+        ctx.fillStyle = '#47d4ff';
+        ctx.fillRect(chartArea.left, sweepY2, w, 1);
+        
         if (inBurst) {
-          const sweepY = bandTop + (hashNoise(t * 3.0) * bandH);
-          ctx.globalCompositeOperation = 'screen';
-          ctx.globalAlpha = 0.12 * intensity;
-          ctx.fillStyle = '#33ff99';
-          ctx.fillRect(chartArea.left, sweepY, w, 1);
+          // Extra glitch lines during burst
+          const glitchY = bandTop + (hashNoise(t * 3.0) * bandH);
+          ctx.globalAlpha = 0.25 * intensity;
+          ctx.fillStyle = '#ff4fd8';
+          ctx.fillRect(chartArea.left, glitchY, w, 2);
           
-          // Secondary line (desktop only)
-          if (!isMobile && Math.random() < 0.3) {
-            const sweepY2 = bandTop + (hashNoise(t * 7.0 + 100) * bandH);
-            ctx.globalAlpha = 0.06 * intensity;
-            ctx.fillStyle = '#47d4ff';
-            ctx.fillRect(chartArea.left, sweepY2, w, 1);
+          if (Math.random() < 0.4) {
+            const glitchY2 = bandTop + (hashNoise(t * 7.0 + 100) * bandH);
+            ctx.globalAlpha = 0.15 * intensity;
+            ctx.fillStyle = '#ffb347';
+            ctx.fillRect(chartArea.left, glitchY2, w, 1);
           }
         }
 
         // ============================================================
-        // D) PHOSPHOR ECHO — Simplified, both platforms
+        // D) PHOSPHOR ECHO — Continuous ghosting effect
         // ============================================================
+        // Always have a subtle echo (persistence simulation)
+        const baseEchoShift = 1.0;
+        ctx.globalAlpha = 0.04 * intensity;
+        ctx.globalCompositeOperation = 'screen';
+        try {
+          ctx.drawImage(
+            canvas,
+            chartArea.left, bandTop, w, bandH,
+            chartArea.left + baseEchoShift, bandTop + 0.3, w, bandH
+          );
+        } catch (e) { /* ignore */ }
+        
         if (inBurst) {
-          const echoShift = 1.5 * amt;
-          ctx.globalAlpha = 0.06 * intensity;
-          ctx.globalCompositeOperation = 'screen';
+          const echoShift = 2.5 * amt;
+          ctx.globalAlpha = 0.10 * intensity;
           try {
             ctx.drawImage(
               canvas,
               chartArea.left, bandTop, w, bandH,
-              chartArea.left + echoShift, bandTop + 0.5, w, bandH
+              chartArea.left + echoShift, bandTop + 0.8, w, bandH
             );
           } catch (e) { /* ignore */ }
         }

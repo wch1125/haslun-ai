@@ -12,10 +12,40 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
   <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/crt-effects.css">
   <!-- Ship Brief dialog styles (isolated for modularity) -->
   <link rel="stylesheet" href="css/ship-brief.css">
 </head>
 <body>
+  <!-- CRT NOISE OVERLAY -->
+  <div class="noise-overlay" aria-hidden="true"></div>
+  
+  <!-- SVG FILTERS FOR ADVANCED EFFECTS -->
+  <svg class="svg-filters" aria-hidden="true">
+    <defs>
+      <filter id="phosphor-glow">
+        <feGaussianBlur stdDeviation="2" result="blur"/>
+        <feMerge>
+          <feMergeNode in="blur"/>
+          <feMergeNode in="blur"/>
+          <feMergeNode in="SourceGraphic"/>
+        </feMerge>
+      </filter>
+      <filter id="crt-warp">
+        <feTurbulence type="fractalNoise" baseFrequency="0.01" numOctaves="1" result="noise"/>
+        <feDisplacementMap in="SourceGraphic" in2="noise" scale="2" xChannelSelector="R" yChannelSelector="G"/>
+      </filter>
+      <filter id="scanline-filter">
+        <feFlood flood-color="#000" flood-opacity="0.1" result="flood"/>
+        <feComposite in="flood" in2="SourceGraphic" operator="in" result="mask"/>
+        <feMerge>
+          <feMergeNode in="SourceGraphic"/>
+          <feMergeNode in="mask"/>
+        </feMerge>
+      </filter>
+    </defs>
+  </svg>
+  
   <!-- HOLO FLEET LIBRARY :: refined ship wireframes -->
   <svg id="ship-library" width="0" height="0" style="position:absolute;visibility:hidden;">
     <defs>
