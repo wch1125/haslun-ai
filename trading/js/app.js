@@ -194,7 +194,7 @@
         // Ship badge
         const badge = document.createElement('div');
         badge.className = 'ship-badge';
-        badge.textContent = eliteSet.has(ticker) ? (ticker + ' ★') : ticker;
+        badge.innerHTML = eliteSet.has(ticker) ? (ticker + ' ' + PixelIcons.toSvg('star', '#ffaa33', 10)) : ticker;
 
         // Sprite
         const img = document.createElement('img');
@@ -1340,8 +1340,8 @@
       });
       
       if (caption) {
-        const label = meta.hero ? lore.label + " ★" : lore.label;
-        caption.textContent = `${ticker.toUpperCase()} · ${label}`;
+        const heroMark = meta.hero ? ' ' + PixelIcons.toSvg('star', '#ffaa33', 10) : '';
+        caption.innerHTML = `${ticker.toUpperCase()} · ${lore.label}${heroMark}`;
       }
       
       // Update status based on P&L
@@ -1520,7 +1520,7 @@
         const lore = getPixelShipLore(ship.pattern);
 
         nameEl.textContent = `${ship.ticker} · ${ship.codename}`;
-        classEl.textContent = ship.shipClass + (ship.isHero ? ' ★' : '');
+        classEl.innerHTML = ship.shipClass + (ship.isHero ? ' ' + PixelIcons.toSvg('star', '#ffaa33', 10) : '');
         sectorEl.textContent = lore.hud; // Show HUD tag instead of sector
 
         const health = pnlToHealth(ship.pnlNum);
@@ -2925,7 +2925,7 @@
       // Warp drive milestone
       if (warp && warp.state === 'ACQUIRED') {
         objectives.push({
-          icon: '★',
+          icon: PixelIcons.toSvg('star', '#ffaa33', 12),
           text: 'Warp capability unlocked (macro trend)',
           type: 'milestone'
         });
@@ -3932,7 +3932,7 @@
       // Level up notifications
       window.PARALLAX_BUS.on('progress:level', (e) => {
         if (typeof showToast === 'function') {
-          showToast(`🎖️ ${e.ticker} reached Level ${e.to}!`, 'alert');
+          showToast(`${PixelIcons.toSvg('medal', '#ffaa33', 14)} ${e.ticker} reached Level ${e.to}!`, 'alert');
         }
         if (window.MechSFX) {
           MechSFX.success();
@@ -4656,7 +4656,8 @@
         if (!container) return;
         const div = document.createElement('div');
         div.className = 'toast' + (level !== 'info' ? ' ' + level : '');
-        div.textContent = message;
+        // Use innerHTML to support pixel icon SVGs
+        div.innerHTML = message;
         container.appendChild(div);
         requestAnimationFrame(() => div.classList.add('show'));
         setTimeout(() => {
@@ -4718,7 +4719,7 @@
         // Check if all missions complete
         if (ARCADE_MISSIONS.every(m => m.done)) {
           setTimeout(() => {
-            showToast('🏆 ALL MISSIONS COMPLETE!', 'alert');
+            showToast(PixelIcons.toSvg('trophy', '#ffaa33', 14) + ' ALL MISSIONS COMPLETE!', 'alert');
             beep(1000, 0.15);
           }, 500);
         }
@@ -5431,7 +5432,7 @@
         let interactionTimeout;
 
         function setStatus(text, mode) {
-          status.textContent = text;
+          status.innerHTML = text;
           status.className = 'signal-status ' + mode;
         }
 
@@ -5446,7 +5447,7 @@
           } else if (value < 80) {
             setStatus("LISTENING…", "");
           } else {
-            setStatus("⚡ COMMS LOCKED ⚡", "locked");
+            setStatus(PixelIcons.toSvg('lightning', '#ffaa33', 12) + " COMMS LOCKED " + PixelIcons.toSvg('lightning', '#ffaa33', 12), "locked");
             if (typeof beep === 'function') beep(660, 0.08);
           }
         }
@@ -5886,12 +5887,12 @@
 
         // Toast notification
         if (typeof showToast === 'function') {
-          showToast('🛸 INVADER ATTACK DETECTED!', 'alert');
+          showToast(PixelIcons.toSvg('ufo', '#ff4444', 14) + ' INVADER ATTACK DETECTED!', 'alert');
         }
 
         // Log to terminal
         if (typeof logTerminal === 'function') {
-          logTerminal('⚠ ALERT: Hostile formation detected! Shields up!');
+          logTerminal(PixelIcons.toSvg('warning', '#ffaa33', 12) + ' ALERT: Hostile formation detected! Shields up!');
         }
 
         // Create invader wave
@@ -6184,7 +6185,7 @@
       const progress = MissionBridge.getMissionProgress(activeMission);
       const supports = MissionBridge.getSupportSummary(activeMission);
       const recentLogs = MissionBridge.getRecentLogs(activeMission, 3);
-      const stars = '★'.repeat(activeMission.difficulty || 2) + '☆'.repeat(3 - (activeMission.difficulty || 2));
+      const stars = PixelIcons.starRating(activeMission.difficulty || 2, 3);
       
       let supportsHtml = '';
       if (supports.length > 0) {
@@ -6199,15 +6200,17 @@
       if (recentLogs.length > 0) {
         logsHtml = `
           <div class="mission-context-logs">
-            ${recentLogs.map(l => `<div class="mission-context-log">${l.msg}</div>`).join('')}
+            ${recentLogs.map(l => `<div class="mission-context-log">${PixelIcons.replaceEmojis(l.msg)}</div>`).join('')}
           </div>
         `;
       }
       
+      const missionIcon = activeMission.icon ? PixelIcons.replaceEmojis(activeMission.icon) : PixelIcons.toSvg('rocket', '#33ff99', 14);
+      
       contextContainer.innerHTML = `
         <div class="mission-context-card">
           <div class="mission-context-header">
-            <span class="mission-context-type">${activeMission.icon || '🚀'} ${activeMission.typeName || activeMission.type}</span>
+            <span class="mission-context-type">${missionIcon} ${activeMission.typeName || activeMission.type}</span>
             <span class="mission-context-difficulty">${stars}</span>
           </div>
           <div class="mission-context-progress">

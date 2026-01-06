@@ -1091,7 +1091,8 @@
           
           if (success) {
             if (msgEl) {
-              msgEl.textContent = '✓ SOFT LANDING — DATA SECURED';
+              const checkIcon = window.PixelIcons ? window.PixelIcons.toSvg('check', '#33ff99', 14) : '✓';
+              msgEl.innerHTML = checkIcon + ' SOFT LANDING — DATA SECURED';
               msgEl.className = 'landing-message success';
             }
             if (typeof showToast === 'function') {

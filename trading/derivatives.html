@@ -645,8 +645,8 @@
     </div>
     
     <!-- Disclaimer -->
-    <div class="disclaimer">
-      ⚠️ TRAINING SIMULATION — Not investment advice. No real orders. Educational purposes only.
+    <div class="disclaimer" id="disclaimer-text">
+      <span class="px-warning-icon"></span> TRAINING SIMULATION — Not investment advice. No real orders. Educational purposes only.
     </div>
     
     <!-- Footer -->
@@ -673,6 +673,9 @@
   
   <!-- Context Focus (Page-Behind Awareness) -->
   <script src="js/ui/contextFocus.js"></script>
+  
+  <!-- Pixel Icons (emoji replacement) -->
+  <script src="js/data/pixel-icons.js"></script>
   
   <!-- Mission System -->
   <script src="js/mission-system.js"></script>
@@ -828,12 +831,14 @@
       },
       
       renderEnvironment(env) {
+        // Use PixelIcons for stat icons
+        const PI = window.PixelIcons || { toSvg: () => '◈' };
         const stats = [
-          { key: 'hull', name: 'Hull', icon: '🛡️' },
-          { key: 'firepower', name: 'Firepower', icon: '⚡' },
-          { key: 'sensors', name: 'Sensors', icon: '◈' },
-          { key: 'fuel', name: 'Fuel', icon: '⛽' },
-          { key: 'threat', name: 'Threat', icon: '⚠️', inverted: true }
+          { key: 'hull', name: 'Hull', icon: PI.toSvg('shield', '#47d4ff', 14) },
+          { key: 'firepower', name: 'Firepower', icon: PI.toSvg('lightning', '#ffaa33', 14) },
+          { key: 'sensors', name: 'Sensors', icon: PI.toSvg('satellite', '#47d4ff', 14) },
+          { key: 'fuel', name: 'Fuel', icon: PI.toSvg('fuel', '#ffaa33', 14) },
+          { key: 'threat', name: 'Threat', icon: PI.toSvg('warning', '#ff4444', 14), inverted: true }
         ];
         
         let html = '';
@@ -847,7 +852,7 @@
           // Polish: Narrative microcopy for extreme values
           let extremeNote = '';
           if (stat.key === 'threat' && value >= 90) {
-            extremeNote = '<div class="stat-extreme">⚠️ Extreme boundary proximity. Regime stability may be deceptive.</div>';
+            extremeNote = '<div class="stat-extreme">' + PI.toSvg('warning', '#ffaa33', 12) + ' Extreme boundary proximity. Regime stability may be deceptive.</div>';
           } else if (stat.key === 'threat' && value >= 75) {
             extremeNote = '<div class="stat-extreme">Elevated instability. Consider hedged positions.</div>';
           } else if (stat.key === 'firepower' && value >= 90) {
@@ -888,10 +893,11 @@
         
         // Step 3.1: Check if current ticker is BENCHMARK
         const isBenchmark = this.tickerStatuses?.[this.currentTicker] === 'BENCHMARK';
+        const PI = window.PixelIcons || { starRating: (n) => '★'.repeat(n) };
         
         let html = '';
         for (const m of recommendations) {
-          const stars = '★'.repeat(m.difficulty) + '☆'.repeat(3 - m.difficulty);
+          const stars = PI.starRating(m.difficulty, 3);
           const canLaunch = !activeMission && !isBenchmark && this.currentTickerData;
           
           // Polish: Fit % visual affordance with color coding
@@ -1013,18 +1019,21 @@
         });
         
         let html = '';
+        const PI = window.PixelIcons || { replaceEmojis: (s) => s, starRating: (n) => '★'.repeat(n) };
         for (const m of missions) {
           const progress = MissionSystem.getMissionProgress(m);
           const isSelected = m.id === this.selectedMissionId;
           const statusClass = m.status === 'COMPLETE' ? 'complete' : m.status === 'DAMAGED' ? 'damaged' : '';
+          const missionIcon = PI.replaceEmojis(m.icon || '');
+          const difficultyStars = PI.starRating(m.difficulty, 3);
           
           html += `
             <div class="active-mission-item ${statusClass} ${isSelected ? 'selected' : ''}" onclick="UI.selectMission('${m.id}')">
               <div class="ami-header">
-                <span class="ami-ticker">${m.icon} ${m.ticker}</span>
+                <span class="ami-ticker">${missionIcon} ${m.ticker}</span>
                 ${m.outcome ? `<span class="ami-grade ${m.outcome.grade}">${m.outcome.grade}</span>` : ''}
               </div>
-              <div class="ami-type">${m.typeName} • ${m.difficulty}★</div>
+              <div class="ami-type">${m.typeName} • ${difficultyStars}</div>
               <div class="ami-progress">
                 <div class="ami-progress-fill ${progress.progress >= 1 ? 'complete' : ''}" style="width:${progress.progress * 100}%"></div>
               </div>
@@ -1059,8 +1068,12 @@
       },
       
       renderMissionDetail(mission) {
-        document.getElementById('detail-name').textContent = `${mission.icon} ${mission.typeName}`;
-        document.getElementById('detail-ticker').textContent = `${mission.ticker} • ${mission.difficulty}★ • ${mission.duration.label}`;
+        const PI = window.PixelIcons || { replaceEmojis: (s) => s, starRating: (n) => '★'.repeat(n) };
+        const missionIcon = PI.replaceEmojis(mission.icon || '');
+        const difficultyStars = PI.starRating(mission.difficulty, 3);
+        
+        document.getElementById('detail-name').innerHTML = `${missionIcon} ${mission.typeName}`;
+        document.getElementById('detail-ticker').innerHTML = `${mission.ticker} • ${difficultyStars} • ${mission.duration.label}`;
         
         const progress = MissionSystem.getMissionProgress(mission);
         document.getElementById('detail-progress-fill').style.width = `${progress.progress * 100}%`;
@@ -1486,7 +1499,15 @@
     }
     
     // Initialize
-    document.addEventListener('DOMContentLoaded', () => UI.init());
+    document.addEventListener('DOMContentLoaded', () => {
+      UI.init();
+      
+      // Replace warning icon in disclaimer with pixel icon
+      const warningSpan = document.querySelector('.px-warning-icon');
+      if (warningSpan && window.PixelIcons) {
+        warningSpan.innerHTML = PixelIcons.toSvg('warning', '#ffaa33', 14);
+      }
+    });
   </script>
 </body>
 </html>

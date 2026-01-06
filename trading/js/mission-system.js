@@ -15,6 +15,20 @@
 const MissionSystem = (function() {
   'use strict';
   
+  // Pixel icon helper - uses PixelIcons if available, else returns text fallback
+  function pxIcon(name, color = '#33ff99', size = 12) {
+    if (window.PixelIcons) {
+      return window.PixelIcons.toSvg(name, color, size);
+    }
+    // Fallback text symbols
+    const fallbacks = {
+      scout: '[SCT]', shield: '[SHD]', fuel: '[FUL]', wrench: '[UTL]',
+      rocket: '[RKT]', warning: '[!]', lightning: '[ZAP]', fire: '[FIR]',
+      satellite: '[SAT]', target: '[TGT]', sword: '[ATK]'
+    };
+    return fallbacks[name] || '[?]';
+  }
+  
   const STORAGE_KEY = 'PARALLAX_MISSIONS_V1';
   const DEFAULT_LOOKBACK = 32; // bars for stat computation
   
@@ -49,7 +63,7 @@ const MissionSystem = (function() {
     SCOUT: {
       id: 'SCOUT',
       name: 'Scout Wing',
-      icon: '🛰️',
+      get icon() { return pxIcon('scout', '#47d4ff', 14); },
       description: 'Improves signal clarity and recon quality',
       mods: {
         sensorsBoost: 0.15,
@@ -57,13 +71,13 @@ const MissionSystem = (function() {
         stabilityBoost: 0,
         timeBuffer: 0
       },
-      launchLog: '🛰️ Scout wing expanded sensor range (+15% flow clarity)',
-      interventionLog: '🛰️ Scout interpreted flow anomaly'
+      get launchLog() { return pxIcon('scout', '#47d4ff', 12) + ' Scout wing expanded sensor range (+15% flow clarity)'; },
+      get interventionLog() { return pxIcon('scout', '#47d4ff', 12) + ' Scout interpreted flow anomaly'; }
     },
     ESCORT: {
       id: 'ESCORT',
       name: 'Escort Formation',
-      icon: '🛡️',
+      get icon() { return pxIcon('shield', '#47d4ff', 14); },
       description: 'Reduces storm damage and turbulence impact',
       mods: {
         sensorsBoost: 0,
@@ -71,13 +85,13 @@ const MissionSystem = (function() {
         stabilityBoost: 0.10,
         timeBuffer: 0
       },
-      launchLog: '🛡️ Escort formation deployed (storm impact -15%)',
-      interventionLog: '🛡️ Escort dampened storm impact'
+      get launchLog() { return pxIcon('shield', '#47d4ff', 12) + ' Escort formation deployed (storm impact -15%)'; },
+      get interventionLog() { return pxIcon('shield', '#47d4ff', 12) + ' Escort dampened storm impact'; }
     },
     CARRIER: {
       id: 'CARRIER',
       name: 'Carrier Resupply',
-      icon: '⛽',
+      get icon() { return pxIcon('fuel', '#ffaa33', 14); },
       description: 'Extends operational endurance and patience buffer',
       mods: {
         sensorsBoost: 0,
@@ -85,13 +99,13 @@ const MissionSystem = (function() {
         stabilityBoost: 0.05,
         timeBuffer: 0.10
       },
-      launchLog: '⛽ Carrier resupply extended operational endurance',
-      interventionLog: '⛽ Carrier reserves maintained mission stability'
+      get launchLog() { return pxIcon('fuel', '#ffaa33', 12) + ' Carrier resupply extended operational endurance'; },
+      get interventionLog() { return pxIcon('fuel', '#ffaa33', 12) + ' Carrier reserves maintained mission stability'; }
     },
     UTILITY: {
       id: 'UTILITY',
       name: 'Utility Craft',
-      icon: '🔧',
+      get icon() { return pxIcon('wrench', '#ffaa33', 14); },
       description: 'General mission support and resilience',
       mods: {
         sensorsBoost: 0,
@@ -99,8 +113,8 @@ const MissionSystem = (function() {
         stabilityBoost: 0.05,
         timeBuffer: 0
       },
-      launchLog: '🔧 Utility craft improved mission resilience',
-      interventionLog: '🔧 Utility craft provided auxiliary support'
+      get launchLog() { return pxIcon('wrench', '#ffaa33', 12) + ' Utility craft improved mission resilience'; },
+      get interventionLog() { return pxIcon('wrench', '#ffaa33', 12) + ' Utility craft provided auxiliary support'; }
     }
   };
   
@@ -229,7 +243,7 @@ const MissionSystem = (function() {
       tMs: Date.now(),
       barIndex: mission._lastProcessedBarIndex || mission.start?.barIndex || 0,
       kind: 'EVENT',
-      msg: `📡 Support assigned: ${ticker} (${role.name})`
+      msg: pxIcon('satellite', '#47d4ff', 12) + ` Support assigned: ${ticker} (${role.name})`
     });
     
     saveMissions(missions);
@@ -258,7 +272,7 @@ const MissionSystem = (function() {
       tMs: Date.now(),
       barIndex: mission._lastProcessedBarIndex || mission.start?.barIndex || 0,
       kind: 'INFO',
-      msg: `📡 Support detached: ${removedTicker}`
+      msg: pxIcon('satellite', '#47d4ff', 12) + ` Support detached: ${removedTicker}`
     });
     
     saveMissions(missions);
@@ -306,7 +320,7 @@ const MissionSystem = (function() {
     RECON: {
       id: 'RECON',
       name: 'RECON SWEEP',
-      icon: '🛰️',
+      get icon() { return pxIcon('scout', '#47d4ff', 14); },
       concept: 'Teaches regime/flow awareness',
       description: 'Scout the sector for signal clarity and flow patterns. High sensor readings improve success.',
       teaches: 'How to read market flow and identify regime changes before committing capital.',
@@ -319,7 +333,7 @@ const MissionSystem = (function() {
     CARGO: {
       id: 'CARGO',
       name: 'CARGO RUN',
-      icon: '📦',
+      get icon() { return pxIcon('fuel', '#ffaa33', 14); },
       concept: 'Teaches theta/time cost',
       description: 'Transport value across time. Stable hull and fuel reserves are critical for the journey.',
       teaches: 'How time decay (theta) erodes option value, and why patience has a cost.',
@@ -332,7 +346,7 @@ const MissionSystem = (function() {
     ESCORT: {
       id: 'ESCORT',
       name: 'ESCORT FORMATION',
-      icon: '🛡️',
+      get icon() { return pxIcon('shield', '#47d4ff', 14); },
       concept: 'Teaches structure/hedging reduces variance',
       description: 'Protect the convoy with coordinated positioning. Spreads and hedges reduce damage exposure.',
       teaches: 'How structured positions (spreads) trade upside for reduced risk.',
@@ -345,7 +359,7 @@ const MissionSystem = (function() {
     STRIKE: {
       id: 'STRIKE',
       name: 'DEEP SPACE STRIKE',
-      icon: '⚔️',
+      get icon() { return pxIcon('sword', '#ff4444', 14); },
       concept: 'Teaches convexity/asymmetry sizing',
       description: 'High-risk assault on distant targets. Requires firepower and directional conviction.',
       teaches: 'How to size asymmetric bets where small losses can lead to large gains.',
@@ -358,7 +372,7 @@ const MissionSystem = (function() {
     HARVEST: {
       id: 'HARVEST',
       name: 'HARVEST OPERATION',
-      icon: '🌾',
+      get icon() { return pxIcon('target', '#33ff99', 14); },
       concept: 'Teaches range/mean reversion / premium intuition',
       description: 'Extract value from stable zones. Low volatility and clear boundaries maximize yield.',
       teaches: 'How to profit from range-bound conditions by selling premium.',
@@ -870,7 +884,7 @@ const MissionSystem = (function() {
       tMs: Date.now(),
       barIndex: startBarIndex,
       kind: 'EVENT',
-      msg: `🚀 Mission launched from ${mission.ticker} @ $${rows[startBarIndex].close.toFixed(2)}`
+      msg: pxIcon('rocket', '#33ff99', 12) + ` Mission launched from ${mission.ticker} @ $${rows[startBarIndex].close.toFixed(2)}`
     });
     
     // Warn if mission window was shortened due to limited data
@@ -879,7 +893,7 @@ const MissionSystem = (function() {
         tMs: Date.now(),
         barIndex: startBarIndex,
         kind: 'INFO',
-        msg: `📋 Note: Mission window shortened to ${effectiveTargetBars} bars due to limited chart history`
+        msg: pxIcon('satellite', '#47d4ff', 12) + ` Note: Mission window shortened to ${effectiveTargetBars} bars due to limited chart history`
       });
     }
     
@@ -985,7 +999,7 @@ const MissionSystem = (function() {
       tMs: Date.now(),
       barIndex: mission._lastProcessedBarIndex || 0,
       kind: 'WARN',
-      msg: '⚠️ Mission aborted by operator command'
+      msg: pxIcon('warning', '#ffaa33', 12) + ' Mission aborted by operator command'
     });
     
     saveMissions(missions);
@@ -1130,9 +1144,9 @@ const MissionSystem = (function() {
       if (range > 0) {
         const pos = (bar.close - lower) / range;
         if (pos > 0.95) {
-          triggers.push({ kind: 'WARN', msg: '⚠️ Storm front: price approaching upper envelope extreme' });
+          triggers.push({ kind: 'WARN', msg: pxIcon('warning', '#ffaa33', 12) + ' Storm front: price approaching upper envelope extreme' });
         } else if (pos < 0.05) {
-          triggers.push({ kind: 'WARN', msg: '⚠️ Storm front: price approaching lower envelope extreme' });
+          triggers.push({ kind: 'WARN', msg: pxIcon('warning', '#ffaa33', 12) + ' Storm front: price approaching lower envelope extreme' });
         }
       }
     }
@@ -1142,7 +1156,7 @@ const MissionSystem = (function() {
       const currSign = bar.histogram >= 0;
       const prevSign = prevBar.histogram >= 0;
       if (currSign !== prevSign) {
-        triggers.push({ kind: 'WARN', msg: '⚡ Turbulence: momentum flip detected (histogram sign change)' });
+        triggers.push({ kind: 'WARN', msg: pxIcon('lightning', '#ffaa33', 12) + ' Turbulence: momentum flip detected (histogram sign change)' });
       }
     }
     
@@ -1168,12 +1182,12 @@ const MissionSystem = (function() {
           const threshold = recentATRs[p80Index];
           
           if (currentATR > threshold && currentATR > 0.02) { // Also require minimum 2%
-            triggers.push({ kind: 'EVENT', msg: `🔥 Engine burn: high volatility bar (${(currentATR * 100).toFixed(1)}% range, above 80th percentile)` });
+            triggers.push({ kind: 'EVENT', msg: pxIcon('fire', '#ffaa33', 12) + ` Engine burn: high volatility bar (${(currentATR * 100).toFixed(1)}% range, above 80th percentile)` });
           }
         }
       } else if (currentATR > 0.05) {
         // Fallback for insufficient history
-        triggers.push({ kind: 'EVENT', msg: `🔥 Engine burn: high volatility bar (${(currentATR * 100).toFixed(1)}% range)` });
+        triggers.push({ kind: 'EVENT', msg: pxIcon('fire', '#ffaa33', 12) + ` Engine burn: high volatility bar (${(currentATR * 100).toFixed(1)}% range)` });
       }
     }
     
@@ -1181,9 +1195,9 @@ const MissionSystem = (function() {
     if (bar.volume != null && bar.volumeMA != null && bar.volumeMA > 0) {
       const ratio = bar.volume / bar.volumeMA;
       if (ratio > 1.5) {
-        triggers.push({ kind: 'INFO', msg: `📡 Sensors: flow surge detected (${ratio.toFixed(2)}x Volume MA)` });
+        triggers.push({ kind: 'INFO', msg: pxIcon('satellite', '#47d4ff', 12) + ` Sensors: flow surge detected (${ratio.toFixed(2)}x Volume MA)` });
       } else if (ratio < 0.7) {
-        triggers.push({ kind: 'INFO', msg: `📡 Sensors: flow drought (${ratio.toFixed(2)}x Volume MA)` });
+        triggers.push({ kind: 'INFO', msg: pxIcon('satellite', '#47d4ff', 12) + ` Sensors: flow drought (${ratio.toFixed(2)}x Volume MA)` });
       }
     }
     
@@ -1193,7 +1207,7 @@ const MissionSystem = (function() {
       const prevAbove = prevBar.close > prevBar.kernelRegression;
       if (currAbove !== prevAbove) {
         const direction = currAbove ? 'above' : 'below';
-        triggers.push({ kind: 'EVENT', msg: `🎯 Course correction: price crossed ${direction} trend line` });
+        triggers.push({ kind: 'EVENT', msg: pxIcon('target', '#33ff99', 12) + ` Course correction: price crossed ${direction} trend line` });
       }
     }
     
