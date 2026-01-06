@@ -77,9 +77,6 @@
     }
 
     _init() {
-      // Check for reduced motion preference
-      this.prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      
       // Create or find image element
       this.img = this.container.querySelector('img.ship-sprite');
       if (!this.img) {
@@ -94,12 +91,6 @@
       // Check if animations are available for this ticker
       const shipData = SHIP_ANIMATIONS[this.ticker];
       if (!shipData?.hasAnimations) {
-        this._loadStaticFallback();
-        return;
-      }
-      
-      // If user prefers reduced motion, just show static image
-      if (this.prefersReducedMotion) {
         this._loadStaticFallback();
         return;
       }

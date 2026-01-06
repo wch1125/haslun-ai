@@ -1838,10 +1838,17 @@
     function toggleMobileDrawer() {
       const drawer = document.getElementById('mobile-drawer');
       const backdrop = document.getElementById('mobile-drawer-backdrop');
+      const menuBtn = document.getElementById('mobile-menu-btn');
+      
       if (drawer && backdrop) {
         const isOpening = !drawer.classList.contains('open');
         drawer.classList.toggle('open');
         backdrop.classList.toggle('open');
+        
+        // Update ARIA expanded state
+        if (menuBtn) {
+          menuBtn.setAttribute('aria-expanded', isOpening ? 'true' : 'false');
+        }
         
         if (isOpening) {
           // Save scroll position and lock body
@@ -3582,9 +3589,11 @@
       // Determine which group this tab belongs to
       const group = getPrimaryGroup(tabName);
       
-      // Update primary nav buttons (data-group)
+      // Update primary nav buttons (data-group) and ARIA states
       document.querySelectorAll('.nav-tab[data-group]').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.group === group);
+        const isActive = btn.dataset.group === group;
+        btn.classList.toggle('active', isActive);
+        btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
       });
       
       // Show/hide subtabs based on group
@@ -6663,41 +6672,35 @@
     }
     
     async function initHangarPanel() {
-      try {
-        // Build ship roster if not already done
-        if (hangarShipList.length === 0) {
-          hangarShipList = await buildHangarShipList();
-        }
-        
-        // Get current selected ship or default to first
-        const selectedTicker = getSelectedShip() || (hangarShipList[0]?.ticker || 'RKLB');
-        hangarShipIndex = Math.max(0, hangarShipList.findIndex(s => s.ticker === selectedTicker));
-        
-        // Populate all sections
-        populateFleetSidebar();
-        populateFloatingFleet();
-        populateMobileCarousel();
-        
-        // Initialize hero ship animator
-        initHeroAnimator();
-        
-        updateHangarDisplay();
-        
-        // Initialize touch swipe for viewport
-        initViewportSwipe();
-        
-        // Load saved performance mode
-        const savedPerfMode = localStorage.getItem('parallax_perf_mode');
-        if (savedPerfMode && perfModes[savedPerfMode]) {
-          currentPerfMode = savedPerfMode;
-          const selector = document.getElementById('perf-mode-select');
-          if (selector) selector.value = savedPerfMode;
-          setPerformanceMode(savedPerfMode);
-        }
-        
-        console.log('[HANGAR] Panel initialized successfully');
-      } catch (err) {
-        console.error('[HANGAR] Failed to initialize hangar panel:', err);
+      // Build ship roster if not already done
+      if (hangarShipList.length === 0) {
+        hangarShipList = await buildHangarShipList();
+      }
+      
+      // Get current selected ship or default to first
+      const selectedTicker = getSelectedShip() || (hangarShipList[0]?.ticker || 'RKLB');
+      hangarShipIndex = Math.max(0, hangarShipList.findIndex(s => s.ticker === selectedTicker));
+      
+      // Populate all sections
+      populateFleetSidebar();
+      populateFloatingFleet();
+      populateMobileCarousel();
+      
+      // Initialize hero ship animator
+      initHeroAnimator();
+      
+      updateHangarDisplay();
+      
+      // Initialize touch swipe for viewport
+      initViewportSwipe();
+      
+      // Load saved performance mode
+      const savedPerfMode = localStorage.getItem('parallax_perf_mode');
+      if (savedPerfMode && perfModes[savedPerfMode]) {
+        currentPerfMode = savedPerfMode;
+        const selector = document.getElementById('perf-mode-select');
+        if (selector) selector.value = savedPerfMode;
+        setPerformanceMode(savedPerfMode);
       }
     }
     

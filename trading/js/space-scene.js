@@ -16,15 +16,18 @@ const SpaceScene = (() => {
   let running = true;
   const isMobile = window.innerWidth < 768;
   let dpr = Math.min(window.devicePixelRatio || 1, isMobile ? 1.5 : 2);
-  
-  // Performance detection - reduce effects on low-powered devices
-  const isLowPowerDevice = isMobile || navigator.hardwareConcurrency < 4;
+
+  // Subtle camera drift (pointer/touch) to sell depth without moving UI
+  let aimX = 0.5;
+  let aimY = 0.5;
+  let camX = 0.5;
+  let camY = 0.5;
   
   // Performance settings
   let perfSettings = {
-    animatedSprites: !isLowPowerDevice,
-    fleetFlybys: !isLowPowerDevice,
-    parallax: !isLowPowerDevice,
+    animatedSprites: true,
+    fleetFlybys: true,
+    parallax: true,
     debris: true,
     scanlines: true
   };
@@ -46,11 +49,19 @@ const SpaceScene = (() => {
   
   // Mode configurations
   const modeConfig = {
-    hangar: { starSpeed: 0.15, debrisSpeed: 0.3, debrisCount: 8, starCount: 150, shipFrequency: 0.003, shipSpeed: 0.4 },
+    // Hangar should still feel like we're drifting forward through space
+    // (higher speed + more frequent distant flybys)
+    hangar: { starSpeed: 0.35, debrisSpeed: 0.6, debrisCount: 10, starCount: 170, shipFrequency: 0.007, shipSpeed: 0.7 },
     command: { starSpeed: 0.08, debrisSpeed: 0.15, debrisCount: 4, starCount: 120, shipFrequency: 0.001, shipSpeed: 0.2 },
     arcade: { starSpeed: 0.8, debrisSpeed: 1.2, debrisCount: 15, starCount: 200, shipFrequency: 0.008, shipSpeed: 1.2 },
     data: { starSpeed: 0.05, debrisSpeed: 0.1, debrisCount: 2, starCount: 80, shipFrequency: 0.0005, shipSpeed: 0.15 }
   };
+
+  // Pointer drift (subtle parallax camera sway)
+  let driftTarget = { x: 0, y: 0 };
+  let drift = { x: 0, y: 0 };
+  const driftStrength = isMobile ? 0.012 : 0.02;
+  const driftLerp = 0.06;
   
   // Parallax layers for depth
   const parallaxLayers = [
@@ -72,6 +83,23 @@ const SpaceScene = (() => {
     
     initStars();
     initDebris();
+  }
+
+  function initPointerDrift() {
+    if (isMobile) {
+      window.addEventListener('touchmove', (e) => {
+        const t = e.touches && e.touches[0];
+        if (!t) return;
+        aimX = Math.min(1, Math.max(0, t.clientX / window.innerWidth));
+        aimY = Math.min(1, Math.max(0, t.clientY / window.innerHeight));
+      }, { passive: true });
+      return;
+    }
+
+    window.addEventListener('mousemove', (e) => {
+      aimX = Math.min(1, Math.max(0, e.clientX / window.innerWidth));
+      aimY = Math.min(1, Math.max(0, e.clientY / window.innerHeight));
+    }, { passive: true });
   }
   
   // Load ship sprites for flybys
@@ -193,6 +221,14 @@ const SpaceScene = (() => {
     // Draw stars with parallax layers
     const activeParallaxLayers = perfSettings.parallax ? parallaxLayers : [{ speedMult: 1, opacity: 0.8 }];
     
+    // Ease camera drift
+    camX += (aimX - camX) * 0.04;
+    camY += (aimY - camY) * 0.04;
+    // More drift in hangar/arcade so it feels like we're moving through depth
+    const driftStrength = mode === 'arcade' ? 40 : (mode === 'hangar' ? 26 : 12);
+    const driftX = (camX - 0.5) * driftStrength;
+    const driftY = (camY - 0.5) * driftStrength;
+
     stars.forEach(s => {
       const layer = activeParallaxLayers[s.layer] || activeParallaxLayers[0];
       s.y += config.starSpeed * layer.speedMult;
@@ -206,7 +242,25 @@ const SpaceScene = (() => {
       const brightness = 0.5 + Math.sin(s.twinkle) * 0.3;
       ctx.globalAlpha = brightness * layer.opacity;
       ctx.fillStyle = s.color;
-      ctx.fillRect(s.x, s.y, s.size, s.size);
+
+      // Apply parallax drift (near layers shift more)
+      const p = perfSettings.parallax ? (0.35 + s.layer * 0.35) : 0.55;
+      const x = s.x + driftX * p;
+      const y = s.y + driftY * p;
+
+      // Add a streak to sell forward motion (hangar should always have some)
+      const speed = config.starSpeed * layer.speedMult;
+      const streakOn = (mode === 'hangar') || (speed > 0.18);
+      if (streakOn) {
+        ctx.beginPath();
+        ctx.moveTo(x, y - speed * (mode === 'arcade' ? 28 : 20));
+        ctx.lineTo(x, y + s.size);
+        ctx.lineWidth = Math.max(1, s.size);
+        ctx.strokeStyle = s.color;
+        ctx.stroke();
+      } else {
+        ctx.fillRect(x, y, s.size, s.size);
+      }
     });
     
     ctx.globalAlpha = 1;
@@ -324,6 +378,7 @@ const SpaceScene = (() => {
   function mount() {
     document.body.prepend(canvas);
     loadShipSprites();
+    initPointerDrift();
     resize();
     draw();
   }

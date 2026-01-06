@@ -17,6 +17,8 @@
   <link rel="stylesheet" href="css/fleet-command.css">
   <!-- Ship Select (Mario Kart-style hangar) -->
   <link rel="stylesheet" href="css/ship-select.css">
+  <!-- Accessibility & keyboard shortcuts styles -->
+  <link rel="stylesheet" href="css/accessibility.css">
 <script src="js/space-scene.js"></script>
 </head>
 <body>
@@ -467,11 +469,11 @@
             <div class="logo-sub">FLEET COMMAND</div>
           </div>
         </div>
-        <nav class="nav-tabs">
-          <button class="nav-tab active" data-group="hangar" data-tab="hangar" onclick="switchTab('hangar')">🚀 HANGAR</button>
-          <button class="nav-tab" data-group="command" data-tab="positions" onclick="switchTab('positions')">COMMAND</button>
-          <button class="nav-tab" data-group="arcade" data-tab="arcade" onclick="switchTab('arcade')">ARCADE</button>
-          <button class="nav-tab" data-group="data" data-tab="chart" onclick="switchTab('chart')">DATA</button>
+        <nav class="nav-tabs" role="tablist" aria-label="Main navigation">
+          <button class="nav-tab active" data-group="hangar" data-tab="hangar" onclick="switchTab('hangar')" role="tab" aria-selected="true" aria-controls="hangar-panel">🚀 HANGAR</button>
+          <button class="nav-tab" data-group="command" data-tab="positions" onclick="switchTab('positions')" role="tab" aria-selected="false" aria-controls="positions-panel">COMMAND</button>
+          <button class="nav-tab" data-group="arcade" data-tab="arcade" onclick="switchTab('arcade')" role="tab" aria-selected="false" aria-controls="arcade-panel">ARCADE</button>
+          <button class="nav-tab" data-group="data" data-tab="chart" onclick="switchTab('chart')" role="tab" aria-selected="false" aria-controls="chart-panel">DATA</button>
         </nav>
       </div>
       
@@ -483,7 +485,10 @@
       </div>
       
       <div class="header-right">
-        <button class="mobile-menu-btn" id="mobile-menu-btn" onclick="toggleMobileDrawer()">
+        <button class="kbd-hint" onclick="ParallaxA11y.showShortcuts()" title="Keyboard shortcuts (?)">
+          <kbd>?</kbd>
+        </button>
+        <button class="mobile-menu-btn" id="mobile-menu-btn" onclick="toggleMobileDrawer()" aria-label="Open menu" aria-expanded="false">
           <span>☰</span> MENU
         </button>
         <span class="demo-badge" data-glossary-id="mode_simulation">SIMULATION</span>
@@ -2126,6 +2131,9 @@
   
   <!-- Context Focus (Page-Behind Awareness) -->
   <script src="js/ui/contextFocus.js"></script>
+  
+  <!-- Accessibility & Keyboard Shortcuts -->
+  <script src="js/ui/accessibility.js"></script>
   
   <!-- Ship Select (Mario Kart-style stats) -->
   <script src="js/ui/ship-select.js"></script>
