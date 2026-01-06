@@ -14,6 +14,24 @@
     const SHIP_NAMES = window.SHIP_NAMES || {};
     const SHIP_SPRITES = window.SHIP_SPRITES || {};
     const DEFAULT_SHIP_SPRITE = window.DEFAULT_SHIP_SPRITE || 'assets/ships/static/Unclaimed-Drone-ship.png';
+
+    // =========================================================================
+    // MOBILE VIEWPORT HEIGHT HELPER
+    // Fixes iOS address-bar "jump" that breaks vh-based layouts.
+    // Use: height: calc(var(--vh, 1vh) * 100)
+    // =========================================================================
+    function setViewportUnits() {
+      try {
+        const vh = window.innerHeight * 0.01;
+        document.documentElement.style.setProperty('--vh', `${vh}px`);
+      } catch (e) {
+        // Non-fatal
+      }
+    }
+
+    window.addEventListener('resize', setViewportUnits, { passive: true });
+    window.addEventListener('orientationchange', setViewportUnits, { passive: true });
+    document.addEventListener('DOMContentLoaded', setViewportUnits);
     
     // =========================================================================
     // CHART.JS LAZY LOADER

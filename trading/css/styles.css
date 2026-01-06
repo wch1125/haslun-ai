@@ -7,7 +7,7 @@
       top: 0;
       left: 0;
       width: 100vw;
-      height: 100vh;
+      height: calc(var(--vh, 1vh) * 100);
       z-index: -1;
       pointer-events: none;
       background: var(--bg-void);
@@ -20,7 +20,7 @@
     .hangar-command-layout {
       display: grid;
       grid-template-columns: 320px 1fr;
-      height: calc(100vh - 60px);
+      height: calc((var(--vh, 1vh) * 100) - 60px);
       gap: 0;
       background: transparent;
     }
@@ -763,7 +763,8 @@
     @media (max-width: 768px) {
       .hangar-command-layout {
         height: auto;
-        min-height: calc(100vh - 120px);
+        /* Let the tab panel handle scrolling; avoid fragile vh math */
+        min-height: 100%;
       }
       
       .hangar-portfolio-strip {
@@ -3696,7 +3697,11 @@ body.no-scanlines::before {
     }
     
     .app.visible {
-      display: block;
+      display: flex;
+      flex-direction: column;
+      /* Mobile-safe app shell: avoid hard-coded header+footer math */
+      min-height: 100vh;
+      min-height: 100dvh;
     }
     
     .header {
@@ -3714,6 +3719,16 @@ body.no-scanlines::before {
       z-index: 100;
       box-shadow: 0 0 30px rgba(51, 255, 153, 0.05);
       flex-shrink: 0;
+    }
+
+    /* iOS safe-area support (notches / dynamic islands) */
+    @supports (padding-top: env(safe-area-inset-top)) {
+      @media (max-width: 768px) {
+        .header {
+          padding-top: env(safe-area-inset-top);
+          height: calc(56px + env(safe-area-inset-top));
+        }
+      }
     }
     
     .header::after {
@@ -3803,7 +3818,15 @@ body.no-scanlines::before {
     .time-display { font-size: 0.8rem; color: var(--phosphor); letter-spacing: 0.05em; text-shadow: 0 0 10px var(--phosphor-glow); }
     .time-display .blink { animation: blink 1s step-end infinite; }
     
-    .main { display: flex; height: calc(100vh - 56px - 28px); height: calc(100dvh - 56px - 28px); }
+    /* Main area: flexes between sticky header and fixed status strip */
+    .main {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+      height: auto;
+      /* Status strip is fixed at the bottom; keep content clear of it */
+      padding-bottom: calc(28px + env(safe-area-inset-bottom));
+    }
     
     .sidebar { width: 280px; background: var(--bg-panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; }
     .sidebar-section { padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); }
@@ -5222,7 +5245,28 @@ body.no-scanlines::before {
     .watermark a:hover { text-shadow: 0 0 10px var(--amber-glow); }
     .watermark .parallax-mark { color: var(--phosphor); letter-spacing: 0.15em; font-weight: 500; opacity: 0.7; }
     
-    .status-strip { position: fixed; bottom: 0; left: 0; right: 0; height: 28px; background: var(--bg-panel); border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: flex-end; padding: 0 1.5rem; gap: 2rem; z-index: 100; font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; }
+    .status-strip {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 28px;
+      padding-bottom: env(safe-area-inset-bottom);
+      background: var(--bg-panel);
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-left: 1.5rem;
+      padding-right: 1.5rem;
+      gap: 2rem;
+      z-index: 100;
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      /* iOS: avoid overlaying taps near the home indicator */
+      touch-action: pan-x;
+    }
     .status-item { display: flex; align-items: center; gap: 0.5rem; color: var(--text-dim); }
     .status-item .dot { width: 6px; height: 6px; border-radius: 50%; }
     .status-item .dot.green { background: var(--phosphor); box-shadow: 0 0 8px var(--phosphor-glow); }
@@ -7842,6 +7886,36 @@ body.no-scanlines::before {
         padding: 0.4rem 0.5rem;
         font-size: 0.55rem;
       }
+
+      /* Header right: keep essentials on very small screens */
+      .demo-badge {
+        display: none;
+      }
+
+      .status-indicator {
+        padding: 0.3rem 0.45rem;
+      }
+
+      .status-indicator .status-text {
+        display: none;
+      }
+
+      .mobile-menu-btn {
+        padding: 0.35rem 0.5rem;
+        /* Icon-only on very small screens */
+        font-size: 0;
+        border-radius: 6px;
+        min-height: 44px;
+        justify-content: center;
+        gap: 0.25rem;
+      }
+
+      .mobile-menu-btn span {
+        font-size: 0.9rem;
+        line-height: 1;
+      }
+
+      .mobile-menu-btn { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
       
       /* Chart header mobile fixes */
       .chart-header {
