@@ -1,130 +1,165 @@
-# HASLUN-BOT Optimization Report
+# PARALLAX Cockpit HUD — Optimization Report
 
-## Summary
+## 📋 Executive Summary
 
-Reviewed and optimized the codebase for better maintainability and reduced redundancy.
-
----
-
-## Issues Identified
-
-### 1. **CSS Duplication (FIXED)**
-   - **Duplicate keyframes**: `pulse-glow` and `crt-flicker` defined twice → **Removed**
-   - **Ship-select styles**: Duplicated in both `styles.css` and `ship-select.css` → **Removed from styles.css**
-   - **Fleet-command styles**: Some overlap between files (kept in component file which loads later)
-
-### 2. **CSS Size (10,068 → 10,004 lines)**
-   - Removed 64 lines of duplicate/redundant CSS
-   - 196 selectors appear multiple times (mostly in media queries - normal for responsive design)
-   - 50+ media queries scattered throughout (design choice, not a bug)
-
-### 3. **app.js Size (6,526 lines)**
-   - Already modularized from original 7,061 lines
-   - No truly dead code found (functions appearing once are called from HTML onclick handlers)
-   - Largest remaining functions:
-     - `drawMacdOrbitFrame()`: 320 lines
-     - `updateCharts()`: 232 lines
-     - `updateTelemetryConsole()`: 201 lines
-     - `initVesselDossier()`: 187 lines
-
-### 4. **JSON Data Files (18MB total)**
-   - Each ticker has ~1.2MB of historical data (1,281 daily + 2,350 intraday records)
-   - This is necessary for charting functionality
+Reviewed the PARALLAX Cockpit HUD game folder and identified **3 critical issues**, **3 medium issues**, and **3 minor optimizations**. All fixes have been implemented in the attached files.
 
 ---
 
-## Changes Made
+## 🔴 Critical Issues Fixed
 
-### CSS Optimizations
-1. ✅ Removed duplicate `@keyframes crt-flicker` definition
-2. ✅ Removed duplicate `@keyframes pulse-glow` definition  
-3. ✅ Removed 7 ship-select style blocks that duplicated `ship-select.css`
-4. ✅ Removed excessive blank lines
-
-### Files Modified
-- `css/styles.css`: 10,068 → 10,004 lines (-64 lines, -0.6%)
-
----
-
-## Recommended Future Optimizations
-
-### High Impact (Recommended)
-1. **Extract chart-related functions** from app.js (~800 lines)
-   - Create `js/charts/chart-manager.js`
-   - Move: `updateCharts()`, `drawMacdOrbitFrame()`, `updateTickerDisplay()`
-   
-2. **Extract fleet rendering** from app.js (~400 lines)
-   - Create `js/ui/fleet-renderer.js`
-   - Move: `renderFleetGrid()`, `updateCommandBrief()`, `generateShipSvgString()`
-
-3. **Split styles.css by feature**
-   - `css/base.css` - variables, resets, typography
-   - `css/layout.css` - grid, sidebar, main content
-   - `css/components.css` - cards, buttons, controls
-   - `css/charts.css` - chart-specific styles
-   - `css/mobile.css` - all media queries
-
-### Medium Impact
-4. **Lazy-load ticker JSON data**
-   - Only load data when ticker is selected
-   - Currently all data may be pre-cached
-
-5. **Consolidate media queries**
-   - Group all responsive styles at end of CSS files
-   - Easier to maintain mobile-first approach
-
-### Low Impact (Nice to Have)
-6. **Minify production builds**
-   - Use build tool to minify CSS/JS for production
-   - Keep source files readable for development
-
----
-
-## Current File Structure
-
+### 1. Panel Visibility Conflict
+**Problem:** `hangar-panel-new` had conflicting attributes:
+```html
+<!-- BEFORE: Conflicts! -->
+<div class="cockpit-panel active" id="hangar-panel-new" style="display: none;">
 ```
-trading/
-├── index.html                 (1,958 lines)
-├── ship-select.html           (494 lines)
-├── derivatives.html           (2,007 lines)
-├── css/
-│   ├── styles.css             (10,004 lines) ← OPTIMIZED
-│   ├── crt-effects.css        (363 lines)
-│   ├── fleet-command.css      (851 lines)
-│   ├── ship-brief.css         (685 lines)
-│   └── ship-select.css        (830 lines)
-├── js/
-│   ├── app.js                 (6,526 lines) ← Core application
-│   ├── core/                  (469 lines total)
-│   ├── data/                  (2,546 lines total)
-│   ├── audio/                 (500 lines)
-│   ├── games/                 (933 lines)
-│   ├── state/                 (772 lines)
-│   ├── ui/                    (1,818 lines)
-│   └── (other modules)        (2,901 lines)
-├── data/                      (~18MB JSON files)
-└── assets/ships/              (~14MB image files)
+
+**Fix:** Removed inline `style="display: none"` and let JS control visibility:
+```html
+<!-- AFTER: Clean -->
+<div class="cockpit-panel" id="hangar-panel-new" role="tabpanel" aria-labelledby="hangar-tab">
+```
+
+### 2. Missing Sprite Fallbacks
+**Problem:** `CockpitNav` referenced `window.SHIP_SPRITES` which wasn't reliably populated before initialization.
+
+**Fix:** Added internal `SPRITE_FALLBACK` map and `getSprite()` helper method that cascades through fallbacks:
+```javascript
+getSprite(ticker) {
+  if (window.SHIP_SPRITES && window.SHIP_SPRITES[ticker]) {
+    return window.SHIP_SPRITES[ticker];
+  }
+  return SPRITE_FALLBACK[ticker] || DEFAULT_SPRITE;
+}
+```
+
+### 3. Keyboard Shortcut Conflicts
+**Problem:** Both `accessibility.js` (keys 1-4) and `cockpit-nav.js` (keys 1-3) listened for number keys.
+
+**Fix:** Changed `cockpit-nav.js` to use `Shift+1/2/3` (typed as `!`, `@`, `#`):
+```javascript
+if (e.shiftKey && !e.ctrlKey && !e.metaKey) {
+  if (e.key === '!') { e.preventDefault(); this.switchPanel('hangar'); }
+  if (e.key === '@') { e.preventDefault(); this.switchPanel('battle'); }
+  if (e.key === '#') { e.preventDefault(); this.switchPanel('news'); }
+}
 ```
 
 ---
 
-## Verification Steps
+## 🟡 Medium Issues Fixed
 
-After optimization, verify:
-- [ ] Page loads without console errors
-- [ ] Loading screen animation works
-- [ ] Ticker selection works
-- [ ] Fleet grid displays ships
-- [ ] Charts render correctly
-- [ ] Ship Brief dialog opens
-- [ ] All media queries still work (responsive design)
-- [ ] Ship Select modal functions correctly
+### 4. Mobile Touch Targets Too Small
+**Problem:** Ship selector buttons were 48×48px, below the 56px minimum for comfortable touch.
+
+**Fix:** 
+- Increased `.ship-selector-btn` to 56×56px
+- Added `touch-action: manipulation` for faster tap response
+- Added `:active` states for tactile feedback
+
+### 5. Tablet Layout Cramped
+**Problem:** Only breakpoints at 768px and 1024px, nothing for tablet landscape.
+
+**Fix:** Added tablet-specific breakpoint:
+```css
+@media (max-width: 1024px) and (min-width: 769px) {
+  .hangar-rpg {
+    grid-template-columns: 240px 1fr 240px;
+  }
+  .ship-showcase { max-width: 350px; }
+}
+```
+
+### 6. Safe Area Insets Missing
+**Problem:** Bottom HUD didn't account for iOS notch/home indicator.
+
+**Fix:**
+```css
+.cockpit-hud {
+  padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+}
+```
 
 ---
 
-## Notes
+## 🟢 Minor Optimizations
 
-- The codebase is already well-modularized from a previous effort
-- Most "duplicate" CSS is intentional (media query overrides)
-- No truly unused functions found - all are called from HTML or window object
-- Data files are large but necessary for full historical charting
+### 7. Reduced Motion Support
+Added `@media (prefers-reduced-motion: reduce)` to disable:
+- Ship showcase ring rotation
+- Battle button pulse animation
+- Stat bar transitions
+- News card hover transforms
+
+### 8. ARIA Accessibility
+- Added `role="tablist"` to HUD navigation
+- Added `role="tab"` and `aria-selected` to buttons
+- Added `role="tabpanel"` to content panels
+- Added `role="progressbar"` to stat bars
+- Added screen reader announcer for dynamic content
+
+### 9. Image Performance
+- Added `width`/`height` attributes to prevent CLS
+- Added `loading="lazy"` to ship selector images
+- Added `loading="eager"` to primary ship sprites
+
+---
+
+## 📁 Files Delivered
+
+| File | Description |
+|------|-------------|
+| `index-fixed.html` | Main HTML with all fixes applied |
+| `cockpit-nav-fixed.js` | Optimized navigation controller |
+| `cockpit-hud-fixed.css` | Optimized HUD stylesheet |
+
+---
+
+## 🔧 Integration Instructions
+
+### Option A: Replace Files (Recommended)
+```bash
+# Backup originals
+mv css/cockpit-hud.css css/cockpit-hud.backup.css
+mv js/cockpit-nav.js js/cockpit-nav.backup.js
+mv index.html index.backup.html
+
+# Install fixes
+mv cockpit-hud-fixed.css css/cockpit-hud.css
+mv cockpit-nav-fixed.js js/cockpit-nav.js
+mv index-fixed.html index.html
+```
+
+### Option B: Use Fixed Files Directly
+Update `index.html` references:
+```html
+<link rel="stylesheet" href="css/cockpit-hud-fixed.css">
+<script src="js/cockpit-nav-fixed.js"></script>
+```
+
+---
+
+## 📊 Testing Checklist
+
+- [ ] Desktop Chrome/Firefox/Safari: Panels switch correctly
+- [ ] Mobile Safari (iPhone): Touch targets feel comfortable
+- [ ] Mobile Chrome (Android): No tap delay
+- [ ] Tablet (iPad): 3-column layout renders properly
+- [ ] Reduced motion: Animations disabled when preference set
+- [ ] Screen reader: Panel changes announced
+- [ ] Keyboard only: Can navigate with Tab and Shift+1/2/3
+
+---
+
+## 🚀 Future Recommendations
+
+1. **Lazy-load BeyArena** — Don't load the battle canvas until panel is opened
+2. **Service Worker** — Cache ship sprites for offline support
+3. **Preload Critical Assets** — Add `<link rel="preload">` for active ship sprite
+4. **Virtual Scroll News Feed** — If news items grow, virtualize the list
+
+---
+
+*Report generated for PARALLAX v2.0 Cockpit HUD*
+*Date: January 2026*
