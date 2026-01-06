@@ -6532,8 +6532,8 @@
     window.getSelectedShip = getSelectedShip;
     
     /**
-     * HANGAR PANEL - Living ship display
-     * Initialize the main hangar view with ship in space
+     * HANGAR PANEL - Dense Command Interface
+     * Fleet Command sidebar + Framed viewport + Bottom dossier
      */
     let hangarShipIndex = 0;
     let hangarShipList = [];
@@ -6548,14 +6548,10 @@
       const selectedTicker = getSelectedShip() || (hangarShipList[0]?.ticker || 'RKLB');
       hangarShipIndex = Math.max(0, hangarShipList.findIndex(s => s.ticker === selectedTicker));
       
-      // Populate dock ships
-      populateHangarDock();
-      
-      // Update display for current ship
+      // Populate all sections
+      populateFleetSidebar();
+      populateFloatingFleet();
       updateHangarDisplay();
-      
-      // Populate signal widgets
-      populateSignalWidgets();
     }
     
     async function buildHangarShipList() {
@@ -6587,8 +6583,8 @@
         'GME': 'DREADNOUGHT',
         'ASTS': 'RELAY',
         'JOBY': 'EVTOL',
-        'ACHR': 'EVTOL',
-        'BKSY': 'RECON',
+        'ACHR': 'CARRIER',
+        'BKSY': 'DRONE',
         'PL': 'SCOUT',
         'KTOS': 'FIGHTER',
         'RDW': 'HAULER',
@@ -6599,62 +6595,177 @@
         'EVEX': 'TRANSPORT'
       };
       
+      // Codename mappings
+      const codenameMap = {
+        'RKLB': 'ELECTRON',
+        'LUNR': 'MOONSHOT',
+        'JOBY': 'SKYPORT',
+        'ACHR': 'MIDNIGHT',
+        'ASTS': 'BLUEBIRD',
+        'GME': 'DIAMOND',
+        'BKSY': 'BLACKSKY',
+        'PL': 'PELICAN',
+        'KTOS': 'KRATOS',
+        'RDW': 'REDWIRE',
+        'RTX': 'RAYTHEON',
+        'LHX': 'L3HARRIS',
+        'GE': 'VERNOVA',
+        'COHR': 'COHERENT',
+        'EVEX': 'EVEX'
+      };
+      
+      // Lore mappings
+      const loreMap = {
+        'RKLB': 'Spearhead command ship. Victory follows in its wake.',
+        'LUNR': 'Lunar descent specialist. Hope and precision in equal measure.',
+        'JOBY': 'Sky taxi of the future. Vertical freedom.',
+        'ACHR': 'Urban air mobility pioneer. The city is now 3D.',
+        'ASTS': 'Direct-to-cell satellite constellation. Signal from the void.',
+        'GME': 'Meme-forged dreadnought. Refuses to die.',
+        'BKSY': 'Eyes in the sky. Watching. Always watching.',
+        'PL': 'Earth observation fleet. Data is the new oil.',
+        'KTOS': 'Defense systems online. Autonomous and relentless.',
+        'RDW': 'Space infrastructure backbone. Quietly essential.',
+        'RTX': 'Aerospace titan. When you need it done right.',
+        'LHX': 'Multi-domain ops. From seabed to orbit.',
+        'GE': 'Energy transition flagship. Powering tomorrow.',
+        'COHR': 'Photonics mastery. Light becomes leverage.',
+        'EVEX': 'Electric aviation pioneer. Silent thunder.'
+      };
+      
       // Get ticker profiles and stats
       const profiles = window.tickerProfiles || window.TICKER_PROFILES || {};
       let statsData = {};
       
-      // Try to load stats from window.statsData or fetch
       if (window.statsData && window.statsData.stats) {
         statsData = window.statsData.stats;
       }
       
-      // Priority tickers to show first
-      const priorityTickers = ['RKLB', 'LUNR', 'JOBY', 'ACHR', 'ASTS', 'GME', 'BKSY', 'PL', 'KTOS', 'RDW'];
+      // Priority tickers to show
+      const priorityTickers = ['RKLB', 'BKSY', 'ACHR', 'LUNR', 'JOBY', 'ASTS', 'GME', 'PL', 'KTOS', 'RDW'];
       
-      // Build from priority list + any additional tickers in profiles
-      const allTickers = [...new Set([...priorityTickers, ...Object.keys(profiles)])];
-      
-      for (const ticker of allTickers) {
+      for (const ticker of priorityTickers) {
         const profile = profiles[ticker] || {};
         const stats = statsData[ticker] || {};
         const shipType = shipTypeMap[ticker] || 'ship';
         
+        // Generate random but consistent stats based on ticker
+        const seed = ticker.charCodeAt(0) + ticker.charCodeAt(1);
+        const hull = 60 + (seed % 30);
+        const cargo = 50 + ((seed * 3) % 45);
+        const fuel = 70 + ((seed * 7) % 25);
+        
         ships.push({
           ticker,
-          name: profile.name || profile.codename || ticker,
+          name: codenameMap[ticker] || profile.codename || ticker,
           class: shipClassMap[ticker] || 'STANDARD',
-          sector: profile.sector || 'UNKNOWN SECTOR',
+          designation: `${shipClassMap[ticker]?.substring(0,3) || 'STD'}-${String(seed % 100).padStart(3, '0')}`,
+          sector: profile.sector || 'SPACE SYSTEMS',
           sprite: `assets/ships/${ticker}-${shipType}.png`,
           fallbackSprite: `assets/ships/static/${ticker}-${shipType}.png`,
-          value: stats.value || Math.round(stats.current * 100) || 0,
-          pnl: stats.pnl || Math.round((stats.return_1d || 0) * 10) || 0,
-          pnlPercent: stats.return_1d || 0,
+          value: stats.value || Math.round((stats.current || 10) * (50 + seed % 100)),
+          pnl: Math.round((stats.return_1d || (Math.random() * 10 - 3)) * 30),
+          pnlPercent: stats.return_1d || (Math.random() * 10 - 3),
           status: (stats.return_1d || 0) >= 0 ? 'OPERATIONAL' : 'CAUTIONARY',
-          lore: profile.lore || ''
+          hull,
+          cargo,
+          fuel,
+          cargoUnits: Math.round(cargo * 2.5),
+          lore: loreMap[ticker] || profile.lore || 'Status nominal.'
         });
       }
       
       return ships;
     }
     
-    function populateHangarDock() {
-      const dockContainer = document.getElementById('hangar-dock-ships');
-      if (!dockContainer) return;
+    function populateFleetSidebar() {
+      const container = document.getElementById('hangar-fleet-list');
+      if (!container) return;
       
-      dockContainer.innerHTML = '';
+      container.innerHTML = '';
       
       hangarShipList.forEach((ship, idx) => {
-        const dockShip = document.createElement('div');
-        dockShip.className = `dock-ship ${idx === hangarShipIndex ? 'active' : ''}`;
-        dockShip.onclick = () => selectHangarShip(idx);
+        const card = document.createElement('div');
+        card.className = `fleet-ship-card ${idx === hangarShipIndex ? 'active' : ''}`;
+        card.onclick = () => selectHangarShip(idx);
         
-        const img = document.createElement('img');
-        img.src = ship.sprite;
-        img.alt = ship.ticker;
-        img.onerror = () => { img.src = ship.fallbackSprite; };
+        const pnlClass = ship.pnl >= 0 ? 'positive' : 'negative';
+        const pnlStr = ship.pnl >= 0 ? `+$${ship.pnl}` : `-$${Math.abs(ship.pnl)}`;
+        const pnlPctStr = ship.pnlPercent >= 0 ? `+${ship.pnlPercent.toFixed(1)}%` : `${ship.pnlPercent.toFixed(1)}%`;
         
-        dockShip.appendChild(img);
-        dockContainer.appendChild(dockShip);
+        card.innerHTML = `
+          <div>
+            <img class="fleet-card-sprite" src="${ship.sprite}" alt="${ship.ticker}" onerror="this.src='${ship.fallbackSprite}'">
+            <div class="fleet-card-class">${ship.class}</div>
+          </div>
+          <div class="fleet-card-info">
+            <div class="fleet-card-ticker">${ship.ticker}</div>
+            <div class="fleet-card-name">${ship.name} · ${ship.designation}</div>
+            <div class="fleet-card-bars">
+              <div class="fleet-bar-row">
+                <span class="fleet-bar-label">HULL</span>
+                <div class="fleet-bar-track"><div class="fleet-bar-fill hull" style="width:${ship.hull}%"></div></div>
+                <span class="fleet-bar-val">${ship.hull}%</span>
+              </div>
+              <div class="fleet-bar-row">
+                <span class="fleet-bar-label">CARGO</span>
+                <div class="fleet-bar-track"><div class="fleet-bar-fill cargo" style="width:${ship.cargo}%"></div></div>
+                <span class="fleet-bar-val">${ship.cargoUnits} UNITS</span>
+              </div>
+              <div class="fleet-bar-row">
+                <span class="fleet-bar-label">FUEL</span>
+                <div class="fleet-bar-track"><div class="fleet-bar-fill fuel" style="width:${ship.fuel}%"></div></div>
+                <span class="fleet-bar-val">${ship.fuel}%</span>
+              </div>
+            </div>
+          </div>
+          <div class="fleet-card-status">
+            <span class="fleet-status-badge">● ${ship.status}</span>
+            <div class="fleet-card-value">$${ship.value.toLocaleString()}</div>
+            <div class="fleet-card-pnl ${pnlClass}">${pnlStr} ${pnlPctStr}</div>
+          </div>
+        `;
+        
+        container.appendChild(card);
+      });
+    }
+    
+    function populateFloatingFleet() {
+      const container = document.getElementById('hangar-floating-fleet');
+      if (!container) return;
+      
+      container.innerHTML = '';
+      
+      // Create formation: 1 top, 2 middle, 1 bottom
+      const formation = [
+        [hangarShipList[0]],
+        [hangarShipList[1], hangarShipList[2]],
+        [hangarShipList[3]]
+      ];
+      
+      formation.forEach((row, rowIdx) => {
+        const rowDiv = document.createElement('div');
+        rowDiv.className = 'floating-ship-row';
+        
+        row.forEach((ship, shipIdx) => {
+          if (!ship) return;
+          
+          const shipDiv = document.createElement('div');
+          shipDiv.className = 'floating-ship';
+          shipDiv.onclick = () => {
+            const idx = hangarShipList.findIndex(s => s.ticker === ship.ticker);
+            if (idx >= 0) selectHangarShip(idx);
+          };
+          
+          shipDiv.innerHTML = `
+            <img class="floating-ship-sprite" src="${ship.sprite}" alt="${ship.ticker}" onerror="this.src='${ship.fallbackSprite}'">
+            <span class="floating-ship-label">${ship.class}</span>
+          `;
+          
+          rowDiv.appendChild(shipDiv);
+        });
+        
+        container.appendChild(rowDiv);
       });
     }
     
@@ -6662,8 +6773,8 @@
       hangarShipIndex = index;
       updateHangarDisplay();
       
-      // Update dock active states
-      document.querySelectorAll('.dock-ship').forEach((el, idx) => {
+      // Update sidebar active states
+      document.querySelectorAll('.fleet-ship-card').forEach((el, idx) => {
         el.classList.toggle('active', idx === index);
       });
       
@@ -6678,11 +6789,6 @@
           selectTicker(ship.ticker);
         }
       }
-    }
-    
-    function cycleHangarShip(direction) {
-      const newIndex = (hangarShipIndex + direction + hangarShipList.length) % hangarShipList.length;
-      selectHangarShip(newIndex);
       
       // Play UI sound
       if (window.MechaAudio && MechaAudio.ctx) {
@@ -6690,76 +6796,72 @@
       }
     }
     
+    function cycleHangarShip(direction) {
+      const newIndex = (hangarShipIndex + direction + hangarShipList.length) % hangarShipList.length;
+      selectHangarShip(newIndex);
+    }
+    
     function updateHangarDisplay() {
       const ship = hangarShipList[hangarShipIndex];
       if (!ship) return;
       
-      // Update hero sprite
+      // Update viewport
       const heroSprite = document.getElementById('hangar-hero-sprite');
+      const callsign = document.getElementById('hangar-callsign');
+      const shipClass = document.getElementById('hangar-class');
+      const lore = document.getElementById('hangar-lore');
+      
       if (heroSprite) {
         heroSprite.src = ship.sprite;
         heroSprite.onerror = () => { heroSprite.src = ship.fallbackSprite; };
       }
-      
-      // Update identity
-      const callsign = document.getElementById('hangar-callsign');
-      const shipClass = document.getElementById('hangar-class');
-      const shipName = document.getElementById('hangar-ship-name');
-      
       if (callsign) callsign.textContent = ship.ticker;
-      if (shipClass) shipClass.textContent = `${ship.class} CLASS`;
-      if (shipName) shipName.textContent = ship.name;
+      if (shipClass) shipClass.textContent = ship.class;
+      if (lore) lore.textContent = ship.lore;
       
-      // Update stats
-      const sector = document.getElementById('hangar-sector');
-      const value = document.getElementById('hangar-value');
-      const pnl = document.getElementById('hangar-pnl');
-      const status = document.getElementById('hangar-status');
+      // Update dossier panel
+      const dossierImg = document.getElementById('dossier-ship-img');
+      const dossierBadge = document.getElementById('dossier-class-badge');
+      const dossierTicker = document.getElementById('dossier-ticker');
+      const dossierName = document.getElementById('dossier-name');
+      const dossierDesig = document.getElementById('dossier-designation');
+      const dossierHull = document.getElementById('dossier-hull');
+      const dossierCargo = document.getElementById('dossier-cargo');
+      const dossierFuel = document.getElementById('dossier-fuel');
+      const dossierValue = document.getElementById('dossier-value');
+      const dossierPnl = document.getElementById('dossier-pnl');
+      const dossierReturn = document.getElementById('dossier-return');
+      const dossierMission = document.getElementById('dossier-mission');
+      const dossierNote = document.getElementById('dossier-note');
       
-      if (sector) sector.textContent = ship.sector;
-      if (value) value.textContent = `$${ship.value.toLocaleString()}`;
-      if (pnl) {
-        const pnlStr = ship.pnl >= 0 ? `+$${ship.pnl.toLocaleString()}` : `-$${Math.abs(ship.pnl).toLocaleString()}`;
-        pnl.textContent = pnlStr;
-        pnl.className = `stat-value ${ship.pnl >= 0 ? 'positive' : 'negative'}`;
+      if (dossierImg) {
+        dossierImg.src = ship.sprite;
+        dossierImg.onerror = () => { dossierImg.src = ship.fallbackSprite; };
       }
-      if (status) status.textContent = ship.status;
+      if (dossierBadge) dossierBadge.textContent = ship.class;
+      if (dossierTicker) dossierTicker.textContent = ship.ticker;
+      if (dossierName) dossierName.textContent = ship.name;
+      if (dossierDesig) dossierDesig.textContent = ship.designation;
+      if (dossierHull) dossierHull.style.width = `${ship.hull}%`;
+      if (dossierCargo) dossierCargo.style.width = `${ship.cargo}%`;
+      if (dossierFuel) dossierFuel.style.width = `${ship.fuel}%`;
+      if (dossierValue) dossierValue.textContent = `$${ship.value.toLocaleString()}`;
+      if (dossierPnl) {
+        const pnlStr = ship.pnl >= 0 ? `+$${ship.pnl}` : `-$${Math.abs(ship.pnl)}`;
+        dossierPnl.textContent = pnlStr;
+        dossierPnl.className = `ops-value ${ship.pnl >= 0 ? 'positive' : 'negative'}`;
+      }
+      if (dossierReturn) {
+        const retStr = ship.pnlPercent >= 0 ? `+${ship.pnlPercent.toFixed(1)}%` : `${ship.pnlPercent.toFixed(1)}%`;
+        dossierReturn.textContent = retStr;
+      }
+      if (dossierMission) dossierMission.textContent = ship.status === 'OPERATIONAL' ? 'STANDBY' : 'CAUTION';
+      if (dossierNote) {
+        dossierNote.textContent = ship.value > 0 ? `POSITION ACTIVE — ${ship.sector}` : 'NO POSITION — OBSERVATION MODE';
+      }
       
-      // Store current ticker for dossier button
+      // Store current ticker
       window.currentHangarTicker = ship.ticker;
-    }
-    
-    function populateSignalWidgets() {
-      const container = document.getElementById('hangar-signals');
-      if (!container) return;
-      
-      container.innerHTML = '';
-      
-      // Create signal widgets for top ships
-      const topShips = hangarShipList.slice(0, 6);
-      
-      topShips.forEach(ship => {
-        const widget = document.createElement('div');
-        widget.className = 'signal-widget';
-        
-        // Determine trend based on P&L
-        let trend = 'nebulous';
-        let trendText = 'NEBULOUS';
-        if (ship.pnl > 0) {
-          trend = 'bullish';
-          trendText = '▲ BULLISH';
-        } else if (ship.pnl < 0) {
-          trend = 'bearish';
-          trendText = '▼ BEARISH';
-        }
-        
-        widget.innerHTML = `
-          <div class="signal-widget-ticker">${ship.ticker}</div>
-          <div class="signal-widget-trend ${trend}">${trendText}</div>
-        `;
-        
-        container.appendChild(widget);
-      });
     }
     
     // Make functions globally available

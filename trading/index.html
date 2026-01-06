@@ -629,75 +629,155 @@
       </aside>
       
       <div class="content">
-        <!-- HANGAR PANEL - Default/Home - Ship floating in space -->
+        <!-- HANGAR PANEL - Default/Home - Dense command interface -->
         <div class="tab-panel active" id="hangar-panel">
-          <div class="hangar-orbital">
-            <!-- Living Hangar: Ship in space, not a grid -->
-            <div class="hangar-space-viewport">
-              <!-- Hero ship display -->
-              <div class="hangar-hero-ship" id="hangar-hero-ship">
-                <div class="hero-ship-frame">
-                  <img id="hangar-hero-sprite" class="hero-ship-sprite" src="assets/ships/RKLB-flagship-ship.png" alt="Active vessel">
-                </div>
-                <div class="hero-ship-glow"></div>
-              </div>
-              
-              <!-- Ship identity overlay -->
-              <div class="hangar-ship-identity">
-                <div class="ship-callsign" id="hangar-callsign">RKLB</div>
-                <div class="ship-class" id="hangar-class">FLAGSHIP CLASS</div>
-                <div class="ship-name" id="hangar-ship-name">ELECTRON</div>
-              </div>
-              
-              <!-- Fleet carousel for ship selection (swipe/cycle) -->
-              <div class="hangar-fleet-dock">
-                <button class="dock-nav dock-prev" onclick="cycleHangarShip(-1)">◀</button>
-                <div class="dock-ships" id="hangar-dock-ships">
-                  <!-- Populated dynamically -->
-                </div>
-                <button class="dock-nav dock-next" onclick="cycleHangarShip(1)">▶</button>
-              </div>
-              
-              <!-- Ship stats panel (compact) -->
-              <div class="hangar-stats-panel">
-                <div class="hangar-stat">
-                  <span class="stat-label">SECTOR</span>
-                  <span class="stat-value" id="hangar-sector">SPACE LAUNCH</span>
-                </div>
-                <div class="hangar-stat">
-                  <span class="stat-label">POSITION</span>
-                  <span class="stat-value" id="hangar-value">$5,460</span>
-                </div>
-                <div class="hangar-stat">
-                  <span class="stat-label">P&L</span>
-                  <span class="stat-value positive" id="hangar-pnl">+$326</span>
-                </div>
-                <div class="hangar-stat">
-                  <span class="stat-label">STATUS</span>
-                  <span class="stat-value" id="hangar-status">OPERATIONAL</span>
+          <div class="hangar-command-layout">
+            
+            <!-- LEFT: Fleet Command List -->
+            <div class="hangar-fleet-sidebar">
+              <div class="fleet-sidebar-header">
+                <span class="fleet-header-icon">▲</span>
+                <div class="fleet-header-text">
+                  <div class="fleet-header-title">FLEET COMMAND</div>
+                  <div class="fleet-header-sub">ACTIVE VESSEL MANIFEST</div>
                 </div>
               </div>
-              
-              <!-- Action buttons -->
-              <div class="hangar-actions">
-                <button class="hangar-btn primary" onclick="openVesselDossier(window.currentHangarTicker || 'RKLB')">
-                  <span class="btn-icon">◈</span> VIEW DOSSIER
-                </button>
-                <button class="hangar-btn" onclick="switchTab('chart')">
-                  <span class="btn-icon">◇</span> TELEMETRY
-                </button>
+              <div class="fleet-ship-list" id="hangar-fleet-list">
+                <!-- Populated dynamically with ship cards -->
               </div>
             </div>
             
-            <!-- Signal panel (compact telemetry widgets) -->
-            <div class="hangar-signal-panel">
-              <div class="signal-header">
-                <span class="signal-icon">◈</span>
-                <span class="signal-title">FLEET SIGNALS</span>
+            <!-- CENTER: Main Viewport + Floating Fleet -->
+            <div class="hangar-main-area">
+              
+              <!-- Top: Portfolio Status -->
+              <div class="hangar-portfolio-strip">
+                <div class="portfolio-stat-box highlight">
+                  <div class="portfolio-label">TODAY P&L</div>
+                  <div class="portfolio-value positive" id="hangar-today-pnl">+$1,172</div>
+                </div>
+                <div class="portfolio-stat-box">
+                  <div class="portfolio-label">TOTAL P&L</div>
+                  <div class="portfolio-value positive" id="hangar-total-pnl">+$34,015</div>
+                </div>
+                <div class="portfolio-stat-box">
+                  <div class="portfolio-label">POSITIONS</div>
+                  <div class="portfolio-value" id="hangar-positions">10</div>
+                </div>
+                <div class="portfolio-stat-box">
+                  <div class="portfolio-label">WIN RATE</div>
+                  <div class="portfolio-value positive" id="hangar-winrate">90%</div>
+                </div>
               </div>
-              <div class="signal-widgets" id="hangar-signals">
-                <!-- Populated with compact trend/momentum indicators -->
+              
+              <!-- Center: Ship Viewport + Floating Fleet -->
+              <div class="hangar-viewport-area">
+                <!-- Framed ship viewport -->
+                <div class="hangar-ship-viewport">
+                  <div class="viewport-frame">
+                    <div class="viewport-corner tl"></div>
+                    <div class="viewport-corner tr"></div>
+                    <div class="viewport-corner bl"></div>
+                    <div class="viewport-corner br"></div>
+                    <div class="viewport-grid"></div>
+                    <div class="viewport-scanline"></div>
+                    <img id="hangar-hero-sprite" class="viewport-ship-sprite" src="assets/ships/RKLB-flagship-ship.png" alt="Active vessel">
+                  </div>
+                  <div class="viewport-label">
+                    <span class="viewport-ticker" id="hangar-callsign">RKLB</span>
+                    <span class="viewport-dot">•</span>
+                    <span class="viewport-class" id="hangar-class">FLAGSHIP</span>
+                  </div>
+                  <div class="viewport-lore" id="hangar-lore">Spearhead command ship. Victory follows in its wake.</div>
+                </div>
+                
+                <!-- Floating fleet formation -->
+                <div class="hangar-floating-fleet" id="hangar-floating-fleet">
+                  <!-- Populated with floating ship sprites -->
+                </div>
               </div>
+              
+              <!-- Bottom: Ship Dossier Panel -->
+              <div class="hangar-dossier-panel">
+                <div class="dossier-ship-preview">
+                  <img id="dossier-ship-img" class="dossier-ship-sprite" src="assets/ships/RKLB-flagship-ship.png" alt="">
+                  <div class="dossier-class-badge" id="dossier-class-badge">FLAGSHIP</div>
+                  <div class="dossier-hud-msg">◈ COMMAND AUTHORITY ACTIVE</div>
+                </div>
+                
+                <div class="dossier-info-cols">
+                  <div class="dossier-col">
+                    <div class="dossier-ticker" id="dossier-ticker">RKLB</div>
+                    <div class="dossier-name" id="dossier-name">ELECTRON</div>
+                    <div class="dossier-designation" id="dossier-designation">FSC-001</div>
+                    
+                    <div class="dossier-section-title">▸ SYSTEMS STATUS</div>
+                    <div class="dossier-stat-row">
+                      <span class="dossier-stat-label">HULL INTEGRITY</span>
+                      <div class="dossier-stat-bar"><div class="dossier-bar-fill hull" id="dossier-hull" style="width:87%"></div></div>
+                    </div>
+                    <div class="dossier-stat-row">
+                      <span class="dossier-stat-label">CARGO HOLD</span>
+                      <div class="dossier-stat-bar"><div class="dossier-bar-fill cargo" id="dossier-cargo" style="width:65%"></div></div>
+                    </div>
+                    <div class="dossier-stat-row">
+                      <span class="dossier-stat-label">FUEL RESERVES</span>
+                      <div class="dossier-stat-bar"><div class="dossier-bar-fill fuel" id="dossier-fuel" style="width:92%"></div></div>
+                    </div>
+                  </div>
+                  
+                  <div class="dossier-col">
+                    <div class="dossier-section-title">▸ PILOT PROGRESSION</div>
+                    <div class="dossier-level">
+                      <span class="level-badge">LVL 1</span>
+                      <span class="level-xp">0 / 100 XP</span>
+                    </div>
+                    <div class="dossier-skills">
+                      <span class="skill-chip">THR ━</span>
+                      <span class="skill-chip">HULL ━</span>
+                      <span class="skill-chip">SEN ━</span>
+                      <span class="skill-chip">WPN ━</span>
+                      <span class="skill-chip">COM ━</span>
+                    </div>
+                    
+                    <div class="dossier-section-title">▸ OPERATIONS DATA</div>
+                    <div class="dossier-ops-grid">
+                      <div class="dossier-ops-item">
+                        <span class="ops-label">POSITION VALUE</span>
+                        <span class="ops-value" id="dossier-value">$5,460</span>
+                      </div>
+                      <div class="dossier-ops-item">
+                        <span class="ops-label">P&L STATUS</span>
+                        <span class="ops-value positive" id="dossier-pnl">+$326</span>
+                      </div>
+                      <div class="dossier-ops-item">
+                        <span class="ops-label">RETURN</span>
+                        <span class="ops-value" id="dossier-return">+6.4%</span>
+                      </div>
+                      <div class="dossier-ops-item">
+                        <span class="ops-label">MISSION STATUS</span>
+                        <span class="ops-value" id="dossier-mission">STANDBY</span>
+                      </div>
+                    </div>
+                    
+                    <div class="dossier-position-note">
+                      <span class="note-icon">◎</span>
+                      <span class="note-text" id="dossier-note">NO POSITION — OBSERVATION MODE</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Bottom Actions -->
+              <div class="hangar-action-bar">
+                <button class="hangar-action-btn secondary" onclick="launchMissionCommand()">
+                  <span class="action-icon">☆</span> ASSIGN MISSION
+                </button>
+                <button class="hangar-action-btn primary" onclick="switchTab('chart')">
+                  <span class="action-icon">◆</span> VIEW TELEMETRY
+                </button>
+              </div>
+              
             </div>
           </div>
         </div>

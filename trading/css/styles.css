@@ -14,353 +14,738 @@
     }
     
     /* =========================================================================
-       HANGAR PANEL - Living Ship Display
-       Ship floating in space, not a static grid
+       HANGAR PANEL - Dense Command Interface
+       Fleet Command sidebar + Framed viewport + Bottom dossier
        ========================================================================= */
-    .hangar-orbital {
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-      min-height: calc(100vh - 120px);
+    .hangar-command-layout {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      height: calc(100vh - 60px);
+      gap: 0;
       background: transparent;
-      position: relative;
     }
     
-    .hangar-space-viewport {
-      flex: 1;
+    /* === LEFT SIDEBAR: Fleet Command List === */
+    .hangar-fleet-sidebar {
+      background: rgba(10, 12, 15, 0.95);
+      border-right: 2px solid var(--phosphor-dim);
       display: flex;
       flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-      padding: 2rem;
+      overflow: hidden;
     }
     
-    .hangar-hero-ship {
-      position: relative;
-      width: 280px;
-      height: 200px;
+    .fleet-sidebar-header {
       display: flex;
       align-items: center;
-      justify-content: center;
-      animation: hangar-ship-drift 8s ease-in-out infinite;
+      gap: 0.75rem;
+      padding: 1rem;
+      background: linear-gradient(180deg, rgba(51, 255, 153, 0.1) 0%, transparent 100%);
+      border-bottom: 1px solid var(--border);
     }
     
-    @keyframes hangar-ship-drift {
-      0%, 100% { transform: translateY(0) rotate(0deg); }
-      25% { transform: translateY(-8px) rotate(0.5deg); }
-      50% { transform: translateY(4px) rotate(-0.3deg); }
-      75% { transform: translateY(-4px) rotate(0.2deg); }
-    }
-    
-    .hero-ship-frame {
-      position: relative;
-      z-index: 2;
-    }
-    
-    .hero-ship-sprite {
-      width: 200px;
-      height: auto;
-      image-rendering: pixelated;
-      filter: drop-shadow(0 0 30px var(--phosphor-glow)) drop-shadow(0 0 60px rgba(51, 255, 153, 0.1));
-      transition: transform 0.5s ease;
-    }
-    
-    .hero-ship-glow {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 300px;
-      height: 300px;
-      transform: translate(-50%, -50%);
-      background: radial-gradient(circle, var(--phosphor-ghost) 0%, transparent 70%);
-      pointer-events: none;
-      z-index: 1;
-      animation: hero-glow-pulse 4s ease-in-out infinite;
-    }
-    
-    @keyframes hero-glow-pulse {
-      0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
-      50% { opacity: 0.8; transform: translate(-50%, -50%) scale(1.1); }
-    }
-    
-    .hangar-ship-identity {
-      text-align: center;
-      margin-top: 1.5rem;
-    }
-    
-    .ship-callsign {
-      font-family: var(--font-display);
-      font-size: 2rem;
-      font-weight: 700;
+    .fleet-header-icon {
       color: var(--phosphor);
-      text-shadow: 0 0 20px var(--phosphor-glow);
+      font-size: 1.25rem;
+    }
+    
+    .fleet-header-title {
+      font-family: var(--font-display);
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--phosphor);
+      letter-spacing: 0.05em;
+    }
+    
+    .fleet-header-sub {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      color: var(--text-muted);
       letter-spacing: 0.1em;
     }
     
-    .ship-class {
-      font-family: var(--font-mono);
-      font-size: 0.7rem;
-      color: var(--amber);
-      letter-spacing: 0.2em;
-      margin-top: 0.25rem;
+    .fleet-ship-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0.5rem;
     }
     
-    .ship-name {
-      font-family: var(--font-mono);
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      margin-top: 0.5rem;
-    }
-    
-    /* Fleet dock for ship selection */
-    .hangar-fleet-dock {
-      display: flex;
+    /* Ship cards in sidebar */
+    .fleet-ship-card {
+      display: grid;
+      grid-template-columns: 60px 1fr auto;
+      gap: 0.75rem;
       align-items: center;
-      gap: 1rem;
-      margin-top: 2rem;
-      padding: 1rem;
-      background: rgba(10, 12, 15, 0.8);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-    }
-    
-    .dock-nav {
-      width: 36px;
-      height: 36px;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      color: var(--phosphor);
-      font-size: 1rem;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-    
-    .dock-nav:hover {
-      background: var(--bg-input);
-      border-color: var(--phosphor-dim);
-    }
-    
-    .dock-ships {
-      display: flex;
-      gap: 0.5rem;
-      overflow-x: auto;
-      padding: 0.25rem;
-    }
-    
-    .dock-ship {
-      width: 48px;
-      height: 48px;
+      padding: 0.75rem;
+      margin-bottom: 0.5rem;
       background: var(--bg-panel);
-      border: 2px solid var(--border);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--phosphor-dim);
       border-radius: 4px;
       cursor: pointer;
       transition: all 0.2s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 4px;
     }
     
-    .dock-ship:hover {
-      border-color: var(--phosphor-dim);
-      transform: scale(1.05);
+    .fleet-ship-card:hover {
+      background: var(--bg-card);
+      border-left-color: var(--phosphor);
     }
     
-    .dock-ship.active {
+    .fleet-ship-card.active {
+      background: rgba(51, 255, 153, 0.08);
       border-color: var(--phosphor);
-      box-shadow: 0 0 15px var(--phosphor-glow);
+      border-left-color: var(--phosphor);
     }
     
-    .dock-ship img {
-      width: 100%;
-      height: 100%;
+    .fleet-card-sprite {
+      width: 56px;
+      height: 56px;
       object-fit: contain;
       image-rendering: pixelated;
     }
     
-    /* Hangar stats panel */
-    .hangar-stats-panel {
-      display: flex;
-      gap: 2rem;
-      margin-top: 1.5rem;
-      padding: 1rem 1.5rem;
-      background: rgba(10, 12, 15, 0.7);
-      border: 1px solid var(--border);
-      border-radius: 6px;
+    .fleet-card-class {
+      font-family: var(--font-mono);
+      font-size: 0.55rem;
+      color: var(--amber);
+      background: rgba(255, 179, 71, 0.15);
+      padding: 0.15rem 0.4rem;
+      border-radius: 2px;
+      margin-top: 0.25rem;
+      display: inline-block;
     }
     
-    .hangar-stat {
-      text-align: center;
+    .fleet-card-info {
+      min-width: 0;
     }
     
-    .hangar-stat .stat-label {
+    .fleet-card-ticker {
+      font-family: var(--font-display);
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-bright);
+    }
+    
+    .fleet-card-name {
       font-family: var(--font-mono);
       font-size: 0.65rem;
+      color: var(--text-muted);
+      margin-top: 0.1rem;
+    }
+    
+    .fleet-card-bars {
+      margin-top: 0.5rem;
+    }
+    
+    .fleet-bar-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.25rem;
+    }
+    
+    .fleet-bar-label {
+      font-family: var(--font-mono);
+      font-size: 0.55rem;
+      color: var(--text-dim);
+      width: 35px;
+    }
+    
+    .fleet-bar-track {
+      flex: 1;
+      height: 4px;
+      background: var(--bg-void);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    
+    .fleet-bar-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.3s ease;
+    }
+    
+    .fleet-bar-fill.hull { background: var(--phosphor); }
+    .fleet-bar-fill.cargo { background: var(--amber); }
+    .fleet-bar-fill.fuel { background: #6b9fff; }
+    
+    .fleet-bar-val {
+      font-family: var(--font-mono);
+      font-size: 0.55rem;
+      color: var(--text-muted);
+      width: 45px;
+      text-align: right;
+    }
+    
+    .fleet-card-status {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.25rem;
+    }
+    
+    .fleet-status-badge {
+      font-family: var(--font-mono);
+      font-size: 0.55rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 3px;
+      background: rgba(51, 255, 153, 0.15);
+      color: var(--phosphor);
+      border: 1px solid var(--phosphor-dim);
+    }
+    
+    .fleet-card-value {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--text);
+      margin-top: 0.5rem;
+    }
+    
+    .fleet-card-pnl {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+    }
+    
+    .fleet-card-pnl.positive { color: var(--signal-up); }
+    .fleet-card-pnl.negative { color: var(--signal-down); }
+    
+    /* === MAIN AREA === */
+    .hangar-main-area {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: transparent;
+    }
+    
+    /* Portfolio strip */
+    .hangar-portfolio-strip {
+      display: flex;
+      gap: 1rem;
+      padding: 0.75rem 1rem;
+      background: rgba(10, 12, 15, 0.9);
+      border-bottom: 1px solid var(--border);
+      justify-content: flex-end;
+    }
+    
+    .portfolio-stat-box {
+      padding: 0.5rem 1rem;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      min-width: 100px;
+    }
+    
+    .portfolio-stat-box.highlight {
+      border-color: var(--phosphor-dim);
+      background: rgba(51, 255, 153, 0.05);
+    }
+    
+    .portfolio-label {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
       color: var(--text-dim);
       letter-spacing: 0.1em;
     }
     
-    .hangar-stat .stat-value {
-      font-family: var(--font-mono);
-      font-size: 0.9rem;
-      color: var(--text);
+    .portfolio-value {
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text-bright);
       margin-top: 0.25rem;
     }
     
-    .hangar-stat .stat-value.positive {
-      color: var(--signal-up);
+    .portfolio-value.positive { color: var(--signal-up); }
+    .portfolio-value.negative { color: var(--signal-down); }
+    
+    /* Viewport area */
+    .hangar-viewport-area {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 2rem;
+      padding: 1rem;
+      position: relative;
+      min-height: 280px;
     }
     
-    .hangar-stat .stat-value.negative {
-      color: var(--signal-down);
+    /* Framed ship viewport */
+    .hangar-ship-viewport {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
     
-    /* Hangar action buttons */
-    .hangar-actions {
+    .viewport-frame {
+      position: relative;
+      width: 240px;
+      height: 200px;
+      background: rgba(10, 15, 20, 0.8);
+      border: 2px solid var(--phosphor-dim);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    
+    .viewport-corner {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      border-color: var(--phosphor);
+      border-style: solid;
+      border-width: 0;
+    }
+    
+    .viewport-corner.tl { top: 8px; left: 8px; border-top-width: 2px; border-left-width: 2px; }
+    .viewport-corner.tr { top: 8px; right: 8px; border-top-width: 2px; border-right-width: 2px; }
+    .viewport-corner.bl { bottom: 8px; left: 8px; border-bottom-width: 2px; border-left-width: 2px; }
+    .viewport-corner.br { bottom: 8px; right: 8px; border-bottom-width: 2px; border-right-width: 2px; }
+    
+    .viewport-grid {
+      position: absolute;
+      inset: 0;
+      background-image: 
+        linear-gradient(rgba(51, 255, 153, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(51, 255, 153, 0.03) 1px, transparent 1px);
+      background-size: 20px 20px;
+      pointer-events: none;
+    }
+    
+    .viewport-scanline {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--phosphor-glow), transparent);
+      animation: viewport-scan 3s linear infinite;
+      pointer-events: none;
+    }
+    
+    @keyframes viewport-scan {
+      0% { top: 0; opacity: 0; }
+      10% { opacity: 0.5; }
+      90% { opacity: 0.5; }
+      100% { top: 100%; opacity: 0; }
+    }
+    
+    .viewport-ship-sprite {
+      width: 140px;
+      height: auto;
+      image-rendering: pixelated;
+      filter: drop-shadow(0 0 20px var(--phosphor-glow));
+      animation: ship-hover 4s ease-in-out infinite;
+      z-index: 1;
+    }
+    
+    @keyframes ship-hover {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+    
+    .viewport-label {
+      margin-top: 1rem;
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      color: var(--text-bright);
+    }
+    
+    .viewport-ticker { color: var(--phosphor); font-weight: 600; }
+    .viewport-dot { color: var(--text-dim); margin: 0 0.5rem; }
+    .viewport-class { color: var(--amber); }
+    
+    .viewport-lore {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+      text-align: center;
+      max-width: 280px;
+      line-height: 1.4;
+    }
+    
+    /* Floating fleet formation */
+    .hangar-floating-fleet {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      align-items: center;
+    }
+    
+    .floating-ship-row {
       display: flex;
       gap: 1rem;
-      margin-top: 1.5rem;
+      justify-content: center;
     }
     
-    .hangar-btn {
+    .floating-ship {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+    
+    .floating-ship:hover {
+      transform: scale(1.1);
+    }
+    
+    .floating-ship-sprite {
+      width: 64px;
+      height: 64px;
+      object-fit: contain;
+      image-rendering: pixelated;
+      filter: drop-shadow(0 0 10px rgba(51, 255, 153, 0.3));
+      animation: float-drift 5s ease-in-out infinite;
+    }
+    
+    .floating-ship:nth-child(odd) .floating-ship-sprite {
+      animation-delay: -2s;
+    }
+    
+    @keyframes float-drift {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      25% { transform: translateY(-4px) rotate(1deg); }
+      75% { transform: translateY(4px) rotate(-1deg); }
+    }
+    
+    .floating-ship-label {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+    }
+    
+    /* === BOTTOM DOSSIER PANEL === */
+    .hangar-dossier-panel {
+      display: grid;
+      grid-template-columns: 140px 1fr;
+      gap: 1rem;
+      padding: 1rem;
+      background: rgba(10, 12, 15, 0.95);
+      border-top: 2px solid var(--phosphor-dim);
+    }
+    
+    .dossier-ship-preview {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0.5rem;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+    }
+    
+    .dossier-ship-sprite {
+      width: 80px;
+      height: 80px;
+      object-fit: contain;
+      image-rendering: pixelated;
+    }
+    
+    .dossier-class-badge {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      color: var(--phosphor);
+      background: rgba(51, 255, 153, 0.1);
+      border: 1px solid var(--phosphor-dim);
+      padding: 0.2rem 0.5rem;
+      border-radius: 3px;
+      margin-top: 0.5rem;
+    }
+    
+    .dossier-hud-msg {
+      font-family: var(--font-mono);
+      font-size: 0.55rem;
+      color: var(--amber);
+      margin-top: 0.5rem;
+      text-align: center;
+    }
+    
+    .dossier-info-cols {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+    
+    .dossier-col {
+      min-width: 0;
+    }
+    
+    .dossier-ticker {
+      font-family: var(--font-display);
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--phosphor);
+    }
+    
+    .dossier-name {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--text);
+    }
+    
+    .dossier-designation {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: var(--text-dim);
+    }
+    
+    .dossier-section-title {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      margin: 0.75rem 0 0.5rem;
+      letter-spacing: 0.05em;
+    }
+    
+    .dossier-stat-row {
       display: flex;
       align-items: center;
       gap: 0.5rem;
-      padding: 0.75rem 1.5rem;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      color: var(--text);
+      margin-bottom: 0.35rem;
+    }
+    
+    .dossier-stat-label {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      color: var(--text-dim);
+      width: 90px;
+    }
+    
+    .dossier-stat-bar {
+      flex: 1;
+      height: 6px;
+      background: var(--bg-void);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    
+    .dossier-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+    }
+    
+    .dossier-bar-fill.hull { background: linear-gradient(90deg, var(--phosphor-dim), var(--phosphor)); }
+    .dossier-bar-fill.cargo { background: linear-gradient(90deg, var(--amber-dim), var(--amber)); }
+    .dossier-bar-fill.fuel { background: linear-gradient(90deg, #4a7fff, #6b9fff); }
+    
+    .dossier-level {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    
+    .level-badge {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--bg-void);
+      background: var(--text-muted);
+      padding: 0.15rem 0.5rem;
+      border-radius: 3px;
+    }
+    
+    .level-xp {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: var(--text-dim);
+    }
+    
+    .dossier-skills {
+      display: flex;
+      gap: 0.35rem;
+      margin-top: 0.5rem;
+      flex-wrap: wrap;
+    }
+    
+    .skill-chip {
+      font-family: var(--font-mono);
+      font-size: 0.55rem;
+      color: var(--phosphor);
+      background: rgba(51, 255, 153, 0.1);
+      padding: 0.15rem 0.35rem;
+      border-radius: 2px;
+    }
+    
+    .dossier-ops-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+    }
+    
+    .dossier-ops-item {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .ops-label {
+      font-family: var(--font-mono);
+      font-size: 0.55rem;
+      color: var(--text-dim);
+    }
+    
+    .ops-value {
       font-family: var(--font-mono);
       font-size: 0.8rem;
+      color: var(--text);
+    }
+    
+    .ops-value.positive { color: var(--signal-up); }
+    .ops-value.negative { color: var(--signal-down); }
+    
+    .dossier-position-note {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+      padding: 0.5rem;
+      background: rgba(255, 179, 71, 0.1);
+      border: 1px solid var(--amber-dim);
+      border-radius: 4px;
+    }
+    
+    .note-icon {
+      color: var(--amber);
+    }
+    
+    .note-text {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      color: var(--amber);
+    }
+    
+    /* === ACTION BAR === */
+    .hangar-action-bar {
+      display: flex;
+      gap: 1rem;
+      padding: 0.75rem 1rem;
+      background: rgba(10, 12, 15, 0.95);
+      border-top: 1px solid var(--border);
+    }
+    
+    .hangar-action-btn {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      border-radius: 4px;
       cursor: pointer;
       transition: all 0.2s ease;
     }
     
-    .hangar-btn:hover {
-      background: var(--bg-input);
+    .hangar-action-btn.secondary {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    
+    .hangar-action-btn.secondary:hover {
+      background: var(--bg-card);
       border-color: var(--phosphor-dim);
       color: var(--phosphor);
     }
     
-    .hangar-btn.primary {
-      background: linear-gradient(180deg, var(--phosphor-ghost) 0%, transparent 100%);
-      border-color: var(--phosphor-dim);
-      color: var(--phosphor);
+    .hangar-action-btn.primary {
+      background: linear-gradient(180deg, var(--phosphor-dim) 0%, var(--phosphor-ghost) 100%);
+      border: 1px solid var(--phosphor);
+      color: var(--text-bright);
     }
     
-    .hangar-btn.primary:hover {
-      background: linear-gradient(180deg, var(--phosphor-glow) 0%, transparent 100%);
+    .hangar-action-btn.primary:hover {
+      background: linear-gradient(180deg, var(--phosphor) 0%, var(--phosphor-dim) 100%);
       box-shadow: 0 0 20px var(--phosphor-glow);
     }
     
-    .hangar-btn .btn-icon {
+    .action-icon {
       font-size: 1rem;
     }
     
-    /* Signal panel (compact telemetry) */
-    .hangar-signal-panel {
-      position: absolute;
-      bottom: 1rem;
-      left: 1rem;
-      right: 1rem;
-      background: rgba(10, 12, 15, 0.9);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 0.75rem 1rem;
-    }
-    
-    .signal-header {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      margin-bottom: 0.75rem;
-      padding-bottom: 0.5rem;
-      border-bottom: 1px solid var(--border);
-    }
-    
-    .signal-icon {
-      color: var(--amber);
-    }
-    
-    .signal-title {
-      font-family: var(--font-mono);
-      font-size: 0.7rem;
-      color: var(--text-muted);
-      letter-spacing: 0.1em;
-    }
-    
-    .signal-widgets {
-      display: flex;
-      gap: 1rem;
-      overflow-x: auto;
-    }
-    
-    .signal-widget {
-      flex: 0 0 auto;
-      min-width: 100px;
-      padding: 0.5rem;
-      background: var(--bg-panel);
-      border-radius: 4px;
-    }
-    
-    .signal-widget-ticker {
-      font-family: var(--font-display);
-      font-size: 0.75rem;
-      color: var(--phosphor);
-    }
-    
-    .signal-widget-trend {
-      font-family: var(--font-mono);
-      font-size: 0.65rem;
-      color: var(--text-muted);
-      margin-top: 0.25rem;
-    }
-    
-    .signal-widget-trend.bullish { color: var(--signal-up); }
-    .signal-widget-trend.bearish { color: var(--signal-down); }
-    .signal-widget-trend.nebulous { color: var(--amber); }
-    
-    /* Mobile responsive hangar */
-    @media (max-width: 768px) {
-      .hangar-hero-ship {
-        width: 200px;
-        height: 150px;
+    /* === MOBILE RESPONSIVE === */
+    @media (max-width: 1024px) {
+      .hangar-command-layout {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr;
       }
       
-      .hero-ship-sprite {
-        width: 140px;
+      .hangar-fleet-sidebar {
+        display: none; /* Hide sidebar on tablet, use fleet dock instead */
       }
       
-      .ship-callsign {
-        font-size: 1.5rem;
+      .hangar-dossier-panel {
+        grid-template-columns: 1fr;
       }
       
-      .hangar-stats-panel {
-        flex-wrap: wrap;
+      .dossier-ship-preview {
+        flex-direction: row;
         gap: 1rem;
+        padding: 0.75rem;
+      }
+      
+      .dossier-info-cols {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .hangar-command-layout {
+        height: auto;
+        min-height: calc(100vh - 120px);
+      }
+      
+      .hangar-portfolio-strip {
+        flex-wrap: wrap;
         justify-content: center;
       }
       
-      .hangar-actions {
+      .portfolio-stat-box {
+        min-width: 80px;
+        padding: 0.4rem 0.75rem;
+      }
+      
+      .portfolio-value {
+        font-size: 0.95rem;
+      }
+      
+      .hangar-viewport-area {
         flex-direction: column;
-        width: 100%;
-        padding: 0 1rem;
+        gap: 1rem;
       }
       
-      .hangar-btn {
-        width: 100%;
+      .viewport-frame {
+        width: 200px;
+        height: 160px;
+      }
+      
+      .viewport-ship-sprite {
+        width: 100px;
+      }
+      
+      .hangar-floating-fleet {
+        flex-direction: row;
+        flex-wrap: wrap;
         justify-content: center;
       }
       
-      .hangar-signal-panel {
-        position: relative;
-        bottom: auto;
-        left: auto;
-        right: auto;
-        margin: 1rem;
+      .floating-ship-sprite {
+        width: 48px;
+        height: 48px;
+      }
+      
+      .hangar-dossier-panel {
+        padding: 0.75rem;
+      }
+      
+      .dossier-ops-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+      
+      .hangar-action-bar {
+        flex-direction: column;
       }
     }
     
