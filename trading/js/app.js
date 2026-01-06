@@ -6302,7 +6302,7 @@
 
       // =========================================================================
       // MINI-GAMES — Loaded from js/games/mini-games.js
-      // ParallaxRun exposed via window object
+      // SpaceRun exposed via window object
       // =========================================================================
 
       // =========================================================================
@@ -6396,7 +6396,7 @@
       initKonamiCode();
       initRippleEffects();
       
-      // ParallaxRun loaded from js/games/mini-games.js
+      // SpaceRun loaded from js/games/mini-games.js
       
       if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initArcade);
@@ -6406,8 +6406,31 @@
         document.addEventListener('DOMContentLoaded', initTrajectoryCanvas);
         document.addEventListener('DOMContentLoaded', initLoreEngine);
         document.addEventListener('DOMContentLoaded', initEnhancedCatalysts);
-        document.addEventListener('DOMContentLoaded', () => window.ParallaxRun && window.ParallaxRun.init());
+        document.addEventListener('DOMContentLoaded', () => window.SpaceRun && window.SpaceRun.init());
         document.addEventListener('DOMContentLoaded', () => window.AdminConsole && window.AdminConsole.init());
+        
+        // Livery system integration - redraw sprites when colors change
+        document.addEventListener('paintbay:apply', (e) => {
+          if (e.detail?.ticker) {
+            console.log(`[APP] Livery applied to ${e.detail.ticker}, triggering sprite refresh`);
+            // Refresh hangar display if showing this ship
+            if (typeof updateHangarDisplay === 'function') {
+              updateHangarDisplay();
+            }
+          }
+        });
+        
+        // Listen for sprite redraw requests
+        document.addEventListener('sprite:redraw', (e) => {
+          if (e.detail?.ticker) {
+            console.log(`[APP] Sprite redraw requested for ${e.detail.ticker}`);
+            // Force hangar refresh
+            if (typeof updateHangarDisplay === 'function') {
+              updateHangarDisplay();
+            }
+          }
+        });
+        
         document.addEventListener('DOMContentLoaded', initConsoleShip);
         document.addEventListener('DOMContentLoaded', initMissionPanel); // Step 4
         document.addEventListener('DOMContentLoaded', initHangarFocusEvents); // Step 5
@@ -6420,7 +6443,7 @@
         initTrajectoryCanvas();
         initLoreEngine();
         initEnhancedCatalysts();
-        window.ParallaxRun && window.ParallaxRun.init();
+        window.SpaceRun && window.SpaceRun.init();
         window.AdminConsole && window.AdminConsole.init();
         initConsoleShip();
         initMissionPanel(); // Step 4
@@ -7262,10 +7285,28 @@
           
           console.log(`[HANGAR] Switched to ${ship.ticker} with frame animation`);
         }
+        
+        // NEW: Start idle animation on the hero ship container
+        if (window.ShipIdleAnimation) {
+          ShipIdleAnimation.attachToHeroShip(animContainer, {
+            ticker: ship.ticker,
+            class: ship.class
+          });
+        }
       } else if (animContainer) {
         // Fallback: use static image if ShipAnimator not available
         const staticPath = ship.sprite;
         animContainer.innerHTML = `<img class="ship-sprite" src="${staticPath}" alt="${ship.ticker}" style="width:140px;height:auto;image-rendering:pixelated;">`;
+        
+        // Still apply idle animation to static sprite
+        if (window.ShipIdleAnimation) {
+          setTimeout(() => {
+            ShipIdleAnimation.attachToHeroShip(animContainer, {
+              ticker: ship.ticker,
+              class: ship.class
+            });
+          }, 50);
+        }
       }
       
       // Update viewport labels

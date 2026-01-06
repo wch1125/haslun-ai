@@ -1,10 +1,11 @@
 /**
  * ═══════════════════════════════════════════════════════════════════════════
- * PARALLAX - Sprite Composer
+ * SPACE CAPITAL - Sprite Composer
  * ═══════════════════════════════════════════════════════════════════════════
  * 
  * Composes ship sprites with modular upgrade parts.
  * Handles layering, anchoring, mirroring, and effects.
+ * Now includes hull color overlay support for livery system.
  * 
  * Uses offscreen canvas for pixel-art safe rendering.
  * 
@@ -428,6 +429,101 @@ export function clearCacheEntry(key) {
 }
 
 /**
+ * Apply hull color overlay to a canvas
+ * This is the key function that was missing - allows liveries to tint sprites
+ * 
+ * @param {HTMLCanvasElement} canvas - The sprite canvas
+ * @param {string} hullColor - Hex color for hull tint
+ * @param {number} intensity - Blend intensity (0-1, default 0.4)
+ * @returns {HTMLCanvasElement} - The modified canvas
+ */
+export function applyHullColor(canvas, hullColor, intensity = 0.4) {
+  if (!canvas || !hullColor) return canvas;
+  
+  const ctx = canvas.getContext('2d');
+  const width = canvas.width;
+  const height = canvas.height;
+  
+  ctx.save();
+  
+  // Use source-atop to only color non-transparent pixels
+  ctx.globalCompositeOperation = 'source-atop';
+  ctx.globalAlpha = intensity;
+  ctx.fillStyle = hullColor;
+  ctx.fillRect(0, 0, width, height);
+  
+  ctx.restore();
+  
+  return canvas;
+}
+
+/**
+ * Apply full livery to a sprite
+ * Handles multiple color zones based on ship class
+ * 
+ * @param {HTMLCanvasElement} canvas - The sprite canvas  
+ * @param {Object} livery - Livery object with palette
+ * @param {string} shipClass - Ship class for zone mapping
+ * @returns {HTMLCanvasElement} - The modified canvas
+ */
+export function applyLivery(canvas, livery, shipClass = 'default') {
+  if (!canvas || !livery?.palette?.generated) return canvas;
+  
+  // Get the primary hull color from livery
+  const hullRole = window.LiverySystem?.CLASS_APPLICATION_DEFAULTS?.[shipClass]?.hull || 'primary';
+  const hullColorEntry = livery.palette.generated.find(c => c.role === hullRole);
+  
+  if (hullColorEntry?.hex) {
+    applyHullColor(canvas, hullColorEntry.hex, 0.45);
+  }
+  
+  return canvas;
+}
+
+/**
+ * Compose sprite with livery support
+ * Wrapper around composeSprite that automatically applies assigned livery
+ * 
+ * @param {Object} options - Same as composeSprite, plus ticker for livery lookup
+ * @returns {Promise<{canvas, key, width, height}>}
+ */
+export async function composeSpriteWithLivery(options) {
+  const result = await composeSprite(options);
+  
+  // Check if ticker has an assigned livery
+  if (options.ticker && window.LiverySystem) {
+    const livery = window.LiverySystem.getLiveryForTicker(options.ticker);
+    if (livery) {
+      applyLivery(result.canvas, livery, options.shipClass);
+      // Invalidate dataUrl since canvas changed
+      result.dataUrl = null;
+    }
+  }
+  
+  return result;
+}
+
+/**
+ * Trigger a redraw of the active ship's sprite with current livery
+ * This is what should be called when hull colors change
+ */
+export function redrawActiveShip(ticker) {
+  // Dispatch event for UI systems to handle
+  document.dispatchEvent(new CustomEvent('sprite:redraw', {
+    detail: { ticker }
+  }));
+  
+  // Clear cache for this ticker's sprites
+  composedCache.forEach((value, key) => {
+    if (key.includes(ticker)) {
+      composedCache.delete(key);
+    }
+  });
+  
+  console.log(`[SpriteComposer] Triggered redraw for ${ticker}`);
+}
+
+/**
  * Preload images for a set of tickers
  */
 export async function preloadSprites(tickers) {
@@ -461,10 +557,14 @@ export function getCacheStats() {
 
 export default {
   composeSprite,
+  composeSpriteWithLivery,
   getDataUrl,
   clearCache,
   clearCacheEntry,
   preloadSprites,
   getCacheStats,
-  loadImage
+  loadImage,
+  applyHullColor,
+  applyLivery,
+  redrawActiveShip
 };

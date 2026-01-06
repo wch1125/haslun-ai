@@ -475,6 +475,45 @@
       75% { transform: translate3d(3px, 5px, 0) rotate(-0.6deg) scale(0.99); }
     }
     
+    /* === SHIP IDLE ANIMATION (from ShipIdleAnimation module) === */
+    .ship-idle-animated {
+      transition: transform 0.05s linear;
+      will-change: transform;
+    }
+    
+    .ship-idle-animated img {
+      transition: filter 0.1s ease-out;
+    }
+    
+    /* Engine glow pulse for active ships */
+    .ship-engine-glow {
+      animation: enginePulse 1.8s ease-in-out infinite;
+    }
+    
+    @keyframes enginePulse {
+      0%, 100% { filter: brightness(1) drop-shadow(0 0 15px var(--phosphor-glow)); }
+      50% { filter: brightness(1.35) drop-shadow(0 0 25px var(--phosphor)); }
+    }
+    
+    /* Engine thrust flicker for high-speed modes */
+    .ship-thrust-active {
+      animation: thrustFlicker 0.15s ease-in-out infinite alternate;
+    }
+    
+    @keyframes thrustFlicker {
+      0% { filter: brightness(1.1) saturate(1.2); }
+      100% { filter: brightness(1.25) saturate(1.4); }
+    }
+    
+    /* Hero ship container breathing */
+    #hero-ship-container {
+      transition: transform 0.1s ease-out;
+    }
+    
+    #hero-ship-container.ship-idle-animated {
+      animation: none; /* Disable CSS animation, use JS instead */
+    }
+    
     .floating-ship-label {
       font-family: var(--font-mono);
       font-size: 0.6rem;

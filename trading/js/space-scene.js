@@ -142,7 +142,13 @@ const SpaceScene = (() => {
           size: layer.starSize * (Math.random() * 0.8 + 0.6),
           color: starColors[Math.floor(Math.random() * starColors.length)],
           twinkle: Math.random() * Math.PI * 2,
-          twinkleSpeed: Math.random() * 0.02 + 0.005
+          twinkleSpeed: Math.random() * 0.02 + 0.005,
+          // NEW: Curved path parameters for koi-pond motion
+          phase: Math.random() * Math.PI * 2,
+          phaseSpeed: (Math.random() * 0.3 + 0.1) * 0.01,
+          curveAmplitude: Math.random() * 15 + 5, // Horizontal drift amount
+          verticalPhase: Math.random() * Math.PI * 2,
+          verticalSpeed: (Math.random() * 0.2 + 0.05) * 0.01
         });
       }
     });
@@ -169,11 +175,15 @@ const SpaceScene = (() => {
       rotation: Math.random() * Math.PI * 2,
       rotSpeed: (Math.random() - 0.5) * 0.02,
       color: debrisColors[Math.floor(Math.random() * debrisColors.length)],
-      type: Math.random() > 0.7 ? 'chunk' : 'debris'
+      type: Math.random() > 0.7 ? 'chunk' : 'debris',
+      // NEW: Curved drift parameters
+      phase: Math.random() * Math.PI * 2,
+      phaseSpeed: (Math.random() * 0.4 + 0.2) * 0.01,
+      driftAmplitude: Math.random() * 30 + 10
     };
   }
   
-  // Fleet flyby ship creation
+  // Fleet flyby ship creation with curved paths
   function createFleetShip() {
     const availableTypes = Object.keys(shipSprites).filter(t => shipSprites[t]);
     if (availableTypes.length === 0) return null;
@@ -193,7 +203,11 @@ const SpaceScene = (() => {
       opacity: 0.15 + depth * 0.25, // Farther = more faded
       rotation: (fromLeft ? 0 : Math.PI) + (Math.random() - 0.5) * 0.3, // Slight angle variation
       wobble: Math.random() * Math.PI * 2,
-      wobbleSpeed: Math.random() * 0.02 + 0.01
+      wobbleSpeed: Math.random() * 0.02 + 0.01,
+      // NEW: Curved flight path parameters
+      curvePhase: Math.random() * Math.PI * 2,
+      curveSpeed: (Math.random() * 0.3 + 0.1) * 0.02,
+      curveAmplitude: 20 + Math.random() * 40 // Arc height
     };
   }
   
@@ -231,13 +245,28 @@ const SpaceScene = (() => {
 
     stars.forEach(s => {
       const layer = activeParallaxLayers[s.layer] || activeParallaxLayers[0];
-      s.y += config.starSpeed * layer.speedMult;
+      
+      // NEW: Curved koi-pond motion instead of linear
+      s.phase += s.phaseSpeed;
+      s.verticalPhase += s.verticalSpeed;
+      
+      // Primary downward drift with curved horizontal sway
+      const curvedX = Math.sin(s.phase) * s.curveAmplitude * layer.speedMult;
+      const curvedY = config.starSpeed * layer.speedMult + Math.cos(s.verticalPhase * 0.7) * 0.15;
+      
+      s.x += curvedX * 0.3; // Gentle horizontal curve
+      s.y += curvedY;       // Forward motion with subtle wave
+      
       s.twinkle += s.twinkleSpeed;
       
+      // Wrap around screen
       if (s.y > window.innerHeight) {
-        s.y = 0;
+        s.y = -5;
         s.x = Math.random() * window.innerWidth;
+        s.phase = Math.random() * Math.PI * 2; // Reset phase for variety
       }
+      if (s.x < -20) s.x = window.innerWidth + 10;
+      if (s.x > window.innerWidth + 20) s.x = -10;
       
       const brightness = 0.5 + Math.sin(s.twinkle) * 0.3;
       ctx.globalAlpha = brightness * layer.opacity;
@@ -265,16 +294,20 @@ const SpaceScene = (() => {
     
     ctx.globalAlpha = 1;
     
-    // Draw fleet flyby ships (behind debris)
+    // Draw fleet flyby ships (behind debris) with curved paths
     if (perfSettings.fleetFlybys) {
       maybeSpawnFleetShip();
       
       fleetShips = fleetShips.filter(ship => {
         const speed = config.shipSpeed * (0.5 + ship.depth * 0.5);
         
+        // NEW: Curved flight path
+        ship.curvePhase += ship.curveSpeed;
+        const curveOffset = Math.sin(ship.curvePhase) * ship.curveAmplitude;
+        
         ship.x += ship.direction * speed;
         ship.wobble += ship.wobbleSpeed;
-        const wobbleY = Math.sin(ship.wobble) * 3;
+        const wobbleY = Math.sin(ship.wobble) * 3 + curveOffset * 0.3;
         
         // Check if off screen
         if ((ship.direction > 0 && ship.x > window.innerWidth + 150) ||
@@ -288,7 +321,10 @@ const SpaceScene = (() => {
           ctx.save();
           ctx.globalAlpha = ship.opacity;
           ctx.translate(ship.x, ship.y + wobbleY);
-          ctx.rotate(ship.rotation);
+          
+          // Add slight banking based on curve direction
+          const bankAngle = Math.cos(ship.curvePhase) * 0.1 * ship.direction;
+          ctx.rotate(ship.rotation + bankAngle);
           
           const w = sprite.width * ship.scale;
           const h = sprite.height * ship.scale;
@@ -307,9 +343,14 @@ const SpaceScene = (() => {
     
     ctx.globalAlpha = 1;
     
-    // Draw debris
+    // Draw debris with curved motion
     if (perfSettings.debris) {
       debris.forEach(d => {
+        // NEW: Curved path motion
+        d.phase += d.phaseSpeed;
+        const curvedDrift = Math.sin(d.phase) * d.driftAmplitude * 0.3;
+        
+        d.x += curvedDrift * 0.1;
         d.y += d.z * config.debrisSpeed;
         d.rotation += d.rotSpeed;
         
@@ -317,6 +358,10 @@ const SpaceScene = (() => {
           Object.assign(d, createDebris());
           d.y = -30;
         }
+        
+        // Wrap horizontally
+        if (d.x < -50) d.x = window.innerWidth + 30;
+        if (d.x > window.innerWidth + 50) d.x = -30;
         
         ctx.save();
         ctx.translate(d.x, d.y);

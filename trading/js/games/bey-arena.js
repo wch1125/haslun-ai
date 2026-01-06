@@ -863,7 +863,7 @@
   // UI wiring
   // ------------------------------
   function getActiveTicker() {
-    // prefer PaintBay selection; fallback to ParallaxRun; fallback RKLB
+    // prefer PaintBay selection; fallback to SpaceRun; fallback RKLB
     try {
       if (window.PaintBay && typeof window.PaintBay.getSelectedShip === 'function') {
         const t = window.PaintBay.getSelectedShip();
@@ -871,7 +871,7 @@
       }
     } catch (e) {}
     try {
-      if (window.ParallaxRun && window.ParallaxRun.selectedShip) return window.ParallaxRun.selectedShip;
+      if (window.SpaceRun && window.SpaceRun.selectedShip) return window.SpaceRun.selectedShip;
     } catch (e) {}
     return 'RKLB';
   }

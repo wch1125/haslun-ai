@@ -94,10 +94,10 @@
         this.populateNewsFeed(); // Refresh news
       }
       
-      // Also hide the sidebar on mobile when switching
+      // Hide sidebar on mobile when not in hangar
       const sidebar = document.querySelector('.sidebar');
       if (sidebar && window.innerWidth < 1024) {
-        sidebar.style.display = panel === 'hangar' ? 'none' : 'none';
+        sidebar.style.display = 'none'; // Always hide sidebar on mobile for cockpit view
       }
     },
     
