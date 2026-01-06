@@ -1,3 +1,369 @@
+    /* =========================================================================
+       GLOBAL SPACE SCENE - Always floating in space
+       Single canvas behind all UI, never resets between pages
+       ========================================================================= */
+    #space-scene {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: -1;
+      pointer-events: none;
+      background: var(--bg-void);
+    }
+    
+    /* =========================================================================
+       HANGAR PANEL - Living Ship Display
+       Ship floating in space, not a static grid
+       ========================================================================= */
+    .hangar-orbital {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      min-height: calc(100vh - 120px);
+      background: transparent;
+      position: relative;
+    }
+    
+    .hangar-space-viewport {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      padding: 2rem;
+    }
+    
+    .hangar-hero-ship {
+      position: relative;
+      width: 280px;
+      height: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: hangar-ship-drift 8s ease-in-out infinite;
+    }
+    
+    @keyframes hangar-ship-drift {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      25% { transform: translateY(-8px) rotate(0.5deg); }
+      50% { transform: translateY(4px) rotate(-0.3deg); }
+      75% { transform: translateY(-4px) rotate(0.2deg); }
+    }
+    
+    .hero-ship-frame {
+      position: relative;
+      z-index: 2;
+    }
+    
+    .hero-ship-sprite {
+      width: 200px;
+      height: auto;
+      image-rendering: pixelated;
+      filter: drop-shadow(0 0 30px var(--phosphor-glow)) drop-shadow(0 0 60px rgba(51, 255, 153, 0.1));
+      transition: transform 0.5s ease;
+    }
+    
+    .hero-ship-glow {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 300px;
+      height: 300px;
+      transform: translate(-50%, -50%);
+      background: radial-gradient(circle, var(--phosphor-ghost) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 1;
+      animation: hero-glow-pulse 4s ease-in-out infinite;
+    }
+    
+    @keyframes hero-glow-pulse {
+      0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
+      50% { opacity: 0.8; transform: translate(-50%, -50%) scale(1.1); }
+    }
+    
+    .hangar-ship-identity {
+      text-align: center;
+      margin-top: 1.5rem;
+    }
+    
+    .ship-callsign {
+      font-family: var(--font-display);
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--phosphor);
+      text-shadow: 0 0 20px var(--phosphor-glow);
+      letter-spacing: 0.1em;
+    }
+    
+    .ship-class {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--amber);
+      letter-spacing: 0.2em;
+      margin-top: 0.25rem;
+    }
+    
+    .ship-name {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+    }
+    
+    /* Fleet dock for ship selection */
+    .hangar-fleet-dock {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-top: 2rem;
+      padding: 1rem;
+      background: rgba(10, 12, 15, 0.8);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+    
+    .dock-nav {
+      width: 36px;
+      height: 36px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--phosphor);
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .dock-nav:hover {
+      background: var(--bg-input);
+      border-color: var(--phosphor-dim);
+    }
+    
+    .dock-ships {
+      display: flex;
+      gap: 0.5rem;
+      overflow-x: auto;
+      padding: 0.25rem;
+    }
+    
+    .dock-ship {
+      width: 48px;
+      height: 48px;
+      background: var(--bg-panel);
+      border: 2px solid var(--border);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px;
+    }
+    
+    .dock-ship:hover {
+      border-color: var(--phosphor-dim);
+      transform: scale(1.05);
+    }
+    
+    .dock-ship.active {
+      border-color: var(--phosphor);
+      box-shadow: 0 0 15px var(--phosphor-glow);
+    }
+    
+    .dock-ship img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      image-rendering: pixelated;
+    }
+    
+    /* Hangar stats panel */
+    .hangar-stats-panel {
+      display: flex;
+      gap: 2rem;
+      margin-top: 1.5rem;
+      padding: 1rem 1.5rem;
+      background: rgba(10, 12, 15, 0.7);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+    }
+    
+    .hangar-stat {
+      text-align: center;
+    }
+    
+    .hangar-stat .stat-label {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: var(--text-dim);
+      letter-spacing: 0.1em;
+    }
+    
+    .hangar-stat .stat-value {
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      color: var(--text);
+      margin-top: 0.25rem;
+    }
+    
+    .hangar-stat .stat-value.positive {
+      color: var(--signal-up);
+    }
+    
+    .hangar-stat .stat-value.negative {
+      color: var(--signal-down);
+    }
+    
+    /* Hangar action buttons */
+    .hangar-actions {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+    
+    .hangar-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .hangar-btn:hover {
+      background: var(--bg-input);
+      border-color: var(--phosphor-dim);
+      color: var(--phosphor);
+    }
+    
+    .hangar-btn.primary {
+      background: linear-gradient(180deg, var(--phosphor-ghost) 0%, transparent 100%);
+      border-color: var(--phosphor-dim);
+      color: var(--phosphor);
+    }
+    
+    .hangar-btn.primary:hover {
+      background: linear-gradient(180deg, var(--phosphor-glow) 0%, transparent 100%);
+      box-shadow: 0 0 20px var(--phosphor-glow);
+    }
+    
+    .hangar-btn .btn-icon {
+      font-size: 1rem;
+    }
+    
+    /* Signal panel (compact telemetry) */
+    .hangar-signal-panel {
+      position: absolute;
+      bottom: 1rem;
+      left: 1rem;
+      right: 1rem;
+      background: rgba(10, 12, 15, 0.9);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.75rem 1rem;
+    }
+    
+    .signal-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .signal-icon {
+      color: var(--amber);
+    }
+    
+    .signal-title {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      letter-spacing: 0.1em;
+    }
+    
+    .signal-widgets {
+      display: flex;
+      gap: 1rem;
+      overflow-x: auto;
+    }
+    
+    .signal-widget {
+      flex: 0 0 auto;
+      min-width: 100px;
+      padding: 0.5rem;
+      background: var(--bg-panel);
+      border-radius: 4px;
+    }
+    
+    .signal-widget-ticker {
+      font-family: var(--font-display);
+      font-size: 0.75rem;
+      color: var(--phosphor);
+    }
+    
+    .signal-widget-trend {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+    }
+    
+    .signal-widget-trend.bullish { color: var(--signal-up); }
+    .signal-widget-trend.bearish { color: var(--signal-down); }
+    .signal-widget-trend.nebulous { color: var(--amber); }
+    
+    /* Mobile responsive hangar */
+    @media (max-width: 768px) {
+      .hangar-hero-ship {
+        width: 200px;
+        height: 150px;
+      }
+      
+      .hero-ship-sprite {
+        width: 140px;
+      }
+      
+      .ship-callsign {
+        font-size: 1.5rem;
+      }
+      
+      .hangar-stats-panel {
+        flex-wrap: wrap;
+        gap: 1rem;
+        justify-content: center;
+      }
+      
+      .hangar-actions {
+        flex-direction: column;
+        width: 100%;
+        padding: 0 1rem;
+      }
+      
+      .hangar-btn {
+        width: 100%;
+        justify-content: center;
+      }
+      
+      .hangar-signal-panel {
+        position: relative;
+        bottom: auto;
+        left: auto;
+        right: auto;
+        margin: 1rem;
+      }
+    }
+    
     :root {
       --bg-void: #050608;
       --bg-deep: #0a0c0f;

@@ -3490,10 +3490,11 @@
      * Get primary group for a tab
      */
     function getPrimaryGroup(tab) {
-      if (tab === 'chart') return 'telemetry';
-      if (tab === 'arcade') return 'training';
-      if (tab === 'positions' || tab === 'options' || tab === 'catalysts') return 'ops';
-      return 'telemetry';
+      if (tab === 'hangar') return 'hangar';
+      if (tab === 'chart') return 'data';
+      if (tab === 'arcade') return 'arcade';
+      if (tab === 'positions' || tab === 'options' || tab === 'catalysts') return 'command';
+      return 'hangar'; // Default to hangar
     }
     
     function switchTab(tabName) {
@@ -3514,26 +3515,29 @@
       });
       
       // Show/hide subtabs based on group
-      const opsSubtabs = document.getElementById('ops-subtabs');
-      const trainingSubtabs = document.getElementById('training-subtabs');
+      const commandSubtabs = document.getElementById('command-subtabs');
       
-      if (opsSubtabs) {
-        opsSubtabs.style.display = (group === 'ops') ? 'flex' : 'none';
-      }
-      if (trainingSubtabs) {
-        trainingSubtabs.style.display = (group === 'training') ? 'flex' : 'none';
+      if (commandSubtabs) {
+        commandSubtabs.style.display = (group === 'command') ? 'flex' : 'none';
       }
       
       // Update subtab active states
-      document.querySelectorAll('#ops-subtabs .subtab[data-tab]').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.tab === tabName);
-      });
-      document.querySelectorAll('#training-subtabs .subtab[data-tab]').forEach(btn => {
+      document.querySelectorAll('#command-subtabs .subtab[data-tab]').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.tab === tabName);
       });
       
       // Step 5.1: Start/stop fleet background animation
       handleFleetBackground(tabName);
+      
+      // Initialize hangar when switching to it
+      if (tabName === 'hangar' && window.initHangarPanel) {
+        window.initHangarPanel();
+      }
+      
+      // Set SpaceScene mode based on current tab
+      if (window.SpaceScene && window.SpaceScene.setMode) {
+        SpaceScene.setMode(group);
+      }
       
       // Refresh arcade previews when switching to arcade tab
       if (tabName === 'arcade' && window.SpriteCache && SpriteCache.loaded) {
@@ -6257,6 +6261,7 @@
         document.addEventListener('DOMContentLoaded', initConsoleShip);
         document.addEventListener('DOMContentLoaded', initMissionPanel); // Step 4
         document.addEventListener('DOMContentLoaded', initHangarFocusEvents); // Step 5
+        document.addEventListener('DOMContentLoaded', () => window.initHangarPanel && window.initHangarPanel()); // Step 6: Living Hangar
       } else {
         initArcade();
         initTubeOverload();
@@ -6270,6 +6275,7 @@
         initConsoleShip();
         initMissionPanel(); // Step 4
         initHangarFocusEvents(); // Step 5
+        window.initHangarPanel && window.initHangarPanel(); // Step 6: Living Hangar
       }
     })();
     
@@ -6524,3 +6530,239 @@
     }
     
     window.getSelectedShip = getSelectedShip;
+    
+    /**
+     * HANGAR PANEL - Living ship display
+     * Initialize the main hangar view with ship in space
+     */
+    let hangarShipIndex = 0;
+    let hangarShipList = [];
+    
+    async function initHangarPanel() {
+      // Build ship roster if not already done
+      if (hangarShipList.length === 0) {
+        hangarShipList = await buildHangarShipList();
+      }
+      
+      // Get current selected ship or default to first
+      const selectedTicker = getSelectedShip() || (hangarShipList[0]?.ticker || 'RKLB');
+      hangarShipIndex = Math.max(0, hangarShipList.findIndex(s => s.ticker === selectedTicker));
+      
+      // Populate dock ships
+      populateHangarDock();
+      
+      // Update display for current ship
+      updateHangarDisplay();
+      
+      // Populate signal widgets
+      populateSignalWidgets();
+    }
+    
+    async function buildHangarShipList() {
+      const ships = [];
+      
+      // Ship type mappings from ticker to sprite filename
+      const shipTypeMap = {
+        'RKLB': 'flagship-ship',
+        'LUNR': 'lander-ship',
+        'JOBY': 'eVTOL-light-class-ship',
+        'ACHR': 'eVTOL-ship',
+        'ASTS': 'Communications-Relay-Ship',
+        'GME': 'moonshot-ship',
+        'BKSY': 'recon-ship',
+        'PL': 'scout-ship',
+        'KTOS': 'Fighter-Ship',
+        'RDW': 'Hauler-ship',
+        'RTX': 'Officer-Class-Ship',
+        'LHX': 'Drone-ship',
+        'GE': 'Stealth-Bomber-ship',
+        'COHR': 'Glass-Reflector-ship',
+        'EVEX': 'Transport-Ship'
+      };
+      
+      // Ship class mappings
+      const shipClassMap = {
+        'RKLB': 'FLAGSHIP',
+        'LUNR': 'LANDER',
+        'GME': 'DREADNOUGHT',
+        'ASTS': 'RELAY',
+        'JOBY': 'EVTOL',
+        'ACHR': 'EVTOL',
+        'BKSY': 'RECON',
+        'PL': 'SCOUT',
+        'KTOS': 'FIGHTER',
+        'RDW': 'HAULER',
+        'RTX': 'OFFICER',
+        'LHX': 'DRONE',
+        'GE': 'STEALTH',
+        'COHR': 'REFLECTOR',
+        'EVEX': 'TRANSPORT'
+      };
+      
+      // Get ticker profiles and stats
+      const profiles = window.tickerProfiles || window.TICKER_PROFILES || {};
+      let statsData = {};
+      
+      // Try to load stats from window.statsData or fetch
+      if (window.statsData && window.statsData.stats) {
+        statsData = window.statsData.stats;
+      }
+      
+      // Priority tickers to show first
+      const priorityTickers = ['RKLB', 'LUNR', 'JOBY', 'ACHR', 'ASTS', 'GME', 'BKSY', 'PL', 'KTOS', 'RDW'];
+      
+      // Build from priority list + any additional tickers in profiles
+      const allTickers = [...new Set([...priorityTickers, ...Object.keys(profiles)])];
+      
+      for (const ticker of allTickers) {
+        const profile = profiles[ticker] || {};
+        const stats = statsData[ticker] || {};
+        const shipType = shipTypeMap[ticker] || 'ship';
+        
+        ships.push({
+          ticker,
+          name: profile.name || profile.codename || ticker,
+          class: shipClassMap[ticker] || 'STANDARD',
+          sector: profile.sector || 'UNKNOWN SECTOR',
+          sprite: `assets/ships/${ticker}-${shipType}.png`,
+          fallbackSprite: `assets/ships/static/${ticker}-${shipType}.png`,
+          value: stats.value || Math.round(stats.current * 100) || 0,
+          pnl: stats.pnl || Math.round((stats.return_1d || 0) * 10) || 0,
+          pnlPercent: stats.return_1d || 0,
+          status: (stats.return_1d || 0) >= 0 ? 'OPERATIONAL' : 'CAUTIONARY',
+          lore: profile.lore || ''
+        });
+      }
+      
+      return ships;
+    }
+    
+    function populateHangarDock() {
+      const dockContainer = document.getElementById('hangar-dock-ships');
+      if (!dockContainer) return;
+      
+      dockContainer.innerHTML = '';
+      
+      hangarShipList.forEach((ship, idx) => {
+        const dockShip = document.createElement('div');
+        dockShip.className = `dock-ship ${idx === hangarShipIndex ? 'active' : ''}`;
+        dockShip.onclick = () => selectHangarShip(idx);
+        
+        const img = document.createElement('img');
+        img.src = ship.sprite;
+        img.alt = ship.ticker;
+        img.onerror = () => { img.src = ship.fallbackSprite; };
+        
+        dockShip.appendChild(img);
+        dockContainer.appendChild(dockShip);
+      });
+    }
+    
+    function selectHangarShip(index) {
+      hangarShipIndex = index;
+      updateHangarDisplay();
+      
+      // Update dock active states
+      document.querySelectorAll('.dock-ship').forEach((el, idx) => {
+        el.classList.toggle('active', idx === index);
+      });
+      
+      // Store selection
+      const ship = hangarShipList[index];
+      if (ship) {
+        localStorage.setItem('parallax_selected_ship', ship.ticker);
+        window.currentHangarTicker = ship.ticker;
+        
+        // Update global ticker selection if available
+        if (typeof selectTicker === 'function') {
+          selectTicker(ship.ticker);
+        }
+      }
+    }
+    
+    function cycleHangarShip(direction) {
+      const newIndex = (hangarShipIndex + direction + hangarShipList.length) % hangarShipList.length;
+      selectHangarShip(newIndex);
+      
+      // Play UI sound
+      if (window.MechaAudio && MechaAudio.ctx) {
+        MechaAudio.playUISound('blip');
+      }
+    }
+    
+    function updateHangarDisplay() {
+      const ship = hangarShipList[hangarShipIndex];
+      if (!ship) return;
+      
+      // Update hero sprite
+      const heroSprite = document.getElementById('hangar-hero-sprite');
+      if (heroSprite) {
+        heroSprite.src = ship.sprite;
+        heroSprite.onerror = () => { heroSprite.src = ship.fallbackSprite; };
+      }
+      
+      // Update identity
+      const callsign = document.getElementById('hangar-callsign');
+      const shipClass = document.getElementById('hangar-class');
+      const shipName = document.getElementById('hangar-ship-name');
+      
+      if (callsign) callsign.textContent = ship.ticker;
+      if (shipClass) shipClass.textContent = `${ship.class} CLASS`;
+      if (shipName) shipName.textContent = ship.name;
+      
+      // Update stats
+      const sector = document.getElementById('hangar-sector');
+      const value = document.getElementById('hangar-value');
+      const pnl = document.getElementById('hangar-pnl');
+      const status = document.getElementById('hangar-status');
+      
+      if (sector) sector.textContent = ship.sector;
+      if (value) value.textContent = `$${ship.value.toLocaleString()}`;
+      if (pnl) {
+        const pnlStr = ship.pnl >= 0 ? `+$${ship.pnl.toLocaleString()}` : `-$${Math.abs(ship.pnl).toLocaleString()}`;
+        pnl.textContent = pnlStr;
+        pnl.className = `stat-value ${ship.pnl >= 0 ? 'positive' : 'negative'}`;
+      }
+      if (status) status.textContent = ship.status;
+      
+      // Store current ticker for dossier button
+      window.currentHangarTicker = ship.ticker;
+    }
+    
+    function populateSignalWidgets() {
+      const container = document.getElementById('hangar-signals');
+      if (!container) return;
+      
+      container.innerHTML = '';
+      
+      // Create signal widgets for top ships
+      const topShips = hangarShipList.slice(0, 6);
+      
+      topShips.forEach(ship => {
+        const widget = document.createElement('div');
+        widget.className = 'signal-widget';
+        
+        // Determine trend based on P&L
+        let trend = 'nebulous';
+        let trendText = 'NEBULOUS';
+        if (ship.pnl > 0) {
+          trend = 'bullish';
+          trendText = '▲ BULLISH';
+        } else if (ship.pnl < 0) {
+          trend = 'bearish';
+          trendText = '▼ BEARISH';
+        }
+        
+        widget.innerHTML = `
+          <div class="signal-widget-ticker">${ship.ticker}</div>
+          <div class="signal-widget-trend ${trend}">${trendText}</div>
+        `;
+        
+        container.appendChild(widget);
+      });
+    }
+    
+    // Make functions globally available
+    window.initHangarPanel = initHangarPanel;
+    window.cycleHangarShip = cycleHangarShip;
+    window.selectHangarShip = selectHangarShip;

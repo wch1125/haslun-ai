@@ -469,23 +469,18 @@
           </div>
         </div>
         <nav class="nav-tabs">
-          <button class="nav-tab active" data-group="telemetry" data-tab="chart" onclick="switchTab('chart')">TELEMETRY</button>
-          <button class="nav-tab" data-group="ops" onclick="switchTab('positions')">OPERATIONS</button>
-          <button class="nav-tab" data-group="training" onclick="switchTab('arcade')">TRAINING</button>
-          <button class="nav-tab hangar-tab" onclick="openHangarBay()" title="Choose Your Ship">🚀 HANGAR</button>
+          <button class="nav-tab active" data-group="hangar" data-tab="hangar" onclick="switchTab('hangar')">🚀 HANGAR</button>
+          <button class="nav-tab" data-group="command" data-tab="positions" onclick="switchTab('positions')">COMMAND</button>
+          <button class="nav-tab" data-group="arcade" data-tab="arcade" onclick="switchTab('arcade')">ARCADE</button>
+          <button class="nav-tab" data-group="data" data-tab="chart" onclick="switchTab('chart')">DATA</button>
         </nav>
       </div>
       
-      <!-- Secondary subtabs for OPERATIONS -->
-      <div class="nav-subtabs" id="ops-subtabs" style="display:none;">
-        <button class="subtab active" data-tab="positions" onclick="switchTab('positions')">HOLDINGS</button>
+      <!-- Secondary subtabs for COMMAND (merged Operations + Training decisions) -->
+      <div class="nav-subtabs" id="command-subtabs" style="display:none;">
+        <button class="subtab active" data-tab="positions" onclick="switchTab('positions')">FLEET</button>
         <button class="subtab" onclick="launchMissionCommand()">MISSIONS</button>
         <button class="subtab" data-tab="catalysts" onclick="switchTab('catalysts')">EVENTS</button>
-      </div>
-      
-      <!-- Secondary subtabs for TRAINING -->
-      <div class="nav-subtabs" id="training-subtabs" style="display:none;">
-        <button class="subtab active" data-tab="arcade" onclick="switchTab('arcade')">ARCADE</button>
       </div>
       
       <div class="header-right">
@@ -634,7 +629,80 @@
       </aside>
       
       <div class="content">
-        <div class="tab-panel active" id="chart-panel">
+        <!-- HANGAR PANEL - Default/Home - Ship floating in space -->
+        <div class="tab-panel active" id="hangar-panel">
+          <div class="hangar-orbital">
+            <!-- Living Hangar: Ship in space, not a grid -->
+            <div class="hangar-space-viewport">
+              <!-- Hero ship display -->
+              <div class="hangar-hero-ship" id="hangar-hero-ship">
+                <div class="hero-ship-frame">
+                  <img id="hangar-hero-sprite" class="hero-ship-sprite" src="assets/ships/RKLB-flagship-ship.png" alt="Active vessel">
+                </div>
+                <div class="hero-ship-glow"></div>
+              </div>
+              
+              <!-- Ship identity overlay -->
+              <div class="hangar-ship-identity">
+                <div class="ship-callsign" id="hangar-callsign">RKLB</div>
+                <div class="ship-class" id="hangar-class">FLAGSHIP CLASS</div>
+                <div class="ship-name" id="hangar-ship-name">ELECTRON</div>
+              </div>
+              
+              <!-- Fleet carousel for ship selection (swipe/cycle) -->
+              <div class="hangar-fleet-dock">
+                <button class="dock-nav dock-prev" onclick="cycleHangarShip(-1)">◀</button>
+                <div class="dock-ships" id="hangar-dock-ships">
+                  <!-- Populated dynamically -->
+                </div>
+                <button class="dock-nav dock-next" onclick="cycleHangarShip(1)">▶</button>
+              </div>
+              
+              <!-- Ship stats panel (compact) -->
+              <div class="hangar-stats-panel">
+                <div class="hangar-stat">
+                  <span class="stat-label">SECTOR</span>
+                  <span class="stat-value" id="hangar-sector">SPACE LAUNCH</span>
+                </div>
+                <div class="hangar-stat">
+                  <span class="stat-label">POSITION</span>
+                  <span class="stat-value" id="hangar-value">$5,460</span>
+                </div>
+                <div class="hangar-stat">
+                  <span class="stat-label">P&L</span>
+                  <span class="stat-value positive" id="hangar-pnl">+$326</span>
+                </div>
+                <div class="hangar-stat">
+                  <span class="stat-label">STATUS</span>
+                  <span class="stat-value" id="hangar-status">OPERATIONAL</span>
+                </div>
+              </div>
+              
+              <!-- Action buttons -->
+              <div class="hangar-actions">
+                <button class="hangar-btn primary" onclick="openVesselDossier(window.currentHangarTicker || 'RKLB')">
+                  <span class="btn-icon">◈</span> VIEW DOSSIER
+                </button>
+                <button class="hangar-btn" onclick="switchTab('chart')">
+                  <span class="btn-icon">◇</span> TELEMETRY
+                </button>
+              </div>
+            </div>
+            
+            <!-- Signal panel (compact telemetry widgets) -->
+            <div class="hangar-signal-panel">
+              <div class="signal-header">
+                <span class="signal-icon">◈</span>
+                <span class="signal-title">FLEET SIGNALS</span>
+              </div>
+              <div class="signal-widgets" id="hangar-signals">
+                <!-- Populated with compact trend/momentum indicators -->
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="tab-panel" id="chart-panel">
           <!-- Mobile Ticker Carousel -->
           <div class="mobile-ticker-carousel" id="mobile-ticker-carousel">
             <div class="ticker-carousel-inner" id="ticker-carousel-inner">
@@ -1415,17 +1483,21 @@
          ============================================================ -->
     <nav class="mobile-bottom-nav" id="mobile-bottom-nav">
       <div class="mobile-nav-items">
-        <button class="mobile-nav-item active" data-tab="chart" data-group="telemetry" onclick="switchTabMobile('chart')">
-          <span class="nav-icon">◈</span>
-          <span>Telemetry</span>
+        <button class="mobile-nav-item active" data-tab="hangar" data-group="hangar" onclick="switchTabMobile('hangar')">
+          <span class="nav-icon">🚀</span>
+          <span>Hangar</span>
         </button>
-        <button class="mobile-nav-item" data-tab="positions" data-group="ops" onclick="switchTabMobile('positions')">
+        <button class="mobile-nav-item" data-tab="positions" data-group="command" onclick="switchTabMobile('positions')">
           <span class="nav-icon">▲</span>
-          <span>Operations</span>
+          <span>Command</span>
         </button>
-        <button class="mobile-nav-item" data-tab="arcade" data-group="training" onclick="switchTabMobile('arcade')">
+        <button class="mobile-nav-item" data-tab="arcade" data-group="arcade" onclick="switchTabMobile('arcade')">
           <span class="nav-icon">◇</span>
-          <span>Training</span>
+          <span>Arcade</span>
+        </button>
+        <button class="mobile-nav-item" data-tab="chart" data-group="data" onclick="switchTabMobile('chart')">
+          <span class="nav-icon">◈</span>
+          <span>Data</span>
         </button>
         <button class="mobile-nav-item" onclick="toggleMobileDrawer()">
           <span class="nav-icon">≡</span>
