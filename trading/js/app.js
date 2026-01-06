@@ -6466,3 +6466,61 @@
     
     // Make getMissionBadgeForTicker available globally for fleet rendering
     window.getMissionBadgeForTicker = getMissionBadgeForTicker;
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // HANGAR BAY :: Ship Selection Modal
+    // ═══════════════════════════════════════════════════════════════════
+    
+    /**
+     * Open the Hangar Bay ship selection modal
+     * Uses real financial data to generate Mario Kart-style stats
+     */
+    function openHangarBay() {
+      // Check if ShipSelect module is loaded
+      if (!window.ShipSelect) {
+        console.warn('[Hangar] ShipSelect module not loaded');
+        // Fallback: navigate to standalone page
+        window.location.href = 'ship-select.html';
+        return;
+      }
+      
+      // Get stats data (should be loaded by now)
+      const statsData = window.statsData || {};
+      
+      // Show the modal
+      ShipSelect.showShipSelectModal(statsData, (ticker, shipData) => {
+        console.log('[Hangar] Ship selected:', ticker, shipData);
+        
+        // Store selection
+        localStorage.setItem('parallax_selected_ship', ticker);
+        
+        // Update the current ticker display if available
+        if (typeof selectTicker === 'function') {
+          selectTicker(ticker);
+        } else if (typeof window.selectTicker === 'function') {
+          window.selectTicker(ticker);
+        }
+        
+        // Play selection sound if audio system available
+        if (window.MechaAudio && MechaAudio.ctx) {
+          MechaAudio.playUISound('select');
+        }
+        
+        // Flash notification
+        if (typeof showNotification === 'function') {
+          showNotification(`${ticker} selected as primary vessel`, 'success');
+        }
+      });
+    }
+    
+    // Make openHangarBay globally available
+    window.openHangarBay = openHangarBay;
+    
+    /**
+     * Get currently selected ship from localStorage
+     */
+    function getSelectedShip() {
+      return localStorage.getItem('parallax_selected_ship') || null;
+    }
+    
+    window.getSelectedShip = getSelectedShip;

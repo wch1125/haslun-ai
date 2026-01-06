@@ -16,6 +16,8 @@
   <!-- Ship Brief dialog styles (isolated for modularity) -->
   <link rel="stylesheet" href="css/ship-brief.css">
   <link rel="stylesheet" href="css/fleet-command.css">
+  <!-- Ship Select (Mario Kart-style hangar) -->
+  <link rel="stylesheet" href="css/ship-select.css">
 </head>
 <body>
   <!-- CRT NOISE OVERLAY -->
@@ -468,6 +470,7 @@
           <button class="nav-tab active" data-group="telemetry" data-tab="chart" onclick="switchTab('chart')">TELEMETRY</button>
           <button class="nav-tab" data-group="ops" onclick="switchTab('positions')">OPERATIONS</button>
           <button class="nav-tab" data-group="training" onclick="switchTab('arcade')">TRAINING</button>
+          <button class="nav-tab hangar-tab" onclick="openHangarBay()" title="Choose Your Ship">🚀 HANGAR</button>
         </nav>
       </div>
       
@@ -1944,6 +1947,9 @@
   
   <!-- Context Focus (Page-Behind Awareness) -->
   <script src="js/ui/contextFocus.js"></script>
+  
+  <!-- Ship Select (Mario Kart-style stats) -->
+  <script src="js/ui/ship-select.js"></script>
   
   <!-- Main application -->
   <script src="js/app.js"></script>
