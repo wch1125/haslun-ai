@@ -876,3 +876,97 @@
 .ship-brief-img.has-livery {
   filter: drop-shadow(0 0 12px var(--livery-accent, #33ff99));
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TELEMETRY-DRIVEN BEHAVIORS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Signal flicker for low clarity tickers */
+.ship-behavior {
+  --signal-flicker: 0;
+  --engine-stability: 1;
+  --volatility-influence: 0.5;
+}
+
+/* Signal flicker effect (triggered by low signal clarity) */
+.ship-behavior[style*="--signal-flicker"] .sensor-indicator,
+.ship-behavior[style*="--signal-flicker"] .status-light {
+  animation: signal-flicker calc(0.5s / var(--signal-flicker, 1)) ease-in-out infinite;
+}
+
+@keyframes signal-flicker {
+  0%, 100% { opacity: 1; }
+  25% { opacity: calc(1 - var(--signal-flicker, 0) * 0.3); }
+  50% { opacity: calc(1 - var(--signal-flicker, 0) * 0.5); }
+  75% { opacity: calc(1 - var(--signal-flicker, 0) * 0.2); }
+}
+
+/* Engine stability affects exhaust particle consistency */
+.ship-behavior::after {
+  opacity: calc(var(--engine-stability, 1) * 0.8 + 0.2);
+}
+
+/* Volatility influence on ambient movement */
+.ship-behavior[style*="--volatility-influence"] {
+  --base-jitter: calc(var(--volatility-influence, 0.5) * 2px);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TELEMETRY STATUS DISPLAY
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.telemetry-status {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.5rem;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+
+.telemetry-status .status-primary {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--phosphor);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.telemetry-status .status-regime {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+}
+
+/* Status primary variations */
+.telemetry-status .status-primary[data-status="Compromised"] {
+  color: var(--red);
+}
+
+.telemetry-status .status-primary[data-status="Nebulous"] {
+  color: var(--amber);
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.telemetry-status .status-primary[data-status="Combat Ready"] {
+  color: var(--phosphor);
+  text-shadow: 0 0 6px var(--phosphor);
+}
+
+.telemetry-status .status-primary[data-status="Fortified"] {
+  color: #4dabf7;
+}
+
+/* Regime variations */
+.telemetry-status .status-regime[data-regime="Trending Formation"] {
+  color: var(--phosphor-dim);
+}
+
+.telemetry-status .status-regime[data-regime="High Volatility Zone"] {
+  color: var(--amber);
+}
+
+.telemetry-status .status-regime[data-regime="Consolidation Pattern"] {
+  color: #74c0fc;
+}

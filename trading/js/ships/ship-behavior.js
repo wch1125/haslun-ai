@@ -190,14 +190,42 @@ window.ShipBehavior = (function() {
         winRate: 0.5
       };
       this.currentState = STATES.STANDBY;
-      this.classBehavior = CLASS_BEHAVIORS[this.shipClass] || CLASS_BEHAVIORS['Ship'];
+      this.classBehavior = { ...CLASS_BEHAVIORS[this.shipClass] || CLASS_BEHAVIORS['Ship'] };
       this.animationFrame = null;
       this.isActive = false;
       
       // Mood system
       this.mood = 'neutral';
       
+      // Apply telemetry-based animation modifiers
+      if (options.animationModifiers) {
+        this.applyAnimationModifiers(options.animationModifiers);
+      }
+      
       this.init();
+    }
+
+    /**
+     * Apply telemetry-derived animation modifiers to class behavior
+     */
+    applyAnimationModifiers(mods) {
+      if (!mods) return;
+      
+      // Modify drift based on telemetry chop sensitivity
+      if (mods.idleSpeed !== undefined) {
+        this.classBehavior.driftSpeed = this.classBehavior.driftSpeed / mods.idleSpeed;
+      }
+      if (mods.idleAmplitude !== undefined) {
+        this.classBehavior.driftAmplitude = this.classBehavior.driftAmplitude * mods.idleAmplitude;
+      }
+      
+      // Modify engine intensity based on thrust potential
+      if (mods.thrustIntensity !== undefined) {
+        this.classBehavior.engineIntensity = this.classBehavior.engineIntensity * mods.thrustIntensity;
+      }
+      
+      // Store for future use
+      this.animationModifiers = mods;
     }
 
     init() {
@@ -209,6 +237,19 @@ window.ShipBehavior = (function() {
       this.element.style.setProperty('--drift-speed', `${this.classBehavior.driftSpeed}s`);
       this.element.style.setProperty('--drift-amplitude', `${this.classBehavior.driftAmplitude}px`);
       this.element.style.setProperty('--engine-intensity', this.classBehavior.engineIntensity);
+      
+      // Set telemetry-based modifiers if available
+      if (this.animationModifiers) {
+        if (this.animationModifiers.signalFlicker !== undefined) {
+          this.element.style.setProperty('--signal-flicker', this.animationModifiers.signalFlicker);
+        }
+        if (this.animationModifiers.engineStability !== undefined) {
+          this.element.style.setProperty('--engine-stability', this.animationModifiers.engineStability);
+        }
+        if (this.animationModifiers.volatilityInfluence !== undefined) {
+          this.element.style.setProperty('--volatility-influence', this.animationModifiers.volatilityInfluence);
+        }
+      }
       
       // Start idle animation
       this.startIdleAnimation();

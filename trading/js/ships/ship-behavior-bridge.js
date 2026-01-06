@@ -22,9 +22,10 @@ window.ShipBehaviorBridge = (function() {
 
   /**
    * Convert portfolio position data into behavior stats
+   * Now enhanced with telemetry data from 45-min CSV analysis
    */
-  function deriveStats(position) {
-    if (!position) return getDefaultStats();
+  function deriveStats(position, ticker) {
+    if (!position && !ticker) return getDefaultStats();
 
     const stats = {
       pnlPercent: 0,
@@ -34,44 +35,69 @@ window.ShipBehaviorBridge = (function() {
       winRate: 0.5
     };
 
+    // Get telemetry data if available
+    const telemetry = window.ShipTelemetry?.getTelemetry(ticker);
+    const animMods = window.ShipTelemetry?.getAnimationModifiers(ticker);
+
     // P&L percentage
-    if (position.pnlPercent !== undefined) {
+    if (position?.pnlPercent !== undefined) {
       stats.pnlPercent = position.pnlPercent;
-    } else if (position.pnl !== undefined && position.value !== undefined && position.value > 0) {
+    } else if (position?.pnl !== undefined && position?.value !== undefined && position.value > 0) {
       stats.pnlPercent = (position.pnl / (position.value - position.pnl)) * 100;
     }
 
-    // Volatility (from daily range or explicit)
-    if (position.volatility !== undefined) {
+    // Volatility - use telemetry if available, else derive from position
+    if (telemetry) {
+      // Base volatility from telemetry, modulated by current position data
+      stats.volatility = telemetry.volatilityFactor * 0.1; // Scale to 0-10% range
+    } else if (position?.volatility !== undefined) {
       stats.volatility = position.volatility;
-    } else if (position.dayHigh !== undefined && position.dayLow !== undefined && position.price) {
+    } else if (position?.dayHigh !== undefined && position?.dayLow !== undefined && position?.price) {
       stats.volatility = (position.dayHigh - position.dayLow) / position.price;
     }
 
-    // Hull = position health (based on drawdown from highs)
-    if (position.hull !== undefined) {
+    // Hull = position health (based on drawdown + telemetry resilience)
+    if (position?.hull !== undefined) {
       stats.hull = position.hull;
-    } else if (position.high52w !== undefined && position.price !== undefined) {
+    } else if (position?.high52w !== undefined && position?.price !== undefined) {
       const drawdown = (position.high52w - position.price) / position.high52w;
-      stats.hull = Math.max(10, Math.round((1 - drawdown) * 100));
+      // Telemetry resilience affects how much drawdown impacts hull
+      const resilienceMod = telemetry ? telemetry.hullResilience : 0.5;
+      stats.hull = Math.max(10, Math.round((1 - drawdown * (1.5 - resilienceMod)) * 100));
+    } else if (telemetry) {
+      // Use telemetry-based hull with P&L modulation
+      const baseHull = telemetry.hullResilience * 100;
+      stats.hull = Math.max(10, Math.min(100, baseHull + stats.pnlPercent * 2));
     } else {
       // Derive from P&L as proxy
       stats.hull = Math.max(10, Math.min(100, 70 + stats.pnlPercent * 3));
     }
 
-    // Fuel = trading capacity / momentum
-    if (position.fuel !== undefined) {
+    // Fuel = trading capacity / momentum (enhanced by telemetry thrust potential)
+    if (position?.fuel !== undefined) {
       stats.fuel = position.fuel;
-    } else if (position.volume !== undefined && position.avgVolume !== undefined) {
+    } else if (position?.volume !== undefined && position?.avgVolume !== undefined) {
       const relativeVolume = position.volume / position.avgVolume;
-      stats.fuel = Math.min(100, Math.round(relativeVolume * 50 + 25));
+      const thrustMod = telemetry ? telemetry.thrustPotential : 0.5;
+      stats.fuel = Math.min(100, Math.round(relativeVolume * 50 * (0.5 + thrustMod) + 25));
+    } else if (telemetry) {
+      // Use telemetry thrust potential as fuel proxy
+      stats.fuel = Math.round(telemetry.thrustPotential * 60 + 40);
     } else {
       stats.fuel = 75; // Default
     }
 
-    // Win rate (if available)
-    if (position.winRate !== undefined) {
+    // Win rate (if available, or estimate from telemetry)
+    if (position?.winRate !== undefined) {
       stats.winRate = position.winRate;
+    } else if (telemetry) {
+      // Estimate from telemetry: stable + trending = higher implied win rate
+      stats.winRate = Math.min(0.8, 0.35 + telemetry.maneuverStability * 0.25 + telemetry.thrustPotential * 0.2);
+    }
+
+    // Attach animation modifiers for behavior system
+    if (animMods) {
+      stats._animationModifiers = animMods;
     }
 
     return stats;
@@ -93,6 +119,7 @@ window.ShipBehaviorBridge = (function() {
 
   /**
    * Get ship class from ticker or SHIP_DATA
+   * Now uses telemetry-based suggestions as fallback
    */
   function getShipClass(ticker) {
     // Check SHIP_DATA first
@@ -107,7 +134,13 @@ window.ShipBehaviorBridge = (function() {
       if (profile.class) return profile.class;
     }
 
-    // Fallback class assignments
+    // Use telemetry-suggested class if available
+    if (window.ShipTelemetry?.hasData(ticker)) {
+      const suggested = ShipTelemetry.getSuggestedClass(ticker);
+      if (suggested !== 'Ship') return suggested;
+    }
+
+    // Fallback class assignments (manual overrides)
     const CLASS_MAP = {
       'RKLB': 'Flagship',
       'LUNR': 'Lander',
@@ -143,16 +176,18 @@ window.ShipBehaviorBridge = (function() {
     const ticker = window.currentHangarTicker || 'RKLB';
     const shipClass = getShipClass(ticker);
 
+    // Get telemetry-based animation modifiers
+    const animMods = window.ShipTelemetry?.getAnimationModifiers(ticker);
+
     const controller = ShipBehavior.create(heroShip, {
       ticker,
-      shipClass
+      shipClass,
+      animationModifiers: animMods
     });
 
-    // Get current stats from portfolio data
+    // Get current stats from portfolio data + telemetry
     const position = getPositionData(ticker);
-    if (position) {
-      controller.updateStats(deriveStats(position));
-    }
+    controller.updateStats(deriveStats(position, ticker));
 
     // Check market status for state
     if (isMarketOpen()) {
@@ -172,21 +207,21 @@ window.ShipBehaviorBridge = (function() {
     if (!shipImg) return null;
 
     const shipClass = getShipClass(ticker);
+    const animMods = window.ShipTelemetry?.getAnimationModifiers(ticker);
+    
     const controller = ShipBehavior.create(shipImg, {
       ticker,
-      shipClass
+      shipClass,
+      animationModifiers: animMods
     });
 
     const position = getPositionData(ticker);
-    if (position) {
-      controller.updateStats(deriveStats(position));
-    }
+    const stats = deriveStats(position, ticker);
+    controller.updateStats(stats);
 
     // Add stress indicators
     const statsContainer = dialog.querySelector('.brief-stats, .ship-stats');
-    if (statsContainer && position) {
-      const stats = deriveStats(position);
-      
+    if (statsContainer) {
       // Hull indicator
       const hullIndicator = ShipBehavior.createStressIndicator('hull', stats.hull);
       if (hullIndicator) {
@@ -199,6 +234,20 @@ window.ShipBehaviorBridge = (function() {
       if (fuelIndicator) {
         fuelIndicator.classList.add('brief-stress-indicator');
         statsContainer.appendChild(fuelIndicator);
+      }
+    }
+
+    // Add telemetry status descriptor if available
+    if (window.ShipTelemetry?.hasData(ticker)) {
+      const statusDesc = ShipTelemetry.getStatusDescriptor(ticker);
+      const statusContainer = dialog.querySelector('.brief-status, .ship-status-desc');
+      if (statusContainer) {
+        statusContainer.innerHTML = `
+          <div class="telemetry-status">
+            <span class="status-primary">${statusDesc.primary}</span>
+            <span class="status-regime">${statusDesc.regime}</span>
+          </div>
+        `;
       }
     }
 
@@ -226,15 +275,16 @@ window.ShipBehaviorBridge = (function() {
     if (!shipImg) return null;
 
     const shipClass = getShipClass(ticker);
+    const animMods = window.ShipTelemetry?.getAnimationModifiers(ticker);
+    
     const controller = ShipBehavior.create(shipImg, {
       ticker,
-      shipClass
+      shipClass,
+      animationModifiers: animMods
     });
 
     const position = getPositionData(ticker);
-    if (position) {
-      controller.updateStats(deriveStats(position));
-    }
+    controller.updateStats(deriveStats(position, ticker));
 
     return controller;
   }
@@ -322,11 +372,11 @@ window.ShipBehaviorBridge = (function() {
       positions = Store.get('positions') || [];
     }
 
-    // Build stats map
+    // Build stats map (now with telemetry integration)
     const statsMap = {};
     positions.forEach(pos => {
       if (pos.ticker) {
-        statsMap[pos.ticker] = deriveStats(pos);
+        statsMap[pos.ticker] = deriveStats(pos, pos.ticker);
       }
     });
 
