@@ -111,13 +111,16 @@
   }
 
   // Export to window
-  window.PARALLAX_BUS = {
+  const BusAPI = {
     on,
     off,
     emit,
     once,
     listenerCount
   };
+
+  window.PARALLAX_BUS = BusAPI;
+  window.Bus = BusAPI;  // Shorter alias for convenience
 
   console.log('[PARALLAX] Event bus initialized');
 })();

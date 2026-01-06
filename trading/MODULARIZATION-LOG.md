@@ -314,3 +314,53 @@ After each step, verify:
 - All extracted modules use `window.X` pattern for global exposure
 - Main `app.js` creates local aliases for backwards compatibility
 - Load order in `index.html` is critical: data modules must load before `app.js`
+
+---
+
+## Phase 4: State Management Foundation
+
+### Step 4.1: Add Store + Event Bus Enhancement ✅
+**Date:** 2025-01-06  
+**Status:** Complete
+
+**Goal:** Create global state management with localStorage persistence.
+
+### Changes Made:
+
+1. **Modified:** `js/core/bus.js`
+   - Added `window.Bus` alias alongside existing `window.PARALLAX_BUS`
+   - Provides shorter API access (`Bus.on/off/emit`)
+
+2. **Created:** `js/core/store.js` (165 lines)
+   - Global `window.Store` with reactive state
+   - Default state: `{ activeTicker:'RKLB', route:'#telemetry', opsSub:'holdings', trainingSub:'arcade', activeMissionId:null }`
+   - `Store.get()` / `Store.get(key)` — read state
+   - `Store.set(partial)` — merge update, persists, emits `store:change`
+   - `Store.subscribe(fn)` — direct callbacks, returns unsubscribe
+   - `Store.reset()` — restore defaults (debug utility)
+   - Persists to `localStorage` under key `parallax_state_v1`
+   - Safe hydration on load
+
+3. **Modified:** `index.html`
+   - Added `<script src="js/core/store.js"></script>` after bus.js
+
+### Acceptance Tests:
+```javascript
+// Console test 1: Read state
+Store.get()  
+// → {activeTicker:'RKLB', route:'#telemetry', opsSub:'holdings', trainingSub:'arcade', activeMissionId:null}
+
+// Console test 2: Persistence
+Store.set({activeTicker:'ACHR'})
+// Refresh page, then:
+Store.get().activeTicker  // → 'ACHR'
+
+// Console test 3: Bus integration
+Bus.on('store:change', s => console.log('Changed:', s))
+Store.set({route:'#ops'})  
+// → logs: "Changed: {activeTicker:'ACHR', route:'#ops', ...}"
+```
+
+### File Sizes After:
+- `js/core/bus.js`: 123 → 128 lines (+5 lines)
+- `js/core/store.js`: 165 lines (new)
