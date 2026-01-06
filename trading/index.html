@@ -23,6 +23,8 @@
   <link rel="stylesheet" href="css/paint-bay.css">
   <!-- Ship Behavior States (reactive animations) -->
   <link rel="stylesheet" href="css/ship-states.css">
+  <!-- Bey Arena (Beyblade-style ship battles) -->
+  <link rel="stylesheet" href="css/bey-arena.css">
 <script src="js/space-scene.js"></script>
 </head>
 <body>
@@ -1455,6 +1457,31 @@
               </div>
             </div>
             
+            <!-- BEY ARENA - Telemetry Spin Battle -->
+            <div class="bey-arena-launcher" style="margin-top: 24px;">
+              <div class="run-hero-card" id="bey-arena-launch" style="cursor: pointer;">
+                <div class="run-hero-preview" style="background: radial-gradient(circle at 50% 40%, rgba(28,32,44,0.95), rgba(8,10,14,0.98)); display: flex; align-items: center; justify-content: center;">
+                  <div class="run-hero-overlay">
+                    <span class="run-play-icon" style="font-size: 2.2rem;">⟳</span>
+                    <span class="run-play-text">LAUNCH ARENA</span>
+                  </div>
+                </div>
+                <div class="run-hero-info">
+                  <div class="run-hero-title">BEY ARENA</div>
+                  <div class="run-hero-subtitle">Telemetry Spin Battle</div>
+                  <div class="run-hero-desc">
+                    Ships become spinners. Market behavior becomes physics. Watch your fleet collide 
+                    in an anime-style arena where telemetry drives the action. Ring-outs, burst finishes, 
+                    and momentum clashes — all derived from real trading data.
+                  </div>
+                  <div class="run-hero-controls">
+                    <span class="control-hint">TELEMETRY → PHYSICS</span>
+                    <span class="control-hint">CHAOS GUARANTEED</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
             <!-- Ship Selection for Games -->
             <div class="arcade-ship-select">
               <div class="ship-select-header">
@@ -1791,6 +1818,9 @@
       <div class="hud-title">[ARCADE MODE]</div>
       <ul id="mission-list"></ul>
       <div style="display: flex; flex-direction: column; gap: 0.4rem; margin-top: 0.5rem;">
+        <button class="arcade-launch-btn" onclick="window.BeyArena && BeyArena.open('RKLB', 'ACHR')" style="border-color: #ff6b35; color: #ff6b35;">
+          › BEY ARENA
+        </button>
         <button class="arcade-launch-btn" onclick="window.SignalInvaders && SignalInvaders.start()">
           › SIGNAL INVADERS
         </button>
@@ -1905,6 +1935,41 @@
         </div>
         
         <div class="run-message" id="run-message" style="display: none;"></div>
+      </div>
+    </div>
+    
+    <!-- BEY ARENA OVERLAY -->
+    <div id="bey-arena-overlay" class="bey-arena-overlay">
+      <div class="bey-arena-shell">
+        <div class="bey-arena-topbar">
+          <div>
+            <div class="bey-arena-title">BEY ARENA</div>
+            <div class="bey-arena-sub">TELEMETRY SPIN BATTLE</div>
+          </div>
+          <button class="bey-arena-close" id="bey-arena-close">✕ ESC</button>
+        </div>
+        
+        <div class="bey-arena-stage">
+          <div class="bey-panel left">
+            <h3>PILOT 1</h3>
+            <pre class="bey-readout" id="bey-left-readout">—</pre>
+          </div>
+          
+          <div class="bey-canvas-wrap">
+            <canvas id="bey-arena-canvas" width="520" height="520"></canvas>
+            <div class="bey-banner" id="bey-arena-banner">AWAITING LAUNCH</div>
+            <div class="bey-controls">
+              <button class="bey-btn primary" id="bey-arena-rematch">⟳ REMATCH</button>
+              <button class="bey-btn" id="bey-arena-swap">⇄ SWAP</button>
+            </div>
+            <div class="bey-scanlines"></div>
+          </div>
+          
+          <div class="bey-panel right">
+            <h3>PILOT 2</h3>
+            <pre class="bey-readout" id="bey-right-readout">—</pre>
+          </div>
+        </div>
       </div>
     </div>
     
@@ -2266,6 +2331,9 @@
   
   <!-- SPACE RUN Racing Game -->
   <script src="js/games/parallax-run.js"></script>
+  
+  <!-- BEY ARENA Spin Battle Game -->
+  <script src="js/games/bey-arena.js"></script>
   
   <!-- Ship Behavior System (reactive animations) -->
   <script src="js/ships/ship-behavior.js"></script>
