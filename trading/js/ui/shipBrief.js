@@ -38,7 +38,7 @@ window.ShipBrief = (function() {
   let closeTimer = null;
   
   // Default fallback sprite
-  const DEFAULT_SPRITE = 'assets/ships/Unclaimed-Drone-ship.png';
+  const DEFAULT_SPRITE = 'assets/ships/static/Unclaimed-Drone-ship.png';
   
   // ═══════════════════════════════════════════════════════════════════════════
   // SOUND CONFIGURATION

@@ -102,7 +102,7 @@ window.FlightScene = (function() {
   
   function getShipSprite(ticker) {
     const sprites = window.SHIP_SPRITES || {};
-    const fallback = window.DEFAULT_SHIP_SPRITE || 'assets/ships/Unclaimed-Drone-ship.png';
+    const fallback = window.DEFAULT_SHIP_SPRITE || 'assets/ships/static/Unclaimed-Drone-ship.png';
     const src = sprites[ticker] || fallback;
     
     if (!SPRITE_CACHE.has(src)) {
@@ -864,7 +864,7 @@ window.FlightScene = (function() {
    */
   async function preloadSpritesForTickers(tickers) {
     const sprites = window.SHIP_SPRITES || {};
-    const fallback = window.DEFAULT_SHIP_SPRITE || 'assets/ships/Unclaimed-Drone-ship.png';
+    const fallback = window.DEFAULT_SHIP_SPRITE || 'assets/ships/static/Unclaimed-Drone-ship.png';
     
     // Get unique sprite URLs
     const srcs = [...new Set(tickers.map(t => sprites[t] || fallback))];

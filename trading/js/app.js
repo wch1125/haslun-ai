@@ -13,7 +13,7 @@
     const PIXEL_SHIP_LORE = window.PIXEL_SHIP_LORE || {};
     const SHIP_NAMES = window.SHIP_NAMES || {};
     const SHIP_SPRITES = window.SHIP_SPRITES || {};
-    const DEFAULT_SHIP_SPRITE = window.DEFAULT_SHIP_SPRITE || 'assets/ships/Unclaimed-Drone-ship.png';
+    const DEFAULT_SHIP_SPRITE = window.DEFAULT_SHIP_SPRITE || 'assets/ships/static/Unclaimed-Drone-ship.png';
     
     // Loading screen countdown (data-driven fleet)
     function clamp(n,a,b){ return Math.max(a, Math.min(b,n)); }
@@ -359,6 +359,50 @@
       const b = parseInt(h.slice(4, 6), 16);
       return `rgba(${r},${g},${b},${a})`;
     }
+    
+    /**
+     * Chart.js plugin for topographic terrain effect
+     * Creates altitude-map aesthetic beneath the price ribbon
+     */
+    const terrainPlugin = {
+      id: 'terrainPlugin',
+      beforeDraw(chart) {
+        const { ctx, chartArea } = chart;
+        if (!chartArea) return;
+        
+        // Only for price chart
+        if (chart.canvas.id !== 'price-chart') return;
+        
+        const w = chartArea.right - chartArea.left;
+        const h = chartArea.bottom - chartArea.top;
+        
+        ctx.save();
+        
+        // Terrain gradient from bottom (deep) to ribbon area (high altitude)
+        const terrainGrad = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+        terrainGrad.addColorStop(0, 'rgba(51, 255, 153, 0.08)');
+        terrainGrad.addColorStop(0.2, 'rgba(71, 212, 255, 0.05)');
+        terrainGrad.addColorStop(0.4, 'rgba(179, 136, 255, 0.03)');
+        terrainGrad.addColorStop(0.7, 'rgba(51, 255, 153, 0.02)');
+        terrainGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        
+        ctx.fillStyle = terrainGrad;
+        ctx.fillRect(chartArea.left, chartArea.top, w, h);
+        
+        // Subtle horizontal contour lines (like topographic map)
+        ctx.strokeStyle = 'rgba(51, 255, 153, 0.03)';
+        ctx.lineWidth = 1;
+        const contourSpacing = 40;
+        for (let y = chartArea.bottom; y > chartArea.top; y -= contourSpacing) {
+          ctx.beginPath();
+          ctx.moveTo(chartArea.left, y);
+          ctx.lineTo(chartArea.right, y);
+          ctx.stroke();
+        }
+        
+        ctx.restore();
+      }
+    };
     
     /**
      * Chart.js plugin for arcade CRT glow + scanlines
@@ -2287,21 +2331,30 @@
               } 
             },
             tooltip: { 
-              backgroundColor: 'rgba(10, 12, 15, 0.95)', 
-              titleColor: '#e8f4f0', 
-              bodyColor: '#a8c0b8', 
-              borderColor: '#1e2832', 
-              borderWidth: 1, 
-              titleFont: { family: "'IBM Plex Mono', monospace" }, 
-              bodyFont: { family: "'IBM Plex Mono', monospace" }, 
+              backgroundColor: 'rgba(10, 12, 15, 0.92)', 
+              titleColor: '#33ff99', 
+              bodyColor: '#e8f4f0', 
+              borderColor: '#33ff99', 
+              borderWidth: 1,
+              padding: 8,
+              titleFont: { family: "'IBM Plex Mono', monospace", size: 11 }, 
+              bodyFont: { family: "'IBM Plex Mono', monospace", size: 12, weight: 'bold' }, 
+              displayColors: false,
               callbacks: { 
-                label: i => {
-                  // Skip band datasets in tooltip
-                  if (i.dataset.label && i.dataset.label.startsWith('BAND')) return null;
-                  return i.dataset.label + ': $' + i.parsed.y.toFixed(2);
+                title: (items) => {
+                  if (!items.length) return '';
+                  const d = new Date(items[0].parsed.x);
+                  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                },
+                label: (item) => {
+                  // Only show main price line, hide everything else
+                  if (item.dataset.label === 'RKLB' || item.datasetIndex === 0) {
+                    return '$' + item.parsed.y.toFixed(2);
+                  }
+                  return null;
                 }
               },
-              filter: (item) => !item.dataset.label.startsWith('BAND')
+              filter: (item) => item.datasetIndex === 0 // Only price, no EMAs
             }
           },
           scales: {
@@ -2319,7 +2372,7 @@
             }
           }
         },
-        plugins: [arcadeCRTPlugin, ribbonEMGlitchPlugin, shipOverlayPlugin]
+        plugins: [terrainPlugin, arcadeCRTPlugin, ribbonEMGlitchPlugin, shipOverlayPlugin]
       });
       
       if (macdChart) macdChart.destroy();
@@ -2481,6 +2534,7 @@
     
     /**
      * Draw a single frame of the orbital visualization
+     * ENHANCED: Larger, more atmospheric, topographic feel
      */
     function drawMacdOrbitFrame() {
       if (!macdOrbitData) return;
@@ -2492,16 +2546,11 @@
       if (!wrapper || !canvas) return;
       
       const rect = wrapper.getBoundingClientRect();
-      
-      // Skip if canvas is too small
       if (rect.width < 100 || rect.height < 60) return;
       
-      // Mobile detection
       const isMobile = window.innerWidth < 768 || ('ontouchstart' in window);
-      
       const dpr = isMobile ? Math.min(window.devicePixelRatio, 2) : (window.devicePixelRatio || 1);
       
-      // Resize canvas if needed
       const targetW = Math.max(1, Math.floor(rect.width * dpr));
       const targetH = Math.max(1, Math.floor(rect.height * dpr));
       if (canvas.width !== targetW || canvas.height !== targetH) {
@@ -2514,10 +2563,8 @@
       ctx.scale(dpr, dpr);
       ctx.clearRect(0, 0, rect.width, rect.height);
       
-      // If no data, bail
       if (!macd?.length || !signal?.length) return;
       
-      // Use last N points for "recent orbit" - fewer on mobile
       const N = Math.min(isMobile ? 60 : 120, macd.length);
       const start = macd.length - N;
       
@@ -2529,99 +2576,132 @@
       const mmS = getMinMax(sigSlice);
       const mmH = getMinMax(histSlice);
       
-      // Center + radii
+      // ENHANCED: Larger orbital elements, more centered
       const cx = rect.width * 0.5;
-      const cy = rect.height * 0.52;
-      const baseR = Math.min(rect.width, rect.height) * 0.16;
-      const maxR = Math.min(rect.width, rect.height) * 0.40;
+      const cy = rect.height * 0.48;
+      const baseR = Math.min(rect.width, rect.height) * 0.18;
+      const maxR = Math.min(rect.width, rect.height) * 0.42;
       
-      // Current time for animation
       const t = performance.now() * 0.001;
       
-      // Pick the "current" point (latest)
       const i = N - 1;
       const m = macdSlice[i] ?? 0;
       const s = sigSlice[i] ?? 0;
       const h = histSlice[i] ?? 0;
       
-      // Normalize into [-1..1] style signals
       const mN = normFromRange(m, mmM.min, mmM.max) * 2 - 1;
       const sN = normFromRange(s, mmS.min, mmS.max) * 2 - 1;
       const hN = normFromRange(h, mmH.min, mmH.max) * 2 - 1;
       
-      // Planet radius responds to |MACD| (more divergence = wider orbit)
       const planetR = baseR + (maxR - baseR) * orbitClamp(Math.abs(mN), 0, 1);
+      const moonR = planetR * (0.25 + 0.20 * orbitClamp(Math.abs(sN), 0, 1));
       
-      // Moon radius responds to |Signal| but smaller
-      const moonR = planetR * (0.22 + 0.18 * orbitClamp(Math.abs(sN), 0, 1));
-      
-      // Angle progression: time drives orbit, data affects speed
-      const orbitSpeed = 0.12 + Math.abs(hN) * 0.08; // Faster when momentum is high
+      const orbitSpeed = 0.10 + Math.abs(hN) * 0.06;
       const angle = t * orbitSpeed;
       
-      // Signal "phase" offset - moon orbits planet
-      const moonOrbitSpeed = 1.85;
+      const moonOrbitSpeed = 1.65;
       const moonAngle = angle * moonOrbitSpeed + sN * 0.9;
       
-      // Histogram controls "thrust" flare + eccentricity
       const thrust = orbitClamp(Math.abs(hN), 0, 1);
+      const ecc = 1 - thrust * 0.15;
       
-      // Eccentricity: slightly squash orbit during high thrust
-      const ecc = 1 - thrust * 0.18;
-      
-      // Planet position
       const px = cx + Math.cos(angle) * planetR;
       const py = cy + Math.sin(angle) * (planetR * ecc);
       
-      // Moon position around planet
       const mx = px + Math.cos(moonAngle) * moonR;
-      const my = py + Math.sin(moonAngle) * (moonR * 0.92);
+      const my = py + Math.sin(moonAngle) * (moonR * 0.9);
       
       // --- DRAW ---
       ctx.save();
       
-      // Background starfield (subtle, static per frame)
-      ctx.globalAlpha = 0.04;
-      const starSeed = Math.floor(t * 0.5); // Changes slowly
-      for (let k = 0; k < 24; k++) {
-        // Pseudo-random based on seed
+      // ENHANCED: Deep space nebula background
+      const nebulaGrad = ctx.createRadialGradient(
+        cx * 0.7, cy * 0.6, 0,
+        cx, cy, rect.width * 0.6
+      );
+      nebulaGrad.addColorStop(0, 'rgba(71, 212, 255, 0.04)');
+      nebulaGrad.addColorStop(0.3, 'rgba(179, 136, 255, 0.025)');
+      nebulaGrad.addColorStop(0.6, 'rgba(51, 255, 153, 0.015)');
+      nebulaGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = nebulaGrad;
+      ctx.fillRect(0, 0, rect.width, rect.height);
+      
+      // ENHANCED: More stars, varying sizes
+      ctx.globalAlpha = 0.06;
+      const starSeed = Math.floor(t * 0.3);
+      for (let k = 0; k < 40; k++) {
         const sx = ((k * 137.5 + starSeed * 0.3) % rect.width);
         const sy = ((k * 173.3 + starSeed * 0.7) % rect.height);
-        ctx.fillStyle = k % 3 === 0 ? '#47d4ff' : '#33ff99';
-        ctx.fillRect(sx, sy, 1, 1);
+        const starSize = k % 5 === 0 ? 2 : 1;
+        const twinkle = 0.5 + 0.5 * Math.sin(t * 3 + k);
+        ctx.globalAlpha = 0.03 + twinkle * 0.04;
+        ctx.fillStyle = k % 4 === 0 ? '#47d4ff' : k % 3 === 0 ? '#b388ff' : '#33ff99';
+        ctx.beginPath();
+        ctx.arc(sx, sy, starSize, 0, Math.PI * 2);
+        ctx.fill();
       }
       ctx.globalAlpha = 1;
       
-      // STAR (center) - pulsing core
-      const starPulse = 1 + Math.sin(t * 2.5) * 0.08;
-      const starGlow = ctx.createRadialGradient(cx, cy, 0, cx, cy, baseR * 1.3 * starPulse);
-      starGlow.addColorStop(0, 'rgba(255, 255, 255, 0.25)');
-      starGlow.addColorStop(0.15, 'rgba(51, 255, 153, 0.45)');
-      starGlow.addColorStop(0.45, 'rgba(71, 212, 255, 0.15)');
+      // ENHANCED: Central star with corona
+      const starPulse = 1 + Math.sin(t * 2.2) * 0.12;
+      
+      // Outer corona
+      const coronaGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, baseR * 2.5 * starPulse);
+      coronaGrad.addColorStop(0, 'rgba(255, 255, 255, 0.12)');
+      coronaGrad.addColorStop(0.1, 'rgba(51, 255, 153, 0.25)');
+      coronaGrad.addColorStop(0.25, 'rgba(71, 212, 255, 0.15)');
+      coronaGrad.addColorStop(0.5, 'rgba(179, 136, 255, 0.06)');
+      coronaGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = coronaGrad;
+      ctx.beginPath();
+      ctx.arc(cx, cy, baseR * 2.5 * starPulse, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Inner star glow
+      const starGlow = ctx.createRadialGradient(cx, cy, 0, cx, cy, baseR * 0.8 * starPulse);
+      starGlow.addColorStop(0, 'rgba(255, 255, 255, 0.5)');
+      starGlow.addColorStop(0.3, 'rgba(51, 255, 153, 0.6)');
+      starGlow.addColorStop(0.7, 'rgba(71, 212, 255, 0.2)');
       starGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
       ctx.fillStyle = starGlow;
       ctx.beginPath();
-      ctx.arc(cx, cy, baseR * 1.3 * starPulse, 0, Math.PI * 2);
+      ctx.arc(cx, cy, baseR * 0.8 * starPulse, 0, Math.PI * 2);
       ctx.fill();
       
       // Star core
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.18)';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+      ctx.shadowBlur = 8;
+      ctx.shadowColor = 'rgba(255, 255, 255, 0.8)';
       ctx.beginPath();
-      ctx.arc(cx, cy, 3.5, 0, Math.PI * 2);
+      ctx.arc(cx, cy, 4, 0, Math.PI * 2);
       ctx.fill();
+      ctx.shadowBlur = 0;
       
-      // ORBIT RING (dotted ellipse)
-      ctx.strokeStyle = `rgba(51, 255, 153, ${0.08 + thrust * 0.12})`;
-      ctx.lineWidth = 1;
-      ctx.setLineDash([4, 6]);
+      // ENHANCED: Multiple orbit rings (like altitude contours)
+      ctx.setLineDash([3, 5]);
+      for (let ring = 0; ring < 3; ring++) {
+        const ringR = baseR + (maxR - baseR) * (ring / 2);
+        const ringAlpha = 0.04 + (ring === 0 ? 0.04 : 0);
+        ctx.strokeStyle = `rgba(51, 255, 153, ${ringAlpha})`;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.ellipse(cx, cy, ringR, ringR * ecc, 0, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      ctx.setLineDash([]);
+      
+      // Active orbit ring (brighter)
+      ctx.strokeStyle = `rgba(51, 255, 153, ${0.12 + thrust * 0.15})`;
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([4, 4]);
       ctx.beginPath();
       ctx.ellipse(cx, cy, planetR, planetR * ecc, 0, 0, Math.PI * 2);
       ctx.stroke();
       ctx.setLineDash([]);
       
-      // ORBIT TRAIL (historical path) - skip points on mobile for perf
+      // ENHANCED: Orbit trail with gradient fade
       ctx.globalCompositeOperation = 'screen';
-      const trailStep = isMobile ? 2 : 1;
+      const trailStep = isMobile ? 3 : 2;
       for (let j = 0; j < N; j += trailStep) {
         const mj = macdSlice[j] ?? 0;
         const hj = histSlice[j] ?? 0;
@@ -2631,78 +2711,114 @@
         
         const rj = baseR + (maxR - baseR) * orbitClamp(Math.abs(mjN), 0, 1);
         const aj = (j / Math.max(1, N - 1)) * Math.PI * 2 + t * orbitSpeed;
-        const eccJ = 1 - orbitClamp(Math.abs(hjN), 0, 1) * 0.18;
+        const eccJ = 1 - orbitClamp(Math.abs(hjN), 0, 1) * 0.15;
         
         const xj = cx + Math.cos(aj) * rj;
         const yj = cy + Math.sin(aj) * (rj * eccJ);
         
         const age = j / (N - 1);
-        ctx.fillStyle = `rgba(71, 212, 255, ${0.015 + age * 0.12})`;
-        ctx.fillRect(xj, yj, 1.5, 1.5);
+        const trailColor = hjN > 0 ? '51, 255, 153' : '255, 107, 107';
+        ctx.fillStyle = `rgba(${trailColor}, ${0.02 + age * 0.12})`;
+        ctx.beginPath();
+        ctx.arc(xj, yj, 1.5 + age * 1.5, 0, Math.PI * 2);
+        ctx.fill();
       }
       ctx.globalCompositeOperation = 'source-over';
       
-      // PLANET (MACD)
+      // ENHANCED: Planet with atmosphere
       ctx.save();
-      ctx.shadowBlur = 14;
-      ctx.shadowColor = thrust > 0.5 ? 'rgba(51, 255, 153, 0.9)' : 'rgba(71, 212, 255, 0.7)';
-      ctx.fillStyle = thrust > 0.5 ? 'rgba(51, 255, 153, 0.9)' : 'rgba(71, 212, 255, 0.8)';
+      
+      // Atmospheric glow
+      const atmosGrad = ctx.createRadialGradient(px, py, 0, px, py, 20 + thrust * 15);
+      const planetColor = thrust > 0.5 ? 'rgba(51, 255, 153' : 'rgba(71, 212, 255';
+      atmosGrad.addColorStop(0, planetColor + ', 0.9)');
+      atmosGrad.addColorStop(0.4, planetColor + ', 0.4)');
+      atmosGrad.addColorStop(0.7, planetColor + ', 0.15)');
+      atmosGrad.addColorStop(1, planetColor + ', 0)');
+      ctx.fillStyle = atmosGrad;
       ctx.beginPath();
-      ctx.arc(px, py, 4.5 + thrust * 3, 0, Math.PI * 2);
+      ctx.arc(px, py, 20 + thrust * 15, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Planet core
+      ctx.shadowBlur = 20;
+      ctx.shadowColor = thrust > 0.5 ? 'rgba(51, 255, 153, 0.9)' : 'rgba(71, 212, 255, 0.8)';
+      ctx.fillStyle = thrust > 0.5 ? '#33ff99' : '#47d4ff';
+      ctx.beginPath();
+      ctx.arc(px, py, 6 + thrust * 4, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
       
-      // THRUST FLARE (histogram direction)
-      if (thrust > 0.08) {
-        const dir = h >= 0 ? 1 : -1; // positive momentum vs negative
-        const flareColor = dir > 0 ? 'rgba(51, 255, 153, 0.6)' : 'rgba(255, 107, 107, 0.5)';
-        ctx.globalAlpha = 0.55;
-        ctx.strokeStyle = flareColor;
-        ctx.lineWidth = 2;
+      // ENHANCED: Thrust flare with gradient
+      if (thrust > 0.06) {
+        const dir = h >= 0 ? 1 : -1;
+        const flareLen = 20 + thrust * 40;
+        const flareGrad = ctx.createLinearGradient(
+          px, py,
+          px - Math.cos(angle) * flareLen, 
+          py - Math.sin(angle) * flareLen * ecc
+        );
+        const flareColor = dir > 0 ? '51, 255, 153' : '255, 107, 107';
+        flareGrad.addColorStop(0, `rgba(${flareColor}, 0.8)`);
+        flareGrad.addColorStop(0.5, `rgba(${flareColor}, 0.3)`);
+        flareGrad.addColorStop(1, `rgba(${flareColor}, 0)`);
+        
+        ctx.strokeStyle = flareGrad;
+        ctx.lineWidth = 3 + thrust * 2;
+        ctx.lineCap = 'round';
         ctx.beginPath();
         ctx.moveTo(px, py);
-        const flareLen = 12 + thrust * 28;
         ctx.lineTo(px - Math.cos(angle) * flareLen, py - Math.sin(angle) * flareLen * ecc);
         ctx.stroke();
-        ctx.globalAlpha = 1;
       }
       
-      // MOON (Signal)
+      // ENHANCED: Moon with glow
       ctx.save();
-      ctx.shadowBlur = 10;
-      ctx.shadowColor = 'rgba(255, 179, 71, 0.7)';
-      ctx.fillStyle = 'rgba(255, 179, 71, 0.7)';
+      const moonGlow = ctx.createRadialGradient(mx, my, 0, mx, my, 10 + thrust * 6);
+      moonGlow.addColorStop(0, 'rgba(255, 179, 71, 0.9)');
+      moonGlow.addColorStop(0.4, 'rgba(255, 179, 71, 0.4)');
+      moonGlow.addColorStop(1, 'rgba(255, 179, 71, 0)');
+      ctx.fillStyle = moonGlow;
       ctx.beginPath();
-      ctx.arc(mx, my, 2.5 + thrust * 1.5, 0, Math.PI * 2);
+      ctx.arc(mx, my, 10 + thrust * 6, 0, Math.PI * 2);
+      ctx.fill();
+      
+      ctx.shadowBlur = 12;
+      ctx.shadowColor = 'rgba(255, 179, 71, 0.8)';
+      ctx.fillStyle = '#ffb347';
+      ctx.beginPath();
+      ctx.arc(mx, my, 3.5 + thrust * 2, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
       
-      // Tether line (very faint)
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+      // Tether line
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
       ctx.lineWidth = 1;
+      ctx.setLineDash([2, 4]);
       ctx.beginPath();
       ctx.moveTo(px, py);
       ctx.lineTo(mx, my);
       ctx.stroke();
+      ctx.setLineDash([]);
       
-      // STATUS LABEL (bottom)
+      // ENHANCED: Status readout (minimal, just momentum direction)
       ctx.font = "9px 'IBM Plex Mono', monospace";
-      ctx.fillStyle = 'rgba(90, 112, 104, 0.7)';
       ctx.textAlign = 'center';
-      const statusText = `MACD: ${m.toFixed(2)} | SIG: ${s.toFixed(2)} | HIST: ${h.toFixed(2)}`;
-      ctx.fillText(statusText, cx, rect.height - 6);
+      const momentum = h >= 0 ? '▲ THRUST' : '▼ DRAG';
+      const momentumColor = h >= 0 ? 'rgba(51, 255, 153, 0.6)' : 'rgba(255, 107, 107, 0.6)';
+      ctx.fillStyle = momentumColor;
+      ctx.fillText(momentum, cx, rect.height - 8);
       
-      // DIVERGENCE INDICATOR (when MACD and Signal are far apart)
+      // Divergence arc indicator
       const divergence = Math.abs(m - s);
       const maxDiv = Math.max(Math.abs(mmM.max - mmS.min), Math.abs(mmM.min - mmS.max)) || 1;
       const divNorm = orbitClamp(divergence / maxDiv, 0, 1);
-      if (divNorm > 0.5) {
-        ctx.globalAlpha = (divNorm - 0.5) * 0.4;
-        ctx.strokeStyle = m > s ? 'rgba(51, 255, 153, 0.6)' : 'rgba(255, 107, 107, 0.6)';
-        ctx.lineWidth = 1;
+      if (divNorm > 0.4) {
+        ctx.globalAlpha = (divNorm - 0.4) * 0.5;
+        ctx.strokeStyle = m > s ? 'rgba(51, 255, 153, 0.7)' : 'rgba(255, 107, 107, 0.7)';
+        ctx.lineWidth = 2;
         ctx.beginPath();
-        // Draw arc showing divergence
-        ctx.arc(cx, cy, planetR + 10, angle - 0.3, angle + 0.3);
+        ctx.arc(cx, cy, planetR + 14, angle - 0.35, angle + 0.35);
         ctx.stroke();
         ctx.globalAlpha = 1;
       }

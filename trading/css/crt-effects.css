@@ -1,12 +1,12 @@
 /* =========================================================================
    PARALLAX CRT EFFECTS — Web Art Installation Layer
    =========================================================================
-   This stylesheet transforms the dashboard into an immersive retro-futuristic
-   art piece. Layer this ON TOP of existing styles.
+   Transforms the dashboard into an immersive retro-futuristic experience.
+   Focused on atmosphere, not obstruction.
    ========================================================================= */
 
 /* -------------------------------------------------------------------------
-   CSS CUSTOM PROPERTIES — Tune the entire aesthetic from here
+   CSS CUSTOM PROPERTIES
    ------------------------------------------------------------------------- */
 :root {
   /* Phosphor colors */
@@ -16,61 +16,40 @@
   --phosphor-magenta: #ff4fd8;
   --phosphor-violet: #b388ff;
   
-  /* CRT characteristics */
-  --crt-curve: 2px;
-  --scanline-opacity: 0.12;
-  --bloom-intensity: 1.2;
-  --flicker-intensity: 0.03;
-  --noise-opacity: 0.02;
-  
-  /* Animation speeds */
-  --pulse-slow: 4s;
-  --pulse-med: 2s;
-  --pulse-fast: 0.8s;
+  /* CRT characteristics — tuned for readability */
+  --scanline-opacity: 0.06;
+  --bloom-intensity: 1.15;
+  --noise-opacity: 0.015;
 }
 
 /* -------------------------------------------------------------------------
-   SVG FILTERS — Define once, use everywhere
-   ------------------------------------------------------------------------- */
-.svg-filters {
-  position: absolute;
-  width: 0;
-  height: 0;
-  overflow: hidden;
-}
-
-/* -------------------------------------------------------------------------
-   GLOBAL CRT SCREEN EFFECT — Applied to body
+   GLOBAL ATMOSPHERE — Subtle vignette
    ------------------------------------------------------------------------- */
 body {
-  /* Subtle vignette */
   background: 
-    radial-gradient(ellipse at center, transparent 0%, transparent 50%, rgba(0,0,0,0.4) 100%),
+    radial-gradient(ellipse at center, transparent 0%, transparent 60%, rgba(0,0,0,0.35) 100%),
     #0a0f14;
 }
 
-/* Master CRT overlay on the entire viewport */
+/* Scanlines — very light, won't obstruct text */
 body::before {
   content: "";
   position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: 10000;
-  
-  /* Scanlines */
   background: repeating-linear-gradient(
     to bottom,
     transparent 0px,
-    transparent 2px,
-    rgba(0, 0, 0, var(--scanline-opacity)) 2px,
+    transparent 3px,
+    rgba(0, 0, 0, var(--scanline-opacity)) 3px,
     rgba(0, 0, 0, var(--scanline-opacity)) 4px
   );
-  
-  /* Subtle screen curvature via box-shadow inset */
-  box-shadow: inset 0 0 150px 60px rgba(0, 0, 0, 0.3);
+  /* Screen edge darkening */
+  box-shadow: inset 0 0 120px 40px rgba(0, 0, 0, 0.2);
 }
 
-/* Phosphor persistence / ghosting layer */
+/* Ambient phosphor glow */
 body::after {
   content: "";
   position: fixed;
@@ -78,314 +57,165 @@ body::after {
   pointer-events: none;
   z-index: 10001;
   background: radial-gradient(
-    ellipse at 50% 50%,
-    rgba(51, 255, 153, 0.03) 0%,
-    transparent 70%
+    ellipse 120% 80% at 50% 40%,
+    rgba(51, 255, 153, 0.025) 0%,
+    transparent 60%
   );
-  animation: phosphor-breathe var(--pulse-slow) ease-in-out infinite;
+  animation: ambient-pulse 6s ease-in-out infinite;
   mix-blend-mode: screen;
 }
 
-@keyframes phosphor-breathe {
-  0%, 100% { opacity: 0.5; transform: scale(1); }
-  50% { opacity: 0.8; transform: scale(1.02); }
+@keyframes ambient-pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
 }
 
 /* -------------------------------------------------------------------------
-   SCREEN FLICKER — Subtle CRT instability
-   ------------------------------------------------------------------------- */
-@keyframes screen-flicker {
-  0%, 100% { opacity: 1; }
-  92% { opacity: 1; }
-  93% { opacity: 0.95; }
-  94% { opacity: 1; }
-  97% { opacity: 0.98; }
-  98% { opacity: 1; }
-}
-
-body {
-  animation: screen-flicker 8s infinite;
-}
-
-/* -------------------------------------------------------------------------
-   HORIZONTAL SYNC GLITCH — Occasional scan distortion
-   ------------------------------------------------------------------------- */
-@keyframes hsync-glitch {
-  0%, 100% { clip-path: none; transform: translateX(0); }
-  0.5% { clip-path: inset(20% 0 75% 0); transform: translateX(-2px); }
-  1% { clip-path: none; transform: translateX(0); }
-  45% { clip-path: none; transform: translateX(0); }
-  45.5% { clip-path: inset(60% 0 35% 0); transform: translateX(3px); }
-  46% { clip-path: none; transform: translateX(0); }
-}
-
-/* Apply sparingly — too much is annoying */
-.telemetry-panel {
-  animation: hsync-glitch 15s infinite;
-}
-
-/* -------------------------------------------------------------------------
-   PHOSPHOR TEXT GLOW — Make text feel like it's emitting light
+   PHOSPHOR TEXT GLOW — Subtle, not overwhelming
    ------------------------------------------------------------------------- */
 .ticker-symbol,
 .stat-value,
-.price-display,
-[class*="price"],
-[class*="value"],
-.section-title,
-h1, h2, h3 {
+h1, h2, h3,
+.section-title {
   text-shadow: 
     0 0 2px currentColor,
-    0 0 8px currentColor,
-    0 0 20px currentColor;
-  animation: text-glow var(--pulse-med) ease-in-out infinite alternate;
+    0 0 8px rgba(51, 255, 153, 0.3);
 }
 
-@keyframes text-glow {
-  0% { 
-    text-shadow: 
-      0 0 2px currentColor,
-      0 0 6px currentColor,
-      0 0 15px currentColor;
-    filter: brightness(1);
-  }
-  100% { 
-    text-shadow: 
-      0 0 3px currentColor,
-      0 0 10px currentColor,
-      0 0 25px currentColor;
-    filter: brightness(1.1);
-  }
+/* Price values get stronger glow */
+[class*="price"],
+[class*="value"] {
+  text-shadow: 
+    0 0 3px currentColor,
+    0 0 12px currentColor;
 }
 
-/* Positive values glow green */
+/* Positive = green glow */
 .positive, .gain, [class*="up"] {
   color: var(--phosphor-green) !important;
   text-shadow: 
-    0 0 5px var(--phosphor-green),
-    0 0 15px var(--phosphor-green),
-    0 0 30px rgba(51, 255, 153, 0.5);
+    0 0 4px var(--phosphor-green),
+    0 0 12px rgba(51, 255, 153, 0.4);
 }
 
-/* Negative values glow red/amber */
+/* Negative = red glow */
 .negative, .loss, [class*="down"] {
   color: #ff6b6b !important;
   text-shadow: 
-    0 0 5px #ff6b6b,
-    0 0 15px #ff6b6b,
-    0 0 30px rgba(255, 107, 107, 0.5);
+    0 0 4px #ff6b6b,
+    0 0 12px rgba(255, 107, 107, 0.4);
 }
 
 /* -------------------------------------------------------------------------
-   PANEL GLASS EFFECT — CRT monitor bezels
+   CHART CANVAS — Topographic terrain aesthetic
    ------------------------------------------------------------------------- */
-.panel,
-.card,
-.chart-container,
-.price-chart-wrapper,
-.macd-chart-wrapper,
-[class*="panel"],
-[class*="section"] {
-  position: relative;
-  
-  /* Glass reflection */
-  background: 
-    linear-gradient(
-      135deg,
-      rgba(255, 255, 255, 0.03) 0%,
-      transparent 50%,
-      rgba(0, 0, 0, 0.1) 100%
-    ),
-    linear-gradient(to bottom, rgba(51, 255, 153, 0.02), transparent 30%);
-  
-  /* Subtle inner glow */
-  box-shadow: 
-    inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    inset 0 0 30px rgba(51, 255, 153, 0.03),
-    0 0 1px rgba(51, 255, 153, 0.3);
-  
-  /* Rounded CRT corners */
-  border-radius: 4px;
-  
-  overflow: hidden;
-}
-
-/* Panel scanlines */
-.panel::before,
-.card::before,
-[class*="panel"]::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: repeating-linear-gradient(
-    to bottom,
-    transparent 0px,
-    transparent 1px,
-    rgba(0, 0, 0, 0.08) 1px,
-    rgba(0, 0, 0, 0.08) 2px
-  );
-  z-index: 10;
-}
-
-/* Corner brackets — HUD framing */
-.panel::after,
-[class*="chart-wrapper"]::after {
-  content: "";
-  position: absolute;
-  inset: 4px;
-  pointer-events: none;
-  border: 1px solid transparent;
-  
-  /* Corner accents only */
-  background: 
-    linear-gradient(to right, var(--phosphor-green) 20px, transparent 20px) top left,
-    linear-gradient(to bottom, var(--phosphor-green) 20px, transparent 20px) top left,
-    linear-gradient(to left, var(--phosphor-green) 20px, transparent 20px) top right,
-    linear-gradient(to bottom, var(--phosphor-green) 20px, transparent 20px) top right,
-    linear-gradient(to right, var(--phosphor-green) 20px, transparent 20px) bottom left,
-    linear-gradient(to top, var(--phosphor-green) 20px, transparent 20px) bottom left,
-    linear-gradient(to left, var(--phosphor-green) 20px, transparent 20px) bottom right,
-    linear-gradient(to top, var(--phosphor-green) 20px, transparent 20px) bottom right;
-  background-size: 1px 1px;
-  background-repeat: no-repeat;
-  
-  opacity: 0.4;
-  z-index: 11;
-  animation: corner-pulse var(--pulse-slow) ease-in-out infinite;
-}
-
-@keyframes corner-pulse {
-  0%, 100% { opacity: 0.3; }
-  50% { opacity: 0.6; }
-}
-
-/* -------------------------------------------------------------------------
-   CHART SPECIFIC — The main telemetry display
-   ------------------------------------------------------------------------- */
-.price-chart-wrapper,
-.macd-chart-wrapper,
-#price-chart,
-#macd-chart {
-  position: relative;
-}
-
-/* Heavy phosphor bloom on chart */
 .price-chart-wrapper canvas,
 .macd-chart-wrapper canvas {
   filter: 
-    drop-shadow(0 0 2px var(--phosphor-green))
-    drop-shadow(0 0 6px var(--phosphor-green))
-    drop-shadow(0 0 12px rgba(51, 255, 153, 0.4))
-    contrast(1.05)
+    drop-shadow(0 0 3px var(--phosphor-green))
+    drop-shadow(0 0 8px rgba(51, 255, 153, 0.3))
     brightness(var(--bloom-intensity));
 }
 
-/* Animated grid pulse overlay */
+/* Terrain grid overlay */
 .price-chart-wrapper::before {
   content: "";
   position: absolute;
   inset: 0;
   pointer-events: none;
   z-index: 5;
-  
   background: 
-    /* Horizontal grid lines */
+    /* Subtle contour lines */
     repeating-linear-gradient(
       to bottom,
       transparent 0px,
-      transparent 49px,
-      rgba(51, 255, 153, 0.06) 50px
+      transparent 39px,
+      rgba(51, 255, 153, 0.04) 40px
     ),
-    /* Vertical grid lines */
+    /* Vertical grid */
     repeating-linear-gradient(
       to right,
       transparent 0px,
-      transparent 99px,
-      rgba(51, 255, 153, 0.04) 100px
+      transparent 79px,
+      rgba(51, 255, 153, 0.025) 80px
     );
-  
-  animation: grid-pulse var(--pulse-slow) ease-in-out infinite;
+  animation: terrain-shift 20s linear infinite;
 }
 
-@keyframes grid-pulse {
-  0%, 100% { opacity: 0.3; }
-  50% { opacity: 0.6; }
+@keyframes terrain-shift {
+  0% { background-position: 0 0, 0 0; }
+  100% { background-position: 0 40px, 80px 0; }
 }
 
-/* EM Wave interference pattern */
+/* Altitude gradient beneath chart area */
 .price-chart-wrapper::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 60%;
+  pointer-events: none;
+  z-index: 1;
+  background: linear-gradient(
+    to top,
+    rgba(51, 255, 153, 0.06) 0%,
+    rgba(71, 212, 255, 0.03) 30%,
+    transparent 100%
+  );
+  mix-blend-mode: screen;
+}
+
+/* -------------------------------------------------------------------------
+   ORBITAL DISPLAY — Enhanced atmosphere
+   ------------------------------------------------------------------------- */
+.macd-chart-wrapper {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Deep space gradient */
+.macd-chart-wrapper::before {
   content: "";
   position: absolute;
   inset: 0;
   pointer-events: none;
-  z-index: 6;
-  
+  z-index: 0;
   background: 
     radial-gradient(
-      ellipse 200% 100% at 50% 100%,
-      rgba(71, 212, 255, 0.08) 0%,
-      transparent 50%
+      ellipse 100% 120% at 50% 80%,
+      rgba(51, 255, 153, 0.08) 0%,
+      rgba(71, 212, 255, 0.04) 30%,
+      transparent 60%
+    ),
+    radial-gradient(
+      circle at 30% 20%,
+      rgba(179, 136, 255, 0.03) 0%,
+      transparent 40%
     );
-  
-  animation: em-wave 3s ease-in-out infinite;
-  mix-blend-mode: screen;
-}
-
-@keyframes em-wave {
-  0% { 
-    transform: translateY(100%) scaleY(0.5);
-    opacity: 0;
-  }
-  50% { 
-    transform: translateY(0%) scaleY(1);
-    opacity: 1;
-  }
-  100% { 
-    transform: translateY(-100%) scaleY(0.5);
-    opacity: 0;
-  }
 }
 
 /* -------------------------------------------------------------------------
-   SHIP DISPLAY — The vessel visualization
+   SHIP HOLOGRAM EFFECT
    ------------------------------------------------------------------------- */
 .ship-display,
 .active-vessel,
 [class*="ship"] img {
-  /* Holographic projection effect */
   filter: 
-    drop-shadow(0 0 8px var(--phosphor-cyan))
-    drop-shadow(0 0 20px rgba(71, 212, 255, 0.5))
-    saturate(1.2);
-  
-  animation: hologram-flicker 4s ease-in-out infinite;
+    drop-shadow(0 0 6px var(--phosphor-cyan))
+    drop-shadow(0 0 15px rgba(71, 212, 255, 0.4))
+    saturate(1.15);
+  animation: holo-pulse 3s ease-in-out infinite;
 }
 
-@keyframes hologram-flicker {
+@keyframes holo-pulse {
   0%, 100% { 
-    opacity: 0.9; 
-    filter: 
-      drop-shadow(0 0 8px var(--phosphor-cyan))
-      drop-shadow(0 0 20px rgba(71, 212, 255, 0.5))
-      saturate(1.2);
-  }
-  25% { 
-    opacity: 1; 
-    filter: 
-      drop-shadow(0 0 12px var(--phosphor-cyan))
-      drop-shadow(0 0 30px rgba(71, 212, 255, 0.7))
-      saturate(1.3);
-  }
-  50% { 
-    opacity: 0.85; 
     filter: 
       drop-shadow(0 0 6px var(--phosphor-cyan))
       drop-shadow(0 0 15px rgba(71, 212, 255, 0.4))
-      saturate(1.1);
+      saturate(1.15);
   }
-  75% { 
-    opacity: 0.95; 
+  50% { 
     filter: 
       drop-shadow(0 0 10px var(--phosphor-cyan))
       drop-shadow(0 0 25px rgba(71, 212, 255, 0.6))
@@ -393,79 +223,51 @@ h1, h2, h3 {
   }
 }
 
-/* Hologram scanline overlay on ship */
-.ship-display::before,
-.active-vessel::before {
+/* -------------------------------------------------------------------------
+   PANEL STYLING — Glass with corner frames
+   ------------------------------------------------------------------------- */
+.panel,
+.card,
+[class*="panel"],
+[class*="section"] {
+  position: relative;
+  background: 
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.02) 0%,
+      transparent 50%
+    );
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.03),
+    inset 0 0 20px rgba(51, 255, 153, 0.02);
+  border-radius: 3px;
+}
+
+/* Corner brackets */
+.panel::after,
+[class*="chart-wrapper"]::after {
   content: "";
   position: absolute;
-  inset: 0;
+  inset: 3px;
   pointer-events: none;
-  background: repeating-linear-gradient(
-    to bottom,
-    transparent 0px,
-    transparent 2px,
-    rgba(71, 212, 255, 0.1) 2px,
-    rgba(71, 212, 255, 0.1) 4px
-  );
-  animation: scan-down 2s linear infinite;
-  z-index: 10;
-}
-
-@keyframes scan-down {
-  0% { transform: translateY(-100%); }
-  100% { transform: translateY(100%); }
-}
-
-/* -------------------------------------------------------------------------
-   TICKER LIST — Stock watchlist styling
-   ------------------------------------------------------------------------- */
-.ticker-row,
-.tracking-item,
-[class*="ticker"] {
-  position: relative;
-  transition: all 0.3s ease;
-}
-
-.ticker-row:hover,
-.tracking-item:hover {
-  background: rgba(51, 255, 153, 0.08);
-  box-shadow: 
-    inset 0 0 20px rgba(51, 255, 153, 0.1),
-    0 0 10px rgba(51, 255, 153, 0.2);
-}
-
-/* Active/selected ticker */
-.ticker-row.active,
-.ticker-row.selected,
-.tracking-item.active {
-  background: linear-gradient(
-    90deg,
-    rgba(51, 255, 153, 0.15) 0%,
-    rgba(51, 255, 153, 0.05) 50%,
-    transparent 100%
-  );
-  border-left: 2px solid var(--phosphor-green);
-  box-shadow: 
-    inset 0 0 30px rgba(51, 255, 153, 0.1),
-    0 0 20px rgba(51, 255, 153, 0.3);
-  animation: selected-pulse 2s ease-in-out infinite;
-}
-
-@keyframes selected-pulse {
-  0%, 100% { 
-    box-shadow: 
-      inset 0 0 30px rgba(51, 255, 153, 0.1),
-      0 0 20px rgba(51, 255, 153, 0.3);
-  }
-  50% { 
-    box-shadow: 
-      inset 0 0 40px rgba(51, 255, 153, 0.15),
-      0 0 30px rgba(51, 255, 153, 0.4);
-  }
+  border: 1px solid transparent;
+  background: 
+    linear-gradient(to right, rgba(51, 255, 153, 0.3) 15px, transparent 15px) top left,
+    linear-gradient(to bottom, rgba(51, 255, 153, 0.3) 15px, transparent 15px) top left,
+    linear-gradient(to left, rgba(51, 255, 153, 0.3) 15px, transparent 15px) top right,
+    linear-gradient(to bottom, rgba(51, 255, 153, 0.3) 15px, transparent 15px) top right,
+    linear-gradient(to right, rgba(51, 255, 153, 0.3) 15px, transparent 15px) bottom left,
+    linear-gradient(to top, rgba(51, 255, 153, 0.3) 15px, transparent 15px) bottom left,
+    linear-gradient(to left, rgba(51, 255, 153, 0.3) 15px, transparent 15px) bottom right,
+    linear-gradient(to top, rgba(51, 255, 153, 0.3) 15px, transparent 15px) bottom right;
+  background-size: 1px 1px;
+  background-repeat: no-repeat;
+  opacity: 0.5;
+  z-index: 11;
 }
 
 /* -------------------------------------------------------------------------
-   BUTTONS & CONTROLS — Interactive elements
+   BUTTONS — Glowing interactive elements
    ------------------------------------------------------------------------- */
 button,
 .btn,
@@ -473,359 +275,89 @@ button,
 [class*="toggle"] {
   position: relative;
   overflow: hidden;
-  
-  /* Glow effect */
-  box-shadow: 
-    0 0 5px rgba(51, 255, 153, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  
+  box-shadow: 0 0 4px rgba(51, 255, 153, 0.2);
   transition: all 0.2s ease;
 }
 
 button:hover,
 .btn:hover {
   box-shadow: 
-    0 0 15px rgba(51, 255, 153, 0.5),
-    0 0 30px rgba(51, 255, 153, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  
-  text-shadow: 0 0 10px currentColor;
+    0 0 10px rgba(51, 255, 153, 0.4),
+    0 0 20px rgba(51, 255, 153, 0.2);
+  text-shadow: 0 0 8px currentColor;
 }
 
-/* Button sweep animation on hover */
-button::before,
-.btn::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(51, 255, 153, 0.2),
-    transparent
-  );
-  transition: left 0.5s ease;
-}
-
-button:hover::before,
-.btn:hover::before {
-  left: 100%;
-}
-
-/* Active/pressed state */
-button:active,
-.btn:active,
 button.active,
 .btn.active {
-  background: rgba(51, 255, 153, 0.2);
+  background: rgba(51, 255, 153, 0.15);
   box-shadow: 
-    0 0 20px rgba(51, 255, 153, 0.6),
-    inset 0 0 10px rgba(51, 255, 153, 0.3);
+    0 0 15px rgba(51, 255, 153, 0.5),
+    inset 0 0 8px rgba(51, 255, 153, 0.2);
 }
 
 /* -------------------------------------------------------------------------
-   STATUS INDICATORS — Mission status, alerts, etc.
-   ------------------------------------------------------------------------- */
-.status-indicator,
-.alert,
-[class*="status"] {
-  position: relative;
-}
-
-/* Pulsing dot indicators */
-.status-indicator::before {
-  content: "";
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  margin-right: 8px;
-  background: var(--phosphor-green);
-  box-shadow: 
-    0 0 5px var(--phosphor-green),
-    0 0 15px var(--phosphor-green);
-  animation: status-blink 1.5s ease-in-out infinite;
-}
-
-@keyframes status-blink {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(0.9); }
-}
-
-/* Warning status */
-.status-warning::before,
-.alert-warning::before {
-  background: var(--phosphor-amber);
-  box-shadow: 
-    0 0 5px var(--phosphor-amber),
-    0 0 15px var(--phosphor-amber);
-}
-
-/* Error/danger status */
-.status-danger::before,
-.status-error::before,
-.alert-danger::before {
-  background: #ff6b6b;
-  box-shadow: 
-    0 0 5px #ff6b6b,
-    0 0 15px #ff6b6b;
-  animation: status-alarm 0.5s ease-in-out infinite;
-}
-
-@keyframes status-alarm {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
-}
-
-/* -------------------------------------------------------------------------
-   SCROLLBARS — Themed to match
+   SCROLLBARS
    ------------------------------------------------------------------------- */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.2);
 }
 
 ::-webkit-scrollbar-thumb {
   background: linear-gradient(
     to bottom,
-    var(--phosphor-green),
-    rgba(51, 255, 153, 0.5)
+    rgba(51, 255, 153, 0.6),
+    rgba(51, 255, 153, 0.3)
   );
-  border-radius: 4px;
-  box-shadow: 0 0 10px var(--phosphor-green);
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--phosphor-green);
-  box-shadow: 0 0 15px var(--phosphor-green);
+  border-radius: 3px;
 }
 
 /* -------------------------------------------------------------------------
-   NOISE OVERLAY — Film grain / static effect
+   NOISE OVERLAY — Very subtle film grain
    ------------------------------------------------------------------------- */
-@keyframes noise-shift {
-  0% { transform: translate(0, 0); }
-  10% { transform: translate(-1%, -1%); }
-  20% { transform: translate(1%, 1%); }
-  30% { transform: translate(-1%, 1%); }
-  40% { transform: translate(1%, -1%); }
-  50% { transform: translate(-1%, 0); }
-  60% { transform: translate(1%, 0); }
-  70% { transform: translate(0, 1%); }
-  80% { transform: translate(0, -1%); }
-  90% { transform: translate(1%, 1%); }
-  100% { transform: translate(0, 0); }
-}
-
-/* This would need a noise texture image or SVG - using CSS approximation */
 .noise-overlay {
   position: fixed;
-  inset: -10%;
+  inset: -5%;
   pointer-events: none;
   z-index: 10002;
   opacity: var(--noise-opacity);
-  
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-  
-  animation: noise-shift 0.5s steps(10) infinite;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation: noise-drift 0.3s steps(4) infinite;
+}
+
+@keyframes noise-drift {
+  0% { transform: translate(0, 0); }
+  25% { transform: translate(-0.5%, 0.5%); }
+  50% { transform: translate(0.5%, -0.5%); }
+  75% { transform: translate(-0.5%, -0.5%); }
+  100% { transform: translate(0, 0); }
 }
 
 /* -------------------------------------------------------------------------
-   CHROMATIC ABERRATION — Color channel separation
-   ------------------------------------------------------------------------- */
-.chromatic-text {
-  position: relative;
-}
-
-.chromatic-text::before,
-.chromatic-text::after {
-  content: attr(data-text);
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-}
-
-.chromatic-text::before {
-  color: #ff0000;
-  clip-path: inset(0 0 0 0);
-  animation: chromatic-r 3s ease-in-out infinite;
-}
-
-.chromatic-text::after {
-  color: #00ffff;
-  clip-path: inset(0 0 0 0);
-  animation: chromatic-c 3s ease-in-out infinite;
-}
-
-@keyframes chromatic-r {
-  0%, 100% { transform: translate(-1px, 0); opacity: 0.5; }
-  50% { transform: translate(1px, 0); opacity: 0.3; }
-}
-
-@keyframes chromatic-c {
-  0%, 100% { transform: translate(1px, 0); opacity: 0.5; }
-  50% { transform: translate(-1px, 0); opacity: 0.3; }
-}
-
-/* -------------------------------------------------------------------------
-   LOADING / BOOT SEQUENCE STATES
-   ------------------------------------------------------------------------- */
-.loading,
-.booting {
-  position: relative;
-  overflow: hidden;
-}
-
-.loading::after,
-.booting::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    var(--phosphor-green),
-    var(--phosphor-cyan),
-    transparent
-  );
-  animation: loading-scan 1.5s ease-in-out infinite;
-}
-
-@keyframes loading-scan {
-  0% { transform: translateY(0) scaleX(0.5); opacity: 0; }
-  50% { transform: translateY(50vh) scaleX(1); opacity: 1; }
-  100% { transform: translateY(100vh) scaleX(0.5); opacity: 0; }
-}
-
-/* -------------------------------------------------------------------------
-   DATA STREAM EFFECT — For real-time data displays
-   ------------------------------------------------------------------------- */
-.data-stream {
-  background: linear-gradient(
-    to bottom,
-    transparent,
-    rgba(51, 255, 153, 0.1) 50%,
-    transparent
-  );
-  background-size: 100% 20px;
-  animation: data-scroll 2s linear infinite;
-}
-
-@keyframes data-scroll {
-  0% { background-position: 0 0; }
-  100% { background-position: 0 20px; }
-}
-
-/* -------------------------------------------------------------------------
-   RADAR / SWEEP EFFECT — For scanning displays
-   ------------------------------------------------------------------------- */
-.radar-sweep {
-  position: relative;
-  overflow: hidden;
-}
-
-.radar-sweep::before {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 200%;
-  height: 200%;
-  transform: translate(-50%, -50%);
-  background: conic-gradient(
-    from 0deg,
-    transparent 0deg,
-    rgba(51, 255, 153, 0.3) 30deg,
-    transparent 60deg
-  );
-  animation: radar-spin 4s linear infinite;
-}
-
-@keyframes radar-spin {
-  0% { transform: translate(-50%, -50%) rotate(0deg); }
-  100% { transform: translate(-50%, -50%) rotate(360deg); }
-}
-
-/* -------------------------------------------------------------------------
-   MISSION BRIDGE / CAPTAIN'S LOG — Special sections
-   ------------------------------------------------------------------------- */
-.bridge-feed,
-.captains-log,
-[class*="log"] {
-  font-family: 'IBM Plex Mono', monospace;
-  
-  /* Terminal text effect */
-  background: linear-gradient(
-    to bottom,
-    rgba(51, 255, 153, 0.05),
-    transparent
-  );
-}
-
-/* Log entry typing cursor */
-.log-entry:last-child::after {
-  content: "█";
-  animation: cursor-blink 1s step-end infinite;
-  color: var(--phosphor-green);
-}
-
-@keyframes cursor-blink {
-  0%, 50% { opacity: 1; }
-  51%, 100% { opacity: 0; }
-}
-
-/* -------------------------------------------------------------------------
-   RIBBON CHART ENHANCEMENT — More glow on the MA lines
-   ------------------------------------------------------------------------- */
-canvas {
-  /* This enhances the Chart.js canvas globally */
-  image-rendering: auto;
-}
-
-/* -------------------------------------------------------------------------
-   RESPONSIVE ADJUSTMENTS
+   RESPONSIVE — Lighter effects on mobile
    ------------------------------------------------------------------------- */
 @media (max-width: 768px) {
   :root {
-    --scanline-opacity: 0.08;
+    --scanline-opacity: 0.04;
     --bloom-intensity: 1.1;
-  }
-  
-  /* Reduce effects on mobile for performance */
-  body::before {
-    background-size: 100% 4px;
+    --noise-opacity: 0.01;
   }
   
   .price-chart-wrapper canvas {
-    filter: 
-      drop-shadow(0 0 2px var(--phosphor-green))
-      brightness(1.1);
+    filter: drop-shadow(0 0 2px var(--phosphor-green)) brightness(1.1);
   }
 }
 
 /* -------------------------------------------------------------------------
-   REDUCED MOTION — Respect user preferences
+   REDUCED MOTION
    ------------------------------------------------------------------------- */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
   }
 }
