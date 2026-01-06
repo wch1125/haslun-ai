@@ -487,9 +487,9 @@
         <button class="subtab" data-tab="catalysts" onclick="switchTab('catalysts')">EVENTS</button>
       </div>
       
-      <!-- Secondary subtabs for GARAGE (Paint Bay + Ship Upgrades) -->
+      <!-- Secondary subtabs for GARAGE (Refit Bay + Ship Upgrades) -->
       <div class="nav-subtabs" id="garage-subtabs" style="display:none;">
-        <button class="subtab active" data-tab="garage" onclick="switchTab('garage')">PAINT BAY</button>
+        <button class="subtab active" data-tab="garage" onclick="switchTab('garage')">REFIT BAY</button>
         <button class="subtab" data-tab="upgrades" onclick="switchTab('upgrades')">UPGRADES</button>
       </div>
       
@@ -539,10 +539,10 @@
           <button class="push-btn" style="width: 100%; margin-bottom: 0.5rem;" onclick="toggleMobileDrawer(); switchTab('arcade');">› Arcade</button>
         </div>
         <div class="sidebar-section" style="padding-bottom: 0.5rem;">
-          <div class="sidebar-title">🎨 Garage</div>
+          <div class="sidebar-title">⚙ Garage</div>
         </div>
         <div style="padding: 0 0.5rem 0.5rem;">
-          <button class="push-btn" style="width: 100%; margin-bottom: 0.5rem;" onclick="toggleMobileDrawer(); switchTab('garage');">› Paint Bay</button>
+          <button class="push-btn" style="width: 100%; margin-bottom: 0.5rem;" onclick="toggleMobileDrawer(); switchTab('garage');">› Refit Bay</button>
           <button class="push-btn" style="width: 100%; margin-bottom: 0.5rem;" onclick="toggleMobileDrawer(); switchTab('upgrades');">› Ship Upgrades</button>
         </div>
         <div class="sidebar-section" style="padding-bottom: 0.5rem;">
@@ -1466,21 +1466,9 @@
           </div>
         </div>
         
-        <!-- GARAGE PANEL - Paint Bay (Ship Color Customization) -->
+        <!-- GARAGE PANEL - Refit Bay (Ship Livery Customization) -->
         <div class="tab-panel" id="garage-panel">
-          <div class="garage-container">
-            <div class="garage-header">
-              <div class="garage-title">
-                <span class="garage-icon">🎨</span>
-                <div>
-                  <h2>PAINT BAY</h2>
-                  <span class="garage-subtitle">Ship Livery Customization</span>
-                </div>
-              </div>
-              <p class="garage-desc">Customize your fleet's colors using watercolor glazing color theory. Pick 2-3 base colors to generate harmonious palettes.</p>
-            </div>
-            <div id="paint-bay-container"></div>
-          </div>
+          <div id="paint-bay-container"></div>
         </div>
         
         <!-- UPGRADES PANEL - Visual Ship Upgrades Based on Stats -->
